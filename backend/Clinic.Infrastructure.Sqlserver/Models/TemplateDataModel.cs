@@ -6,5 +6,6 @@ namespace Clinic.Infrastructure.Sqlserver.Models
 {
     public class TemplateDataModel
     {
+        public int Id { get; set; }
     }
 }
