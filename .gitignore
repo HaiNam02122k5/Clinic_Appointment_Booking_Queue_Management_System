@@ -32,6 +32,7 @@ TestResults/
 
 # IDE and OS files
 .DS_Store
+.vs/
 .idea/
 .vscode/*
 !.vscode/extensions.json
