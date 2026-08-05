@@ -14,37 +14,63 @@ export const useAuthStore = defineStore('auth', () => {
   const error = ref<string | null>(null)
 
   const isAuthenticated = computed(() => user.value !== null)
-  const userRole = computed<UserRole | null>(() => user.value?.role ?? null)
-  
+  const currentUserRole = computed<UserRole | null>(() => user.value?.role ?? null)
+
   // Kiểm tra xem người dùng có quyền truy cập vào các vai trò được phép hay không
   function hasRole(allowedRoles: UserRole[]): boolean {
     if (!user.value) return false
     return allowedRoles.includes(user.value.role)
   }
 
+  // Lưu trữ Access Token và Refresh Token vào tokenStorage
+  function setToken(accessToken: string, refreshToken?: string) {
+    tokenStorage.set(accessToken, refreshToken)
+  }
+
+  // Lưu trữ thông tin người dùng vào State và localStorage
+  function setUser(userData: AuthUser | null) {
+    user.value = userData
+    if (userData) {
+      localStorage.setItem(USER_KEY, JSON.stringify(userData))
+    } else {
+      localStorage.removeItem(USER_KEY)
+    }
+  }
+
+  // Tái sử dụng setToken và setUser trong hàm login
   async function login(payload: LoginPayload) {
     status.value = 'loading'
     error.value = null
     try {
       const res = await authApi.login(payload)
-      tokenStorage.set(res.accessToken, res.refreshToken)
-      user.value = res.user
-      localStorage.setItem(USER_KEY, JSON.stringify(res.user))
+      setToken(res.accessToken, res.refreshToken)
+      setUser(res.user)
       status.value = 'idle'
     } catch (e) {
       status.value = 'error'
-      error.value = e instanceof Error ? e.message : 'error'
+      error.value = e instanceof Error ? e.message : 'Đăng nhập không thành công'
       throw e
     }
   }
 
   function logout() {
     tokenStorage.clear()
-    localStorage.removeItem(USER_KEY)
-    user.value = null
+    setUser(null)
     status.value = 'idle'
     error.value = null
   }
 
-  return { user, status, error, isAuthenticated, login, logout }
+  return {
+    user,
+    status,
+    error,
+    isAuthenticated,
+    currentUserRole,
+
+    setToken,
+    setUser,
+    logout,
+    hasRole,
+    login,
+  }
 })
