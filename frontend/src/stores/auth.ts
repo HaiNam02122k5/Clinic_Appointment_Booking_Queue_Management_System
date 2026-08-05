@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { tokenStorage } from '@/lib/api/token-storage'
 import { authApi } from '@/features/auth/auth.api'
-import type { AuthUser, LoginPayload } from '@/features/auth/auth.types'
+import type { AuthUser, LoginPayload, UserRole } from '@/features/auth/auth.types'
 
 const USER_KEY = 'auth.user'
 
@@ -14,6 +14,13 @@ export const useAuthStore = defineStore('auth', () => {
   const error = ref<string | null>(null)
 
   const isAuthenticated = computed(() => user.value !== null)
+  const userRole = computed<UserRole | null>(() => user.value?.role ?? null)
+  
+  // Kiểm tra xem người dùng có quyền truy cập vào các vai trò được phép hay không
+  function hasRole(allowedRoles: UserRole[]): boolean {
+    if (!user.value) return false
+    return allowedRoles.includes(user.value.role)
+  }
 
   async function login(payload: LoginPayload) {
     status.value = 'loading'
