@@ -17,6 +17,9 @@ namespace Clinic.Infrastructure.Sqlserver
                 options.UseSqlServer(connectionString));
 
             //services.AddScoped<IFarmRepository, FarmRepository>();
+            services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IPersonRepository, PersonRepository>();
+            services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
             return services;
         }
