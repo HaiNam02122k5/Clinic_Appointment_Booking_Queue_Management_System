@@ -12,18 +12,28 @@ declare module 'vue-router' {
 }
 
 const routes: RouteRecordRaw[] = [
+  // --- Route Public: Chọn Vai trò (Màn hình khởi đầu) ---
+  {
+    path: '/select-role',
+    name: 'select-role',
+    component: () => import('@/views/SelectRoleView.vue'),
+    meta: { public: true },
+  },
+  // --- Route Public: Đăng nhập ---
   {
     path: '/login',
     name: 'login',
     component: () => import('@/views/LoginView.vue'),
     meta: { public: true },
   },
+  // --- Route Public: Màn hình TV Công cộng ---
   {
     path: '/public/queue-display',
     name: 'public-queue-display',
     component: () => import('@/views/NotFoundView.vue'), // Sẽ thay bằng màn hình TV công cộng ở Sprint 2
     meta: { public: true },
   },
+  // --- Route Chức năng (Yêu cầu Đăng nhập & Layout chung) ---
   {
     path: '/',
     component: AppLayout,
@@ -69,6 +79,7 @@ const routes: RouteRecordRaw[] = [
       },
     ],
   },
+  // --- Catch-all 404 ---
   {
     path: '/:pathMatch(.*)*',
     name: 'not-found',
@@ -88,15 +99,16 @@ router.beforeEach((to) => {
 
   // 1. Nếu là trang Public
   if (to.meta.public) {
-    if (to.name === 'login' && auth.isAuthenticated) {
+    // Nếu đã đăng nhập mà cố vào login hoặc select-role -> chuyển về trang chủ
+    if ((to.name === 'login' || to.name === 'select-role') && auth.isAuthenticated) {
       return { name: 'home' }
     }
     return true
   }
 
-  // 2. Nếu chưa đăng nhập
+  // 2. Nếu chưa đăng nhập -> chuyển hướng về trang Chọn Vai Trò (select-role)
   if (!auth.isAuthenticated) {
-    return { name: 'login', query: { redirect: to.fullPath } }
+    return { name: 'select-role', query: { redirect: to.fullPath } }
   }
 
   // 3. Kiểm tra Phân quyền theo Role
