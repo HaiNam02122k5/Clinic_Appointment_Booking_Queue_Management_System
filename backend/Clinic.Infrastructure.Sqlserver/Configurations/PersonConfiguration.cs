@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Clinic.Infrastructure.Sqlserver.Configurations
 {
-    public class PersonConfiguration
+    public class PersonConfiguration : IEntityTypeConfiguration<PersonDataModel>
     {
         public void Configure(EntityTypeBuilder<PersonDataModel> builder)
         {

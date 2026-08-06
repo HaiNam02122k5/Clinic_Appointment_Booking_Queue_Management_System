@@ -1,10 +1,6 @@
-﻿using Clinic.Application.Features.Auth.DTOs;
-using Clinic.Domain.Entities;
+﻿using Clinic.Domain.Entities;
 using Clinic.Domain.Interfaces;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Clinic.Application.Features.Auth.Commands
 {
@@ -37,15 +33,15 @@ namespace Clinic.Application.Features.Auth.Commands
             var user = await _userRepository.GetByUsernameAsync(command.Username);
             if (user == null)
             {
-                throw new Exception("Invalid username or password.");
+                throw new ArgumentException("Invalid username or password.");
             }
-
             if (!_passwordHasher.VerifyPassword(command.Password, user.PasswordHash))
             {
-                throw new Exception("Invalid username or password.");
+                throw new ArgumentException("Invalid username or password.");
             }
 
             var accessToken = _tokenProvider.GenerateAccessToken(user);
+
             var refreshToken = _tokenProvider.GenerateRefreshToken();
             while (await _refreshTokenRepository.GetByTokenHashAsync(_tokenHasher.Hash(refreshToken)) != null)
             {

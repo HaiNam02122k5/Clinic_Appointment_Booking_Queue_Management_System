@@ -22,6 +22,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             var model = MapToDataModel(user);
             await _context.Users.AddAsync(model);
             await _context.SaveChangesAsync();
+            model = await _context.Users.Include(u => u.Person).Include(u => u.UserRoles).ThenInclude(ur => ur.Role).FirstOrDefaultAsync(u => u.Id == model.Id);
             return MapToDomain(model);
         }
 
@@ -45,19 +46,19 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
 
         public async Task<User?> GetByUsernameAsync(string username)
         {
-            var data = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+            var data = await _context.Users.Include(u => u.Person).Include(u => u.UserRoles).ThenInclude(ur => ur.Role).FirstOrDefaultAsync(u => u.Username == username);
             return MapToDomain(data);
         }
 
         public async Task<User?> GetByIdAsync(Guid id)
         {
-            var data = await _context.Users.FindAsync(id);
+            var data = await _context.Users.Include(u => u.Person).Include(u => u.UserRoles).ThenInclude(ur => ur.Role).FirstOrDefaultAsync(u => u.Id == id);
             return MapToDomain(data);
         }
 
         public async Task<User> UpdateAsync(User user)
         {
-            var model = await _context.Users.Include(u => u.Person).FirstOrDefaultAsync(u => u.Id == user.Id);
+            var model = await _context.Users.Include(u => u.Person).Include(u => u.UserRoles).ThenInclude(ur => ur.Role).FirstOrDefaultAsync(u => u.Id == user.Id);
             if (model == null)
             {
                 throw new InvalidOperationException("User not found");
@@ -73,7 +74,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             return MapToDomain(model);
         }
 
-        private User MapToDomain(UserDataModel? data)
+        private User? MapToDomain(UserDataModel? data)
         {
             if (data == null)
             {
@@ -122,6 +123,12 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                 CreatedAt = user.CreatedAt,
                 UpdatedAt = user.UpdatedAt
             };
+        }
+
+        public async Task<User?> GetByPersonIdAsync(Guid id)
+        {
+            var model = await _context.Users.Include(u => u.Person).Include(u => u.UserRoles).ThenInclude(ur => ur.Role).FirstOrDefaultAsync(u => u.PersonId == id);
+            return MapToDomain(model);
         }
     }
 }

@@ -14,5 +14,6 @@ namespace Clinic.Domain.Interfaces
         Task<User> AddAsync(User user);
         Task<User> UpdateAsync(User user);
         Task<User> DeleteAsync(Guid id);
+        Task<User?> GetByPersonIdAsync(Guid id);
     }
 }

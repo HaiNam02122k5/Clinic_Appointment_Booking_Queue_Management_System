@@ -1,4 +1,5 @@
-﻿using Clinic.Domain.Entities;
+﻿using Clinic.Application.Common.Exceptions;
+using Clinic.Domain.Entities;
 using Clinic.Domain.Enums;
 using Clinic.Domain.Interfaces;
 using MediatR;
@@ -34,7 +35,7 @@ namespace Clinic.Application.Features.Auth.Commands
             var existingUser = await _userRepository.GetByUsernameAsync(command.Username);
             if (existingUser != null)
             {
-                throw new Exception("Username already exists.");
+                throw new ArgumentException("Username already exists.");
             }
 
             // Check if a person with the same phone number already exists
@@ -45,13 +46,19 @@ namespace Clinic.Application.Features.Auth.Commands
             var existingPersonByPhone = await _personRepository.GetByPhoneNumberAsync(command.PhoneNumber);
             if (existingPersonByPhone != null)
             {
+                // If this person already has a user account, don't allow registration.
+                if (await _userRepository.GetByPersonIdAsync(existingPersonByPhone.Id) != null)
+                {
+                    throw new ArgumentException("A user account already exists for this phone number.");
+                }
+
                 // If the email belongs to another person, don't allow registration.
                 if (!string.IsNullOrWhiteSpace(command.Email) && !string.Equals(existingPersonByPhone.Email, command.Email))
                 {
                     var existingPersonByEmail = await _personRepository.GetByEmailAsync(command.Email);
                     if (existingPersonByEmail != null)
                     {
-                        throw new Exception("Email has been taken");
+                        throw new ArgumentException("Email has been taken");
                     }
                 }
 
@@ -64,7 +71,7 @@ namespace Clinic.Application.Features.Auth.Commands
                 var existingPersonByEmail = await _personRepository.GetByEmailAsync(command.Email);
                 if (existingPersonByEmail != null)
                 {
-                    throw new Exception("Email has been taken");
+                    throw new ArgumentException("Email has been taken");
                 }
                 var person = new Person
                 (
@@ -79,7 +86,7 @@ namespace Clinic.Application.Features.Auth.Commands
                 outPerson = await _personRepository.AddAsync(person);
             }
 
-
+            Console.WriteLine(outPerson.Id);
             // Create a new user entity
             var user = new User
             (

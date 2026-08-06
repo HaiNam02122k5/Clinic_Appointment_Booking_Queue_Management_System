@@ -17,7 +17,7 @@ namespace Clinic.Domain.Entities
         public bool IsDeleted { get; set; } = false;
 
         // Navigation
-        public User User { get; set; }
+        public User? User { get; set; }
         public Person(string fullName, string phoneNumber, string? email, DateOnly dateOfBirth, Gender gender, string address)
         {
             FullName = fullName;

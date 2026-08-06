@@ -30,6 +30,10 @@ namespace Clinic.API.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
+            if (string.IsNullOrWhiteSpace(request.Email))
+            {
+                request.Email = null;
+            }
             var command = _mapper.Map<RegisterCommand>(request);
             var response = await _sender.Send(command);
             return StatusCode(StatusCodes.Status201Created, new { id = response });

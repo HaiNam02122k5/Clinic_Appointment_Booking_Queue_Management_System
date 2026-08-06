@@ -14,8 +14,8 @@ namespace Clinic.Domain.Entities
 
         // Navigation
         public Person Person { get; set; }
-        public ICollection<UserRole> UserRoles { get; set; }
-        public ICollection<RefreshToken> RefreshTokens { get; set; }
+        public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+        public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 
         public User(string  username, string passwordHash, Guid personId)
         {

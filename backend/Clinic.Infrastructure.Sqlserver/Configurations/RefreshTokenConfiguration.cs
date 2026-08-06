@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Clinic.Infrastructure.Sqlserver.Configurations
 {
-    public class RefreshTokenConfiguration
+    public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshTokenDataModel>
     {
         public void Configure(EntityTypeBuilder<RefreshTokenDataModel> builder)
         {

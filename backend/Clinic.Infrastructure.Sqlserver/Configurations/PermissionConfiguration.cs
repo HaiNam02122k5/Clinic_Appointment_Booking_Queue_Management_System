@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Clinic.Infrastructure.Sqlserver.Configurations
 {
-    public class PermissionConfiguration
+    public class PermissionConfiguration : IEntityTypeConfiguration<PermissionDataModel>
     {
         public void Configure(EntityTypeBuilder<PermissionDataModel> builder)
         {

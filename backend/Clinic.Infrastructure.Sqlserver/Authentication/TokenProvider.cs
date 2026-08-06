@@ -28,7 +28,7 @@ namespace Clinic.Infrastructure.Authentication
                     JwtRegisteredClaimNames.Jti,
                     Guid.NewGuid().ToString())
             };
-
+            
             // TODO: Add role claims
 
             var key = new SymmetricSecurityKey(
@@ -36,20 +36,20 @@ namespace Clinic.Infrastructure.Authentication
                     _configuration["Jwt:Key"]!
                 ));
 
-
+            
             var credentials =
                 new SigningCredentials(
                     key,
                     SecurityAlgorithms.HmacSha256);
 
-
+            
             var token =
                 new JwtSecurityToken(
                     claims: claims,
                     expires: DateTime.UtcNow.AddMinutes(15),
                     signingCredentials: credentials);
 
-
+            
             return new JwtSecurityTokenHandler()
                 .WriteToken(token);
         }

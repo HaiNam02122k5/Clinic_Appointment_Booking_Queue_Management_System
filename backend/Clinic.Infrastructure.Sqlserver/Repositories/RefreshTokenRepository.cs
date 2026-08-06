@@ -18,6 +18,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             var model = MapToDataModel(refreshToken);
             await _context.RefreshTokens.AddAsync(model);
             await _context.SaveChangesAsync();
+            model = await _context.RefreshTokens.Include(rt => rt.User).FirstOrDefaultAsync(rt => rt.Id == model.Id);
             return MapToDomain(model);
         }
 

@@ -1,6 +1,9 @@
 using System.Reflection;
 using Clinic.Domain.Interfaces;
 using Clinic.Domain.Services;
+using Clinic.Infrastructure.Authentication;
+using Clinic.Infrastructure.Sqlserver.Authentication;
+using Clinic.Infrastructure.Sqlserver.Repositories;
 using Mapster;
 using MapsterMapper;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +25,12 @@ namespace Clinic.Application
 
             // Register Domain Services (Commands/Queries gọi qua Domain, Domain gọi Repository)
             services.AddScoped<ITokenHasher, TokenHasher>();
+            services.AddScoped<IPasswordHasher, PasswordHasher>();
+            services.AddScoped<ITokenProvider, TokenProvider>();
+            services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+            services.AddScoped<IPersonRepository, PersonRepository>();
+
 
             return services;
         }

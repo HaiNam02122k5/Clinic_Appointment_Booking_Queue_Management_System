@@ -30,7 +30,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                 return null;
             }
 
-            return new Person(model.FullName, model.PhoneNumber, model.Email, model.DateOfBirth, model.Gender, model.Address);
+            return new Person(model.Id, model.FullName, model.PhoneNumber, model.Email, model.DateOfBirth, model.Gender, model.Address, model.IsDeleted, model.CreatedAt, model.UpdatedAt);
         }
 
         private PersonDataModel MapToDataModel(Person person)
