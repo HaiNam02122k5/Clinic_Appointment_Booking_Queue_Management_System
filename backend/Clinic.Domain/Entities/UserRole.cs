@@ -12,5 +12,11 @@ namespace Clinic.Domain.Entities
         // Navigation
         public User User { get; set; }
         public Role Role { get; set; }
+
+        public UserRole(Guid userId, Guid roleId)
+        {
+            UserId = userId;
+            RoleId = roleId;
+        }
     }
 }

@@ -29,7 +29,7 @@ namespace Clinic.Domain.Entities
             IsDeleted = false;
         }
 
-        public Person(Guid id, string fullName, string phoneNumber, string? email, DateOnly dateOfBirth, Gender gender, string address, bool isDeleted, DateTime createdAt, DateTime updatedAt)
+        public Person(Guid id, string fullName, string phoneNumber, string? email, DateOnly dateOfBirth, Gender gender, string address, bool isDeleted, DateTime createdAt, DateTime? updatedAt)
             : base(id, createdAt, updatedAt)
         {
             FullName = fullName;

@@ -1,6 +1,8 @@
 ﻿using Clinic.Domain.Entities;
 using Clinic.Domain.Interfaces;
+using Clinic.Infrastructure.Sqlserver.Models;
 using Clinic.Infrastructure.Sqlserver.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace Clinic.Infrastructure.Sqlserver.Repositories
 {
@@ -13,24 +15,80 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             _dbContext = dbContext;
         }
 
-        public Task<Person> AddAsync(Person person)
+        public async Task<Person> AddAsync(Person person)
         {
-            throw new NotImplementedException();
+            var model = MapToDataModel(person);
+            await _dbContext.Persons.AddAsync(model);
+            await _dbContext.SaveChangesAsync();
+            return MapToDomain(model);
         }
 
-        public Task<Person?> GetByEmailAsync(string email)
+        private Person? MapToDomain(PersonDataModel? model)
         {
-            throw new NotImplementedException();
+            if (model == null)
+            {
+                return null;
+            }
+
+            return new Person(model.FullName, model.PhoneNumber, model.Email, model.DateOfBirth, model.Gender, model.Address);
         }
 
-        public Task<Person?> GetByPhoneNumberAsync(string phoneNumber)
+        private PersonDataModel MapToDataModel(Person person)
         {
-            throw new NotImplementedException();
+            UserDataModel? user = null;
+            if (person.User != null)
+            {
+                user = new UserDataModel
+                {
+                    Id = person.User.Id,
+                    Username = person.User.Username,
+                    PasswordHash = person.User.PasswordHash,
+                    CreatedAt = person.User.CreatedAt,
+                    UpdatedAt = person.User.UpdatedAt,
+                };
+            }
+            return new PersonDataModel
+            {
+                Id = person.Id,
+                FullName = person.FullName,
+                PhoneNumber = person.PhoneNumber,
+                Email = person.Email,
+                DateOfBirth = person.DateOfBirth,
+                Gender = person.Gender,
+                Address = person.Address,
+                CreatedAt = person.CreatedAt,
+                UpdatedAt = person.UpdatedAt,
+                IsDeleted = person.IsDeleted,
+                User = user
+            };
         }
 
-        public Task<Person> UpdateAsync(Person person)
+        public async Task<Person?> GetByEmailAsync(string email)
         {
-            throw new NotImplementedException();
+            var model = await _dbContext.Persons.Include(p => p.User).FirstOrDefaultAsync(p => p.Email == email);
+            return MapToDomain(model);
+        }
+
+        public async Task<Person?> GetByPhoneNumberAsync(string phoneNumber)
+        {
+            var model = await _dbContext.Persons.Include(p => p.User).FirstOrDefaultAsync(p => p.PhoneNumber == phoneNumber);
+            return MapToDomain(model);
+        }
+
+        public async Task<Person> UpdateAsync(Person person)
+        {
+            var model = await _dbContext.Persons.Include(p => p.User).FirstOrDefaultAsync(p => p.Id == person.Id);
+            if (model == null)
+            {
+                throw new Exception($"Person with ID {person.Id} not found.");
+            }
+            model.Email = person.Email;
+            model.Address = person.Address;
+            model.DateOfBirth = person.DateOfBirth;
+            model.Gender = person.Gender;
+            model.IsDeleted = person.IsDeleted;
+            await _dbContext.SaveChangesAsync();
+            return MapToDomain(model);
         }
     }
 }

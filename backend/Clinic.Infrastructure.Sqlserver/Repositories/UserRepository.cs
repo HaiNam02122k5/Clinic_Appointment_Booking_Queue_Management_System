@@ -93,6 +93,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                 isDeleted: data.Person.IsDeleted
             );
 
+
             return new User(
                 id: data.Id,
                 username: data.Username,
@@ -101,7 +102,11 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                 personId: data.PersonId,
                 createdAt: data.CreatedAt,
                 updatedAt: data.UpdatedAt,
-                person: person
+                person: person,
+                userRoles: data.UserRoles.Select(ur => new UserRole(
+                    userId: ur.UserId,
+                    roleId: ur.RoleId
+                )).ToList()
             );
         }
 

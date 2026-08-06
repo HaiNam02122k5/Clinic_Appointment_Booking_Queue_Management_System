@@ -14,7 +14,7 @@ namespace Clinic.Domain.Entities
 
         // Navigation
         public Person Person { get; set; }
-        public Role Role { get; set; }
+        public ICollection<UserRole> UserRoles { get; set; }
         public ICollection<RefreshToken> RefreshTokens { get; set; }
 
         public User(string  username, string passwordHash, Guid personId)
@@ -31,7 +31,7 @@ namespace Clinic.Domain.Entities
             IsActive = true;
         }
 
-        public User(Guid id, string username, string passwordHash, bool isActive, Guid personId, DateTime createdAt, DateTime? updatedAt, Person person)
+        public User(Guid id, string username, string passwordHash, bool isActive, Guid personId, DateTime createdAt, DateTime? updatedAt, Person person, ICollection<UserRole> userRoles)
             : base(id, createdAt, updatedAt)
         {
             Username = username;
@@ -39,6 +39,7 @@ namespace Clinic.Domain.Entities
             IsActive = isActive;
             PersonId = personId;
             Person = person;
+            UserRoles = userRoles;
         }
     }
 }
