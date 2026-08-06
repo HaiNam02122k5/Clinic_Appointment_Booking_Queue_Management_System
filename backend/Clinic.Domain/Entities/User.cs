@@ -31,13 +31,14 @@ namespace Clinic.Domain.Entities
             IsActive = true;
         }
 
-        public User(Guid id, string username, string passwordHash, bool isActive, Guid personId, DateTime createdAt, DateTime updatedAt)
+        public User(Guid id, string username, string passwordHash, bool isActive, Guid personId, DateTime createdAt, DateTime? updatedAt, Person person)
             : base(id, createdAt, updatedAt)
         {
             Username = username;
             PasswordHash = passwordHash;
             IsActive = isActive;
             PersonId = personId;
+            Person = person;
         }
     }
 }

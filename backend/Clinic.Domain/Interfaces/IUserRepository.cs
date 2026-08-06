@@ -8,12 +8,11 @@ namespace Clinic.Domain.Interfaces
     public interface IUserRepository
     {
         // ... Define method here
-        Task<User?> GetUserByUsernameAsync(string username);
-        Task<User?> GetUserByIdAsync(Guid id);
-        Task<User?> GetAllAsync();
+        Task<User?> GetByUsernameAsync(string username);
+        Task<User?> GetByIdAsync(Guid id);
+        Task<IEnumerable<User>> GetAllAsync();
         Task<User> AddAsync(User user);
         Task<User> UpdateAsync(User user);
         Task<User> DeleteAsync(Guid id);
-        Task<User?> GetByUsernameAsync(string username);
     }
 }

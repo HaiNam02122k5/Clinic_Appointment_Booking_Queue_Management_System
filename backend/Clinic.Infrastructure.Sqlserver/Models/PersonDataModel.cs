@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Clinic.Domain.Enums;
 
 namespace Clinic.Infrastructure.Sqlserver.Models
 {
@@ -11,7 +9,7 @@ namespace Clinic.Infrastructure.Sqlserver.Models
         public string PhoneNumber { get; set; } = null!;
         public string? Email { get; set; }
         public DateOnly DateOfBirth { get; set; }
-        public int Gender { get; set; }
+        public Gender Gender { get; set; }
         public string Address { get; set; } = null!;
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
