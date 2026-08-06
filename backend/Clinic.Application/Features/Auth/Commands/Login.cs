@@ -1,4 +1,5 @@
 ﻿using Clinic.Application.Features.Auth.DTOs;
+using Clinic.Domain.Entities;
 using Clinic.Domain.Interfaces;
 using MediatR;
 using System;
@@ -12,21 +13,24 @@ namespace Clinic.Application.Features.Auth.Commands
     public record LoginResponse(
         string AccessToken,
         string RefreshToken,
-        DateTime AccessTokenExpiresAt,
         UserInfo User
     );
 
     public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
     {
         private readonly IPasswordHasher _passwordHasher;
+        private readonly ITokenHasher _tokenHasher;
         private readonly IUserRepository _userRepository;
         private readonly ITokenProvider _tokenProvider;
+        private readonly IRefreshTokenRepository _refreshTokenRepository;
 
-        public LoginCommandHandler(IPasswordHasher passwordHasher, IUserRepository userRepository, ITokenProvider tokenProvider)
+        public LoginCommandHandler(IPasswordHasher passwordHasher, ITokenHasher tokenHasher, IUserRepository userRepository, ITokenProvider tokenProvider, IRefreshTokenRepository refreshTokenRepository)
         {
             _passwordHasher = passwordHasher;
+            _tokenHasher = tokenHasher;
             _userRepository = userRepository;
             _tokenProvider = tokenProvider;
+            _refreshTokenRepository = refreshTokenRepository;
         }
 
         public async Task<LoginResponse> Handle(LoginCommand command, CancellationToken cancellationToken)
@@ -43,12 +47,19 @@ namespace Clinic.Application.Features.Auth.Commands
             }
 
             var accessToken = _tokenProvider.GenerateAccessToken(user);
-            var refreshToken = _tokenProvider.GenerateRefreshToken(user);
+            var refreshToken = _tokenProvider.GenerateRefreshToken();
+            await _refreshTokenRepository.AddAsync(
+                new RefreshToken
+                {
+                    UserId = user.Id,
+                    TokenHash = _tokenHasher.Hash(refreshToken),
+                    ExpiresAt = DateTime.UtcNow.AddDays(7),
+                }
+            );
 
             return new LoginResponse(
                 AccessToken: accessToken,
                 RefreshToken: refreshToken,
-                AccessTokenExpiresAt: DateTime.UtcNow.AddHours(1),
                 User: new UserInfo(
                     Id: user.Id,
                     Username: user.Username,

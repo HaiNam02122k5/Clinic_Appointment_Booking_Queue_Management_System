@@ -5,9 +5,8 @@ using System.Text;
 
 namespace Clinic.Domain.Interfaces
 {
-    public interface ITokenProvider
+    public interface IRefreshTokenRepository
     {
-        string GenerateAccessToken(User user);
-        string GenerateRefreshToken();
+        Task<RefreshToken> AddAsync(RefreshToken refreshToken);
     }
 }

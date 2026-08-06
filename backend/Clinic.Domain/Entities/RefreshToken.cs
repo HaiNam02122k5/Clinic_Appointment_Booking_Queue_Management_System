@@ -9,10 +9,11 @@ namespace Clinic.Domain.Entities
     {
         public string TokenHash { get; init; }
         public DateTime ExpiresAt { get; init; }
-        public DateTime RevokedAt { get; set; }
+        public DateTime? RevokedAt { get; set; }
         public Guid UserId { get; set; }
 
         // Navigation
         public User User { get; set; }
     }
+
 }
