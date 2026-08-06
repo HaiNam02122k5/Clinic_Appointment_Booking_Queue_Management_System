@@ -27,5 +27,9 @@ namespace Clinic.Domain.Entities
         public string? Biography { get; set; }
 
         public ICollection<WorkSchedule> WorkSchedules { get; set; } = new List<WorkSchedule>();
+
+        public ICollection<WorkHistory> WorkHistories { get; set; } = new List<WorkHistory>();
+
+        public ICollection<ShiftRequest> ShiftRequests { get; set; } = new List<ShiftRequest>();
     }
 }

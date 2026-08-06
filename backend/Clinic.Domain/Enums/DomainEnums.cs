@@ -64,4 +64,20 @@ namespace Clinic.Domain.Enums
         Sent,
         Failed
     }
+
+    /// <summary>Trạng thái 1 giai đoạn trong lịch sử chuyển khoa của bác sĩ.</summary>
+    public enum WorkHistoryStatus
+    {
+        Active,
+        Ended
+    }
+
+    /// <summary>Trạng thái duyệt yêu cầu ca làm việc của bác sĩ.</summary>
+    public enum ShiftRequestStatus
+    {
+        Pending,
+        Approved,
+        Rejected,
+        Cancelled
+    }
 }

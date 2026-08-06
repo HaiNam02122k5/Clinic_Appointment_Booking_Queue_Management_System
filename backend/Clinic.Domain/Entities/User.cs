@@ -21,5 +21,7 @@ namespace Clinic.Domain.Entities
         public bool IsActive { get; set; } = true;
 
         public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+
+        public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
     }
 }

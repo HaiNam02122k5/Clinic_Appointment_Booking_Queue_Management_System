@@ -26,6 +26,9 @@ namespace Clinic.Infrastructure.Sqlserver.Persistence
         public DbSet<QueueTicket> QueueTickets => Set<QueueTicket>();
         public DbSet<MedicalReport> MedicalReports => Set<MedicalReport>();
         public DbSet<Notification> Notifications => Set<Notification>();
+        public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+        public DbSet<WorkHistory> WorkHistories => Set<WorkHistory>();
+        public DbSet<ShiftRequest> ShiftRequests => Set<ShiftRequest>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
