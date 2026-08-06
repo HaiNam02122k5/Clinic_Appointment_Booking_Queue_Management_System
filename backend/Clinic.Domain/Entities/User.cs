@@ -14,5 +14,28 @@ namespace Clinic.Domain.Entities
 
         // Navigation
         public Person Person { get; set; }
+        public Role Role { get; set; }
+
+        public User(string  username, string passwordHash, Guid personId)
+        {
+            if (string.IsNullOrWhiteSpace(username))
+                throw new ArgumentException("Username cannot be null or empty.", nameof(username));
+
+            if (string.IsNullOrWhiteSpace(passwordHash))
+                throw new ArgumentException("Password hash cannot be null or empty.", nameof(passwordHash));
+
+            Username = username;
+            PasswordHash = passwordHash;
+            PersonId = personId;
+        }
+
+        public User(Guid id, string username, string passwordHash, bool isActive, Guid personId, DateTime createdAt, DateTime updatedAt)
+            : base(id, createdAt, updatedAt)
+        {
+            Username = username;
+            PasswordHash = passwordHash;
+            IsActive = isActive;
+            PersonId = personId;
+        }
     }
 }

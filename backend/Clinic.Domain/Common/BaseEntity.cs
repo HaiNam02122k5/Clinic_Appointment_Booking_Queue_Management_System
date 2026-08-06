@@ -23,6 +23,7 @@ namespace Clinic.Domain.Common
         {
             Id = Guid.NewGuid();
             CreatedAt = DateTime.UtcNow;
+            UpdatedAt = CreatedAt;
         }
 
         /// <summary>
