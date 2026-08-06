@@ -64,7 +64,8 @@ namespace Clinic.Application.Features.Auth.Commands
 
                 // Override the person's email if not empty
                 existingPersonByPhone.Email = command.Email;
-                outPerson = await _personRepository.UpdateAsync(existingPersonByPhone);
+                await _personRepository.UpdateAsync(existingPersonByPhone);
+                outPerson = existingPersonByPhone;
             }
             else
             {

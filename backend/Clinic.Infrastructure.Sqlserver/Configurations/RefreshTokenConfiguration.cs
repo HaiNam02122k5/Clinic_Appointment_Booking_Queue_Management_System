@@ -1,12 +1,12 @@
-﻿using Clinic.Infrastructure.Sqlserver.Models;
+﻿using Clinic.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Clinic.Infrastructure.Sqlserver.Configurations
 {
-    public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshTokenDataModel>
+    public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
     {
-        public void Configure(EntityTypeBuilder<RefreshTokenDataModel> builder)
+        public void Configure(EntityTypeBuilder<RefreshToken> builder)
         {
             builder.ToTable("RefreshTokens");
 

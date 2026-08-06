@@ -1,12 +1,12 @@
-﻿using Clinic.Infrastructure.Sqlserver.Models;
+﻿using Clinic.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Clinic.Infrastructure.Sqlserver.Configurations
 {
-    public class UserConfiguration : IEntityTypeConfiguration<UserDataModel>
+    public class UserConfiguration : IEntityTypeConfiguration<User>
     {
-        public void Configure(EntityTypeBuilder<UserDataModel> builder)
+        public void Configure(EntityTypeBuilder<User> builder)
         {
             builder.ToTable("Users");
 
@@ -20,7 +20,7 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
 
             builder.HasOne(u => u.Person)
                 .WithOne(p => p.User)
-                .HasForeignKey<UserDataModel>(u => u.PersonId)
+                .HasForeignKey<User>(u => u.PersonId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasIndex(u => u.PersonId).IsUnique();

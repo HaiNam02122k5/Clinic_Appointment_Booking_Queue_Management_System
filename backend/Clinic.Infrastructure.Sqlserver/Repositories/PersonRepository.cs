@@ -17,78 +17,85 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
 
         public async Task<Person> AddAsync(Person person)
         {
-            var model = MapToDataModel(person);
-            await _dbContext.Persons.AddAsync(model);
+            await _dbContext.Persons.AddAsync(person);
             await _dbContext.SaveChangesAsync();
-            return MapToDomain(model);
+            var addedPerson = await _dbContext.Persons.Include(p => p.User).FirstOrDefaultAsync(p => p.Id == person.Id);
+            return addedPerson;
         }
 
-        private Person? MapToDomain(PersonDataModel? model)
-        {
-            if (model == null)
-            {
-                return null;
-            }
+        //private Person? MapToDomain(PersonDataModel? model)
+        //{
+        //    if (model == null)
+        //    {
+        //        return null;
+        //    }
 
-            return new Person(model.Id, model.FullName, model.PhoneNumber, model.Email, model.DateOfBirth, model.Gender, model.Address, model.IsDeleted, model.CreatedAt, model.UpdatedAt);
-        }
+        //    return new Person(model.Id, model.FullName, model.PhoneNumber, model.Email, model.DateOfBirth, model.Gender, model.Address, model.IsDeleted, model.CreatedAt, model.UpdatedAt);
+        //}
 
-        private PersonDataModel MapToDataModel(Person person)
-        {
-            UserDataModel? user = null;
-            if (person.User != null)
-            {
-                user = new UserDataModel
-                {
-                    Id = person.User.Id,
-                    Username = person.User.Username,
-                    PasswordHash = person.User.PasswordHash,
-                    CreatedAt = person.User.CreatedAt,
-                    UpdatedAt = person.User.UpdatedAt,
-                };
-            }
-            return new PersonDataModel
-            {
-                Id = person.Id,
-                FullName = person.FullName,
-                PhoneNumber = person.PhoneNumber,
-                Email = person.Email,
-                DateOfBirth = person.DateOfBirth,
-                Gender = person.Gender,
-                Address = person.Address,
-                CreatedAt = person.CreatedAt,
-                UpdatedAt = person.UpdatedAt,
-                IsDeleted = person.IsDeleted,
-                User = user
-            };
-        }
+        //private PersonDataModel MapToDataModel(Person person)
+        //{
+        //    UserDataModel? user = null;
+        //    if (person.User != null)
+        //    {
+        //        user = new UserDataModel
+        //        {
+        //            Id = person.User.Id,
+        //            Username = person.User.Username,
+        //            PasswordHash = person.User.PasswordHash,
+        //            CreatedAt = person.User.CreatedAt,
+        //            UpdatedAt = person.User.UpdatedAt,
+        //        };
+        //    }
+        //    return new PersonDataModel
+        //    {
+        //        Id = person.Id,
+        //        FullName = person.FullName,
+        //        PhoneNumber = person.PhoneNumber,
+        //        Email = person.Email,
+        //        DateOfBirth = person.DateOfBirth,
+        //        Gender = person.Gender,
+        //        Address = person.Address,
+        //        CreatedAt = person.CreatedAt,
+        //        UpdatedAt = person.UpdatedAt,
+        //        IsDeleted = person.IsDeleted,
+        //        User = user
+        //    };
+        //}
 
         public async Task<Person?> GetByEmailAsync(string email)
         {
-            var model = await _dbContext.Persons.Include(p => p.User).FirstOrDefaultAsync(p => p.Email == email);
-            return MapToDomain(model);
+            return await _dbContext.Persons.Include(p => p.User).FirstOrDefaultAsync(p => p.Email == email);
         }
 
         public async Task<Person?> GetByPhoneNumberAsync(string phoneNumber)
         {
-            var model = await _dbContext.Persons.Include(p => p.User).FirstOrDefaultAsync(p => p.PhoneNumber == phoneNumber);
-            return MapToDomain(model);
+            return await _dbContext.Persons.Include(p => p.User).FirstOrDefaultAsync(p => p.PhoneNumber == phoneNumber);
         }
 
-        public async Task<Person> UpdateAsync(Person person)
+        public async Task<Person?> GetByIdAsync(Guid id)
         {
-            var model = await _dbContext.Persons.Include(p => p.User).FirstOrDefaultAsync(p => p.Id == person.Id);
-            if (model == null)
+            return await _dbContext.Persons.Include(p => p.User).FirstOrDefaultAsync(p => p.Id == id);
+        }
+
+        public async Task DeleteAsync(Guid id)
+        {
+            var person = await _dbContext.Persons.FindAsync(id);
+            if (person != null)
             {
-                throw new Exception($"Person with ID {person.Id} not found.");
+                person.IsDeleted = true;
+                _dbContext.Persons.Update(person);
+                await _dbContext.SaveChangesAsync();
             }
-            model.Email = person.Email;
-            model.Address = person.Address;
-            model.DateOfBirth = person.DateOfBirth;
-            model.Gender = person.Gender;
-            model.IsDeleted = person.IsDeleted;
+            else
+            {
+                throw new ArgumentException($"Person with id {id} not found.");
+            }
+        }
+        public async Task UpdateAsync(Person person)
+        {
+            _dbContext.Persons.Update(person);
             await _dbContext.SaveChangesAsync();
-            return MapToDomain(model);
         }
     }
 }

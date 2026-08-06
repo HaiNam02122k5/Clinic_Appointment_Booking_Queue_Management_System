@@ -1,12 +1,12 @@
-﻿using Clinic.Infrastructure.Sqlserver.Models;
+﻿using Clinic.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Clinic.Infrastructure.Sqlserver.Configurations
 {
-    public class PermissionConfiguration : IEntityTypeConfiguration<PermissionDataModel>
+    public class PermissionConfiguration : IEntityTypeConfiguration<Permission>
     {
-        public void Configure(EntityTypeBuilder<PermissionDataModel> builder)
+        public void Configure(EntityTypeBuilder<Permission> builder)
         {
             builder.ToTable("Permissions");
 

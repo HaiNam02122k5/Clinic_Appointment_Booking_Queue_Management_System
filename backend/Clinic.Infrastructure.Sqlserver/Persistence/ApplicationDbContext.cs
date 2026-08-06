@@ -1,4 +1,4 @@
-using Clinic.Infrastructure.Sqlserver.Models;
+using Clinic.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Clinic.Infrastructure.Sqlserver.Persistence
@@ -10,13 +10,13 @@ namespace Clinic.Infrastructure.Sqlserver.Persistence
         {
         }
 
-        public DbSet<UserDataModel> Users => Set<UserDataModel>();
-        public DbSet<PersonDataModel> Persons => Set<PersonDataModel>();
-        public DbSet<RoleDataModel> Roles => Set<RoleDataModel>();
-        public DbSet<PermissionDataModel> Permissions => Set<PermissionDataModel>();
-        public DbSet<UserRoleDataModel> UserRoles => Set<UserRoleDataModel>();
-        public DbSet<RolePermissionDataModel> RolePermissions => Set<RolePermissionDataModel>();
-        public DbSet<RefreshTokenDataModel> RefreshTokens => Set<RefreshTokenDataModel>();
+        public DbSet<User> Users => Set<User>();
+        public DbSet<Person> Persons => Set<Person>();
+        public DbSet<Role> Roles => Set<Role>();
+        public DbSet<Permission> Permissions => Set<Permission>();
+        public DbSet<UserRole> UserRoles => Set<UserRole>();
+        public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
+        public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

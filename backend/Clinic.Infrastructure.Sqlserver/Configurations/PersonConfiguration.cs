@@ -1,12 +1,12 @@
-﻿using Clinic.Infrastructure.Sqlserver.Models;
+﻿using Clinic.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Clinic.Infrastructure.Sqlserver.Configurations
 {
-    public class PersonConfiguration : IEntityTypeConfiguration<PersonDataModel>
+    public class PersonConfiguration : IEntityTypeConfiguration<Person>
     {
-        public void Configure(EntityTypeBuilder<PersonDataModel> builder)
+        public void Configure(EntityTypeBuilder<Person> builder)
         {
             builder.ToTable("Persons");
 

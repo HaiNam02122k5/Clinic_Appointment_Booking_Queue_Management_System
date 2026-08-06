@@ -1,12 +1,12 @@
-﻿using Clinic.Infrastructure.Sqlserver.Models;
+﻿using Clinic.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Clinic.Infrastructure.Sqlserver.Configurations
 {
-    public class UserRoleConfiguration : IEntityTypeConfiguration<UserRoleDataModel>
+    public class UserRoleConfiguration : IEntityTypeConfiguration<UserRole>
     {
-        public void Configure(EntityTypeBuilder<UserRoleDataModel> builder)
+        public void Configure(EntityTypeBuilder<UserRole> builder)
         {
             builder.ToTable("UserRole");
 
