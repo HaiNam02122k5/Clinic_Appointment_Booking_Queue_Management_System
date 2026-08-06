@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Clinic.Infrastructure.Sqlserver.Configurations
 {
-    public class UserRole
+    public class UserRoleConfiguration : IEntityTypeConfiguration<UserRoleDataModel>
     {
         public void Configure(EntityTypeBuilder<UserRoleDataModel> builder)
         {

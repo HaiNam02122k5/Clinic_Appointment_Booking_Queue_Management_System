@@ -16,11 +16,14 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
             builder.Property(u => u.PasswordHash).IsRequired();
             builder.Property(u => u.CreatedAt).IsRequired();
             builder.Property(u => u.IsActive).IsRequired();
+            builder.HasIndex(u => u.Username).IsUnique();
 
             builder.HasOne(u => u.Person)
                 .WithOne(p => p.User)
                 .HasForeignKey<UserDataModel>(u => u.PersonId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasIndex(u => u.PersonId).IsUnique();
         }
     }
 }

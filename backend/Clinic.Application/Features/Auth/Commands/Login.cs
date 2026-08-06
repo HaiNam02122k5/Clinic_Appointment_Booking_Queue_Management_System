@@ -12,7 +12,7 @@ namespace Clinic.Application.Features.Auth.Commands
 
     public record LoginResponse(
         string AccessToken,
-        string RefreshToken,
+        string RefreshToken
     );
 
     public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
