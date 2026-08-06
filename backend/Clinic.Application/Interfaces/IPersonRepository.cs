@@ -1,6 +1,6 @@
 ﻿using Clinic.Domain.Entities;
 
-namespace Clinic.Domain.Interfaces
+namespace Clinic.Application.Interfaces
 {
     public interface IPersonRepository
     {

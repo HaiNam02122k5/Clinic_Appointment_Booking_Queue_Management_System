@@ -1,8 +1,8 @@
 ﻿using Clinic.Domain.Entities;
-using Clinic.Domain.Interfaces;
 using Clinic.Infrastructure.Sqlserver.Models;
 using Clinic.Infrastructure.Sqlserver.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Clinic.Application.Interfaces;
 
 namespace Clinic.Infrastructure.Sqlserver.Repositories
 {

@@ -1,5 +1,6 @@
-﻿using Clinic.Domain.Entities;
-using Clinic.Domain.Interfaces;
+﻿using Clinic.Application.Interfaces;
+using Clinic.Application.Services;
+using Clinic.Domain.Entities;
 using MediatR;
 
 namespace Clinic.Application.Features.Auth.Commands
@@ -13,37 +14,25 @@ namespace Clinic.Application.Features.Auth.Commands
 
     public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
     {
-        private readonly IPasswordHasher _passwordHasher;
-        private readonly ITokenHasher _tokenHasher;
-        private readonly IUserRepository _userRepository;
+        private readonly UserService _userService;
         private readonly ITokenProvider _tokenProvider;
         private readonly IRefreshTokenRepository _refreshTokenRepository;
 
-        public LoginCommandHandler(IPasswordHasher passwordHasher, ITokenHasher tokenHasher, IUserRepository userRepository, ITokenProvider tokenProvider, IRefreshTokenRepository refreshTokenRepository)
+        public LoginCommandHandler(IUserRepository userRepository, IPasswordHasher passwordHasher, ITokenProvider tokenProvider, IRefreshTokenRepository refreshTokenRepository)
         {
-            _passwordHasher = passwordHasher;
-            _tokenHasher = tokenHasher;
-            _userRepository = userRepository;
+            _userService = new UserService(userRepository, passwordHasher);
             _tokenProvider = tokenProvider;
             _refreshTokenRepository = refreshTokenRepository;
         }
 
         public async Task<LoginResponse> Handle(LoginCommand command, CancellationToken cancellationToken)
         {
-            var user = await _userRepository.GetByUsernameAsync(command.Username);
-            if (user == null)
-            {
-                throw new ArgumentException("Invalid username or password.");
-            }
-            if (!_passwordHasher.VerifyPassword(command.Password, user.PasswordHash))
-            {
-                throw new ArgumentException("Invalid username or password.");
-            }
+            var user = await _userService.VerifyUser(command.Username, command.Password);
 
             var accessToken = _tokenProvider.GenerateAccessToken(user);
 
             var refreshToken = _tokenProvider.GenerateRefreshToken();
-            while (await _refreshTokenRepository.GetByTokenHashAsync(_tokenHasher.Hash(refreshToken)) != null)
+            while (await _refreshTokenRepository.GetByTokenHashAsync(_tokenProvider.HashToken(refreshToken)) != null)
             {
                 refreshToken = _tokenProvider.GenerateRefreshToken();
             }
@@ -51,7 +40,7 @@ namespace Clinic.Application.Features.Auth.Commands
                 new RefreshToken
                 (
                     userId: user.Id,
-                    tokenHash: _tokenHasher.Hash(refreshToken),
+                    tokenHash: _tokenProvider.HashToken(refreshToken),
                     expiresAt: DateTime.UtcNow.AddDays(7)
                 )
             );

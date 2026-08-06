@@ -1,4 +1,6 @@
-using Clinic.Domain.Interfaces;
+using Clinic.Application.Interfaces;
+using Clinic.Infrastructure.Authentication;
+using Clinic.Infrastructure.Sqlserver.Authentication;
 using Clinic.Infrastructure.Sqlserver.Persistence;
 using Clinic.Infrastructure.Sqlserver.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +22,10 @@ namespace Clinic.Infrastructure.Sqlserver
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IPersonRepository, PersonRepository>();
             services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
+            services.AddScoped<ITokenProvider, TokenProvider>();
+            services.AddScoped<IRoleRepository, RoleRepository>();
+            services.AddScoped<IPasswordHasher, PasswordHasher>();
 
             return services;
         }

@@ -1,5 +1,5 @@
-﻿using Clinic.Domain.Entities;
-using Clinic.Domain.Interfaces;
+﻿using Clinic.Application.Interfaces;
+using Clinic.Domain.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -64,6 +64,14 @@ namespace Clinic.Infrastructure.Authentication
             var randomBytes = RandomNumberGenerator.GetBytes(64);
 
             return Convert.ToBase64String(randomBytes);
+        }
+
+        public string HashToken(string refreshToken)
+        {
+            using var sha256 = SHA256.Create();
+            var bytes = Encoding.UTF8.GetBytes(refreshToken);
+            var hash = sha256.ComputeHash(bytes);
+            return Convert.ToBase64String(hash);
         }
     }
 }

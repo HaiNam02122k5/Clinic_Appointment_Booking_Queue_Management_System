@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Clinic.Domain.Interfaces
+﻿namespace Clinic.Application.Interfaces
 {
     public interface IPasswordHasher
     {

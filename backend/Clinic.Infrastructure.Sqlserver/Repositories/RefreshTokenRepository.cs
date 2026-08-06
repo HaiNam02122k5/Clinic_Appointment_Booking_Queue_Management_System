@@ -1,5 +1,5 @@
-﻿using Clinic.Domain.Entities;
-using Clinic.Domain.Interfaces;
+﻿using Clinic.Application.Interfaces;
+using Clinic.Domain.Entities;
 using Clinic.Infrastructure.Sqlserver.Models;
 using Clinic.Infrastructure.Sqlserver.Persistence;
 using Microsoft.EntityFrameworkCore;
