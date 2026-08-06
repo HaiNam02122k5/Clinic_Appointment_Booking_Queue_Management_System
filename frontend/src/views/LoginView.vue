@@ -184,6 +184,13 @@ function goBackToRoleSelect() {
             </span>
             <span v-else>Đăng nhập</span>
           </button>
+
+          <p v-if="selectedRole === 'Patient'" class="text-center text-sm text-slate-500 mt-4">
+            Chưa có tài khoản Bệnh nhân?
+            <router-link to="/register" class="text-[#0E4D92] font-semibold hover:underline">
+              Đăng ký ngay
+            </router-link>
+          </p>
         </form>
 
         <!-- Nút chọn Role nhanh cho Dev/Testing -->

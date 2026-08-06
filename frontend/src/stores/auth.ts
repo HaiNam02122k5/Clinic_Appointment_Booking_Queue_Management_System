@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { tokenStorage } from '@/lib/api/token-storage'
 import { authApi } from '@/features/auth/auth.api'
-import type { AuthUser, LoginPayload, UserRole } from '@/features/auth/auth.types'
+import type { AuthUser, LoginPayload, UserRole, RegisterPayload } from '@/features/auth/auth.types'
 
 const USER_KEY = 'auth.user'
 
@@ -49,6 +49,31 @@ export const useAuthStore = defineStore('auth', () => {
     } catch (e) {
       status.value = 'error'
       error.value = e instanceof Error ? e.message : 'Đăng nhập không thành công'
+      throw e
+    }
+  }
+
+  async function register(payload: RegisterPayload) {
+    status.value = 'loading'
+    error.value = null
+    try {
+      // Giả lập API delay
+      await new Promise((resolve) => setTimeout(resolve, 800))
+
+      // Mock thành công: Tạo tài khoản Bệnh nhân mới
+      user.value = {
+        id: 'usr_' + Date.now(),
+        email: payload.email,
+        fullName: payload.fullName,
+        role: 'Patient',
+        phoneNumber: payload.phoneNumber,
+      }
+      token.value = 'mock_jwt_token_' + Date.now()
+      localStorage.setItem('token', token.value)
+      status.value = 'idle'
+    } catch (e: unknown) {
+      status.value = 'error'
+      error.value = e instanceof Error ? e.message : 'Đăng ký thất bại'
       throw e
     }
   }

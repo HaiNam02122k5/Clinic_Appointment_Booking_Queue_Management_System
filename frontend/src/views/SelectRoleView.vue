@@ -89,8 +89,14 @@ function getTagClass(color: RoleOption['tagColor']) {
           </p>
         </div>
       </div>
-      <div class="flex items-center gap-3">
-        <span class="text-sm text-slate-500 hidden sm:block">Đã có tài khoản?</span>
+      <div class="flex items-center gap-2.5">
+        <button
+          type="button"
+          @click="router.push('/register')"
+          class="px-3.5 py-1.5 text-sm font-semibold rounded-xl text-slate-700 hover:bg-slate-100 transition-all"
+        >
+          Đăng ký
+        </button>
         <button
           type="button"
           @click="goToLogin"
@@ -99,17 +105,15 @@ function getTagClass(color: RoleOption['tagColor']) {
           Đăng nhập
         </button>
       </div>
+
     </header>
 
     <!-- Main Content -->
     <div class="flex-1 flex flex-col items-center justify-center px-4 py-4 lg:py-5">
           <!-- Hero -->
       <div class="text-center mb-5 max-w-xl">
-        <div class="inline-flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-full px-4 py-1.5 text-xs font-semibold text-[#0E4D92] mb-3">
-          <span class="w-1.5 h-1.5 bg-[#00A878] rounded-full animate-pulse" />
-          Hệ thống đang hoạt động — {{ todayShort }}
-        </div>
-        <h1 class="text-2xl md:text-3xl font-bold text-slate-800 mb-2 leading-tight">          Bạn đang sử dụng hệ thống<br />với vai trò nào?
+        <h1 class="text-2xl md:text-3xl font-bold text-slate-800 mb-2 leading-tight">          
+            Bạn đang sử dụng hệ thống<br />với vai trò nào?
         </h1>
         <p class="text-slate-500 text-base">
           Chọn vai trò để truy cập các chức năng phù hợp với bạn.

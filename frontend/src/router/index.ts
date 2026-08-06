@@ -12,20 +12,29 @@ declare module 'vue-router' {
 }
 
 const routes: RouteRecordRaw[] = [
-  // --- Route Public: Chọn Vai trò (Màn hình khởi đầu) ---
+  // Route Public: Chọn Vai trò (Màn hình khởi đầu)
   {
     path: '/select-role',
     name: 'select-role',
     component: () => import('@/views/SelectRoleView.vue'),
     meta: { public: true },
   },
-  // --- Route Public: Đăng nhập ---
+  // Route Public: Đăng nhập
   {
     path: '/login',
     name: 'login',
     component: () => import('@/views/LoginView.vue'),
     meta: { public: true },
   },
+
+  // Route Public: Đăng ký
+  {
+    path: '/register',
+    name: 'register',
+    component: () => import('@/views/RegisterView.vue'),
+    meta: { public: true },
+  },
+
   // --- Route Public: Màn hình TV Công cộng ---
   {
     path: '/public/queue-display',

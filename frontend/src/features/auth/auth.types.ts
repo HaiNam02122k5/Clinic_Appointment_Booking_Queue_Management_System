@@ -18,3 +18,12 @@ export interface LoginResponse {
   refreshToken?: string
   user: AuthUser
 }
+
+export interface RegisterPayload {
+  fullName: string
+  phoneNumber: string
+  email: string
+  password: string
+  gender: 'Male' | 'Female' | 'Other'
+  dateOfBirth: string
+}
