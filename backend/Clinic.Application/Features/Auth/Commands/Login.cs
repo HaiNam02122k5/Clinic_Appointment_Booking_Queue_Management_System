@@ -50,11 +50,11 @@ namespace Clinic.Application.Features.Auth.Commands
             var refreshToken = _tokenProvider.GenerateRefreshToken();
             await _refreshTokenRepository.AddAsync(
                 new RefreshToken
-                {
-                    UserId = user.Id,
-                    TokenHash = _tokenHasher.Hash(refreshToken),
-                    ExpiresAt = DateTime.UtcNow.AddDays(7),
-                }
+                (
+                    userId: user.Id,
+                    tokenHash: _tokenHasher.Hash(refreshToken),
+                    expiresAt: DateTime.UtcNow.AddDays(7)
+                )
             );
 
             return new LoginResponse(

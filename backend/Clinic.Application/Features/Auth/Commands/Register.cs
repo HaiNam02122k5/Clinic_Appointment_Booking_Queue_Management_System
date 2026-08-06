@@ -14,7 +14,7 @@ namespace Clinic.Application.Features.Auth.Commands
         DateOnly DateOfBirth,
         Gender Gender,
         string Address
-    );
+    ) : IRequest<Guid>;
     public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Guid>
     {
         private readonly IUserRepository _userRepository;
@@ -67,14 +67,14 @@ namespace Clinic.Application.Features.Auth.Commands
                     throw new Exception("Email has been taken");
                 }
                 var person = new Person
-                {
-                    FullName = command.FullName,
-                    PhoneNumber = command.PhoneNumber,
-                    Email = command.Email,
-                    DateOfBirth = command.DateOfBirth,
-                    Gender = command.Gender,
-                    Address = command.Address
-                };
+                (
+                    fullName: command.FullName,
+                    phoneNumber: command.PhoneNumber,
+                    email: command.Email,
+                    dateOfBirth: command.DateOfBirth,
+                    gender: command.Gender,
+                    address: command.Address
+                );
                 // Add the person to the repository
                 outPerson = await _personRepository.AddAsync(person);
             }
@@ -82,11 +82,11 @@ namespace Clinic.Application.Features.Auth.Commands
 
             // Create a new user entity
             var user = new User
-            {
-                Username = command.Username,
-                PasswordHash = _passwordHasher.HashPassword(command.Password),
-                PersonId = outPerson.Id
-            };
+            (
+                username: command.Username,
+                passwordHash: _passwordHasher.HashPassword(command.Password),
+                personId: outPerson.Id
+            );
 
             // Add the user to the repository
             var addedUser = await _userRepository.AddAsync(user);
