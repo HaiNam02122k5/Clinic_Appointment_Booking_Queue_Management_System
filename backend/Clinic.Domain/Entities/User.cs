@@ -9,12 +9,13 @@ namespace Clinic.Domain.Entities
     {
         public string Username { get; set; }
         public string PasswordHash { get; set; }
-        public bool IsActive { get; set; }
+        public bool IsActive { get; set; } = true;
         public Guid PersonId { get; set; }
 
         // Navigation
         public Person Person { get; set; }
         public Role Role { get; set; }
+        public ICollection<RefreshToken> RefreshTokens { get; set; }
 
         public User(string  username, string passwordHash, Guid personId)
         {
@@ -27,6 +28,7 @@ namespace Clinic.Domain.Entities
             Username = username;
             PasswordHash = passwordHash;
             PersonId = personId;
+            IsActive = true;
         }
 
         public User(Guid id, string username, string passwordHash, bool isActive, Guid personId, DateTime createdAt, DateTime updatedAt)

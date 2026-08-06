@@ -26,6 +26,7 @@ namespace Clinic.Domain.Entities
             DateOfBirth = dateOfBirth;
             Gender = gender;
             Address = address;
+            IsDeleted = false;
         }
 
         public Person(Guid id, string fullName, string phoneNumber, string? email, DateOnly dateOfBirth, Gender gender, string address, bool isDeleted, DateTime createdAt, DateTime updatedAt)

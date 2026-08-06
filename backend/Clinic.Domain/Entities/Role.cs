@@ -1,7 +1,4 @@
 ﻿using Clinic.Domain.Common;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Clinic.Domain.Entities
 {
@@ -12,7 +9,7 @@ namespace Clinic.Domain.Entities
         public bool IsDeleted { get; set; } = false;
 
         // Navigation
-        public List<UserRole> UserRoles { get; set; }
-        public List<RolePermission> RolePermissions { get; set; }
+        public ICollection<UserRole> UserRoles { get; set; }
+        public ICollection<RolePermission> RolePermissions { get; set; }
     }
 }
