@@ -7,9 +7,9 @@ using System.Text;
 
 namespace Clinic.Infrastructure.Sqlserver.Configurations
 {
-    public class TemplateConfiguration : IEntityTypeConfiguration<TemplateDataModel>
+    public class TemplateConfiguration : IEntityTypeConfiguration<UserDataModel>
     {
-        public void Configure(EntityTypeBuilder<TemplateDataModel> builder)
+        public void Configure(EntityTypeBuilder<UserDataModel> builder)
         {
             // ... Configure the entity properties and relationships here
         }

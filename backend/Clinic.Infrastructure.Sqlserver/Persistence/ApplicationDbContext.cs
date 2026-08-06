@@ -10,8 +10,12 @@ namespace Clinic.Infrastructure.Sqlserver.Persistence
         {
         }
 
-        //public DbSet<FarmDataModel> Farms => Set<FarmDataModel>();
-        //public DbSet<CropDataModel> Crops => Set<CropDataModel>();
+        public DbSet<UserDataModel> Users => Set<UserDataModel>();
+        public DbSet<PersonDataModel> Persons => Set<PersonDataModel>();
+        public DbSet<RoleDataModel> Roles => Set<RoleDataModel>();
+        public DbSet<PermissionDataModel> Permissions => Set<PermissionDataModel>();
+        public DbSet<UserRoleDataModel> UserRoles => Set<UserRoleDataModel>();
+        public DbSet<RolePermissionDataModel> RolePermissions => Set<RolePermissionDataModel>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
