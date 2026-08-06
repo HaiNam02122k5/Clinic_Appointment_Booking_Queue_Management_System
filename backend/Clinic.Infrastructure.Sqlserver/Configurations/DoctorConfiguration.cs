@@ -1,0 +1,37 @@
+using Clinic.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace Clinic.Infrastructure.Sqlserver.Configurations
+{
+    public class DoctorConfiguration : IEntityTypeConfiguration<Doctor>
+    {
+        public void Configure(EntityTypeBuilder<Doctor> builder)
+        {
+            builder.ToTable("Doctors");
+
+            builder.HasKey(d => d.Id);
+
+            builder.HasOne(d => d.Employee)
+                .WithOne(e => e.Doctor)
+                .HasForeignKey<Doctor>(d => d.EmployeeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasIndex(d => d.EmployeeId).IsUnique();
+
+            // Chuyên khoa hiện tại đặt trực tiếp trên Doctor để tra cứu nhanh
+            // (không phải đi qua bảng lịch sử) - xem ghi chú trong Doctor.cs.
+            builder.HasOne(d => d.Specialty)
+                .WithMany(s => s.Doctors)
+                .HasForeignKey(d => d.SpecialtyId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Property(d => d.LicenseNumber)
+                .IsRequired()
+                .HasMaxLength(50);
+
+            builder.Property(d => d.Qualification).HasMaxLength(300);
+            builder.Property(d => d.Biography).HasMaxLength(1000);
+        }
+    }
+}
