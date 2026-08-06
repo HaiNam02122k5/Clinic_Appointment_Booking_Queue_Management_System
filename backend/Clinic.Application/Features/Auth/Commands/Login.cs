@@ -48,6 +48,10 @@ namespace Clinic.Application.Features.Auth.Commands
 
             var accessToken = _tokenProvider.GenerateAccessToken(user);
             var refreshToken = _tokenProvider.GenerateRefreshToken();
+            while (await _refreshTokenRepository.GetByTokenHashAsync(_tokenHasher.Hash(refreshToken)) != null)
+            {
+                refreshToken = _tokenProvider.GenerateRefreshToken();
+            }
             await _refreshTokenRepository.AddAsync(
                 new RefreshToken
                 (

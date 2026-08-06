@@ -16,6 +16,7 @@ namespace Clinic.Infrastructure.Sqlserver.Persistence
         public DbSet<PermissionDataModel> Permissions => Set<PermissionDataModel>();
         public DbSet<UserRoleDataModel> UserRoles => Set<UserRoleDataModel>();
         public DbSet<RolePermissionDataModel> RolePermissions => Set<RolePermissionDataModel>();
+        public DbSet<RefreshTokenDataModel> RefreshTokens => Set<RefreshTokenDataModel>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
