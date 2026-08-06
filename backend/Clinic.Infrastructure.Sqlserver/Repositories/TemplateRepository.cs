@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Clinic.Infrastructure.Sqlserver.Repositories
 {
-    public class TemplateRepository : ITemplateRepository
+    public class TemplateRepository : IUserRepository
     {
         private readonly ApplicationDbContext _dbContext;
 

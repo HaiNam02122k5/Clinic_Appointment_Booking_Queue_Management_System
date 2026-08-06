@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Clinic.Domain.Services
 {
-    public class TemplateService : ITemplateService
+    public class TemplateService : ITokenProvider
     {
         // ... Implement here
     }
