@@ -13,7 +13,6 @@ namespace Clinic.Application.Features.Auth.Commands
     public record LoginResponse(
         string AccessToken,
         string RefreshToken,
-        UserInfo User
     );
 
     public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
@@ -63,12 +62,7 @@ namespace Clinic.Application.Features.Auth.Commands
 
             return new LoginResponse(
                 AccessToken: accessToken,
-                RefreshToken: refreshToken,
-                User: new UserInfo(
-                    Id: user.Id,
-                    Username: user.Username,
-                    FullName: user.Person.FullName
-                )
+                RefreshToken: refreshToken
             );
         }
     }
