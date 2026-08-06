@@ -19,17 +19,22 @@ namespace Clinic.Infrastructure.Authentication
 
         public string GenerateAccessToken(User user)
         {
-            var claims = new[]
+            var claims = new List<Claim>
             {
-                new Claim(
+                new(
                     JwtRegisteredClaimNames.Sub,
                     user.Id.ToString()),
-                new Claim(
+                new(
                     JwtRegisteredClaimNames.Jti,
                     Guid.NewGuid().ToString())
             };
             
             // TODO: Add role claims
+            foreach (var userRole in user.UserRoles)
+            {
+                var role = userRole.Role;
+                claims.Add(new Claim(ClaimTypes.Role, role.Name));
+            }
 
             var key = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(

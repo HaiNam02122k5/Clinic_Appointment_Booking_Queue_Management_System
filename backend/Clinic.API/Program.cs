@@ -1,6 +1,8 @@
 using Clinic.API;
 using Clinic.Application;
 using Clinic.Infrastructure.Sqlserver;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +11,28 @@ builder.Services.AddPresentation();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructureSqlServer(builder.Configuration);
 
+// Add Authentication and Authorization services
+builder.Services
+    .AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(
+                System.Text.Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)),
+            RoleClaimType = ClaimTypes.Role
+        };
+    });
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen();
@@ -28,6 +52,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
