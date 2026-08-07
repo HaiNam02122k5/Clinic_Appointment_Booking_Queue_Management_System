@@ -20,7 +20,7 @@ namespace Clinic.Application.UnitTests.Common
 
         public static User CreateUser(string username = "testuser", string passwordHash = "hashedpassword", Person? person = null)
         {
-            var newUser = new User(Guid.NewGuid(), username, passwordHash, true, person?.Id ?? Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow, person, []);
+            var newUser = new User(username, passwordHash, person ?? CreatePerson());
             return newUser;
         }
     }

@@ -19,9 +19,9 @@ namespace Clinic.Domain.UnitTests.Common
             return new Person(fullName, phoneNumber, email, DateOnly.FromDateTime(DateTime.UtcNow), Gender.Male, address);
         }
 
-        public static User CreateUser(string username = "testuser", string passwordHash = "hashedpassword", Guid? personId = null)
+        public static User CreateUser(string username = "testuser", string passwordHash = "hashedpassword", Person person = null)
         {
-            var newUser = new User(Guid.NewGuid(), username, passwordHash, true , personId ?? Guid.NewGuid(), DateTime.UtcNow, DateTime.UtcNow, null, []);
+            var newUser = new User(username, passwordHash, person ?? CreatePerson());
             return newUser;
         }
     }
