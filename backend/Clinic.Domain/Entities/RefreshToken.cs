@@ -8,10 +8,12 @@ namespace Clinic.Domain.Entities
     /// (RevokedAt) khi đăng xuất, và phát hiện token bị đánh cắp nếu dùng lại
     /// một token đã bị thu hồi/hết hạn.
     /// </summary>
-    public class RefreshToken : BaseEntity
+    public class RefreshToken
     {
         public Guid UserId { get; set; }
         public User User { get; set; } = null!;
+
+        public Guid Id { get; init; }
 
         /// <summary>Hash của refresh token, không lưu giá trị gốc.</summary>
         public string TokenHash { get; set; } = string.Empty;

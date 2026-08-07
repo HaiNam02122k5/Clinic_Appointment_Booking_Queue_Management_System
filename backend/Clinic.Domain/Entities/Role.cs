@@ -16,5 +16,12 @@ namespace Clinic.Domain.Entities
         public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
 
         public ICollection<RolePermission> RolePermissions { get; set; } = new List<RolePermission>();
+
+        public Role(Guid id, string name, string? description, DateTime createdAt, DateTime? updatedAt, bool isDeleted)
+            : base(id, createdAt, updatedAt, isDeleted)
+        {
+            Name = name;
+            Description = description;
+        }
     }
 }

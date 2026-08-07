@@ -25,6 +25,19 @@ namespace Clinic.Domain.Common
             UpdatedAt = CreatedAt;
         }
 
+        protected BaseEntity(Guid id, DateTime createdAt, DateTime? updatedAt, bool isDeleted)
+        {
+            Id = id;
+            CreatedAt = createdAt;
+            UpdatedAt = updatedAt;
+            IsDeleted = isDeleted;
+        }
+
+        public void MarkUpdated()
+        {
+            UpdatedAt = DateTime.UtcNow;
+        }
+
         /// <summary>
         /// Soft-delete: API GET mặc định lọc IsDeleted = false.
         /// </summary>

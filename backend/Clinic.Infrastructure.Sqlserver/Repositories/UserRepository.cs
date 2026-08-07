@@ -46,8 +46,8 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
 
         public async Task<User?> GetByUsernameAsync(string username)
         {
-            return await _context.Users.
-                Include(u => u.Person)
+            return await _context.Users
+                .Include(u => u.Person)
                 .Include(u => u.UserRoles)
                 .ThenInclude(ur => ur.Role)
                 .FirstOrDefaultAsync(u => u.Username == username);

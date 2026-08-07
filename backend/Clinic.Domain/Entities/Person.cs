@@ -1,7 +1,6 @@
 using Clinic.Domain.Common;
 using Clinic.Domain.Enums;
-using System;
-using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace Clinic.Domain.Entities
 {
@@ -19,9 +18,9 @@ namespace Clinic.Domain.Entities
 
         public string? Email { get; set; }
 
-        public DateOnly? DateOfBirth { get; set; }
+        public DateOnly DateOfBirth { get; set; }
 
-        public Gender? Gender { get; set; }
+        public Gender Gender { get; set; }
 
         public string? Address { get; set; }
 
@@ -49,11 +48,10 @@ namespace Clinic.Domain.Entities
             DateOfBirth = dateOfBirth;
             Gender = gender;
             Address = address;
-            IsDeleted = false;
         }
 
         public Person(Guid id, string fullName, string? phoneNumber, string? email, DateOnly dateOfBirth, Gender gender, string address, bool isDeleted, DateTime createdAt, DateTime? updatedAt)
-            : base(id, createdAt, updatedAt)
+            : base(id, createdAt, updatedAt, isDeleted)
         {
             FullName = fullName;
             PhoneNumber = phoneNumber;

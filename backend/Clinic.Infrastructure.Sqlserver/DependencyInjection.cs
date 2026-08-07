@@ -2,6 +2,7 @@ using Clinic.Application.Interfaces;
 using Clinic.Infrastructure.Authentication;
 using Clinic.Infrastructure.Sqlserver.Authentication;
 using Clinic.Infrastructure.Sqlserver.Persistence;
+using Clinic.Infrastructure.Sqlserver.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

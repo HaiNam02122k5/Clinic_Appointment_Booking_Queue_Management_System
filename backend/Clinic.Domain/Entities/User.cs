@@ -42,15 +42,13 @@ namespace Clinic.Domain.Entities
             IsActive = true;
         }
 
-        public User(Guid id, string username, string passwordHash, bool isActive, Guid personId, DateTime createdAt, DateTime? updatedAt, Person person, ICollection<UserRole> userRoles)
-            : base(id, createdAt, updatedAt)
+        public User(Guid id, string username, string passwordHash, bool isActive, Guid personId, DateTime createdAt, DateTime? updatedAt, bool isDeleted)
+            : base(id, createdAt, updatedAt, isDeleted)
         {
             Username = username;
             PasswordHash = passwordHash;
             IsActive = isActive;
             PersonId = personId;
-            Person = person;
-            UserRoles = userRoles;
         }
 
         /// <summary>
@@ -88,7 +86,7 @@ namespace Clinic.Domain.Entities
             {
                 throw new ArgumentException($"User already has the role '{role.Name}' assigned.");
             }
-            UserRoles.Add(new UserRole(this.Id, role.Id));
+            UserRoles.Add(new UserRole(this, role));
             MarkUpdated();
         }
 
