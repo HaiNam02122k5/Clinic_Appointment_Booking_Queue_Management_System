@@ -28,3 +28,28 @@ export interface RegisterPayload {
   gender: 'Male' | 'Female' | 'Other'
   dateOfBirth: string
 }
+
+export interface User {
+  id: string;
+  email: string;
+  fullName: string;
+  phoneNumber?: string;
+  role: 'Patient' | 'Admin' | 'Receptionist' | 'Doctor';
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface RegisterRequest {
+  fullName: string;
+  email: string;
+  password: string;
+  phoneNumber: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  user: User;
+}

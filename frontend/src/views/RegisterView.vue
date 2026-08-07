@@ -73,9 +73,16 @@ async function handleRegister() {
       gender: gender.value,
       dateOfBirth: dateOfBirth.value,
     })
-    router.push('/booking')
+
+    // Nếu Backend trả về token và tự động đăng nhập
+    if (authStore.isAuthenticated) {
+      router.push('/patient')
+    } else {
+      // Nếu Backend yêu cầu đăng nhập lại sau khi đăng ký
+      router.push('/login?role=Patient')
+    }
   } catch {
-    /* authStore.error đã lưu thông báo lỗi */
+    /* authStore.error đã lưu thông báo lỗi từ Backend */
   }
 }
 </script>
@@ -107,6 +114,10 @@ async function handleRegister() {
           <h1 class="text-2xl font-bold text-slate-800">Đăng ký tài khoản</h1>
           <p class="text-sm text-slate-500 mt-1">Nhập thông tin cá nhân để tạo hồ sơ khám bệnh.</p>
         </div>
+      
+        <div v-if="authStore.error" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600">
+          ⚠️ {{ authStore.error }}
+        </div>       
 
         <form @submit.prevent="handleRegister" class="space-y-4" novalidate>
           <!-- Họ tên -->

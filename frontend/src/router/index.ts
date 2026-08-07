@@ -104,31 +104,33 @@ const router = createRouter({
 
 // Global Guard: Kiểm tra Xác thực & Phân quyền (RBAC)
 router.beforeEach((to) => {
+  // Lấy Auth Store trực tiếp bên trong callback của Navigation Guard
   const auth = useAuthStore()
 
   // 1. Nếu là trang Public
   if (to.meta.public) {
-    // Nếu đã đăng nhập mà cố vào login hoặc select-role -> chuyển về trang chủ
-    if ((to.name === 'login' || to.name === 'select-role') && auth.isAuthenticated) {
+    // Bổ sung 'register': Nếu đã đăng nhập (auth.isAuthenticated = true)
+    // mà cố truy cập vào login, register, hoặc select-role -> Chặn lại và đẩy về trang chủ
+    if (['login', 'select-role', 'register'].includes(to.name as string) && auth.isAuthenticated) {
       return { name: 'home' }
     }
     return true
   }
 
-  // 2. Nếu chưa đăng nhập -> chuyển hướng về trang Chọn Vai Trò (select-role)
+  // 2. Kiểm tra nếu chưa đăng nhập (!auth.isAuthenticated)
+  // -> Chuyển hướng về trang Chọn Vai Trò (select-role) kèm query redirect
   if (!auth.isAuthenticated) {
     return { name: 'select-role', query: { redirect: to.fullPath } }
   }
 
-  // 3. Kiểm tra Phân quyền theo Role
+  // 3. Kiểm tra Phân quyền theo Role (RBAC)
   const requiredRoles = to.meta.roles
   if (requiredRoles && requiredRoles.length > 0) {
     if (!auth.hasRole(requiredRoles)) {
-      return { name: 'home' } // Không đủ quyền thì về trang chủ
+      return { name: 'home' } // Không đủ quyền thì đẩy về trang chủ
     }
   }
 
   return true
 })
-
 export default router
