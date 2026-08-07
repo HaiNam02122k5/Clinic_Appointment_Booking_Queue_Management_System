@@ -80,6 +80,11 @@ namespace Clinic.Domain.Enums
         Rejected,
         Cancelled
     }
+    public enum DoctorStatus 
+    { 
+        Active, 
+        Inactive 
+    }
     public enum MedicalReportStatus 
     { 
         Draft, 

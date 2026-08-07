@@ -25,6 +25,10 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
 
             builder.Property(d => d.Qualification).HasMaxLength(300);
             builder.Property(d => d.Biography).HasMaxLength(1000);
+
+            builder.Property(d => d.Status)
+                .HasConversion<string>()
+                .HasMaxLength(20);
         }
     }
 }

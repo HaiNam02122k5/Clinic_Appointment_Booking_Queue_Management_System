@@ -21,14 +21,7 @@ namespace Clinic.Domain.Entities
 
         public string? Reason { get; set; }
 
-        public ShiftRequestStatus Status { get; set; } = ShiftRequestStatus.Pending;
+        //public ShiftRequestStatus Status { get; set; } = ShiftRequestStatus.Pending;
 
-        /// <summary>
-        /// Gắn với WorkSchedule được tạo ra sau khi yêu cầu này được duyệt.
-        /// NULL nếu chưa duyệt hoặc bị từ chối. Cần thiết để biết 1 WorkSchedule
-        /// có nguồn gốc từ ShiftRequest nào, hay do Admin tạo tay trực tiếp.
-        /// </summary>
-        public Guid? ApprovedWorkScheduleId { get; set; }
-        public WorkSchedule? ApprovedWorkSchedule { get; set; }
     }
 }

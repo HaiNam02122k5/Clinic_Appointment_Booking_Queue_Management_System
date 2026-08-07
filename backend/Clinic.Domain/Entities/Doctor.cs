@@ -1,4 +1,5 @@
 using Clinic.Domain.Common;
+using Clinic.Domain.Enums;
 using System;
 using System.Collections.Generic;
 
@@ -17,6 +18,7 @@ namespace Clinic.Domain.Entities
         public string? Qualification { get; set; }
 
         public string? Biography { get; set; }
+        public DoctorStatus Status { get; set; } = DoctorStatus.Active;
 
         public ICollection<WorkSchedule> WorkSchedules { get; set; } = new List<WorkSchedule>();
 
