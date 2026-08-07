@@ -38,11 +38,7 @@ namespace Clinic.Application.Services
                 }
 
                 // Override the person's details if not empty
-                existingPersonByPhone.FullName = fullName;
-                existingPersonByPhone.Email = email;
-                existingPersonByPhone.DateOfBirth = dateOfBirth;
-                existingPersonByPhone.Gender = gender;
-                existingPersonByPhone.Address = address;
+                existingPersonByPhone.UpdateDetails(email, gender, address);
                 await _personRepository.UpdateAsync(existingPersonByPhone);
                 return existingPersonByPhone;
             }

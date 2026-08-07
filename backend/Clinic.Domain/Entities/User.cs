@@ -7,15 +7,15 @@ namespace Clinic.Domain.Entities
 {
     public class User : BaseEntity
     {
-        public string Username { get; set; }
-        public string PasswordHash { get; set; }
-        public bool IsActive { get; set; } = true;
-        public Guid PersonId { get; set; }
+        public string Username { get; init; }
+        public string PasswordHash { get; protected set; }
+        public bool IsActive { get; protected set; } = true;
+        public Guid PersonId { get; protected set; }
 
         // Navigation
-        public Person Person { get; set; }
-        public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
-        public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+        public Person Person { get; protected set; }
+        public ICollection<UserRole> UserRoles { get; protected set; } = [];
+        public ICollection<RefreshToken> RefreshTokens { get; protected set; } = [];
 
         public User(string username, string passwordHash, Guid personId)
         {
@@ -42,6 +42,10 @@ namespace Clinic.Domain.Entities
             UserRoles = userRoles;
         }
 
+        /// <summary>
+        /// Updates the user's password hash.
+        /// </summary>
+        /// <exception cref="ArgumentException"></exception>
         public void UpdatePassword(string newPasswordHash)
         {
             if (string.IsNullOrWhiteSpace(newPasswordHash))
@@ -50,12 +54,21 @@ namespace Clinic.Domain.Entities
             MarkUpdated();
         }
 
+        /// <summary>
+        /// Changes the user's active status.
+        /// </summary>
         public void ChangeStatus(bool isActive)
         {
             IsActive = isActive;
             MarkUpdated();
         }
 
+        /// <summary>
+        /// Assigns a role to the user. If the user already has the role, an exception is thrown.
+        /// </summary>
+        /// <param name="role"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="ArgumentException"></exception>
         public void AssignRole(Role role)
         {
             if (role == null)

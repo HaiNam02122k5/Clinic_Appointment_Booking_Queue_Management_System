@@ -11,12 +11,15 @@ namespace Clinic.Domain.Entities
         public string TokenHash { get; init; }
         public DateTime IssuedAt { get; init; } = DateTime.UtcNow;
         public DateTime ExpiresAt { get; init; }
-        public DateTime? RevokedAt { get; set; }
-        public Guid UserId { get; set; }
+        public DateTime? RevokedAt { get; protected set; }
+        public Guid UserId { get; protected set; }
 
         // Navigation
-        public User User { get; set; }
+        public User User { get; protected set; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RefreshToken"/> class.
+        /// </summary>
         public RefreshToken(string tokenHash, DateTime expiresAt, Guid userId)
         {
             Id = Guid.NewGuid();
@@ -26,6 +29,9 @@ namespace Clinic.Domain.Entities
             UserId = userId;
         }
 
+        /// <summary>
+        /// Rebuild the RefreshToken entity from the database
+        /// </summary>
         public RefreshToken(Guid id, string tokenHash, DateTime issuedAt, DateTime expiresAt, DateTime? revokedAt, Guid userId)
         {
             Id = id;
@@ -34,6 +40,19 @@ namespace Clinic.Domain.Entities
             ExpiresAt = expiresAt;
             RevokedAt = revokedAt;
             UserId = userId;
+        }
+
+        /// <summary>
+        /// Revokes the refresh token 
+        /// </summary>
+        /// <exception cref="InvalidOperationException"></exception>
+        public void Revoke()
+        {
+            if (RevokedAt != null)
+            {
+                throw new InvalidOperationException("This token has already revoked");
+            }
+            RevokedAt = DateTime.UtcNow;
         }
     }
 

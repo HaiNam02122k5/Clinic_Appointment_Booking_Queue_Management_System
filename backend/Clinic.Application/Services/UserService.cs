@@ -14,11 +14,18 @@ namespace Clinic.Application.Services
             _passwordHasher = passwordHasher;
         }
 
+        /// <summary>
+        /// Gets a user by their unique identifier.
+        /// </summary>
         public async Task<User?> GetByIdAsync(Guid id)
         {
             return await _userRepository.GetByIdAsync(id);
         }
 
+
+        /// <summary>
+        /// Creates a new user with the specified username, password, and associated person ID. The password is hashed before being stored.
+        /// </summary>
         public async Task<User> CreateUserAsync(string username, string password, Guid personId)
         {
             var hashedPassword = _passwordHasher.HashPassword(password);
@@ -27,6 +34,10 @@ namespace Clinic.Application.Services
             return user;
         }
 
+        /// <summary>
+        /// Verifies a user's credentials by checking the provided username and password against stored data. If the credentials are valid, the corresponding user is returned; otherwise, an exception is thrown.
+        /// </summary>
+        /// <exception cref="ArgumentException"></exception>
         public async Task<User?> VerifyUser(string username, string password)
         {
             var user = await _userRepository.GetByUsernameAsync(username);

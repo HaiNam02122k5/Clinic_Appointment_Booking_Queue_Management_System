@@ -8,13 +8,13 @@ namespace Clinic.Domain.Entities
 {
     public class Person : BaseEntity
     {
-        public string FullName { get; set; }
-        public string PhoneNumber { get; set; }
-        public string? Email { get; set; }
-        public DateOnly DateOfBirth { get; set; }
-        public Gender Gender { get; set; }
-        public string Address { get; set; }
-        public bool IsDeleted { get; set; } = false;
+        public string FullName { get; init; }
+        public string PhoneNumber { get; init; }
+        public string? Email { get; protected set; }
+        public DateOnly DateOfBirth { get; init; }
+        public Gender Gender { get; protected set; }
+        public string Address { get; protected set; }
+        public bool IsDeleted { get; protected set; } = false;
 
         // Navigation
         public User? User { get; set; }
@@ -39,6 +39,17 @@ namespace Clinic.Domain.Entities
             Gender = gender;
             Address = address;
             IsDeleted = isDeleted;
+        }
+
+        /// <summary>
+        /// Updates the details of the person. Limited to email, gender, and address.
+        /// </summary>
+        public void UpdateDetails(string? email, Gender gender, string address)
+        {
+            Email = email;
+            Gender = gender;
+            Address = address;
+            MarkUpdated();
         }
     }
 }
