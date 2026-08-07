@@ -1,5 +1,5 @@
 // phân quyền người dùng
-export type UserRole = 'Patient' | 'Receptionist' | 'Doctor' | 'Admin' | 'TV'
+export type UserRole = 'Patient' | 'Receptionist' | 'Doctor' | 'Admin'
 
 export interface AuthUser {
   id: number
@@ -11,6 +11,7 @@ export interface AuthUser {
 export interface LoginPayload {
   email: string
   password: string
+  role: UserRole
 }
 
 export interface LoginResponse {

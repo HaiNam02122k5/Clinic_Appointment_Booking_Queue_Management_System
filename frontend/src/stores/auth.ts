@@ -56,20 +56,25 @@ export const useAuthStore = defineStore('auth', () => {
   async function register(payload: RegisterPayload) {
     status.value = 'loading'
     error.value = null
+
     try {
       // Giả lập API delay
       await new Promise((resolve) => setTimeout(resolve, 800))
 
-      // Mock thành công: Tạo tài khoản Bệnh nhân mới
-      user.value = {
-        id: 'usr_' + Date.now(),
+      // Mock đăng ký thành công
+      const newUser: AuthUser = {
+        id: Date.now(),
+        name: payload.fullName,
         email: payload.email,
-        fullName: payload.fullName,
         role: 'Patient',
-        phoneNumber: payload.phoneNumber,
       }
-      token.value = 'mock_jwt_token_' + Date.now()
-      localStorage.setItem('token', token.value)
+
+      const mockAccessToken = 'mock-access-token-' + Date.now()
+      const mockRefreshToken = 'mock-refresh-token-' + Date.now()
+
+      setToken(mockAccessToken, mockRefreshToken)
+      setUser(newUser)
+
       status.value = 'idle'
     } catch (e: unknown) {
       status.value = 'error'
@@ -97,5 +102,6 @@ export const useAuthStore = defineStore('auth', () => {
     logout,
     hasRole,
     login,
+    register
   }
 })

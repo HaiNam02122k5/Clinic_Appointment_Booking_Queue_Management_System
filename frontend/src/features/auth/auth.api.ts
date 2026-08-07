@@ -16,7 +16,7 @@ export const authApi = {
     return {
       accessToken: 'mock-access-token',
       refreshToken: 'mock-refresh-token',
-      user: { id: 1, name: 'Demo User', email: payload.email },
+      user: { id: 1, name: 'Demo User', email: payload.email, role: payload.role },
     }
   },
 }

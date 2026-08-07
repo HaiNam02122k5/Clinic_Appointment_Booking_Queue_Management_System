@@ -53,14 +53,8 @@ const roles: RoleOption[] = [
   },
 ]
 
-const todayShort = new Date().toLocaleDateString('vi-VN')
-
 function selectRole(role: UserRole) {
   router.push({ path: '/login', query: { role } })
-}
-
-function goToLogin() {
-  router.push('/login')
 }
 
 function getTagClass(color: RoleOption['tagColor']) {
@@ -99,7 +93,7 @@ function getTagClass(color: RoleOption['tagColor']) {
         </button>
         <button
           type="button"
-          @click="goToLogin"
+          @click="router.push('/login')"
           class="px-3.5 py-1.5 text-sm font-semibold rounded-xl text-[#0E4D92] border-2 border-[#0E4D92] hover:bg-blue-50 transition-all active:scale-[0.98]"
         >
           Đăng nhập

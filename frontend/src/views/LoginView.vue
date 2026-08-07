@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import type { UserRole } from '@/features/auth/auth.types'
+import { validators } from '@/utils/validators'
 
 const route = useRoute()
 const router = useRouter()
@@ -12,6 +13,11 @@ const selectedRole = ref<UserRole>('Patient')
 const email = ref('')
 const password = ref('password')
 const rememberMe = ref(false)
+
+const errors = ref({
+  email: '',
+  password: '',
+})
 
 const ROLE_META = {
   Patient: {
@@ -56,11 +62,48 @@ function switchRole(role: UserRole) {
   email.value = ROLE_META[role].hintEmail
 }
 
+function validateLogin(): boolean {
+  errors.value.email = ''
+  errors.value.password = ''
+
+  const emailRequired = validators.required(email.value, 'Email')
+
+  if (!emailRequired.isValid) {
+    errors.value.email = emailRequired.message
+  } else {
+    const emailValidation = validators.email(email.value)
+
+    if (!emailValidation.isValid) {
+      errors.value.email = emailValidation.message
+    }
+  }
+
+  const passwordRequired = validators.required(
+    password.value,
+    'Mật khẩu',
+  )
+
+  if (!passwordRequired.isValid) {
+    errors.value.password = passwordRequired.message
+  } else {
+    const passwordValidation = validators.password(password.value)
+
+    if (!passwordValidation.isValid) {
+      errors.value.password = passwordValidation.message
+    }
+  }
+
+  return !errors.value.email && !errors.value.password
+}
+
 async function handleLogin() {
+  if (!validateLogin()) return
+
   try {
     await authStore.login({
       email: email.value,
       password: password.value,
+      role: selectedRole.value,
     })
     const redirect = (route.query.redirect as string) || '/'
     router.replace(redirect)
@@ -148,6 +191,12 @@ function goBackToRoleSelect() {
               :placeholder="currentMeta.hintEmail"
               class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0E4D92] bg-white transition-all"
             />
+            <p
+              v-if="errors.email"
+              class="mt-1 text-xs text-red-500"
+            >
+              ⚠️ {{ errors.email }}
+            </p>
           </div>
 
           <div>
@@ -161,6 +210,12 @@ function goBackToRoleSelect() {
               placeholder="••••••••"
               class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0E4D92] bg-white transition-all"
             />
+            <p
+              v-if="errors.password"
+              class="mt-1 text-xs text-red-500"
+            >
+              ⚠️ {{ errors.password }}
+            </p>
           </div>
 
           <div class="flex items-center justify-between">
