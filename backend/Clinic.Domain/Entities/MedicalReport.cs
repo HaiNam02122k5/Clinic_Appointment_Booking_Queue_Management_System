@@ -5,11 +5,7 @@ using System;
 namespace Clinic.Domain.Entities
 {
     /// <summary>
-    /// Hồ sơ khám bệnh, gắn qua QueueTicketId (không phải AppointmentId) vì
-    /// mọi ca khám đều phải đi qua hàng đợi trước khi bác sĩ ghi nhận kết quả.
-    /// Appointment có thể ở trạng thái Cancelled/NoShow (chưa từng khám thật),
-    /// nên gắn qua QueueTicket đảm bảo MedicalReport chỉ tồn tại sau khi bệnh
-    /// nhân thực sự được khám.
+    /// Hồ sơ khám bệnh
     /// </summary>
     public class MedicalReport : BaseEntity
     {

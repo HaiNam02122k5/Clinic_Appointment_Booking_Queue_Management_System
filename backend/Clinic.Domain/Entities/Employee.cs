@@ -6,8 +6,6 @@ namespace Clinic.Domain.Entities
 {
     /// <summary>
     /// Thông tin nghiệp vụ của nhân viên (Doctor/Receptionist/Admin).
-    /// Vai trò cụ thể được xác định qua Role của User, không phải qua subtype riêng
-    /// (đã bỏ bảng Admin/Receptionist thừa vì không có thuộc tính riêng).
     /// </summary>
     public class Employee : BaseEntity
     {

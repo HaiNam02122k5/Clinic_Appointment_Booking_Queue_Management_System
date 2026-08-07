@@ -10,11 +10,6 @@ namespace Clinic.Domain.Entities
 
         public string? Description { get; set; }
 
-        /// <summary>
-        /// Không còn navigation trực tiếp tới Doctor (đã bỏ Doctor.SpecialtyId).
-        /// Muốn tìm bác sĩ thuộc chuyên khoa này, query qua WorkHistory
-        /// (WHERE SpecialtyId = this.Id AND Status == Active).
-        /// </summary>
         public ICollection<WorkHistory> WorkHistories { get; set; } = new List<WorkHistory>();
     }
 }
