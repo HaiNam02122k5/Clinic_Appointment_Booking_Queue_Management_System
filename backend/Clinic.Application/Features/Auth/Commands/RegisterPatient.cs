@@ -38,7 +38,7 @@ namespace Clinic.Application.Features.Auth.Commands
             Console.WriteLine(newPerson.Id);
 
             // Create a new user entity and associate it with the person
-            var existingUser = await _userService.CreateUserAsync(command.Username, command.Password, newPerson.Id);
+            var existingUser = await _userService.CreateUserAsync(command.Username, command.Password, newPerson);
 
             // Assign the "Patient" role to the new user
             existingUser.AssignRole(await _roleRepository.GetByNameAsync("Patient"));

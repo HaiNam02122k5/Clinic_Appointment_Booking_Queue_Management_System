@@ -24,12 +24,12 @@ namespace Clinic.Application.Services
 
 
         /// <summary>
-        /// Creates a new user with the specified username, password, and associated person ID. The password is hashed before being stored.
+        /// Creates a new user with the specified username, password, and associated person. The password is hashed before being stored.
         /// </summary>
-        public async Task<User> CreateUserAsync(string username, string password, Guid personId)
+        public async Task<User> CreateUserAsync(string username, string password, Person person)
         {
             var hashedPassword = _passwordHasher.HashPassword(password);
-            var user = new User(username, hashedPassword, personId);
+            var user = new User(username, hashedPassword, person);
             await _userRepository.AddAsync(user);
             return user;
         }

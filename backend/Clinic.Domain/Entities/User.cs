@@ -17,7 +17,7 @@ namespace Clinic.Domain.Entities
         public ICollection<UserRole> UserRoles { get; protected set; } = [];
         public ICollection<RefreshToken> RefreshTokens { get; protected set; } = [];
 
-        public User(string username, string passwordHash, Guid personId)
+        public User(string username, string passwordHash, Person person)
         {
             if (string.IsNullOrWhiteSpace(username))
                 throw new ArgumentException("Username cannot be null or empty.", nameof(username));
@@ -25,9 +25,13 @@ namespace Clinic.Domain.Entities
             if (string.IsNullOrWhiteSpace(passwordHash))
                 throw new ArgumentException("Password hash cannot be null or empty.", nameof(passwordHash));
 
+            if (person == null)
+                throw new ArgumentNullException("Person cannot be null.", nameof(person));
+
             Username = username;
             PasswordHash = passwordHash;
-            PersonId = personId;
+            Person = person;
+            PersonId = person.Id;
             IsActive = true;
         }
 
@@ -78,6 +82,17 @@ namespace Clinic.Domain.Entities
                 throw new ArgumentException($"User already has the role '{role.Name}' assigned.");
             }
             UserRoles.Add(new UserRole(this.Id, role.Id));
+            MarkUpdated();
+        }
+
+        public void RemoveRole(Role role)
+        {
+            if (role == null)
+                throw new ArgumentNullException(nameof(role), "Role cannot be null.");
+            var userRole = UserRoles.FirstOrDefault(ur => ur.RoleId == role.Id);
+            if (userRole == null)
+                throw new ArgumentException($"User does not have the role '{role.Name}' assigned.");
+            UserRoles.Remove(userRole);
             MarkUpdated();
         }
     }
