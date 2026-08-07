@@ -1,12 +1,15 @@
-﻿using Clinic.Domain.Common;
+using Clinic.Domain.Common;
+using System.Collections.Generic;
 
 namespace Clinic.Domain.Entities
 {
     public class Permission : BaseEntity
     {
-        public string Name { get; set; }
-        public string Description { get; set; }
+        /// <summary>UNIQUE. Ví dụ: "appointment.cancel", "queue.call-next".</summary>
+        public string Name { get; set; } = string.Empty;
 
-        public ICollection<RolePermission> RolePermissions { get; set; }
+        public string? Description { get; set; }
+
+        public ICollection<RolePermission> RolePermissions { get; set; } = new List<RolePermission>();
     }
 }

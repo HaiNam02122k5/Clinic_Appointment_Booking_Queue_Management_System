@@ -1,4 +1,4 @@
-﻿using Clinic.Domain.Entities;
+using Clinic.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -12,16 +12,19 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
 
             builder.HasKey(u => u.Id);
 
-            builder.Property(u => u.Username).IsRequired().HasMaxLength(30);
-            builder.Property(u => u.PasswordHash).IsRequired();
-            builder.Property(u => u.CreatedAt).IsRequired();
-            builder.Property(u => u.IsActive).IsRequired();
+            builder.Property(u => u.Username)
+                .IsRequired()
+                .HasMaxLength(100);
+
             builder.HasIndex(u => u.Username).IsUnique();
 
+            builder.Property(u => u.PasswordHash).IsRequired();
+
+            // Quan hệ 0..1 - 0..1 với Person: 1 Person chỉ có tối đa 1 User.
             builder.HasOne(u => u.Person)
                 .WithOne(p => p.User)
                 .HasForeignKey<User>(u => u.PersonId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasIndex(u => u.PersonId).IsUnique();
         }

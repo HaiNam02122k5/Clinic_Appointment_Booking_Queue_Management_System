@@ -1,21 +1,28 @@
-﻿using Clinic.Domain.Common;
+using Clinic.Domain.Common;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Clinic.Domain.Entities
 {
+    /// <summary>
+    /// Tài khoản đăng nhập. Không phải mọi Person đều có User (VD: khách vãng lai).
+    /// </summary>
     public class User : BaseEntity
     {
-        public string Username { get; init; }
-        public string PasswordHash { get; protected set; }
-        public bool IsActive { get; protected set; } = true;
-        public Guid PersonId { get; protected set; }
+        /// <summary>FK, UNIQUE - 1 Person chỉ có tối đa 1 tài khoản.</summary>
+        public Guid PersonId { get; set; }
+        public Person Person { get; set; } = null!;
 
-        // Navigation
-        public Person Person { get; protected set; }
-        public ICollection<UserRole> UserRoles { get; protected set; } = [];
-        public ICollection<RefreshToken> RefreshTokens { get; protected set; } = [];
+        /// <summary>UNIQUE.</summary>
+        public string Username { get; set; } = string.Empty;
+
+        public string PasswordHash { get; set; } = string.Empty;
+
+        public bool IsActive { get; set; } = true;
+
+        public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+
+        public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 
         public User(string username, string passwordHash, Person person)
         {
@@ -97,4 +104,3 @@ namespace Clinic.Domain.Entities
         }
     }
 }
-

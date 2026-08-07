@@ -3,9 +3,8 @@ using System;
 namespace Clinic.Domain.Common
 {
     /// <summary>
-    /// Lớp cơ sở (Base) cho mọi Entity trong tầng Domain.
-    /// Gom các thuộc tính dùng chung: khóa chính (Id) và mốc thời gian (audit).
-    /// Các Entity khác chỉ cần kế thừa lớp này để có sẵn Id, CreatedAt, UpdatedAt.
+    /// Lớp cơ sở cho mọi entity trong Domain.
+    /// Cung cấp Id, thời gian tạo/cập nhật và soft-delete dùng chung.
     /// </summary>
     public abstract class BaseEntity
     {
@@ -27,23 +26,8 @@ namespace Clinic.Domain.Common
         }
 
         /// <summary>
-        /// Dùng khi dựng lại (rehydrate) Entity từ dữ liệu đã có trong database,
-        /// giữ nguyên Id và các mốc thời gian gốc.
+        /// Soft-delete: API GET mặc định lọc IsDeleted = false.
         /// </summary>
-        protected BaseEntity(Guid id, DateTime createdAt, DateTime? updatedAt)
-        {
-            Id = id;
-            CreatedAt = createdAt;
-            UpdatedAt = updatedAt;
-        }
-
-        /// <summary>
-        /// Đánh dấu Entity vừa được thay đổi. Gọi trong các phương thức nghiệp vụ
-        /// làm thay đổi trạng thái để cập nhật lại mốc thời gian.
-        /// </summary>
-        protected void MarkUpdated()
-        {
-            UpdatedAt = DateTime.UtcNow;
-        }
+        public bool IsDeleted { get; set; } = false;
     }
 }

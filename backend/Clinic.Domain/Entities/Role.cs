@@ -1,23 +1,20 @@
-﻿using Clinic.Domain.Common;
+using Clinic.Domain.Common;
+using System.Collections.Generic;
 
 namespace Clinic.Domain.Entities
 {
+    /// <summary>
+    /// Vai trò: Admin, Doctor, Receptionist, Patient.
+    /// </summary>
     public class Role : BaseEntity
     {
-        public string Name { get; set; }
-        public string Description { get; set; }
-        public bool IsDeleted { get; set; } = false;
+        /// <summary>UNIQUE.</summary>
+        public string Name { get; set; } = string.Empty;
 
-        // Navigation
-        public ICollection<UserRole> UserRoles { get; set; }
-        public ICollection<RolePermission> RolePermissions { get; set; }
+        public string? Description { get; set; }
 
-        private Role() { }
-        public Role(Guid id, string name, string description, DateTime createdAt, DateTime updatedAt, bool isDeleted) : base(id, createdAt, updatedAt)
-        {
-            this.Name = name;
-            this.Description = description;
-            this.IsDeleted = isDeleted;
-        }
+        public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+
+        public ICollection<RolePermission> RolePermissions { get; set; } = new List<RolePermission>();
     }
 }

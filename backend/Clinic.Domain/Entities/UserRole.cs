@@ -1,22 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using System;
 
 namespace Clinic.Domain.Entities
 {
+    /// <summary>
+    /// Bảng trung gian N-N giữa User và Role.
+    /// Khóa chính kép (UserId, RoleId)
+    /// </summary>
     public class UserRole
     {
         public Guid UserId { get; set; }
+        public User User { get; set; } = null!;
+
         public Guid RoleId { get; set; }
-
-        // Navigation
-        public User User { get; set; }
-        public Role Role { get; set; }
-
-        public UserRole(Guid userId, Guid roleId)
-        {
-            UserId = userId;
-            RoleId = roleId;
-        }
+        public Role Role { get; set; } = null!;
     }
 }

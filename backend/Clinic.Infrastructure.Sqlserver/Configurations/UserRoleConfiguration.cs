@@ -1,4 +1,4 @@
-﻿using Clinic.Domain.Entities;
+using Clinic.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -8,12 +8,20 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
     {
         public void Configure(EntityTypeBuilder<UserRole> builder)
         {
-            builder.ToTable("UserRole");
+            builder.ToTable("UserRoles");
 
+            // Khóa chính kép (UserId, RoleId)
             builder.HasKey(ur => new { ur.UserId, ur.RoleId });
 
-            builder.Property(ur => ur.UserId).IsRequired();
-            builder.Property(ur => ur.RoleId).IsRequired();
+            builder.HasOne(ur => ur.User)
+                .WithMany(u => u.UserRoles)
+                .HasForeignKey(ur => ur.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(ur => ur.Role)
+                .WithMany(r => r.UserRoles)
+                .HasForeignKey(ur => ur.RoleId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

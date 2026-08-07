@@ -1,21 +1,27 @@
-﻿using Clinic.Domain.Common;
+using Clinic.Domain.Common;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Clinic.Domain.Entities
 {
-    public class RefreshToken
+    /// <summary>
+    /// Lưu refresh token dạng hash (không lưu token gốc) để có thể thu hồi
+    /// (RevokedAt) khi đăng xuất, và phát hiện token bị đánh cắp nếu dùng lại
+    /// một token đã bị thu hồi/hết hạn.
+    /// </summary>
+    public class RefreshToken : BaseEntity
     {
-        public Guid Id { get; init; }
-        public string TokenHash { get; init; }
-        public DateTime IssuedAt { get; init; } = DateTime.UtcNow;
-        public DateTime ExpiresAt { get; init; }
-        public DateTime? RevokedAt { get; protected set; }
-        public Guid UserId { get; protected set; }
+        public Guid UserId { get; set; }
+        public User User { get; set; } = null!;
 
-        // Navigation
-        public User User { get; protected set; }
+        /// <summary>Hash của refresh token, không lưu giá trị gốc.</summary>
+        public string TokenHash { get; set; } = string.Empty;
+
+        public DateTime IssuedAt { get; set; } = DateTime.UtcNow;
+
+        public DateTime ExpiresAt { get; set; }
+
+        /// <summary>NULL nếu token vẫn còn hiệu lực; có giá trị khi đã bị thu hồi (logout, refresh 1 lần...).</summary>
+        public DateTime? RevokedAt { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RefreshToken"/> class.
@@ -55,5 +61,4 @@ namespace Clinic.Domain.Entities
             RevokedAt = DateTime.UtcNow;
         }
     }
-
 }

@@ -2,7 +2,9 @@ using System.Reflection;
 using Clinic.Application.Interfaces;
 using Mapster;
 using MapsterMapper;
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using System.Reflection;
 
 namespace Clinic.Application
 {
@@ -10,8 +12,11 @@ namespace Clinic.Application
     {
         public static IServiceCollection AddApplication(this IServiceCollection services)
         {
-            // Register MediatR
-            services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
+            // Đăng ký toàn bộ Handler (IRequestHandler<...>) trong assembly này.
+            // Khi nhóm thêm Command/Query dưới Features/, MediatR sẽ tự tìm thấy,
+            // không cần đăng ký thủ công từng handler.
+            services.AddMediatR(cfg =>
+                cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 
             // Register Mapster Config
             var config = TypeAdapterConfig.GlobalSettings;
@@ -20,6 +25,9 @@ namespace Clinic.Application
             services.AddScoped<IMapper, Mapper>();
 
             // Application services are registered via the infrastructure layer.
+            // TODO: nếu dùng Mapster theo pattern IRegister, quét cấu hình mapping tại đây:
+            // TypeAdapterConfig.GlobalSettings.Scan(Assembly.GetExecutingAssembly());
+
             return services;
         }
     }
