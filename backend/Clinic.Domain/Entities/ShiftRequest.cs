@@ -21,7 +21,7 @@ namespace Clinic.Domain.Entities
 
         public string? Reason { get; set; }
 
-        //public ShiftRequestStatus Status { get; set; } = ShiftRequestStatus.Pending;
+        public ShiftRequestStatus Status { get; set; } = ShiftRequestStatus.Pending;
 
     }
 }
