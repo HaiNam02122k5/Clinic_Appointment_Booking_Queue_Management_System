@@ -20,7 +20,7 @@ namespace Clinic.Application.UnitTests.Services
         }
 
         [Fact]
-        public async Task TestPersonCreationDuplicatePhoneNumberUniqueEmail()
+        public async Task TestPersonCreationDuplicatePhone()
         {
             var personRepository = new FakePersonRepository();
             var personService = new PersonService(personRepository);
@@ -34,53 +34,23 @@ namespace Clinic.Application.UnitTests.Services
         }
 
         [Fact]
-        public async Task TestPersonCreationDuplicatePhoneNumberDuplicateEmail()
-        {
-            var personRepository = new FakePersonRepository();
-            var personService = new PersonService(personRepository);
-            var person1 = TestDataFactory.CreatePerson("Full Name", "0123456789", "full.name@example.com", "123 Abc St.");
-            await personRepository.AddAsync(person1);
-            var id = person1.Id;
-            var person2 = await personService.CreateOrGetPersonAsync("Full Name", "0123456789", "full.name@example.com", new DateOnly(2000, 1, 1), Domain.Enums.Gender.Female, "456 Def St.");
-            Assert.NotNull(person2);
-            Assert.Equal(id, person2.Id);
-        }
-
-        [Fact]
-        public async Task TestPersonCreationDuplicatePhoneNumberSameEmailWithAnother()
-        {
-            var personRepository = new FakePersonRepository();
-            var personService = new PersonService(personRepository);
-            var person1 = TestDataFactory.CreatePerson("Full Name", "0123456789", "full.name1@example.com", "123 Abc St.");
-            var person2 = TestDataFactory.CreatePerson("Another Name", "0123456788", "full.name2@example.com", "456 Def St.");
-            await personRepository.AddAsync(person1);
-            await personRepository.AddAsync(person2);
-            var id = person1.Id;
-            await Assert.ThrowsAsync<ArgumentException>(() => personService.CreateOrGetPersonAsync("Diff Name", "0123456789", "full.name2@example.com", new DateOnly(2000, 1, 1), Domain.Enums.Gender.Female, "456 Def St."));
-        }
-
-        [Fact]
-        public async Task TestPersonCreationNoPhoneUniqueEmail()
+        public async Task TestPersonCreationNoPhone()
         {
             var personRepository = new FakePersonRepository();
             var personService = new PersonService(personRepository);
             var person1 = TestDataFactory.CreatePerson("Full Name", "0123456789", "full.name1@example.com", "123 Abc St.");
             await personRepository.AddAsync(person1);
 
+            // Creating new person with no phone number should succeed
             var person2 = await personService.CreateOrGetPersonAsync("Full Name", null, "full.name2@example.com", new DateOnly(2000, 1, 1), Domain.Enums.Gender.Female, "456 Def St.");
             Assert.NotNull(person2);
             Assert.NotEqual(person1.Id, person2.Id);
-        }
+            Assert.NotNull(await personRepository.GetByIdAsync(person2.Id));
 
-        [Fact]
-        public async Task TestPersonCreationNoPhoneDuplicateEmail()
-        {
-            var personRepository = new FakePersonRepository();
-            var personService = new PersonService(personRepository);
-            var person1 = TestDataFactory.CreatePerson("Full Name", "0123456789", "full.name1@example.com", "123 Abc St.");
-            await personRepository.AddAsync(person1);
-
-            await Assert.ThrowsAsync<ArgumentException>(() => personService.CreateOrGetPersonAsync("Full Name", null, "full.name1@example.com", new DateOnly(2000, 1, 1), Domain.Enums.Gender.Female, "456 Def St."));
+            // Creating new person with no phone number and same basic info should return the existing person
+            var remakePerson2 = await personService.CreateOrGetPersonAsync("Full Name", null, "full.name3@example.com", new DateOnly(2000, 1, 1), Domain.Enums.Gender.Female, "789 Ghi St.");
+            Assert.NotNull(remakePerson2);
+            Assert.Equal(person2.Id, remakePerson2.Id);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Clinic.Application.Interfaces;
 using Clinic.Domain.Entities;
+using Clinic.Domain.Enums;
 
 namespace Clinic.Application.UnitTests.Common
 {
@@ -15,6 +16,11 @@ namespace Clinic.Application.UnitTests.Common
         public Task DeleteAsync(Guid id)
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<Person?> GetByBasicInfoAsync(string fullName, DateOnly dateOfBirth, Gender gender)
+        {
+            return _people.FirstOrDefault(p => p.FullName == fullName && p.DateOfBirth == dateOfBirth && p.Gender == gender);
         }
 
         public async Task<Person?> GetByEmailAsync(string email)

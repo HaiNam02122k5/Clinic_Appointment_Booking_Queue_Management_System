@@ -14,7 +14,7 @@ namespace Clinic.Domain.Entities
         public string FullName { get; set; } = string.Empty;
 
         /// <summary>UNIQUE. Dùng để tra cứu tránh tạo trùng hồ sơ khi khách vãng lai.</summary>
-        public string PhoneNumber { get; set; } = string.Empty;
+        public string? PhoneNumber { get; set; } = string.Empty;
 
         public string? Email { get; set; }
 

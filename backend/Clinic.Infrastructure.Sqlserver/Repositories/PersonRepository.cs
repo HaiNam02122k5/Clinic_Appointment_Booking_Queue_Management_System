@@ -2,6 +2,7 @@
 using Clinic.Infrastructure.Sqlserver.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Clinic.Application.Interfaces;
+using Clinic.Domain.Enums;
 
 namespace Clinic.Infrastructure.Sqlserver.Repositories
 {
@@ -95,6 +96,11 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
         {
             _dbContext.Persons.Update(person);
             await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<Person?> GetByBasicInfoAsync(string fullName, DateOnly dateOfBirth, Gender gender)
+        {
+            return await _dbContext.Persons.Include(p => p.User).FirstOrDefaultAsync(p => p.FullName == fullName && p.DateOfBirth == dateOfBirth && p.Gender == gender);
         }
     }
 }
