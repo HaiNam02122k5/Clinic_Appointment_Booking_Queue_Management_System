@@ -51,5 +51,11 @@ namespace Clinic.Domain.Entities
             Address = address;
             MarkUpdated();
         }
+
+        public void Delete()
+        {
+            IsDeleted = true;
+            MarkUpdated();
+        }
     }
 }

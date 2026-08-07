@@ -1,5 +1,4 @@
 ﻿using Clinic.Domain.Entities;
-using Clinic.Infrastructure.Sqlserver.Models;
 using Clinic.Infrastructure.Sqlserver.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Clinic.Application.Interfaces;
@@ -83,7 +82,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             var person = await _dbContext.Persons.FindAsync(id);
             if (person != null)
             {
-                person.IsDeleted = true;
+                person.Delete();
                 _dbContext.Persons.Update(person);
                 await _dbContext.SaveChangesAsync();
             }
