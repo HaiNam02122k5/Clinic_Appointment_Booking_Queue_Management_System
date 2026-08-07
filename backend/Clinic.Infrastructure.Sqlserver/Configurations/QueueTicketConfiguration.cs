@@ -24,6 +24,8 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
 
             builder.Property(q => q.QueueNumber).IsRequired();
 
+            builder.Property(q => q.CheckInTime).IsRequired();
+
             builder.Property(q => q.Status)
                 .HasConversion<string>()
                 .HasMaxLength(20);

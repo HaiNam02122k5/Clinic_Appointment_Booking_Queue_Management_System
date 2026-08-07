@@ -17,7 +17,7 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
                 .HasForeignKey(w => w.DoctorId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.Property(w => w.PatientLimit).IsRequired();
+            builder.Property(w => w.PatientLimitPerSlot).IsRequired();
 
             builder.Property(w => w.Status)
                 .HasConversion<string>()

@@ -1,10 +1,12 @@
-using Clinic.Domain.Common;
 using System;
 
 namespace Clinic.Domain.Entities
 {
-    /// <summary>Bảng trung gian N-N giữa Role và Permission. Xem ghi chú ở UserRole.</summary>
-    public class RolePermission : BaseEntity
+    /// <summary>
+    /// Bảng trung gian N-N giữa Role và Permission.
+    /// Khóa chính kép (RoleId, PermissionId)
+    /// </summary>
+    public class RolePermission
     {
         public Guid RoleId { get; set; }
         public Role Role { get; set; } = null!;

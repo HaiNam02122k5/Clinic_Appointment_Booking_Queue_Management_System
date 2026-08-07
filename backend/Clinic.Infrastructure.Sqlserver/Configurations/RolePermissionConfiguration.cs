@@ -10,7 +10,8 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
         {
             builder.ToTable("RolePermissions");
 
-            builder.HasKey(rp => rp.Id);
+            // Khóa chính kép (RoleId, PermissionId)
+            builder.HasKey(rp => new { rp.RoleId, rp.PermissionId });
 
             builder.HasOne(rp => rp.Role)
                 .WithMany(r => r.RolePermissions)
@@ -21,8 +22,6 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
                 .WithMany(p => p.RolePermissions)
                 .HasForeignKey(rp => rp.PermissionId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            builder.HasIndex(rp => new { rp.RoleId, rp.PermissionId }).IsUnique();
         }
     }
 }

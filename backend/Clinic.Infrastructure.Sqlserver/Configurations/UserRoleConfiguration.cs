@@ -10,7 +10,8 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
         {
             builder.ToTable("UserRoles");
 
-            builder.HasKey(ur => ur.Id);
+            // Khóa chính kép (UserId, RoleId)
+            builder.HasKey(ur => new { ur.UserId, ur.RoleId });
 
             builder.HasOne(ur => ur.User)
                 .WithMany(u => u.UserRoles)
@@ -21,9 +22,6 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
                 .WithMany(r => r.UserRoles)
                 .HasForeignKey(ur => ur.RoleId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            // Đảm bảo 1 User không bị gán trùng 1 Role nhiều lần.
-            builder.HasIndex(ur => new { ur.UserId, ur.RoleId }).IsUnique();
         }
     }
 }

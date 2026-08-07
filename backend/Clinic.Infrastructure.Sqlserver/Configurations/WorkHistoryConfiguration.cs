@@ -18,7 +18,7 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasOne(w => w.Specialty)
-                .WithMany()
+                .WithMany(s => s.WorkHistories)
                 .HasForeignKey(w => w.SpecialtyId)
                 .OnDelete(DeleteBehavior.Restrict);
 

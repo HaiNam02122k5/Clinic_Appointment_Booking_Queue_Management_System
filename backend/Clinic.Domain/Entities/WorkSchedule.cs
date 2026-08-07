@@ -15,7 +15,7 @@ namespace Clinic.Domain.Entities
 
         public DateTime ShiftEnd { get; set; }
 
-        public int PatientLimit { get; set; }
+        public int PatientLimitPerSlot { get; set; }
 
         public WorkScheduleStatus Status { get; set; } = WorkScheduleStatus.Active;
 

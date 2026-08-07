@@ -10,14 +10,6 @@ namespace Clinic.Domain.Entities
         public Guid EmployeeId { get; set; }
         public Employee Employee { get; set; } = null!;
 
-        /// <summary>
-        /// Chuyên khoa hiện tại - đặt trực tiếp trên Doctor để tra cứu nhanh
-        /// (không phải đi qua bảng lịch sử chuyển khoa) vì đây là truy vấn được
-        /// gọi liên tục ("tìm bác sĩ theo chuyên khoa").
-        /// </summary>
-        public Guid SpecialtyId { get; set; }
-        public Specialty Specialty { get; set; } = null!;
-
         public string LicenseNumber { get; set; } = string.Empty;
 
         public int? ExperienceYears { get; set; }
@@ -28,6 +20,13 @@ namespace Clinic.Domain.Entities
 
         public ICollection<WorkSchedule> WorkSchedules { get; set; } = new List<WorkSchedule>();
 
+        /// <summary>
+        /// Nguồn duy nhất để biết chuyên khoa của bác sĩ (đã bỏ Doctor.SpecialtyId
+        /// theo quyết định của nhóm - tránh 2 nơi lưu trùng thông tin dễ lệch dữ liệu).
+        /// Chuyên khoa hiện tại = bản ghi có Status == WorkHistoryStatus.Active
+        /// (tầng Service nên cung cấp helper method, ví dụ Doctor.GetCurrentSpecialty(),
+        /// thay vì để Controller tự query LINQ mỗi lần).
+        /// </summary>
         public ICollection<WorkHistory> WorkHistories { get; set; } = new List<WorkHistory>();
 
         public ICollection<ShiftRequest> ShiftRequests { get; set; } = new List<ShiftRequest>();

@@ -24,6 +24,9 @@ namespace Clinic.Domain.Entities
 
         public QueueStatus Status { get; set; } = QueueStatus.Waiting;
 
+        /// <summary>Thời điểm bệnh nhân check-in, sinh số thứ tự.</summary>
+        public DateTime CheckInTime { get; set; } = DateTime.UtcNow;
+
         public DateTime? CalledAt { get; set; }
 
         /// <summary>0..1 - chỉ có sau khi bác sĩ khám xong.</summary>

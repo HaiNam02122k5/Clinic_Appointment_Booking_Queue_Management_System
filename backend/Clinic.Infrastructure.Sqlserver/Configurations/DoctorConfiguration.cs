@@ -19,13 +19,6 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
 
             builder.HasIndex(d => d.EmployeeId).IsUnique();
 
-            // Chuyên khoa hiện tại đặt trực tiếp trên Doctor để tra cứu nhanh
-            // (không phải đi qua bảng lịch sử) - xem ghi chú trong Doctor.cs.
-            builder.HasOne(d => d.Specialty)
-                .WithMany(s => s.Doctors)
-                .HasForeignKey(d => d.SpecialtyId)
-                .OnDelete(DeleteBehavior.Restrict);
-
             builder.Property(d => d.LicenseNumber)
                 .IsRequired()
                 .HasMaxLength(50);
