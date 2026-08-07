@@ -28,7 +28,7 @@ namespace Clinic.Domain.Entities
             if (person == null)
                 throw new ArgumentNullException("Person cannot be null.", nameof(person));
 
-            Username = username;
+            Username = username.Trim();
             PasswordHash = passwordHash;
             Person = person;
             PersonId = person.Id;

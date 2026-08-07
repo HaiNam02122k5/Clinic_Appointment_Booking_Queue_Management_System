@@ -19,7 +19,7 @@ namespace Clinic.Application.Features.Auth.Commands
     public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Guid>
     {
         private readonly UserService _userService;
-        private readonly IPersonService _personService;
+        private readonly PersonService _personService;
         private readonly IRoleRepository _roleRepository;
         private readonly IUnitOfWork _unitOfWork;
 
@@ -35,7 +35,6 @@ namespace Clinic.Application.Features.Auth.Commands
         {
             // Create a new person entity
             var newPerson = await _personService.CreateOrGetPersonAsync(command.FullName, command.PhoneNumber, command.Email, command.DateOfBirth, command.Gender, command.Address);
-            Console.WriteLine(newPerson.Id);
 
             // Create a new user entity and associate it with the person
             var existingUser = await _userService.CreateUserAsync(command.Username, command.Password, newPerson);

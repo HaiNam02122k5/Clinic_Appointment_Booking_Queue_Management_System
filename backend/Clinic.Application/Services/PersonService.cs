@@ -15,6 +15,29 @@ namespace Clinic.Application.Services
 
         public async Task<Person> CreateOrGetPersonAsync(string fullName, string phoneNumber, string email, DateOnly dateOfBirth, Gender gender, string address)
         {
+            // If no phone number, check for existing person by email. If not found, create a new person with null phone number.
+            if (string.IsNullOrWhiteSpace(phoneNumber))
+            {
+                if (!string.IsNullOrWhiteSpace(email))
+                {
+                    var existingPersonByEmail = await _personRepository.GetByEmailAsync(email);
+                    if (existingPersonByEmail != null)
+                    {
+                        throw new ArgumentException("Email has been taken");
+                    }
+                }
+
+                var newPerson = new Person
+                (
+                    fullName: fullName,
+                    phoneNumber: null,
+                    email: string.IsNullOrEmpty(email) ? null : email,
+                    dateOfBirth: dateOfBirth,
+                    gender: gender,
+                    address: address
+                );
+                return newPerson;
+            }
             // Check if a person with the same phone number already exists
             // The clinic uses phone number as a unique identifier for patients.
             // If a patient already exists with the same phone number, link that profile to the new user account. If not, create a new person profile.
