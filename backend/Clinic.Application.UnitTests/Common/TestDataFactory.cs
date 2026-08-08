@@ -23,5 +23,11 @@ namespace Clinic.Application.UnitTests.Common
             var newUser = new User(username, passwordHash, person ?? CreatePerson());
             return newUser;
         }
+
+        public static RefreshToken CreateRefreshToken(string hashedToken)
+        {
+            var refreshToken = new RefreshToken(hashedToken, DateTime.UtcNow.AddDays(7), Guid.NewGuid());
+            return refreshToken;
+        }
     }
 }
