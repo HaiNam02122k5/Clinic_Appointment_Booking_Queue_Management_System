@@ -33,6 +33,12 @@ namespace Clinic.Application.Features.Auth.Commands
 
         public async Task<Guid> Handle(RegisterCommand command, CancellationToken cancellationToken)
         {
+            // Phone number is required for patient registration via mobile app
+            if (string.IsNullOrWhiteSpace(command.PhoneNumber))
+            {
+                throw new ArgumentException("Phone number is required.");
+            }
+
             // Create a new person entity
             var newPerson = await _personService.CreateOrGetPersonAsync(command.FullName, command.PhoneNumber, command.Email, command.DateOfBirth, command.Gender, command.Address);
 
