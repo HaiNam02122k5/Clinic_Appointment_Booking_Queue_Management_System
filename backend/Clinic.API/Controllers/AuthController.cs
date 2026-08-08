@@ -24,7 +24,18 @@ namespace Clinic.API.Controllers
         {
             var command = _mapper.Map<LoginCommand>(request);
             var response = await _sender.Send(command);
-            return Ok(response);
+            Response.Cookies.Append("refreshToken", response.RefreshToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTimeOffset.UtcNow.AddDays(7),
+                Path = "/auth"
+            });
+            return Ok(new
+            {
+                accessToken = response.AccessToken
+            });
         }
 
         [HttpPost("register")]
