@@ -13,7 +13,8 @@ namespace Clinic.Application.UnitTests.Features.Auth.Commands
             FakePasswordHasher hasher = new FakePasswordHasher();
             FakeTokenProvider tokenProvider = new FakeTokenProvider();
             FakeRefreshTokenRepository refreshTokenRepository = new FakeRefreshTokenRepository();
-            LoginCommandHandler handler = new LoginCommandHandler(userRepository, hasher, tokenProvider, refreshTokenRepository);
+            FakeUnitOfWork unitOfWork = new FakeUnitOfWork();
+            LoginCommandHandler handler = new LoginCommandHandler(userRepository, hasher, tokenProvider, refreshTokenRepository, unitOfWork);
             var person = TestDataFactory.CreatePerson();
             var user = TestDataFactory.CreateUser("testuser", hasher.HashPassword("password"), person);
             await userRepository.AddAsync(user);
@@ -42,7 +43,8 @@ namespace Clinic.Application.UnitTests.Features.Auth.Commands
             FakePasswordHasher hasher = new FakePasswordHasher();
             FakeTokenProvider tokenProvider = new FakeTokenProvider();
             FakeRefreshTokenRepository refreshTokenRepository = new FakeRefreshTokenRepository();
-            LoginCommandHandler handler = new LoginCommandHandler(userRepository, hasher, tokenProvider, refreshTokenRepository);
+            FakeUnitOfWork unitOfWork = new FakeUnitOfWork();
+            LoginCommandHandler handler = new LoginCommandHandler(userRepository, hasher, tokenProvider, refreshTokenRepository, unitOfWork);
             var person = TestDataFactory.CreatePerson();
             var user = TestDataFactory.CreateUser("testuser", hasher.HashPassword("password"), person);
             await userRepository.AddAsync(user);

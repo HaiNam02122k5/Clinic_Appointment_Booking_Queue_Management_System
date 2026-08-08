@@ -8,10 +8,12 @@ namespace Clinic.Application.Features.Auth.Commands
     {
         private readonly IRefreshTokenRepository _refreshTokenRepository;
         private readonly ITokenProvider _tokenProvider;
-        public LogoutCommandHandler(IRefreshTokenRepository refreshTokenRepository, ITokenProvider tokenProvider)
+        private readonly IUnitOfWork _unitOfWork;
+        public LogoutCommandHandler(IRefreshTokenRepository refreshTokenRepository, ITokenProvider tokenProvider, IUnitOfWork unitOfWork)
         {
             _refreshTokenRepository = refreshTokenRepository;
             _tokenProvider = tokenProvider;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task Handle(LogoutCommand request, CancellationToken cancellationToken)
@@ -22,6 +24,7 @@ namespace Clinic.Application.Features.Auth.Commands
             {
                 token.Revoke();
                 await _refreshTokenRepository.UpdateAsync(token);
+                await _unitOfWork.SaveChangesAsync(cancellationToken);
             }
         }
     }

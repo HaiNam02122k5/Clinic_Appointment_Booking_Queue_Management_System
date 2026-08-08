@@ -12,13 +12,9 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
         {
             _context = context;
         }
-        public async Task<RefreshToken> AddAsync(RefreshToken refreshToken)
+        public async Task AddAsync(RefreshToken refreshToken)
         {
             await _context.RefreshTokens.AddAsync(refreshToken);
-            await _context.SaveChangesAsync();
-            return await _context.RefreshTokens
-                .Include(rt => rt.User)
-                .FirstOrDefaultAsync(rt => rt.Id == refreshToken.Id);
         }
 
         //private RefreshToken? MapToDomain(RefreshTokenDataModel model)
@@ -54,7 +50,6 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
         {
 
             _context.RefreshTokens.Update(refreshToken);
-            await _context.SaveChangesAsync();
         }
     }
 }

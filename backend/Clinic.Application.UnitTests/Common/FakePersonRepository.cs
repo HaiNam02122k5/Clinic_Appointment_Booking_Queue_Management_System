@@ -7,10 +7,9 @@ namespace Clinic.Application.UnitTests.Common
     public class FakePersonRepository : IPersonRepository
     {
         private readonly List<Person> _people = [];
-        public async Task<Person> AddAsync(Person person)
+        public async Task AddAsync(Person person)
         {
             _people.Add(person);
-            return person;
         }
 
         public Task DeleteAsync(Guid id)

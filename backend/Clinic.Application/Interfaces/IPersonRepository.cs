@@ -8,7 +8,7 @@ namespace Clinic.Application.Interfaces
         /// <summary>
         /// Adds a new person to the repository.
         /// </summary>
-        Task<Person> AddAsync(Person person);
+        Task AddAsync(Person person);
         Task UpdateAsync(Person person);
 
         /// <summary>

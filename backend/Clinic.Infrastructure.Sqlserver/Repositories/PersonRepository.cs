@@ -15,12 +15,9 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             _dbContext = dbContext;
         }
 
-        public async Task<Person> AddAsync(Person person)
+        public async Task AddAsync(Person person)
         {
             await _dbContext.Persons.AddAsync(person);
-            await _dbContext.SaveChangesAsync();
-            var addedPerson = await _dbContext.Persons.Include(p => p.User).FirstOrDefaultAsync(p => p.Id == person.Id);
-            return addedPerson;
         }
 
         //private Person? MapToDomain(PersonDataModel? model)
@@ -85,7 +82,6 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             {
                 person.Delete();
                 _dbContext.Persons.Update(person);
-                await _dbContext.SaveChangesAsync();
             }
             else
             {
@@ -95,7 +91,6 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
         public async Task UpdateAsync(Person person)
         {
             _dbContext.Persons.Update(person);
-            await _dbContext.SaveChangesAsync();
         }
 
         public async Task<Person?> GetByBasicInfoAsync(string fullName, DateOnly dateOfBirth, Gender gender)

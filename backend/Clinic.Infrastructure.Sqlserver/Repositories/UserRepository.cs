@@ -13,16 +13,9 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             _context = context;
         }
 
-        public async Task<User> AddAsync(User user)
+        public async Task AddAsync(User user)
         {
             await _context.Users.AddAsync(user);
-            await _context.SaveChangesAsync();
-            var addedUser = await _context.Users
-                .Include(u => u.Person)
-                .Include(u => u.UserRoles)
-                .ThenInclude(ur => ur.Role)
-                .FirstOrDefaultAsync(u => u.Id == user.Id);
-            return addedUser;
         }
 
         public async Task DeleteAsync(Guid id)
@@ -33,7 +26,6 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                 throw new InvalidOperationException("User not found");
             }
             _context.Users.Remove(model);
-            await _context.SaveChangesAsync();
         }
 
         public async Task<IEnumerable<User>> GetAllAsync()
@@ -65,7 +57,6 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
         public async Task UpdateAsync(User user)
         {
             _context.Users.Update(user);
-            await _context.SaveChangesAsync();
         }
 
         //private User? MapToDomain(UserDataModel? data)

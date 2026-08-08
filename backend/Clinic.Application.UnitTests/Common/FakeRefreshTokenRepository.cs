@@ -8,10 +8,9 @@ namespace Clinic.Application.UnitTests.Common
         private readonly List<RefreshToken> _tokens = [];
         private int _duplicateCount = 0;
 
-        public async Task<RefreshToken> AddAsync(RefreshToken refreshToken)
+        public async Task AddAsync(RefreshToken refreshToken)
         {
             _tokens.Add(refreshToken);
-            return refreshToken;
         }
 
         public async Task<RefreshToken?> GetByTokenHashAsync(string tokenHash)
