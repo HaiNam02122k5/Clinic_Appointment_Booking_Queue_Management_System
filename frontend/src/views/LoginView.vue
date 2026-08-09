@@ -118,16 +118,19 @@ async function handleLogin() {
 
     // 3. Tự động điều hướng theo Role thực tế do Backend trả về
     const userRole = loggedInUser?.role || authStore.currentUserRole
-    if (userRole === 'Admin' || userRole === 'Receptionist') {
+    if (userRole === 'Admin') {
       router.replace('/admin')
+    } else if (userRole === 'Receptionist') {
+      router.replace('/reception/queue')
     } else if (userRole === 'Doctor') {
-      router.replace('/doctor')
+      router.replace('/doctor/examination')
     } else {
       router.replace('/patient')
     }
-  } catch {
-    /* authStore đã lưu lỗi vào authStore.error */
-  }
+
+    } catch {
+      /* authStore đã lưu lỗi vào authStore.error */
+    }
 }
 
 function goBackToRoleSelect() {

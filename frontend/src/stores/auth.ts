@@ -10,6 +10,7 @@ export const useAuthStore = defineStore('auth', () => {
   // Rehydrate identity from storage (tokens live in tokenStorage).
   const stored = localStorage.getItem(USER_KEY)
   const user = ref<AuthUser | null>(stored ? JSON.parse(stored) : null)
+
   const status = ref<'idle' | 'loading' | 'error'>('idle')
   const error = ref<string | null>(null)
 
@@ -59,8 +60,8 @@ export const useAuthStore = defineStore('auth', () => {
   error.value = null
   try {
     const res = await authApi.register(payload)
-
     const token = res.accessToken || (res as any).token
+    
     if (res && token) {
       setToken(token, res.refreshToken)
       setUser(res.user)

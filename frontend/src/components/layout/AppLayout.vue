@@ -17,6 +17,7 @@ function logout() {
   auth.logout()
   router.push('/login')
 }
+
 </script>
 
 <template>
@@ -27,19 +28,51 @@ function logout() {
       <div class="flex items-center gap-6">
         <span class="text-brand-600 text-lg font-bold">{{ t('app.name') }}</span>
         <nav class="flex items-center gap-1">
+        <!-- Patient -->
+        <template v-if="auth.user?.role === 'Patient'">
+
           <RouterLink
-            to="/"
-            class="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+            to="/patient"
+            class="rounded-lg px-3 py-2 text-sm font-medium
+                  text-gray-600 hover:bg-gray-100
+                  dark:text-gray-300 dark:hover:bg-gray-800"
             active-class="!bg-brand-50 !text-brand-700 dark:!bg-brand-500/10"
-            >{{ t('nav.home') }}</RouterLink
           >
+            Trang chủ
+          </RouterLink>
+
           <RouterLink
-            to="/users"
-            class="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+            to="/patient/booking"
+            class="rounded-lg px-3 py-2 text-sm font-medium
+                  text-gray-600 hover:bg-gray-100
+                  dark:text-gray-300 dark:hover:bg-gray-800"
             active-class="!bg-brand-50 !text-brand-700 dark:!bg-brand-500/10"
-            >{{ t('nav.users') }}</RouterLink
           >
-        </nav>
+            Đặt lịch khám
+          </RouterLink>
+
+          <RouterLink
+            to="/patient/queue"
+            class="rounded-lg px-3 py-2 text-sm font-medium
+                  text-gray-600 hover:bg-gray-100
+                  dark:text-gray-300 dark:hover:bg-gray-800"
+            active-class="!bg-brand-50 !text-brand-700 dark:!bg-brand-500/10"
+          >
+            Theo dõi hàng đợi
+          </RouterLink>
+
+          <RouterLink
+            to="/patient/history"
+            class="rounded-lg px-3 py-2 text-sm font-medium
+                  text-gray-600 hover:bg-gray-100
+                  dark:text-gray-300 dark:hover:bg-gray-800"
+            active-class="!bg-brand-50 !text-brand-700 dark:!bg-brand-500/10"
+          >
+            Lịch sử khám
+          </RouterLink>
+
+        </template>
+      </nav>
       </div>
       <div class="flex items-center gap-3">
         <select

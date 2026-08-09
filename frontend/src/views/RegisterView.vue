@@ -51,20 +51,25 @@ function validateField(field: string): boolean {
   return res.isValid
 }
 
+// Hàm validate tất cả các trường trước khi submit
 function validateAll(): boolean {
   const fields = ['fullName', 'phoneNumber', 'email', 'password', 'confirmPassword']
   let isValid = true
   fields.forEach((f) => {
     touched.value[f] = true
-    if (!validateField(f)) isValid = false
+    if (!validateField(f)) 
+      isValid = false
   })
   return isValid
 }
 
+// Hàm xử lý đăng ký (submit form)
 async function handleRegister() {
-  if (!validateAll()) return
+  if (!validateAll()) 
+    return
 
   try {
+    // Gọi API đăng ký thông qua store (gửi dữ liệu đến Backend)
     await authStore.register({
       fullName: fullName.value,
       phoneNumber: phoneNumber.value,
@@ -107,7 +112,7 @@ async function handleRegister() {
       <p class="text-white/40 text-xs">© 2026 ClinicQueue</p>
     </div>
 
-    <!-- Form Phải -->
+    <!-- Banner Phải -->
     <div class="flex-1 flex flex-col items-center justify-center px-6 py-10 overflow-y-auto">
       <div class="w-full max-w-md">
         <div class="mb-6">
