@@ -1,4 +1,5 @@
 ﻿using Clinic.Application.Features.Auth.Commands;
+using Clinic.Application.Services;
 using Clinic.Application.UnitTests.Common;
 using Clinic.Domain.Enums;
 
@@ -14,7 +15,7 @@ namespace Clinic.Application.UnitTests.Features.Auth.Commands
             var personRepository = new FakePersonRepository();
             var roleRepository = new FakeRoleRepository();
             var unitOfWork = new FakeUnitOfWork();
-            var handler = new RegisterCommandHandler(userRepository, passwordHasher, personRepository, roleRepository, unitOfWork);
+            var handler = new RegisterCommandHandler(new UserService(userRepository, passwordHasher), new PersonService(personRepository), roleRepository, unitOfWork);
             var command = new RegisterCommand(
                 Username: "newpatient",
                 Password: "password123",

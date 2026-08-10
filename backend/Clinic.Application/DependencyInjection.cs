@@ -24,7 +24,7 @@ namespace Clinic.Application
             services.AddSingleton(config);
             services.AddScoped<IMapper, Mapper>();
             services.AddScoped<IUserService, UserService>();
-            services.AddScoped<IPersonService, PersonService>();>
+            services.AddScoped<IPersonService, PersonService>();
 
             // Application services are registered via the infrastructure layer.
             // TODO: nếu dùng Mapster theo pattern IRegister, quét cấu hình mapping tại đây:
