@@ -53,7 +53,7 @@ namespace Clinic.Application.Services
                 address: address
             );
             // Add the person to the repository
-            person = await _personRepository.AddAsync(person);
+            await _personRepository.AddAsync(person);
             return person;
         }
 

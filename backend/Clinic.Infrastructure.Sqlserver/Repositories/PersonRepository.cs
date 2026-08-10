@@ -15,53 +15,10 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             _dbContext = dbContext;
         }
 
-        public async Task<Person> AddAsync(Person person)
+        public async Task AddAsync(Person person)
         {
             await _dbContext.Persons.AddAsync(person);
-            await _dbContext.SaveChangesAsync();
-            var addedPerson = await _dbContext.Persons.Include(p => p.User).FirstOrDefaultAsync(p => p.Id == person.Id);
-            return addedPerson;
         }
-
-        //private Person? MapToDomain(PersonDataModel? model)
-        //{
-        //    if (model == null)
-        //    {
-        //        return null;
-        //    }
-
-        //    return new Person(model.Id, model.FullName, model.PhoneNumber, model.Email, model.DateOfBirth, model.Gender, model.Address, model.IsDeleted, model.CreatedAt, model.UpdatedAt);
-        //}
-
-        //private PersonDataModel MapToDataModel(Person person)
-        //{
-        //    UserDataModel? user = null;
-        //    if (person.User != null)
-        //    {
-        //        user = new UserDataModel
-        //        {
-        //            Id = person.User.Id,
-        //            Username = person.User.Username,
-        //            PasswordHash = person.User.PasswordHash,
-        //            CreatedAt = person.User.CreatedAt,
-        //            UpdatedAt = person.User.UpdatedAt,
-        //        };
-        //    }
-        //    return new PersonDataModel
-        //    {
-        //        Id = person.Id,
-        //        FullName = person.FullName,
-        //        PhoneNumber = person.PhoneNumber,
-        //        Email = person.Email,
-        //        DateOfBirth = person.DateOfBirth,
-        //        Gender = person.Gender,
-        //        Address = person.Address,
-        //        CreatedAt = person.CreatedAt,
-        //        UpdatedAt = person.UpdatedAt,
-        //        IsDeleted = person.IsDeleted,
-        //        User = user
-        //    };
-        //}
 
         public async Task<Person?> GetByEmailAsync(string email)
         {
@@ -85,7 +42,6 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             {
                 person.Delete();
                 _dbContext.Persons.Update(person);
-                await _dbContext.SaveChangesAsync();
             }
             else
             {
@@ -95,7 +51,6 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
         public async Task UpdateAsync(Person person)
         {
             _dbContext.Persons.Update(person);
-            await _dbContext.SaveChangesAsync();
         }
 
         public async Task<Person?> GetByBasicInfoAsync(string fullName, DateOnly dateOfBirth, Gender gender)

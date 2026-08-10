@@ -6,10 +6,9 @@ namespace Clinic.Application.UnitTests.Common
     public class FakeUserRepository : IUserRepository
     {
         private readonly List<User> _users = [];
-        public async Task<User> AddAsync(User user)
+        public async Task AddAsync(User user)
         {
             _users.Add(user);
-            return user;
         }
 
         public async Task DeleteAsync(Guid id)

@@ -5,7 +5,7 @@ namespace Clinic.Application.Interfaces
 {
     public interface IRefreshTokenRepository
     {
-        Task<RefreshToken> AddAsync(RefreshToken refreshToken);
+        Task AddAsync(RefreshToken refreshToken);
         Task UpdateAsync(RefreshToken refreshToken);
         Task<RefreshToken?> GetByTokenHashAsync(string tokenHash);
     }

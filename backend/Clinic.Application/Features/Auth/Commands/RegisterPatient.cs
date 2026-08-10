@@ -56,7 +56,7 @@ namespace Clinic.Application.Features.Auth.Commands
             // TODO: Create a new patient entity and associate it with the person
 
             // Create a new user entity
-            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
             
             return existingUser.Id;
         }

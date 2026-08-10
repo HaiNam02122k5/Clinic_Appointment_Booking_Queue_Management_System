@@ -8,7 +8,7 @@ namespace Clinic.Application.Interfaces
         Task<User?> GetByUsernameAsync(string username);
         Task<User?> GetByIdAsync(Guid id);
         Task<IEnumerable<User>> GetAllAsync();
-        Task<User> AddAsync(User user);
+        Task AddAsync(User user);
         Task UpdateAsync(User user);
         Task DeleteAsync(Guid id);
         Task<User?> GetByPersonIdAsync(Guid id);
