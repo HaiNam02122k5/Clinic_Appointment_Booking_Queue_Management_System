@@ -98,8 +98,10 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         .HasMaxLength(300)
                         .HasColumnType("nvarchar(300)");
 
-                    b.Property<Guid>("SpecialtyId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -108,8 +110,6 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
 
                     b.HasIndex("EmployeeId")
                         .IsUnique();
-
-                    b.HasIndex("SpecialtyId");
 
                     b.ToTable("Doctors", (string)null);
                 });
@@ -166,6 +166,12 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
+                    b.Property<DateTime?>("ExamEndTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ExamStartTime")
+                        .HasColumnType("datetime2");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -179,6 +185,11 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
 
                     b.Property<Guid>("QueueTicketId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("Symptoms")
                         .HasMaxLength(1000)
@@ -322,7 +333,7 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateOnly?>("DateOfBirth")
+                    b.Property<DateOnly>("DateOfBirth")
                         .HasColumnType("date");
 
                     b.Property<string>("Email")
@@ -334,14 +345,13 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
-                    b.Property<int?>("Gender")
+                    b.Property<int>("Gender")
                         .HasColumnType("int");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<string>("PhoneNumber")
-                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
@@ -351,7 +361,8 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("PhoneNumber")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[PhoneNumber] IS NOT NULL");
 
                     b.ToTable("Persons", (string)null);
                 });
@@ -366,6 +377,9 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("CalledAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CheckInTime")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime>("CreatedAt")
@@ -402,14 +416,8 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
 
                     b.Property<DateTime>("IssuedAt")
                         .HasColumnType("datetime2");
@@ -421,9 +429,6 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
@@ -468,35 +473,53 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         .IsUnique();
 
                     b.ToTable("Roles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Administrator role",
+                            IsDeleted = false,
+                            Name = "Admin"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000002"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Patient role",
+                            IsDeleted = false,
+                            Name = "Patient"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000003"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Receptionist role",
+                            IsDeleted = false,
+                            Name = "Receptionist"
+                        },
+                        new
+                        {
+                            Id = new Guid("00000000-0000-0000-0000-000000000004"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Doctor role",
+                            IsDeleted = false,
+                            Name = "Doctor"
+                        });
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.RolePermission", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<Guid>("RoleId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
 
                     b.Property<Guid>("PermissionId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("RoleId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
+                    b.HasKey("RoleId", "PermissionId");
 
                     b.HasIndex("PermissionId");
-
-                    b.HasIndex("RoleId", "PermissionId")
-                        .IsUnique();
 
                     b.ToTable("RolePermissions", (string)null);
                 });
@@ -505,9 +528,6 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("ApprovedWorkScheduleId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -538,10 +558,6 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ApprovedWorkScheduleId")
-                        .IsUnique()
-                        .HasFilter("[ApprovedWorkScheduleId] IS NOT NULL");
 
                     b.HasIndex("DoctorId");
 
@@ -623,31 +639,15 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
 
             modelBuilder.Entity("Clinic.Domain.Entities.UserRole", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
 
                     b.Property<Guid>("RoleId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
+                    b.HasKey("UserId", "RoleId");
 
                     b.HasIndex("RoleId");
-
-                    b.HasIndex("UserId", "RoleId")
-                        .IsUnique();
 
                     b.ToTable("UserRoles", (string)null);
                 });
@@ -708,7 +708,7 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<int>("PatientLimit")
+                    b.Property<int>("PatientLimitPerSlot")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("ShiftEnd")
@@ -730,19 +730,6 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                     b.HasIndex("DoctorId");
 
                     b.ToTable("WorkSchedules", (string)null);
-                });
-
-            modelBuilder.Entity("Clinic.Infrastructure.Sqlserver.Models.TemplateDataModel", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.HasKey("Id");
-
-                    b.ToTable("TemplateDataModel");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.Appointment", b =>
@@ -772,15 +759,7 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Clinic.Domain.Entities.Specialty", "Specialty")
-                        .WithMany("Doctors")
-                        .HasForeignKey("SpecialtyId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.Navigation("Employee");
-
-                    b.Navigation("Specialty");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.Employee", b =>
@@ -877,18 +856,11 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
 
             modelBuilder.Entity("Clinic.Domain.Entities.ShiftRequest", b =>
                 {
-                    b.HasOne("Clinic.Domain.Entities.WorkSchedule", "ApprovedWorkSchedule")
-                        .WithOne()
-                        .HasForeignKey("Clinic.Domain.Entities.ShiftRequest", "ApprovedWorkScheduleId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("Clinic.Domain.Entities.Doctor", "Doctor")
                         .WithMany("ShiftRequests")
                         .HasForeignKey("DoctorId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("ApprovedWorkSchedule");
 
                     b.Navigation("Doctor");
                 });
@@ -932,7 +904,7 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         .IsRequired();
 
                     b.HasOne("Clinic.Domain.Entities.Specialty", "Specialty")
-                        .WithMany()
+                        .WithMany("WorkHistories")
                         .HasForeignKey("SpecialtyId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1007,7 +979,7 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
 
             modelBuilder.Entity("Clinic.Domain.Entities.Specialty", b =>
                 {
-                    b.Navigation("Doctors");
+                    b.Navigation("WorkHistories");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.User", b =>

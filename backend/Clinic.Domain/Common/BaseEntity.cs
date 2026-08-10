@@ -8,11 +8,35 @@ namespace Clinic.Domain.Common
     /// </summary>
     public abstract class BaseEntity
     {
-        public Guid Id { get; set; } = Guid.NewGuid();
+        /// <summary>Khóa chính dùng chung cho mọi Entity.</summary>
+        public Guid Id { get; protected set; }
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        /// <summary>Thời điểm bản ghi được tạo (UTC).</summary>
+        public DateTime CreatedAt { get; protected set; }
 
-        public DateTime? UpdatedAt { get; set; }
+        /// <summary>Thời điểm bản ghi được cập nhật gần nhất (UTC). Null nếu chưa từng sửa.</summary>
+        public DateTime? UpdatedAt { get; protected set; }
+
+        /// <summary>Dùng khi tạo mới một Entity: tự sinh Id và thời điểm tạo.</summary>
+        protected BaseEntity()
+        {
+            Id = Guid.NewGuid();
+            CreatedAt = DateTime.UtcNow;
+            UpdatedAt = CreatedAt;
+        }
+
+        protected BaseEntity(Guid id, DateTime createdAt, DateTime? updatedAt, bool isDeleted)
+        {
+            Id = id;
+            CreatedAt = createdAt;
+            UpdatedAt = updatedAt;
+            IsDeleted = isDeleted;
+        }
+
+        public void MarkUpdated()
+        {
+            UpdatedAt = DateTime.UtcNow;
+        }
 
         /// <summary>
         /// Soft-delete: API GET mặc định lọc IsDeleted = false.

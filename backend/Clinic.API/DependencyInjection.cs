@@ -1,3 +1,6 @@
+using System.Reflection;
+using Clinic.API.Common;
+using Mapster;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Clinic.API
@@ -6,13 +9,19 @@ namespace Clinic.API
     {
         public static IServiceCollection AddPresentation(this IServiceCollection services)
         {
-            services.AddControllers();
+            // Register API controllers + tự động bọc mọi kết quả vào ApiResponse.
+            services.AddControllers(options =>
+            {
+                options.Filters.Add<ApiResponseWrapperFilter>();
+            });
 
-            // TODO: đăng ký GlobalExceptionHandler (IExceptionHandler) khi nhóm
-            // triển khai chuẩn hóa response lỗi qua envelope ApiResponse - Program.cs
-            // đã gọi sẵn app.UseExceptionHandler() để chờ đăng ký handler này.
-            // services.AddExceptionHandler<GlobalExceptionHandler>();
-            // services.AddProblemDetails();
+            // Chuyển mọi exception chưa xử lý thành envelope ApiResponse.
+            services.AddExceptionHandler<GlobalExceptionHandler>();
+            services.AddProblemDetails();
+
+            // Set up Mapster configurations for API
+            var config = TypeAdapterConfig.GlobalSettings;
+            config.Scan(Assembly.GetExecutingAssembly());
 
             return services;
         }

@@ -18,6 +18,13 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
 
             builder.HasIndex(r => r.Name).IsUnique();
 
+            builder.HasData(
+                new Role(Guid.Parse("00000000-0000-0000-0000-000000000001"), "Admin", "Administrator role", new DateTime(2026, 1, 1, 0, 0, 0), null, false),
+                new Role(Guid.Parse("00000000-0000-0000-0000-000000000002"), "Patient", "Patient role", new DateTime(2026, 1, 1, 0, 0, 0), null, false),
+                new Role(Guid.Parse("00000000-0000-0000-0000-000000000003"), "Receptionist", "Receptionist role", new DateTime(2026, 1, 1, 0, 0, 0), null, false),
+                new Role(Guid.Parse("00000000-0000-0000-0000-000000000004"), "Doctor", "Doctor role", new DateTime(2026, 1, 1, 0, 0, 0), null, false)
+            );
+
             builder.Property(r => r.Description).HasMaxLength(300);
         }
     }

@@ -1,4 +1,8 @@
+using Clinic.Application.Interfaces;
+using Clinic.Infrastructure.Authentication;
+using Clinic.Infrastructure.Sqlserver.Authentication;
 using Clinic.Infrastructure.Sqlserver.Persistence;
+using Clinic.Infrastructure.Sqlserver.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,6 +20,14 @@ namespace Clinic.Infrastructure.Sqlserver
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(connectionString));
 
+            //services.AddScoped<IFarmRepository, FarmRepository>();
+            services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IPersonRepository, PersonRepository>();
+            services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+            services.AddScoped<IUnitOfWork, UnitOfWork>();
+            services.AddScoped<ITokenProvider, TokenProvider>();
+            services.AddScoped<IRoleRepository, RoleRepository>();
+            services.AddScoped<IPasswordHasher, PasswordHasher>();
             // TODO: đăng ký các Repository implement từ Clinic.Domain.Interfaces
             // tại đây khi nhóm bắt đầu viết Repository thật (VD: services.AddScoped<IAppointmentRepository, AppointmentRepository>()).
 

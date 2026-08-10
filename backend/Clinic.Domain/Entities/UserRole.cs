@@ -13,5 +13,19 @@ namespace Clinic.Domain.Entities
 
         public Guid RoleId { get; set; }
         public Role Role { get; set; } = null!;
+
+        public UserRole(User user, Role role)
+        {
+            User = user;
+            UserId = user.Id;
+            Role = role;
+            RoleId = role.Id;
+        }
+
+        public UserRole(Guid userId, Guid roleId)
+        {
+            UserId = userId;
+            RoleId = roleId;
+        }
     }
 }
