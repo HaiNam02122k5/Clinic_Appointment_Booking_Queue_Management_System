@@ -13,48 +13,48 @@ namespace Clinic.Application.Services
             _personRepository = personRepository;
         }
 
-        public async Task<Person> CreateOrGetPersonAsync(string fullName, string phoneNumber, string email, DateOnly dateOfBirth, Gender gender, string address)
+        public async Task<Person> CreateOrGetPersonAsync(string fullName, string? phoneNumber, string? email, DateOnly dateOfBirth, Gender gender, string address)
         {
-            if (string.IsNullOrWhiteSpace(phoneNumber))
-            {
-                var existingPersonByBasicInfo = await _personRepository.GetByBasicInfoAsync(fullName, dateOfBirth, gender);
-                if (existingPersonByBasicInfo != null)
-                {
-                    return existingPersonByBasicInfo;
-                }
-            }
             // Check if a person with the same phone number already exists
             // The clinic uses phone number as a unique identifier for patients.
             // If a patient already exists with the same phone number, link that profile to the new user account. If not, create a new person profile.
-            var existingPersonByPhone = await _personRepository.GetByPhoneNumberAsync(phoneNumber);
-            if (existingPersonByPhone != null)
+            if (!string.IsNullOrWhiteSpace(phoneNumber))
             {
-                // If this person already has a user account, don't allow registration.
-                if (existingPersonByPhone.User != null)
+                var existingPersonByPhone = await _personRepository.GetByPhoneNumberAsync(phoneNumber);
+                if (existingPersonByPhone != null)
                 {
-                    throw new ArgumentException("A user account already exists for this phone number.");
-                }
+                    // If this person already has a user account, don't allow registration.
+                    if (existingPersonByPhone.User != null)
+                    {
+                        throw new ArgumentException("A user account already exists for this phone number.");
+                    }
 
-                // Override the person's details if not empty
-                existingPersonByPhone.UpdateDetails(email, gender, address);
-                await _personRepository.UpdateAsync(existingPersonByPhone);
-                return existingPersonByPhone;
+                    // Override the person's details if not empty
+                    existingPersonByPhone.UpdateDetails(email, gender, address);
+                    await _personRepository.UpdateAsync(existingPersonByPhone);
+                    return existingPersonByPhone;
+                }
             }
-            else
+            var existingPersonByBasicInfo = await _personRepository.GetByBasicInfoAsync(fullName, dateOfBirth, gender);
+            if (existingPersonByBasicInfo != null)
             {
-                var person = new Person
-                (
-                    fullName: fullName,
-                    phoneNumber: phoneNumber,
-                    email: email,
-                    dateOfBirth: dateOfBirth,
-                    gender: gender,
-                    address: address
-                );
-                // Add the person to the repository
-                person = await _personRepository.AddAsync(person);
-                return person;
+                existingPersonByBasicInfo.UpdateDetails(email, gender, address);
+                await _personRepository.UpdateAsync(existingPersonByBasicInfo);
+                return existingPersonByBasicInfo;
             }
+
+            var person = new Person
+            (
+                fullName: fullName,
+                phoneNumber: phoneNumber,
+                email: email,
+                dateOfBirth: dateOfBirth,
+                gender: gender,
+                address: address
+            );
+            // Add the person to the repository
+            person = await _personRepository.AddAsync(person);
+            return person;
         }
 
         public Task DeletePersonAsync(Guid id)

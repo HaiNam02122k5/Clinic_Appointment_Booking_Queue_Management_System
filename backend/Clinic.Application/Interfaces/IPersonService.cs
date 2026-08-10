@@ -18,8 +18,8 @@ namespace Clinic.Application.Interfaces
         /// </summary>
         /// <returns>The created or linked person entity.</returns>
         /// <exception cref="ArgumentException"></exception>
-        Task<Person> CreateOrGetPersonAsync(string fullName, string phoneNumber, string email, DateOnly dateOfBirth, Gender gender, string address);
-        Task UpdatePersonAsync(Guid id, string fullName, string phoneNumber, string email, DateOnly dateOfBirth, Gender gender, string address);
+        Task<Person> CreateOrGetPersonAsync(string fullName, string? phoneNumber, string? email, DateOnly dateOfBirth, Gender gender, string address);
+        Task UpdatePersonAsync(Guid id, string fullName, string? phoneNumber, string? email, DateOnly dateOfBirth, Gender gender, string address);
         Task DeletePersonAsync(Guid id);
     }
 }

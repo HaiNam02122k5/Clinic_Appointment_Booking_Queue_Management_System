@@ -11,7 +11,7 @@ namespace Clinic.Application.Features.Auth.Commands
         string Password,
         string FullName,
         string PhoneNumber,
-        string Email,
+        string? Email,
         DateOnly DateOfBirth,
         Gender Gender,
         string Address
@@ -46,7 +46,12 @@ namespace Clinic.Application.Features.Auth.Commands
             var existingUser = await _userService.CreateUserAsync(command.Username, command.Password, newPerson);
 
             // Assign the "Patient" role to the new user
-            existingUser.AssignRole(await _roleRepository.GetByNameAsync("Patient"));
+            var patientRole = await _roleRepository.GetByNameAsync("Patient");
+            if (patientRole == null)
+            {
+                throw new NotFoundException("Role 'Patient' not found.");
+            }
+            existingUser.AssignRole(patientRole);
 
             // TODO: Create a new patient entity and associate it with the person
 
