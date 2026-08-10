@@ -105,10 +105,33 @@ async function handleLogin() {
       password: password.value,
       role: selectedRole.value,
     })
-    const redirect = (route.query.redirect as string) || '/'
-    router.replace(redirect)
+
+    // Nếu user đang được redirect từ một trang cụ thể
+    if (route.query.redirect) {
+      router.replace(route.query.redirect as string)
+      return
+    }
+
+    // Điều hướng theo vai trò
+    switch (selectedRole.value) {
+      case 'Receptionist':
+        router.replace('/reception/queue')
+        break
+
+      case 'Doctor':
+        router.replace('/doctor/examination')
+        break
+
+      case 'Admin':
+        router.replace('/admin/doctors')
+        break
+
+      case 'Patient':
+        router.replace('/patient')
+        break
+    }
   } catch {
-    /* authStore đã lưu lỗi vào authStore.error */
+    // authStore đã lưu lỗi vào authStore.error
   }
 }
 

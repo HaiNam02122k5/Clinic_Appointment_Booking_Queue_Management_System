@@ -66,11 +66,29 @@ const routes: RouteRecordRaw[] = [
         meta: { roles: ['Patient'] },
       },
       // --- Luồng Lễ tân Điều phối ---
+      // {
+      //   path: 'reception/queue',
+      //   name: 'reception-queue',
+      //   component: () => import('@/views/UsersView.vue'),
+      //   meta: { roles: ['Receptionist', 'Admin'] },
+      // },
       {
         path: 'reception/queue',
         name: 'reception-queue',
-        component: () => import('@/views/UsersView.vue'),
-        meta: { roles: ['Receptionist', 'Admin'] },
+        component: () =>
+          import('@/views/ReceptionistDashboardView.vue'),
+        meta: {
+          roles: ['Receptionist', 'Admin'],
+        },
+      },
+      {
+        path: 'reception/checkin',
+        name: 'reception-checkin',
+        component: () =>
+          import('@/views/ReceptionistCheckinView.vue'),
+        meta: {
+          roles: ['Receptionist', 'Admin'],
+        },
       },
       // --- Luồng Bác sĩ Khám bệnh ---
       {

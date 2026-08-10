@@ -27,18 +27,32 @@ function logout() {
       <div class="flex items-center gap-6">
         <span class="text-brand-600 text-lg font-bold">{{ t('app.name') }}</span>
         <nav class="flex items-center gap-1">
-          <RouterLink
-            to="/"
-            class="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-            active-class="!bg-brand-50 !text-brand-700 dark:!bg-brand-500/10"
-            >{{ t('nav.home') }}</RouterLink
-          >
-          <RouterLink
-            to="/users"
-            class="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-            active-class="!bg-brand-50 !text-brand-700 dark:!bg-brand-500/10"
-            >{{ t('nav.users') }}</RouterLink
-          >
+          <!-- ========================= -->
+          <!-- MENU LỄ TÂN -->
+          <!-- ========================= -->
+          <template v-if="auth.hasRole(['Receptionist', 'Admin'])">
+
+            <RouterLink
+              to="/reception/queue"
+              class="rounded-lg px-3 py-2 text-sm font-medium
+                    text-gray-600 hover:bg-gray-100
+                    dark:text-gray-300 dark:hover:bg-gray-800"
+              active-class="!bg-brand-50 !text-brand-700 dark:!bg-brand-500/10"
+            >
+              Bảng điều khiển
+            </RouterLink>
+
+            <RouterLink
+              to="/reception/checkin"
+              class="rounded-lg px-3 py-2 text-sm font-medium
+                    text-gray-600 hover:bg-gray-100
+                    dark:text-gray-300 dark:hover:bg-gray-800"
+              active-class="!bg-brand-50 !text-brand-700 dark:!bg-brand-500/10"
+            >
+              Check-in bệnh nhân
+            </RouterLink>
+
+          </template>
         </nav>
       </div>
       <div class="flex items-center gap-3">
