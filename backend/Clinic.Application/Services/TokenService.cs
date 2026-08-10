@@ -1,4 +1,5 @@
-﻿using Clinic.Application.Interfaces;
+﻿using Clinic.Application.Common.Models;
+using Clinic.Application.Interfaces;
 using Clinic.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -17,7 +18,7 @@ namespace Clinic.Application.Services
             _refreshTokenRepository = refreshTokenRepository;
         }
 
-        public async Task<(string AccessToken, string RefreshToken)> GenerateTokensAsync(User user)
+        public async Task<TokenPair> GenerateTokensAsync(User user)
         {
             if (user == null || !user.IsActive)
             {
@@ -38,7 +39,7 @@ namespace Clinic.Application.Services
                         expiresAt: DateTime.UtcNow.AddDays(7)
                     );
                     await _refreshTokenRepository.AddAsync(refreshTokenEntity);
-                    return (accessToken, refreshToken);
+                    return new TokenPair(accessToken, refreshToken);
                 }
             }
             throw new Exception("Failed to generate a unique refresh token after multiple attempts");

@@ -57,6 +57,7 @@ namespace Clinic.Application.Services
             return person;
         }
 
+        // Method phía dưới chưa dùng đến/đã dùng thông qua Repo
         public Task DeletePersonAsync(Guid id)
         {
             throw new NotImplementedException();

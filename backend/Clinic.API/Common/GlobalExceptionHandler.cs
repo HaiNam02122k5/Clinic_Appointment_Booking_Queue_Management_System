@@ -30,6 +30,7 @@ namespace Clinic.API.Common
                 NotFoundException => (HttpStatusCode.NotFound, new[] { exception.Message }),
                 // Domain ném ArgumentException khi dữ liệu đầu vào không hợp lệ.
                 ArgumentException => (HttpStatusCode.BadRequest, new[] { exception.Message }),
+                UnauthorizedAccessException => (HttpStatusCode.Unauthorized, new[] { exception.Message }),
                 _ => (HttpStatusCode.InternalServerError, new[] { "An unexpected error occurred." })
             };
 
