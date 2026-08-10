@@ -18,15 +18,15 @@ namespace Clinic.Application.Features.Auth.Commands
     ) : IRequest<Guid>;
     public class RegisterCommandHandler : IRequestHandler<RegisterCommand, Guid>
     {
-        private readonly UserService _userService;
-        private readonly PersonService _personService;
+        private readonly IUserService _userService;
+        private readonly IPersonService _personService;
         private readonly IRoleRepository _roleRepository;
         private readonly IUnitOfWork _unitOfWork;
 
-        public RegisterCommandHandler(IUserRepository userRepository, IPasswordHasher passwordHasher, IPersonRepository personRepository, IRoleRepository roleRepository, IUnitOfWork unitOfWork)
+        public RegisterCommandHandler(IUserService userService, IPersonService personService, IRoleRepository roleRepository, IUnitOfWork unitOfWork)
         {
-            _userService = new UserService(userRepository, passwordHasher);
-            _personService = new PersonService(personRepository);
+            _userService = userService;
+            _personService = personService;
             _roleRepository = roleRepository;
             _unitOfWork = unitOfWork;
         }

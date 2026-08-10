@@ -3,7 +3,7 @@ using Clinic.Domain.Entities;
 
 namespace Clinic.Application.Services
 {
-    public class UserService
+    public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
         private readonly IPasswordHasher _passwordHasher;

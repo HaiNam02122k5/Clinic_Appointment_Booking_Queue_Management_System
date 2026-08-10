@@ -1,5 +1,6 @@
 using System.Reflection;
 using Clinic.Application.Interfaces;
+using Clinic.Application.Services;
 using Mapster;
 using MapsterMapper;
 using MediatR;
@@ -22,6 +23,8 @@ namespace Clinic.Application
             config.Scan(Assembly.GetExecutingAssembly());
             services.AddSingleton(config);
             services.AddScoped<IMapper, Mapper>();
+            services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IPersonService, PersonService>();>
 
             // Application services are registered via the infrastructure layer.
             // TODO: nếu dùng Mapster theo pattern IRegister, quét cấu hình mapping tại đây:

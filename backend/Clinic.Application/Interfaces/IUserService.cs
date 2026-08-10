@@ -8,7 +8,7 @@ namespace Clinic.Application.Interfaces
         /// Creates a new user with the specified username, password, and associated person ID.
         /// </summary>
         /// <returns></returns>
-        Task<User> CreateUserAsync(string username, string password, Guid personId);
+        Task<User> CreateUserAsync(string username, string password, Person person);
 
         /// <summary>
         /// Gets a user by their username. Returns null if the user does not exist.

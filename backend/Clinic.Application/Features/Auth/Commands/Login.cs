@@ -14,13 +14,13 @@ namespace Clinic.Application.Features.Auth.Commands
 
     public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse>
     {
-        private readonly UserService _userService;
+        private readonly IUserService _userService;
         private readonly ITokenProvider _tokenProvider;
         private readonly IRefreshTokenRepository _refreshTokenRepository;
 
-        public LoginCommandHandler(IUserRepository userRepository, IPasswordHasher passwordHasher, ITokenProvider tokenProvider, IRefreshTokenRepository refreshTokenRepository)
+        public LoginCommandHandler(IUserService userService, ITokenProvider tokenProvider, IRefreshTokenRepository refreshTokenRepository)
         {
-            _userService = new UserService(userRepository, passwordHasher);
+            _userService = userService;
             _tokenProvider = tokenProvider;
             _refreshTokenRepository = refreshTokenRepository;
         }
