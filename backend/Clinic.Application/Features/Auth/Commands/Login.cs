@@ -32,10 +32,21 @@ namespace Clinic.Application.Features.Auth.Commands
             var accessToken = _tokenProvider.GenerateAccessToken(user);
 
             var refreshToken = _tokenProvider.GenerateRefreshToken();
-            while (await _refreshTokenRepository.GetByTokenHashAsync(_tokenProvider.HashToken(refreshToken)) != null)
+
+            // Ensure the refresh token is unique by checking against existing tokens in the repository
+            for (var trial  = 0; trial < 5; trial++)
             {
+                if (await _refreshTokenRepository.GetByTokenHashAsync(_tokenProvider.HashToken(refreshToken)) == null)
+                {
+                    break;
+                }
                 refreshToken = _tokenProvider.GenerateRefreshToken();
             }
+            if (await _refreshTokenRepository.GetByTokenHashAsync(_tokenProvider.HashToken(refreshToken)) != null)
+            {
+                throw new Exception("Failed to generate a unique refresh token after multiple attempts.");
+            }
+
             await _refreshTokenRepository.AddAsync(
                 new RefreshToken
                 (
