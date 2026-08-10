@@ -1,93 +1,66 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { validators } from '@/utils/validators'
+import { useFormValidation } from '@/composables/useFormValidation'
 
 const router = useRouter()
 const authStore = useAuthStore()
 
-const fullName = ref('')
-const phoneNumber = ref('')
-const email = ref('')
-const password = ref('')
-const confirmPassword = ref('')
-const gender = ref<'Male' | 'Female' | 'Other'>('Male')
-const dateOfBirth = ref('')
+const { error: backendError } = storeToRefs(authStore)
 
-const errors = ref<Record<string, string>>({})
-const touched = ref<Record<string, boolean>>({})
+const {
+  formData,
+  errors,
+  touched,
+  isSubmitting,
+  handleBlur,
+  validateAll
+} = useFormValidation(
+  {
+    fullName: '',
+    phoneNumber: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    gender: 'Male' as 'Male' | 'Female' | 'Other',
+    dateOfBirth: ''
+  },
+  {
+    fullName: [(val) => validators.required(val, 'Họ và tên')],
+    phoneNumber: [
+      (val) => validators.required(val, 'Số điện thoại'),
+      (val) => validators.phone(val)
+    ],
+    email: [
+      (val) => validators.required(val, 'Email'),
+      (val) => validators.email(val)
+    ],
+    password: [
+      (val) => validators.required(val, 'Mật khẩu'),
+      (val) => validators.password(val)
+    ],
+    confirmPassword: [(val, formData) => validators.confirmPassword(formData.password, val)]},
+  { externalError: backendError }
+)
 
-function handleBlur(field: string) {
-  touched.value[field] = true
-  validateField(field)
-}
-
-function validateField(field: string): boolean {
-  let res = { isValid: true, message: '' }
-
-  switch (field) {
-    case 'fullName':
-      res = validators.required(fullName.value, 'Họ và tên')
-      break
-    case 'phoneNumber':
-      res = validators.required(phoneNumber.value, 'Số điện thoại')
-      if (res.isValid) res = validators.phone(phoneNumber.value)
-      break
-    case 'email':
-      res = validators.required(email.value, 'Email')
-      if (res.isValid) res = validators.email(email.value)
-      break
-    case 'password':
-      res = validators.required(password.value, 'Mật khẩu')
-      if (res.isValid) res = validators.password(password.value)
-      break
-    case 'confirmPassword':
-      res = validators.confirmPassword(password.value, confirmPassword.value)
-      break
-  }
-
-  errors.value[field] = res.message
-  return res.isValid
-}
-
-// Hàm validate tất cả các trường trước khi submit
-function validateAll(): boolean {
-  const fields = ['fullName', 'phoneNumber', 'email', 'password', 'confirmPassword']
-  let isValid = true
-  fields.forEach((f) => {
-    touched.value[f] = true
-    if (!validateField(f)) 
-      isValid = false
-  })
-  return isValid
-}
-
-// Hàm xử lý đăng ký (submit form)
 async function handleRegister() {
-  if (!validateAll()) 
-    return
+  if (!validateAll()) return
 
+  isSubmitting.value = true
   try {
-    // Gọi API đăng ký thông qua store (gửi dữ liệu đến Backend)
-    await authStore.register({
-      fullName: fullName.value,
-      phoneNumber: phoneNumber.value,
-      email: email.value,
-      password: password.value,
-      gender: gender.value,
-      dateOfBirth: dateOfBirth.value,
-    })
+    await authStore.register({ ...formData })
 
-    // Nếu Backend trả về token và tự động đăng nhập
     if (authStore.isAuthenticated) {
       router.push('/patient')
     } else {
-      // Nếu Backend yêu cầu đăng nhập lại sau khi đăng ký
       router.push('/login?role=Patient')
     }
   } catch {
-    /* authStore.error đã lưu thông báo lỗi từ Backend */
+    /* Lỗi đã được lưu trong authStore */
+  } finally {
+    isSubmitting.value = false
   }
 }
 </script>
@@ -129,7 +102,7 @@ async function handleRegister() {
           <div>
             <label class="block text-sm font-medium text-slate-700 mb-1">Họ và tên <span class="text-red-500">*</span></label>
             <input
-              v-model="fullName"
+              v-model="formData.fullName"
               @blur="handleBlur('fullName')"
               type="text"
               placeholder="Nguyễn Văn A"
@@ -146,7 +119,7 @@ async function handleRegister() {
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-1">Số điện thoại <span class="text-red-500">*</span></label>
               <input
-                v-model="phoneNumber"
+                v-model="formData.phoneNumber"
                 @blur="handleBlur('phoneNumber')"
                 type="tel"
                 placeholder="0912345678"
@@ -161,7 +134,7 @@ async function handleRegister() {
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-1">Giới tính</label>
               <select
-                v-model="gender"
+                v-model="formData.gender"
                 class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-[#0E4D92] focus:outline-none bg-white"
               >
                 <option value="Male">Nam</option>
@@ -176,7 +149,7 @@ async function handleRegister() {
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-1">Ngày sinh</label>
               <input
-                v-model="dateOfBirth"
+                v-model="formData.dateOfBirth"
                 type="date"
                 class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-[#0E4D92] focus:outline-none bg-white"
               />
@@ -184,7 +157,7 @@ async function handleRegister() {
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-1">Email <span class="text-red-500">*</span></label>
               <input
-                v-model="email"
+                v-model="formData.email"
                 @blur="handleBlur('email')"
                 type="email"
                 placeholder="email@example.com"
@@ -202,7 +175,7 @@ async function handleRegister() {
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-1">Mật khẩu <span class="text-red-500">*</span></label>
               <input
-                v-model="password"
+                v-model="formData.password"
                 @blur="handleBlur('password')"
                 type="password"
                 placeholder="••••••••"
@@ -217,7 +190,7 @@ async function handleRegister() {
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-1">Xác nhận mật khẩu <span class="text-red-500">*</span></label>
               <input
-                v-model="confirmPassword"
+                v-model="formData.confirmPassword"
                 @blur="handleBlur('confirmPassword')"
                 type="password"
                 placeholder="••••••••"
@@ -232,10 +205,10 @@ async function handleRegister() {
 
           <button
             type="submit"
-            :disabled="authStore.status === 'loading'"
+            :disabled="isSubmitting || authStore.status === 'loading'"
             class="w-full bg-[#0E4D92] text-white font-semibold rounded-xl py-3 text-sm hover:bg-[#0b3d75] transition-all disabled:opacity-50 mt-2"
           >
-            <span v-if="authStore.status === 'loading'">Đang tạo tài khoản...</span>
+            <span v-if="isSubmitting || authStore.status === 'loading'">Đang tạo tài khoản...</span>
             <span v-else>Đăng ký ngay</span>
           </button>
         </form>
