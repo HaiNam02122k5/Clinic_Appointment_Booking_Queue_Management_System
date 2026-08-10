@@ -29,7 +29,6 @@ namespace Clinic.Infrastructure.Authentication
                     Guid.NewGuid().ToString())
             };
             
-            // TODO: Add role claims
             foreach (var userRole in user.UserRoles)
             {
                 var role = userRole.Role;
@@ -40,16 +39,16 @@ namespace Clinic.Infrastructure.Authentication
                 Encoding.UTF8.GetBytes(
                     _configuration["Jwt:Key"]!
                 ));
-
             
             var credentials =
                 new SigningCredentials(
                     key,
                     SecurityAlgorithms.HmacSha256);
 
-            
             var token =
                 new JwtSecurityToken(
+                    issuer: _configuration["Jwt:Issuer"],
+                    audience: _configuration["Jwt:Audience"],
                     claims: claims,
                     expires: DateTime.UtcNow.AddMinutes(15),
                     signingCredentials: credentials);
