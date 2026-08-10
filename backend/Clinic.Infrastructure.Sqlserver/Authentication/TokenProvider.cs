@@ -35,6 +35,24 @@ namespace Clinic.Infrastructure.Authentication
                 claims.Add(new Claim(ClaimTypes.Role, role.Name));
             }
 
+            // Add permission claims from role -> rolepermissions if available
+            var permissionClaimType = "permission";
+            var addedPermissions = new HashSet<string>();
+            foreach (var userRole in user.UserRoles)
+            {
+                var role = userRole.Role;
+                if (role.RolePermissions == null) continue;
+                foreach (var rp in role.RolePermissions)
+                {
+                    var permName = rp.Permission?.Name;
+                    if (string.IsNullOrWhiteSpace(permName)) continue;
+                    if (addedPermissions.Add(permName))
+                    {
+                        claims.Add(new Claim(permissionClaimType, permName));
+                    }
+                }
+            }
+
             var key = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(
                     _configuration["Jwt:Key"]!
