@@ -20,6 +20,6 @@ namespace Clinic.Application.Interfaces
         /// Verifies the user's credentials and returns the user if valid, otherwise returns null.
         /// </summary>
         /// <returns></returns>
-        Task<User?> VerifyUser(string username, string password);
+        Task<User> VerifyUser(string username, string password);
     }
 }

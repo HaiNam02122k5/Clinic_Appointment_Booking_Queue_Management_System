@@ -43,12 +43,13 @@ namespace Clinic.Application.Services
         /// Verifies a user's credentials by checking the provided username and password against stored data. If the credentials are valid, the corresponding user is returned; otherwise, an exception is thrown.
         /// </summary>
         /// <exception cref="ArgumentException"></exception>
-        public async Task<User?> VerifyUser(string username, string password)
+        public async Task<User> VerifyUser(string username, string password)
         {
             var user = await _userRepository.GetByUsernameAsync(username);
             if (user == null
-                || !_passwordHasher.VerifyPassword(password, user.PasswordHash))
-            {
+                || !_passwordHasher.VerifyPassword(password, user.PasswordHash)
+                || !user.IsActive
+            ){
                 throw new ArgumentException("Username or password is incorrect.");
             }
 

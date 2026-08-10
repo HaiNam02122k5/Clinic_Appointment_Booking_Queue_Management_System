@@ -10,31 +10,32 @@ namespace Clinic.Domain.Entities
     /// </summary>
     public class RefreshToken
     {
-        public Guid UserId { get; set; }
-        public User User { get; set; } = null!;
+        public Guid UserId { get; init; }
+        public User User { get; init; } = null!;
 
         public Guid Id { get; init; }
 
         /// <summary>Hash của refresh token, không lưu giá trị gốc.</summary>
-        public string TokenHash { get; set; } = string.Empty;
+        public string TokenHash { get; init; } = string.Empty;
 
-        public DateTime IssuedAt { get; set; } = DateTime.UtcNow;
+        public DateTime IssuedAt { get; init; } = DateTime.UtcNow;
 
-        public DateTime ExpiresAt { get; set; }
+        public DateTime ExpiresAt { get; init; }
 
         /// <summary>NULL nếu token vẫn còn hiệu lực; có giá trị khi đã bị thu hồi (logout, refresh 1 lần...).</summary>
-        public DateTime? RevokedAt { get; set; }
+        public DateTime? RevokedAt { get; protected set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RefreshToken"/> class.
         /// </summary>
-        public RefreshToken(string tokenHash, DateTime expiresAt, Guid userId)
+        public RefreshToken(string tokenHash, DateTime expiresAt, User user)
         {
             Id = Guid.NewGuid();
             TokenHash = tokenHash;
             IssuedAt = DateTime.UtcNow;
             ExpiresAt = expiresAt;
-            UserId = userId;
+            UserId = user.Id;
+            User = user;
         }
 
         /// <summary>

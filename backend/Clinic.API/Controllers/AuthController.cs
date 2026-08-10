@@ -49,5 +49,28 @@ namespace Clinic.API.Controllers
             var response = await _sender.Send(command);
             return StatusCode(StatusCodes.Status201Created, new { id = response });
         }
+
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh()
+        {
+            if (!Request.Cookies.TryGetValue("refreshToken", out var refreshToken))
+            {
+                return Unauthorized(new { message = "Refresh token is missing." });
+            }
+            var command = _mapper.Map<RefreshCommand>(new RefreshRequest { RefreshToken = refreshToken });
+            var response = await _sender.Send(command);
+            Response.Cookies.Append("refreshToken", response.RefreshToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTimeOffset.UtcNow.AddDays(7),
+                Path = "/auth"
+            });
+            return Ok(new
+            {
+                accessToken = response.AccessToken
+            });
+        }
     }
 }

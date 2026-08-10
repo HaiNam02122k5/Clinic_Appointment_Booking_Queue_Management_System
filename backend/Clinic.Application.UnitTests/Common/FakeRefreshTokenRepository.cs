@@ -19,7 +19,7 @@ namespace Clinic.Application.UnitTests.Common
             if (_duplicateCount > 0)
             {
                 _duplicateCount--;
-                return new RefreshToken(tokenHash, DateTime.UtcNow.AddDays(7), Guid.NewGuid());
+                return new RefreshToken(tokenHash, DateTime.UtcNow.AddDays(7), TestDataFactory.CreateUser("testuser", "password"));
             }
             //foreach(RefreshToken refreshToken in _tokens)
             //{
