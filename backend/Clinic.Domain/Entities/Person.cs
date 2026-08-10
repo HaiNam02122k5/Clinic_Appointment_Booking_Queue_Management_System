@@ -33,6 +33,10 @@ namespace Clinic.Domain.Entities
 
         public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 
+        /// <summary>
+        /// Constructor for creating a new Person instance. Validates the input parameters.
+        /// </summary>
+        /// <exception cref="ArgumentException"></exception>
         public Person(string fullName, string? phoneNumber, string? email, DateOnly dateOfBirth, Gender gender, string address)
         {
             if (string.IsNullOrWhiteSpace(fullName))
@@ -50,6 +54,9 @@ namespace Clinic.Domain.Entities
             Address = address;
         }
 
+        /// <summary>
+        /// Constructor for reconstructing a Person instance from the database. Used by Entity Framework Core.
+        /// </summary>
         public Person(Guid id, string fullName, string? phoneNumber, string? email, DateOnly dateOfBirth, Gender gender, string address, bool isDeleted, DateTime createdAt, DateTime? updatedAt)
             : base(id, createdAt, updatedAt, isDeleted)
         {
@@ -73,6 +80,9 @@ namespace Clinic.Domain.Entities
             MarkUpdated();
         }
 
+        /// <summary>
+        /// Marks the person as deleted. This is a soft delete, meaning the record is not removed from the database but marked as deleted.
+        /// </summary>
         public void Delete()
         {
             IsDeleted = true;

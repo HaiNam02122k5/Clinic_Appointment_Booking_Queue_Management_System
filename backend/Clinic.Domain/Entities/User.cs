@@ -24,6 +24,11 @@ namespace Clinic.Domain.Entities
 
         public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="User"/> class with the specified username, password hash, and associated person.
+        /// </summary>
+        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="ArgumentNullException"></exception>
         public User(string username, string passwordHash, Person person)
         {
             if (string.IsNullOrWhiteSpace(username))
@@ -42,6 +47,9 @@ namespace Clinic.Domain.Entities
             IsActive = true;
         }
 
+        /// <summary>
+        /// Constructor for reconstructing a User entity from the database with all properties specified.
+        /// </summary>
         public User(Guid id, string username, string passwordHash, bool isActive, Guid personId, DateTime createdAt, DateTime? updatedAt, bool isDeleted)
             : base(id, createdAt, updatedAt, isDeleted)
         {
