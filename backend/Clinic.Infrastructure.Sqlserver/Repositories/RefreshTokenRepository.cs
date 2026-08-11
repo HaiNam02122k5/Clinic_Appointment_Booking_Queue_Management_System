@@ -22,6 +22,8 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                 .Include(rt => rt.User)
                 .ThenInclude(u => u.UserRoles)
                 .ThenInclude(ur => ur.Role)
+                .ThenInclude(r => r.RolePermissions)
+                .ThenInclude(rp => rp.Permission)
                 .FirstOrDefaultAsync(rt => rt.TokenHash == tokenHash);
         }
 
