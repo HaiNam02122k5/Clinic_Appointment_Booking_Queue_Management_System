@@ -115,15 +115,15 @@ async function handleLogin() {
     // Điều hướng theo vai trò
     switch (selectedRole.value) {
       case 'Receptionist':
-        router.replace('/reception/queue')
+        router.replace('/reception')
         break
 
       case 'Doctor':
-        router.replace('/doctor/examination')
+        router.replace('/doctor')
         break
 
       case 'Admin':
-        router.replace('/admin/doctors')
+        router.replace('/admin')
         break
 
       case 'Patient':
