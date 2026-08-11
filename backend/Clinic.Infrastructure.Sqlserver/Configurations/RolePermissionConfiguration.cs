@@ -43,6 +43,7 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
                 new { RoleId = Guid.Parse("00000000-0000-0000-0000-000000000003"), PermissionId = Guid.Parse("10000000-0000-0000-0000-000000000002") },
                 new { RoleId = Guid.Parse("00000000-0000-0000-0000-000000000003"), PermissionId = Guid.Parse("10000000-0000-0000-0000-000000000003") },
                 new { RoleId = Guid.Parse("00000000-0000-0000-0000-000000000003"), PermissionId = Guid.Parse("10000000-0000-0000-0000-000000000004") },
+                new { RoleId = Guid.Parse("00000000-0000-0000-0000-000000000003"), PermissionId = Guid.Parse("10000000-0000-0000-0000-000000000005") },
                 new { RoleId = Guid.Parse("00000000-0000-0000-0000-000000000003"), PermissionId = Guid.Parse("10000000-0000-0000-0000-000000000009") },
                 new { RoleId = Guid.Parse("00000000-0000-0000-0000-000000000003"), PermissionId = Guid.Parse("10000000-0000-0000-0000-00000000000C") },
 
