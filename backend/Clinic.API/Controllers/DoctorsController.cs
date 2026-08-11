@@ -22,7 +22,7 @@ namespace Clinic.API.Controllers
         }
 
         [HttpPost]
-        [Authorize(Policy = "Permission:doctor.edit")]
+        [Authorize(Policy = "Permission:doctor.create")]
         public IActionResult Create()
         {
             return StatusCode(StatusCodes.Status201Created);
@@ -35,13 +35,21 @@ namespace Clinic.API.Controllers
             return NoContent();
         }
 
+        [HttpPut("me")]
+        [Authorize(Policy = "Permission:doctor.edit")]
+        public IActionResult UpdateOwnProfile()
+        {
+            var doctorId = _currentUser.DoctorId;
+            return NoContent();
+        }
+
         [HttpPatch("{doctorId}/status")]
         [Authorize(Roles = "Admin")]
         public IActionResult UpdateStatus([FromRoute] string doctorId)
         {
             return NoContent();
         }
-
+        
         [HttpPost("{doctorId}/shifts")]
         [Authorize(Roles = "Admin")]
         public IActionResult CreateShift([FromRoute] string doctorId)
