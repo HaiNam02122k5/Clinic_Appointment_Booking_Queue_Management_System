@@ -29,5 +29,23 @@ namespace Clinic.Application.UnitTests.Common
             var refreshToken = new RefreshToken(hashedToken, DateTime.UtcNow.AddDays(7), user);
             return refreshToken;
         }
+
+        public static Specialty CreateSpecialty(string? name = "Cardiology", string? description = "Heart specialist")
+        {
+            var specialty = new Specialty(name, description, DateOnly.FromDateTime(DateTime.UtcNow));
+            return specialty;
+        }
+
+        public static Employee CreateEmployee(Person? person = null)
+        {
+            var newEmployee = new Employee(person ?? CreatePerson(), DateOnly.FromDateTime(DateTime.UtcNow));
+            return newEmployee;
+        }
+
+        internal static Doctor CreateDoctor(Employee? employee = null, Specialty? specialty = null, string? licenseNumber = "ABC123", string? qualification = "MD", string? bio = "", int yoe = 0)
+        {
+            var doctor = new Doctor(employee ?? CreateEmployee(), licenseNumber, qualification, specialty ?? CreateSpecialty(), yoe, bio);
+            return doctor;
+        }
     }
 }

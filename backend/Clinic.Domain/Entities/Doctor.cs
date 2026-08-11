@@ -14,7 +14,7 @@ namespace Clinic.Domain.Entities
 
         public string LicenseNumber { get; protected set; } = string.Empty;
 
-        public int? ExperienceYears { get; protected set; }
+        public int ExperienceYears { get; protected set; }
 
         public string Qualification { get; protected set; }
 
@@ -27,9 +27,9 @@ namespace Clinic.Domain.Entities
 
         public ICollection<ShiftRequest> ShiftRequests { get; protected set; } = new List<ShiftRequest>();
 
-        public Doctor(Employee employee, string licenseNumber, string qualification, Specialty specialty, int? experienceYears = null, string? biography = null)
+        public Doctor(Employee employee, string licenseNumber, string qualification, Specialty specialty = null, int experienceYears = 0, string? biography = null)
         {
-            if (experienceYears == null || experienceYears < 0) throw new ArgumentException(nameof(experienceYears), "Experience years cannot be null or negative.");
+            if (experienceYears < 0) throw new ArgumentException(nameof(experienceYears), "Experience years cannot be negative.");
             if (employee == null) throw new ArgumentNullException(nameof(employee));
             if (string.IsNullOrWhiteSpace(licenseNumber)) throw new ArgumentNullException(nameof(licenseNumber));
             if (string.IsNullOrWhiteSpace(qualification)) throw new ArgumentNullException(nameof(qualification));
@@ -43,7 +43,7 @@ namespace Clinic.Domain.Entities
             WorkHistories.Add(new WorkHistory(this, specialty, DateOnly.FromDateTime(DateTime.UtcNow)));
         }
 
-        public Doctor(Guid id, Guid employeeId, string licenseNumber, string qualification, int? experienceYears, string? biography, DoctorStatus status, DateTime createdAt, DateTime? updatedAt, bool isDeleted)
+        public Doctor(Guid id, Guid employeeId, string licenseNumber, string qualification, int experienceYears, string? biography, DoctorStatus status, DateTime createdAt, DateTime? updatedAt, bool isDeleted)
             : base(id, createdAt, updatedAt, isDeleted)
         {
             EmployeeId = employeeId;
@@ -63,9 +63,9 @@ namespace Clinic.Domain.Entities
             }
         }
 
-        public void UpdateInfo(string licenseNumber, string qualification, int? experienceYears = null, string? biography = null)
+        public void UpdateInfo(string licenseNumber, string qualification, int experienceYears = 0, string? biography = null)
         {
-            if (experienceYears == null || experienceYears < 0) throw new ArgumentException(nameof(experienceYears), "Experience years cannot be null or negative.");
+            if (experienceYears < 0) throw new ArgumentException(nameof(experienceYears), "Experience years cannot be negative.");
             if (string.IsNullOrWhiteSpace(licenseNumber)) throw new ArgumentNullException(nameof(licenseNumber));
             if (string.IsNullOrWhiteSpace(qualification)) throw new ArgumentNullException(nameof(qualification));
             LicenseNumber = licenseNumber;

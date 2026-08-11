@@ -92,6 +92,37 @@ namespace Clinic.Domain.UnitTests
         }
 
         [Fact]
+        public void TestAdvancedUpdateDetailsValid()
+        {
+            var person = TestDataFactory.CreatePerson();
+            person.UpdateAdvancedDetails("New Name", "0999999999", "Email@gmai", Gender.Female, new DateOnly(2000, 1, 1), "ABCDEF");
+            Assert.Equal("New Name", person.FullName);
+            Assert.Equal("0999999999", person.PhoneNumber);
+        }
+
+        [Fact]
+        public void TestAdvancedUpdateDetailsInvalid()
+        {
+            var person = TestDataFactory.CreatePerson();
+            // Null or empty name
+            Assert.Throws<ArgumentException>(() => person.UpdateAdvancedDetails(null!, "0999", "Email@g", Gender.Male, new DateOnly(1990, 1, 1), "ABCDEF"));
+            Assert.Throws<ArgumentException>(() => person.UpdateAdvancedDetails("", "0999", "Email@g", Gender.Male, new DateOnly(1990, 1, 1), "ABCDEF"));
+            Assert.Throws<ArgumentException>(() => person.UpdateAdvancedDetails("  ", "0999", "Email@g", Gender.Male, new DateOnly(1990, 1, 1), "ABCDEF"));
+            // Null or empty phone
+            Assert.Throws<ArgumentException>(() => person.UpdateAdvancedDetails("Full Name", null!, "Email@g", Gender.Male, new DateOnly(1990, 1, 1), "ABCDEF"));
+            Assert.Throws<ArgumentException>(() => person.UpdateAdvancedDetails("Full Name", "", "Email@g", Gender.Male, new DateOnly(1990, 1, 1), "ABCDEF"));
+            Assert.Throws<ArgumentException>(() => person.UpdateAdvancedDetails("Full Name", "  ", "Email@g", Gender.Male, new DateOnly(1990, 1, 1), "ABCDEF"));
+            // Null or empty email
+            Assert.Throws<ArgumentException>(() => person.UpdateAdvancedDetails("Full name", "0999", null!, Gender.Male, new DateOnly(1990, 1, 1), "ABCDEF"));
+            Assert.Throws<ArgumentException>(() => person.UpdateAdvancedDetails("Full name", "0999", "", Gender.Male, new DateOnly(1990, 1, 1), "ABCDEF"));
+            Assert.Throws<ArgumentException>(() => person.UpdateAdvancedDetails("Full name", "0999", "  ", Gender.Male, new DateOnly(1990, 1, 1), "ABCDEF"));
+            // Null or empty address
+            Assert.Throws<ArgumentException>(() => person.UpdateAdvancedDetails("Full Name", "0999", "Email@g", Gender.Male, new DateOnly(1990, 1, 1), null!));
+            Assert.Throws<ArgumentException>(() => person.UpdateAdvancedDetails("Full Name", "0999", "Email@g", Gender.Male, new DateOnly(1990, 1, 1), ""));
+            Assert.Throws<ArgumentException>(() => person.UpdateAdvancedDetails("Full Name", "0999", "Email@g", Gender.Male, new DateOnly(1990, 1, 1), "       "));
+        }
+
+        [Fact]
         public void TestDeletePerson()
         {
             var person = TestDataFactory.CreatePerson();
