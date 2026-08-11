@@ -50,7 +50,7 @@ namespace Clinic.API.Controllers
         }
 
         [HttpGet("{doctorId}/queue")]
-        [Authorize(Policy = "Permission:doctor.view")]
+        [Authorize(Policy = "Permission:doctor.queue.view")]
         public IActionResult GetQueue([FromRoute] string doctorId)
         {
             return Ok(new { doctorId });
