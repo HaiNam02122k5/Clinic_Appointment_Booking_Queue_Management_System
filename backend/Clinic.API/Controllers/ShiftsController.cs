@@ -15,35 +15,35 @@ namespace Clinic.API.Controllers
         }
 
         [HttpPut("{shiftId}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "Permission:shift.manage")]
         public IActionResult Update([FromRoute] string shiftId)
         {
             return NoContent();
         }
 
         [HttpPost("{shiftId}/cancel")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "Permission:shift.manage")]
         public IActionResult Cancel([FromRoute] string shiftId)
         {
             return NoContent();
         }
 
         [HttpPost("suggestions")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "Permission:shift.self-manage")]
         public IActionResult CreateSuggestion()
         {
             return StatusCode(StatusCodes.Status201Created);
         }
 
         [HttpPatch("suggestions/{suggestionId}")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "Permission:shift.manage")]
         public IActionResult PatchSuggestion([FromRoute] string suggestionId)
         {
             return NoContent();
         }
 
         [HttpDelete("suggestions")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Policy = "Permission:shift.manage")]
         public IActionResult DeleteSuggestion()
         {
             return NoContent();
