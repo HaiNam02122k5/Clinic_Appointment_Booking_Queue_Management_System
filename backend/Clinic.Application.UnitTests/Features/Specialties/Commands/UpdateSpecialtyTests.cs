@@ -46,6 +46,15 @@ namespace Clinic.Application.UnitTests.Features.Specialties.Commands
             await specialtyRepository.AddAsync(specialty2);
             await Assert.ThrowsAsync<ArgumentException>(async () =>
                 await handler.Handle(new UpdateSpecialtyCommand(specialty1.Id, "Neurology", "Updated description", new DateOnly(2005, 1, 1)), CancellationToken.None));
+
+            // Duplicate name with itself
+            await handler.Handle(new UpdateSpecialtyCommand(specialty1.Id, "Cardiology", "Updated description", new DateOnly(2005, 1, 1)), CancellationToken.None);
+            Assert.Equal("Updated description", specialty1.Description);
+
+            // Duplicate name with deleted entity
+            specialty2.Delete();
+            await handler.Handle(new UpdateSpecialtyCommand(specialty1.Id, "Neurology", "Updated description", new DateOnly(2005, 1, 1)), CancellationToken.None);
+            Assert.Equal("Neurology", specialty1.Name);
         }
 
         [Fact]
