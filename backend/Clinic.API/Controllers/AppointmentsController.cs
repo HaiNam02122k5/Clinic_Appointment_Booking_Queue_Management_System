@@ -21,6 +21,14 @@ namespace Clinic.API.Controllers
             return NoContent();
         }
 
+        [HttpPost("{appointmentId}/confirm")]
+        [Authorize(Policy = "Permission:appointment.confirm")]
+        public IActionResult Confirm([FromRoute] string appointmentId) => NoContent();
+
+        [HttpPost("{appointmentId}/reschedule")]
+        [Authorize(Policy = "Permission:appointment.reschedule")]
+        public IActionResult Reschedule([FromRoute] string appointmentId) => NoContent();
+
         [HttpPost("{appointmentId}/cancel")]
         [Authorize(Policy = "Permission:appointment.cancel")]
         public IActionResult Cancel([FromRoute] string appointmentId)
