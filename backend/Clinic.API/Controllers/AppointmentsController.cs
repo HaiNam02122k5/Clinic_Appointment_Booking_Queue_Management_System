@@ -15,7 +15,7 @@ namespace Clinic.API.Controllers
         }
 
         [HttpPatch("{appointmentId}")]
-        [Authorize(Policy = "Permission:appointment.view")]
+        [Authorize(Policy = "Permission:appointment.update")]
         public IActionResult Patch([FromRoute] string appointmentId)
         {
             return NoContent();
