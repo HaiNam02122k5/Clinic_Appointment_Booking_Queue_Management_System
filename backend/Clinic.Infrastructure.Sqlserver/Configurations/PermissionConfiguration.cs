@@ -30,8 +30,8 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
                 new Permission(Guid.Parse("10000000-0000-0000-0000-000000000007"), "user.manage", "Manage users", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("10000000-0000-0000-0000-000000000008"), "role.manage", "Manage roles and permissions", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("10000000-0000-0000-0000-000000000009"), "appointment.update", "Update appointments", new DateTime(2026, 1, 1), null, false),
-                new Permission(Guid.Parse("10000000-0000-0000-0000-00000000000A"), "appointment.confirm", "Confirm appointments", new DateTime(2026, 1, 1), null, false),
-                new Permission(Guid.Parse("10000000-0000-0000-0000-00000000000B"), "appointment.reschedule", "Reschedule appointments", new DateTime(2026, 1, 1), null, false)
+                new Permission(Guid.Parse("1000000A-0000-0000-0000-000000000001"), "appointment.confirm", "Confirm appointments", new DateTime(2026, 1, 1), null, false),
+                new Permission(Guid.Parse("1000000A-0000-0000-0000-000000000002"), "appointment.reschedule", "Reschedule appointments", new DateTime(2026, 1, 1), null, false)
             );
         }
     }
