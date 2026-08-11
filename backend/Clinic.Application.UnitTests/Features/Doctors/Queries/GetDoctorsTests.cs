@@ -24,7 +24,7 @@ namespace Clinic.Application.UnitTests.Features.Doctors.Queries
         }
 
         [Fact]
-        public async Task TestSearch()
+        public async Task TestSearchDoctors()
         {
             var doctorRepository = new FakeDoctorRepository();
             var handler = new GetDoctorsHandler(doctorRepository);
@@ -41,7 +41,7 @@ namespace Clinic.Application.UnitTests.Features.Doctors.Queries
         }
 
         [Fact]
-        public async Task TestSort()
+        public async Task TestSortDoctors()
         {
             var doctorRepository = new FakeDoctorRepository();
             var handler = new GetDoctorsHandler(doctorRepository);
@@ -58,7 +58,7 @@ namespace Clinic.Application.UnitTests.Features.Doctors.Queries
         }
 
         [Fact]
-        public async Task TestFilter()
+        public async Task TestFilterDoctors()
         {
             var doctorRepository = new FakeDoctorRepository();
             var handler = new GetDoctorsHandler(doctorRepository);
@@ -89,7 +89,7 @@ namespace Clinic.Application.UnitTests.Features.Doctors.Queries
         }
 
         [Fact]
-        public async Task TestPagination()
+        public async Task TestPaginationDoctors()
         {
             var doctorRepository = new FakeDoctorRepository();
             var handler = new GetDoctorsHandler(doctorRepository);

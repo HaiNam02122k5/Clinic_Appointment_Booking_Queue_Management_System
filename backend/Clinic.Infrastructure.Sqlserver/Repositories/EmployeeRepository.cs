@@ -1,11 +1,14 @@
 ﻿using Clinic.Application.Common.Models;
+using Clinic.Application.Interfaces;
 using Clinic.Domain.Entities;
+using Clinic.Domain.Enums;
 using Clinic.Infrastructure.Sqlserver.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Clinic.Infrastructure.Sqlserver.Repositories
 {
-    public class EmployeeRepository
+    public class EmployeeRepository : IEmployeeRepository
     {
         private readonly ApplicationDbContext _context;
         public EmployeeRepository(ApplicationDbContext context)
@@ -18,32 +21,66 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             _context.Employees.Add(employee);
         }
 
-        public async Task<Employee?> GetByPersonIdAsync(Guid personId)
+        public async Task<Employee?> GetByIdAsync(Guid employeeId)
         {
-            return await _context.Employees.FirstOrDefaultAsync(e => e.PersonId == personId && e.IsDeleted == false);
+            return await _context.Employees
+                .Include(e => e.Person)
+                    .ThenInclude(p => p.User)
+                    .ThenInclude(u => u.UserRoles)
+                    .ThenInclude(ur => ur.Role)
+                .Include(e => e.Manager)
+                    .ThenInclude(m => m.Person)
+                .FirstOrDefaultAsync(e => e.Id == employeeId && e.IsDeleted == false);
         }
 
-        public async Task<PagedResult<Employee>> GetPagedAsync(string? searchTerm, string sortBy, bool sortDescending, int page, int pageSize)
+        public async Task<Employee?> GetByPersonIdAsync(Guid personId)
         {
-            var query = _context.Employees.Where(e => e.IsDeleted == false);
+            return await _context.Employees
+                .Include(e => e.Person)
+                .ThenInclude(p => p.User)
+                .ThenInclude(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+                .FirstOrDefaultAsync(e => e.PersonId == personId && e.IsDeleted == false);
+        }
 
-            // TODO: Implement filter
-            //if (!string.IsNullOrEmpty(searchTerm))
-            //{
-            //    query = query.Where(s => s.Name.Contains(searchTerm) || s.Description.Contains(searchTerm));
-            //}
+        public async Task<PagedResult<Employee>> GetPagedAsync(string? search, string sortBy, bool descending, List<string>? roles, Gender? gender, EmployeeStatus? status, int page, int pageSize)
+        {
+            var query = _context.Employees
+                .Include(e => e.Person)
+                    .ThenInclude(p => p.User)
+                    .ThenInclude(u => u.UserRoles)
+                    .ThenInclude(ur => ur.Role)
+                .Where(e => e.IsDeleted == false);
 
-            //query = sortBy.ToLower() switch
-            //{
-            //    "name" => sortDescending ? query.OrderByDescending(s => s.Name) : query.OrderBy(s => s.Name),
-            //    "description" => sortDescending ? query.OrderByDescending(s => s.Description) : query.OrderBy(s => s.Description),
-            //    "establisheddate" => sortDescending ? query.OrderByDescending(s => s.EstablishedDate) : query.OrderBy(s => s.EstablishedDate),
-            //    _ => query.OrderBy(s => s.Name), // Default sorting by Name
-            //};
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(s => s.Person.FullName.Contains(search) ||
+                    (s.Person.Address != null && s.Person.Address.Contains(search)));
+            }
+
+            if (gender != null)
+            {
+                query = query.Where(e => e.Person.Gender == gender);
+            }
+            if (status != null)
+            {
+                query = query.Where(e => e.Status == status);
+            }
+            if (roles != null && roles.Any())
+            {
+                query = query.Where(e => e.Person.User.UserRoles.Any(ur => roles.Contains(ur.Role.Name)));
+            }
+
+            query = sortBy.ToLower() switch
+            {
+                "fullname" => descending ? query.OrderByDescending(s => s.Person.FullName) : query.OrderBy(s => s.Person.FullName),
+                "dateofbirth" => descending ? query.OrderByDescending(s => s.Person.DateOfBirth) : query.OrderBy(s => s.Person.DateOfBirth),
+                _ => query.OrderBy(s => s.Person.FullName), // Default sorting by FullName
+            };
 
             var totalCount = await query.CountAsync();
 
-            var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+            var items = await query.Skip((page - 1) * pageSize).Take(pageSize).AsNoTracking().ToListAsync();
             return new PagedResult<Employee>(items, totalCount);
         }
     }

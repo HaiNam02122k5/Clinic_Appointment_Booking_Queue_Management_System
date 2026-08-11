@@ -14,7 +14,12 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
         }
         public async Task<Role?> GetByNameAsync(string roleName)
         {
-            return await _context.Roles.FirstOrDefaultAsync(r => r.Name == roleName);
+            return await _context.Roles.FirstOrDefaultAsync(r => r.Name == roleName.Trim());
+        }
+
+        public async Task AddAsync(Role role)
+        {
+            await _context.Roles.AddAsync(role);
         }
     }
 }

@@ -13,14 +13,16 @@ namespace Clinic.Application.UnitTests.Common
             new Role(Guid.NewGuid(), "Patient", "Patient role", DateTime.UtcNow, DateTime.UtcNow, false),
         };
 
-        public static Person CreatePerson(string fullName = "John Doe", string? phoneNumber = "1234567890", string? email = "", string? address = "")
+        public static Person CreatePerson(string fullName = "John Doe", string? phoneNumber = "1234567890", string? email = "", string? address = "", DateOnly? dateOfBirth = null)
         {
-            return new Person(fullName, phoneNumber, email, DateOnly.FromDateTime(DateTime.UtcNow), Gender.Male, address);
+            return new Person(fullName, phoneNumber, email, dateOfBirth ?? DateOnly.FromDateTime(DateTime.UtcNow), Gender.Male, address);
         }
 
         public static User CreateUser(string username = "testuser", string passwordHash = "hashedpassword", Person? person = null)
         {
-            var newUser = new User(username, passwordHash, person ?? CreatePerson());
+            person ??= CreatePerson();
+            var newUser = new User(username, passwordHash, person);
+            person.User = newUser;
             return newUser;
         }
 
@@ -38,7 +40,9 @@ namespace Clinic.Application.UnitTests.Common
 
         public static Employee CreateEmployee(Person? person = null)
         {
-            var newEmployee = new Employee(person ?? CreatePerson(), DateOnly.FromDateTime(DateTime.UtcNow));
+            person ??= CreatePerson();
+            var newEmployee = new Employee(person, DateOnly.FromDateTime(DateTime.UtcNow));
+            person.Employee = newEmployee;
             return newEmployee;
         }
 

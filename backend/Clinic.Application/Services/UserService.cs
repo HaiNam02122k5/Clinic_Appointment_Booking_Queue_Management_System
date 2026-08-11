@@ -29,6 +29,10 @@ namespace Clinic.Application.Services
         public async Task<User> CreateUserAsync(string username, string password, Person person)
         {
             var existingUser = await _userRepository.GetByUsernameAsync(username.Trim());
+            if (person.User != null)
+            {
+                throw new ArgumentException("The provided person is already associated with a user.");
+            }
             if (existingUser != null)
             {
                 throw new ArgumentException("A user with that username already exists.");
