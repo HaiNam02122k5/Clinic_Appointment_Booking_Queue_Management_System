@@ -17,6 +17,7 @@ namespace Clinic.Application.Features.Specialties.Commands
         }
         public async Task<Guid> Handle(UpdateSpecialtyCommand request, CancellationToken cancellationToken)
         {
+            // Validate the request
             if (string.IsNullOrWhiteSpace(request.Name))
             {
                 throw new ArgumentException("Specialty name cannot be empty.");
@@ -26,7 +27,10 @@ namespace Clinic.Application.Features.Specialties.Commands
             {
                 throw new NotFoundException("Specialty not found.");
             }
-            if (await _specialtyRepository.GetByNameAsync(request.Name) is not null)
+
+            // Check if the specialty name is already taken by another specialty
+            var existingSpecialty = await _specialtyRepository.GetByNameAsync(request.Name);
+            if (existingSpecialty != null && existingSpecialty.Id != request.Id)
             {
                 throw new ArgumentException($"Specialty {request.Name} already exists.");
             }

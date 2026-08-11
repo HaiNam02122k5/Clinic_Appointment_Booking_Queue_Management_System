@@ -24,10 +24,21 @@ namespace Clinic.API.Controllers
 
         [HttpGet]
         [Authorize(Roles = "Admin")]
-        [ProducesResponseType(typeof(List<SpecialtyDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(PaginationResponse<SpecialtyDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetSpecialties([FromQuery] GetSpecialtiesRequest request)
         {
             var command = _mapper.Map<GetSpecialtiesQuery>(request);
+            var result = await _sender.Send(command);
+            return Ok(result);
+        }
+
+        [HttpGet("{id}")]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(typeof(SpecialtyDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetSpecialty(Guid id)
+        {
+            var command = _mapper.Map<GetSpecialtyQuery>(new { Id = id });
             var result = await _sender.Send(command);
             return Ok(result);
         }
@@ -40,12 +51,12 @@ namespace Clinic.API.Controllers
         {
             var command = _mapper.Map<CreateSpecialtyCommand>(request);
             var result = await _sender.Send(command);
-            return CreatedAtAction(nameof(GetSpecialties), result.Id, result);
+            return CreatedAtAction(nameof(GetSpecialty), result.Id, result);
         }
 
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
-        [ProducesResponseType(typeof(SpecialtyDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> UpdateSpecialty(Guid id, [FromBody] UpdateSpecialtyRequest request)
@@ -57,8 +68,8 @@ namespace Clinic.API.Controllers
                 request.Description,
                 request.EstablishedDate
             });
-            var result = await _sender.Send(command);
-            return Ok(result);
+            await _sender.Send(command);
+            return NoContent();
         }
 
         [HttpPost("{id}/delete")]
@@ -68,7 +79,7 @@ namespace Clinic.API.Controllers
         public async Task<IActionResult> DeleteSpecialty(Guid id)
         {
             var command = _mapper.Map<DeleteSpecialtyCommand>(new { Id = id });
-            var result = await _sender.Send(command);
+            await _sender.Send(command);
             return NoContent();
         }
     }
