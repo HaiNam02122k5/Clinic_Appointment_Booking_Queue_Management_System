@@ -20,36 +20,6 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             _context.Doctors.Add(doctor);
         }
 
-        public async Task<IEnumerable<WorkSchedule>> GetPlannedSchedulesByDoctorIdAsync(Guid doctorId, DateOnly startDate, DateOnly endDate)
-        {
-            // Check if the time range exceeds 1 month
-            if (startDate.AddMonths(1) < endDate)
-            {
-                throw new ArgumentException("The time range cannot exceed 1 month.");
-            }
-
-            return await _context.WorkSchedules
-                .Where(ws => ws.DoctorId == doctorId &&
-                    ((DateOnly.FromDateTime(ws.ShiftStart) >= startDate && DateOnly.FromDateTime(ws.ShiftStart) <= endDate) ||
-                    (DateOnly.FromDateTime(ws.ShiftEnd) >= startDate && DateOnly.FromDateTime(ws.ShiftEnd) <= endDate)))
-                .ToListAsync();
-        }
-
-        public async Task<IEnumerable<ShiftRequest>> GetRequestedSchedulesByDoctorIdAsync(Guid doctorId, DateOnly startDate, DateOnly endDate)
-        {
-            // Check if the time range exceeds 1 month
-            if (startDate.AddMonths(1) < endDate)
-            {
-                throw new ArgumentException("The time range cannot exceed 1 month.");
-            }
-
-            return await _context.ShiftRequests
-                .Where(sr => sr.DoctorId == doctorId &&
-                    ((DateOnly.FromDateTime(sr.ShiftStart) >= startDate && DateOnly.FromDateTime(sr.ShiftStart) <= endDate) ||
-                    (DateOnly.FromDateTime(sr.ShiftEnd) >= startDate && DateOnly.FromDateTime(sr.ShiftEnd) <= endDate)))
-                .ToListAsync();
-        }
-
         public async Task<Doctor?> GetInfoByIdAsync(Guid doctorId)
         {
             return await _context.Doctors
