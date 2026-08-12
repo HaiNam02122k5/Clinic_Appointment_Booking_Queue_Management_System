@@ -13,36 +13,6 @@ namespace Clinic.Application.UnitTests.Common
             _doctors.Add(doctor);
         }
 
-        public async Task<IEnumerable<WorkSchedule>> GetPlannedSchedulesByDoctorIdAsync(Guid doctorId, DateOnly startDate, DateOnly endDate)
-        {
-            // Check if the time range exceeds 1 month
-            if (startDate.AddMonths(1) < endDate)
-            {
-                throw new ArgumentException("The time range cannot exceed 1 month.");
-            }
-
-            var doc = _doctors.FirstOrDefault(d => d.Id == doctorId);
-            return doc?.WorkSchedules.Where(ws =>
-                (DateOnly.FromDateTime(ws.ShiftStart) >= startDate && DateOnly.FromDateTime(ws.ShiftStart) <= endDate) ||
-                (DateOnly.FromDateTime(ws.ShiftEnd) >= startDate && DateOnly.FromDateTime(ws.ShiftEnd) <= endDate)
-            ).ToList();
-        }
-
-        public async Task<IEnumerable<ShiftRequest>> GetRequestedSchedulesByDoctorIdAsync(Guid doctorId, DateOnly startDate, DateOnly endDate)
-        {
-            // Check if the time range exceeds 1 month
-            if (startDate.AddMonths(1) < endDate)
-            {
-                throw new ArgumentException("The time range cannot exceed 1 month.");
-            }
-
-            var doc = _doctors.FirstOrDefault(d => d.Id == doctorId);
-            return doc?.ShiftRequests.Where(sr =>
-                (DateOnly.FromDateTime(sr.ShiftStart) >= startDate && DateOnly.FromDateTime(sr.ShiftStart) <= endDate) ||
-                (DateOnly.FromDateTime(sr.ShiftEnd) >= startDate && DateOnly.FromDateTime(sr.ShiftEnd) <= endDate)
-            ).ToList();
-        }
-
         public async Task<Doctor?> GetInfoByIdAsync(Guid doctorId)
         {
             return _doctors.FirstOrDefault(d => d.Id == doctorId);

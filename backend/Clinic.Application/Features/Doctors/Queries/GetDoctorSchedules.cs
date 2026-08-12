@@ -17,9 +17,11 @@ namespace Clinic.Application.Features.Doctors.Queries
     public class GetDoctorSchedulesHandler : IRequestHandler<GetDoctorSchedulesQuery, DoctorScheduleDto<WorkScheduleDto>>
     {
         private readonly IDoctorRepository _doctorRepository;
-        public GetDoctorSchedulesHandler(IDoctorRepository doctorRepository)
+        private readonly IWorkScheduleRepository _workScheduleRepository;
+        public GetDoctorSchedulesHandler(IDoctorRepository doctorRepository, IWorkScheduleRepository workScheduleRepository)
         {
             _doctorRepository = doctorRepository;
+            _workScheduleRepository = workScheduleRepository;
         }
 
         public async Task<DoctorScheduleDto<WorkScheduleDto>> Handle(GetDoctorSchedulesQuery request, CancellationToken cancellationToken)
@@ -33,7 +35,7 @@ namespace Clinic.Application.Features.Doctors.Queries
             {
                 throw new NotFoundException("Doctor not found");
             }
-            var schedules = await _doctorRepository.GetPlannedSchedulesByDoctorIdAsync(request.DoctorId, request.StartDate, request.EndDate);
+            var schedules = await _workScheduleRepository.GetPlannedSchedulesByDoctorIdAsync(request.DoctorId, request.StartDate, request.EndDate);
 
             // Map the doctor's schedules to the DTO
             var scheduleDto = new DoctorScheduleDto<WorkScheduleDto>

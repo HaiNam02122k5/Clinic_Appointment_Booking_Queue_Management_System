@@ -14,9 +14,11 @@ namespace Clinic.Application.Features.Doctors.Queries
     public class GetDoctorRequestedShiftsHandler : IRequestHandler<GetDoctorRequestedShiftsQuery, DoctorScheduleDto<RequestedShiftDto>>
     {
         private readonly IDoctorRepository _doctorRepository;
-        public GetDoctorRequestedShiftsHandler(IDoctorRepository doctorRepository)
+        private readonly IWorkScheduleRepository _workScheduleRepository;
+        public GetDoctorRequestedShiftsHandler(IDoctorRepository doctorRepository, IWorkScheduleRepository workScheduleRepository)
         {
             _doctorRepository = doctorRepository;
+            _workScheduleRepository = workScheduleRepository;
         }
 
         public async Task<DoctorScheduleDto<RequestedShiftDto>> Handle(GetDoctorRequestedShiftsQuery request, CancellationToken cancellationToken)
@@ -30,7 +32,7 @@ namespace Clinic.Application.Features.Doctors.Queries
             {
                 throw new NotFoundException("Doctor not found");
             }
-            var schedules = await _doctorRepository.GetRequestedSchedulesByDoctorIdAsync(request.DoctorId, request.StartDate, request.EndDate);
+            var schedules = await _workScheduleRepository.GetRequestedSchedulesByDoctorIdAsync(request.DoctorId, request.StartDate, request.EndDate);
 
             // Map the doctor's schedules to the DTO
             var scheduleDto = new DoctorScheduleDto<RequestedShiftDto>
