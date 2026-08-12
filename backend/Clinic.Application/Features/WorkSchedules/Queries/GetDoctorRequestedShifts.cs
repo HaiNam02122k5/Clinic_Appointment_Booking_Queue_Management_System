@@ -45,7 +45,7 @@ namespace Clinic.Application.Features.WorkSchedules.Queries
                     DoctorId = sr.DoctorId,
                     StartTime = sr.ShiftStart,
                     EndTime = sr.ShiftEnd,
-                    PatientLimitPerSlot = sr.PatientLimitPerSlot,
+                    PatientLimit = sr.PatientLimit,
                     Reason = sr.Reason,
                     Status = sr.Status
                 }).ToList(),

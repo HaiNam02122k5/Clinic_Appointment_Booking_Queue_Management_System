@@ -28,7 +28,7 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Commands
 
             // Assert
             Assert.Equal(shiftRequest.Id, result);
-            Assert.Equal(10, shiftRequest.PatientLimitPerSlot);
+            Assert.Equal(10, shiftRequest.PatientLimit);
             Assert.True(shiftRequest.ShiftStart > DateTime.UtcNow.AddDays(1));
         }
 

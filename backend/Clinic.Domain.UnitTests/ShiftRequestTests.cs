@@ -12,7 +12,7 @@ namespace Clinic.Domain.UnitTests
             var doctor = new Doctor(employee, "123ABC", "Tien si", new Specialty("name", "", DateOnly.FromDateTime(DateTime.UtcNow)), 0);
             var shift = new ShiftRequest(doctor, DateTime.UtcNow.AddDays(1), DateTime.UtcNow.AddDays(2), 5, "");
             Assert.Equal(doctor, shift.Doctor);
-            Assert.Equal(5, shift.PatientLimitPerSlot);
+            Assert.Equal(5, shift.PatientLimit);
         }
 
         [Fact]

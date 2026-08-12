@@ -7,7 +7,7 @@ using MediatR;
 namespace Clinic.Application.Features.WorkSchedules.Commands
 {
     // Use-case: Doctor adds a new shift request
-    public record AddDoctorShiftRequestCommand(Guid DoctorId, DateTime StartTime, DateTime EndTime, int PatientLimitPerSlot, string reason) : IRequest<RequestedShiftDto>;
+    public record AddDoctorShiftRequestCommand(Guid DoctorId, DateTime StartTime, DateTime EndTime, int PatientLimit, string reason) : IRequest<RequestedShiftDto>;
 
     public class AddDoctorShiftRequestCommandHandler : IRequestHandler<AddDoctorShiftRequestCommand, RequestedShiftDto>
     {
@@ -36,7 +36,7 @@ namespace Clinic.Application.Features.WorkSchedules.Commands
                 doctor: doctor,
                 shiftStart: request.StartTime,
                 shiftEnd: request.EndTime,
-                patientLimitPerSlot: request.PatientLimitPerSlot,
+                patientLimit: request.PatientLimit,
                 reason: request.reason
             );
             doctor.AddShiftRequest(shiftRequest);
@@ -47,7 +47,7 @@ namespace Clinic.Application.Features.WorkSchedules.Commands
                 DoctorId = doctor.Id,
                 StartTime = request.StartTime,
                 EndTime = request.EndTime,
-                PatientLimitPerSlot = request.PatientLimitPerSlot,
+                PatientLimit = request.PatientLimit,
                 Reason = request.reason,
                 Status = shiftRequest.Status
             };

@@ -20,7 +20,8 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Commands
             var unitOfWork = new FakeUnitOfWork();
             var handler = new CancelRequestCommandHandler(workScheduleRepository, unitOfWork);
             var doctor = TestDataFactory.CreateDoctor();
-            var shiftRequest = new ShiftRequest(doctor, DateTime.UtcNow.AddDays(1), DateTime.UtcNow.AddDays(1).AddHours(1), 5, "");
+            var now = DateTime.UtcNow;
+            var shiftRequest = new ShiftRequest(doctor, now.AddDays(1), now.AddDays(1).AddHours(1), 5, "");
             await workScheduleRepository.AddShiftRequestAsync(shiftRequest);
 
             // Act

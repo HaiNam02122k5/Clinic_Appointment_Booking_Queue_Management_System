@@ -27,7 +27,7 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Commands
 
             // Assert
             Assert.Equal(workSchedule.Id, result);
-            Assert.Equal(10, workSchedule.PatientLimitPerSlot);
+            Assert.Equal(10, workSchedule.PatientLimit);
         }
 
         [Fact]

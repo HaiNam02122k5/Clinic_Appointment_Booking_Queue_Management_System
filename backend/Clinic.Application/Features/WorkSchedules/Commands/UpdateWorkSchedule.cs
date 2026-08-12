@@ -14,7 +14,7 @@ namespace Clinic.Application.Features.WorkSchedules.Commands
         Guid Id,
         DateTime StartTime,
         DateTime EndTime,
-        int PatientLimitPerSlot
+        int PatientLimit
     ) : IRequest<Guid>;
     public class UpdateWorkScheduleCommandHandler : IRequestHandler<UpdateWorkScheduleCommand, Guid>
     {
@@ -33,7 +33,7 @@ namespace Clinic.Application.Features.WorkSchedules.Commands
             {
                 throw new NotFoundException("Work schedule not found");
             }
-            workSchedule.UpdateShift(request.StartTime, request.EndTime, request.PatientLimitPerSlot);
+            workSchedule.UpdateShift(request.StartTime, request.EndTime, request.PatientLimit);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return workSchedule.Id;
         }

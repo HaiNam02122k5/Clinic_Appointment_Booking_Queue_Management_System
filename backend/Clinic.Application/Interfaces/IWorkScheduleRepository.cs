@@ -50,5 +50,10 @@ namespace Clinic.Application.Interfaces
         /// Checks if a doctor has already requested a shift that has exact same time range asynchronously.
         /// </summary>
         Task<bool> HasDuplicateShiftRequest(Guid doctorId, DateTime startTime, DateTime endTime);
+
+        /// <summary>
+        /// Retrieves work schedules for a doctor on a specific date, including their associated appointments asynchronously.
+        /// </summary>
+        Task<IEnumerable<WorkSchedule>> GetDoctorSchedulesWithAppointmentByDateAsync(Guid doctorId, DateOnly date);
     }
 }

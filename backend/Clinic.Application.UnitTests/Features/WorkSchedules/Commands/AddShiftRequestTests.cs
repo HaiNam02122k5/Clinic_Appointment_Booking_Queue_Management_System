@@ -18,13 +18,14 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Commands
             var unitOfWork = new FakeUnitOfWork();
             var handler = new AddDoctorShiftRequestCommandHandler(doctorRepository, workScheduleRepository, unitOfWork);
             var doctor = TestDataFactory.CreateDoctor();
+            var now = DateTime.UtcNow;
             await doctorRepository.AddAsync(doctor);
-            var schedule1 = new ShiftRequest(doctor, DateTime.UtcNow.AddDays(1), DateTime.UtcNow.AddDays(1).AddHours(1), 5, "");
+            var schedule1 = new ShiftRequest(doctor, now.AddDays(1), now.AddDays(1).AddHours(1), 5, "");
             doctor.AddShiftRequest(schedule1);
             await workScheduleRepository.AddShiftRequestAsync(schedule1);
 
             var command = new AddDoctorShiftRequestCommand(
-                doctor.Id, DateTime.UtcNow.AddDays(2), DateTime.UtcNow.AddDays(2).AddHours(1), 5, "");
+                doctor.Id, now.AddDays(2), now.AddDays(2).AddHours(1), 5, "");
             var result = await handler.Handle(command, CancellationToken.None);
 
             Assert.NotNull(workScheduleRepository.GetShiftRequestByIdAsync(result.Id));
@@ -34,7 +35,7 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Commands
             await Assert.ThrowsAsync<InvalidOperationException>(async () =>
             {
                 var overlappingCommand = new AddDoctorShiftRequestCommand(
-                    doctor.Id, DateTime.UtcNow.AddDays(1), DateTime.UtcNow.AddDays(1).AddHours(1), 5, "");
+                    doctor.Id, now.AddDays(1), now.AddDays(1).AddHours(1), 5, "");
                 await handler.Handle(overlappingCommand, CancellationToken.None);
             });
         }

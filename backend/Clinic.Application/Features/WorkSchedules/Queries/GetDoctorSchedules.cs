@@ -48,7 +48,7 @@ namespace Clinic.Application.Features.WorkSchedules.Queries
                     DoctorId = ws.DoctorId,
                     StartTime = ws.ShiftStart,
                     EndTime = ws.ShiftEnd,
-                    PatientLimitPerSlot = ws.PatientLimitPerSlot,
+                    PatientLimit = ws.PatientLimit,
                     Status = ws.Status
                 }).ToList(),
                 startDate = request.StartDate,

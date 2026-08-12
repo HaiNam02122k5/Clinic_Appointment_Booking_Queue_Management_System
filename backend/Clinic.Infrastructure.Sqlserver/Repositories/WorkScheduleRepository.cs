@@ -1,5 +1,6 @@
 ﻿using Clinic.Application.Interfaces;
 using Clinic.Domain.Entities;
+using Clinic.Domain.Enums;
 using Clinic.Infrastructure.Sqlserver.Persistence;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -25,6 +26,13 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
         public async Task AddWorkScheduleAsync(WorkSchedule workSchedule)
         {
             await _context.WorkSchedules.AddAsync(workSchedule);
+        }
+
+        public async Task<IEnumerable<WorkSchedule>> GetDoctorSchedulesWithAppointmentByDateAsync(Guid doctorId, DateOnly date)
+        {
+            return await _context.WorkSchedules.Include(ws => ws.Appointments.Where(a => a.IsDeleted == false && a.Status != AppointmentStatus.Cancelled))
+                .Where(ws => ws.DoctorId == doctorId && ws.IsDeleted == false && ws.Status == Domain.Enums.WorkScheduleStatus.Active && 
+                DateOnly.FromDateTime(ws.ShiftStart) == date).AsNoTracking().ToListAsync();
         }
 
         public async Task<IEnumerable<WorkSchedule>> GetPlannedSchedulesByDoctorIdAsync(Guid doctorId, DateOnly startDate, DateOnly endDate)

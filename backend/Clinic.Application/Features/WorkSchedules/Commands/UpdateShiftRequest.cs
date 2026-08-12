@@ -11,7 +11,7 @@ namespace Clinic.Application.Features.WorkSchedules.Commands
         Guid DoctorId,
         DateTime StartTime,
         DateTime EndTime,
-        int PatientLimitPerSlot,
+        int PatientLimit,
         string Reason
     ) : IRequest<Guid>;
     public class UpdateShiftRequestCommandHandler : IRequestHandler<UpdateShiftRequestCommand, Guid>
@@ -35,7 +35,7 @@ namespace Clinic.Application.Features.WorkSchedules.Commands
             {
                 throw new UnauthorizedAccessException("You are not authorized to update this shift request");
             }
-            shiftRequest.UpdateShift(request.StartTime, request.EndTime, request.PatientLimitPerSlot, request.Reason);
+            shiftRequest.UpdateShift(request.StartTime, request.EndTime, request.PatientLimit, request.Reason);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return shiftRequest.Id;
         }

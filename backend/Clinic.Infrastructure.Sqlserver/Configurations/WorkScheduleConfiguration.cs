@@ -20,7 +20,7 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
             builder.Property(w => w.CancellationReason)
                 .HasMaxLength(500);
 
-            builder.Property(w => w.PatientLimitPerSlot).IsRequired();
+            builder.Property(w => w.PatientLimit).IsRequired();
 
             builder.Property(w => w.Status)
                 .HasConversion<string>()

@@ -1,5 +1,6 @@
 ﻿using Clinic.Application.Interfaces;
 using Clinic.Domain.Entities;
+using Clinic.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -18,6 +19,20 @@ namespace Clinic.Application.UnitTests.Common
         public async Task AddWorkScheduleAsync(WorkSchedule workSchedule)
         {
             _workSchedules.Add(workSchedule);
+        }
+
+        public async Task<IEnumerable<WorkSchedule>> GetDoctorSchedulesWithAppointmentByDateAsync(Guid doctorId, DateOnly date)
+        {
+            List<WorkSchedule> result = _workSchedules
+                .Where(ws => ws.DoctorId == doctorId &&
+                ws.IsDeleted == false &&
+                ws.Status == WorkScheduleStatus.Active &&
+                DateOnly.FromDateTime(ws.ShiftStart) == date).ToList();
+            foreach (var schedule in result)
+            {
+                schedule.Appointments = schedule.Appointments.Where(a => a.IsDeleted == false && a.Status != AppointmentStatus.Cancelled).ToList();
+            }
+            return result;
         }
 
         public async Task<IEnumerable<WorkSchedule>> GetPlannedSchedulesByDoctorIdAsync(Guid doctorId, DateOnly startDate, DateOnly endDate)
@@ -61,7 +76,7 @@ namespace Clinic.Application.UnitTests.Common
         public async Task<bool> HasDuplicateShiftRequest(Guid doctorId, DateTime startTime, DateTime endTime)
         {
             return _shiftRequests.Any(sr => sr.DoctorId == doctorId &&
-                ((sr.ShiftStart == endTime && sr.ShiftEnd == startTime)));
+                ((sr.ShiftStart == startTime && sr.ShiftEnd == endTime)));
         }
 
         public async Task<bool> HasOverlappingWorkSchedule(Guid doctorId, DateTime startTime, DateTime endTime)

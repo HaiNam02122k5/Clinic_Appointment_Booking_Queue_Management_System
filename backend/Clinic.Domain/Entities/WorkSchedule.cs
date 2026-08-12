@@ -8,6 +8,7 @@ namespace Clinic.Domain.Entities
     /// <summary>Một khung giờ làm việc của bác sĩ, giới hạn số bệnh nhân tối đa.</summary>
     public class WorkSchedule : BaseEntity
     {
+        public const int SlotIntervalMinutes = 15; // Khoảng thời gian giữa các slot hẹn (15 phút)
         public Guid DoctorId { get; set; }
         public Doctor Doctor { get; set; } = null!;
 
@@ -15,45 +16,45 @@ namespace Clinic.Domain.Entities
 
         public DateTime ShiftEnd { get; set; }
 
-        public int PatientLimitPerSlot { get; set; }
+        public int PatientLimit { get; set; }
 
         public WorkScheduleStatus Status { get; set; } = WorkScheduleStatus.Active;
         public string? CancellationReason { get; set; }
 
         public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 
-        public WorkSchedule(Doctor doctor, DateTime shiftStart, DateTime shiftEnd, int patientLimitPerSlot)
+        public WorkSchedule(Doctor doctor, DateTime shiftStart, DateTime shiftEnd, int patientLimit)
         {
             if (doctor == null) throw new ArgumentNullException(nameof(doctor));
-            if (shiftStart < DateTime.UtcNow) throw new ArgumentException("Shift start time must be in the future.");
+            if (shiftStart < DateTime.UtcNow.ToLocalTime()) throw new ArgumentException("Shift start time must be in the future.");
             if (shiftStart >= shiftEnd) throw new ArgumentException("Shift start time must be before shift end time.");
-            if (patientLimitPerSlot <= 0) throw new ArgumentException("Patient limit per slot must be greater than zero.");
+            if (patientLimit <= 0) throw new ArgumentException("Patient limit per slot must be greater than zero.");
             Doctor = doctor;
             DoctorId = doctor.Id;
             ShiftStart = shiftStart;
             ShiftEnd = shiftEnd;
-            PatientLimitPerSlot = patientLimitPerSlot;
+            PatientLimit = patientLimit;
         }
 
-        public WorkSchedule(Guid id, Guid doctorId, DateTime shiftStart, DateTime shiftEnd, int patientLimitPerSlot, WorkScheduleStatus status, DateTime createdAt, DateTime? updatedAt, bool isDeleted)
+        public WorkSchedule(Guid id, Guid doctorId, DateTime shiftStart, DateTime shiftEnd, int patientLimit, WorkScheduleStatus status, DateTime createdAt, DateTime? updatedAt, bool isDeleted)
             : base(id, createdAt, updatedAt, isDeleted)
         {
             DoctorId = doctorId;
             ShiftStart = shiftStart;
             ShiftEnd = shiftEnd;
-            PatientLimitPerSlot = patientLimitPerSlot;
+            PatientLimit = patientLimit;
             Status = status;
         }
 
-        public void UpdateShift(DateTime newShiftStart, DateTime newShiftEnd, int newPatientLimitPerSlot)
+        public void UpdateShift(DateTime newShiftStart, DateTime newShiftEnd, int newPatientLimit)
         {
             if (ShiftStart <= DateTime.UtcNow && newShiftStart != ShiftStart) throw new InvalidOperationException("Cannot update the start time of a shift that has already started.");
             if (newShiftStart != ShiftStart && newShiftStart < DateTime.UtcNow) throw new ArgumentException("New shift start time must be in the future.");
             if (newShiftStart >= newShiftEnd) throw new ArgumentException("New shift start time must be before new shift end time.");
-            if (newPatientLimitPerSlot <= 0) throw new ArgumentException("New patient limit per slot must be greater than zero.");
+            if (newPatientLimit <= 0) throw new ArgumentException("New patient limit per slot must be greater than zero.");
             ShiftStart = newShiftStart;
             ShiftEnd = newShiftEnd;
-            PatientLimitPerSlot = newPatientLimitPerSlot;
+            PatientLimit = newPatientLimit;
             MarkUpdated();
         }
 

@@ -11,7 +11,7 @@ namespace Clinic.Application.Contracts
         public Guid DoctorId { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
-        public int PatientLimitPerSlot { get; set; }
+        public int PatientLimit { get; set; }
         public string? Reason { get; set; }
         public ShiftRequestStatus Status { get; set; }
     }
