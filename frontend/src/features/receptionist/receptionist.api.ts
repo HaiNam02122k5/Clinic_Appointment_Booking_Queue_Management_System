@@ -1,14 +1,15 @@
+import { http } from '@/lib/api/http'
+
 import type {
-  QueueItem,
-  RecentCheckin,
+  Doctor,
 } from './receptionist.types'
 
 export const receptionistApi = {
-  async getQueue(): Promise<QueueItem[]> {
-    return []
-  },
+  async getDoctors(): Promise<Doctor[]> {
+    const response = await http.get<Doctor[]>(
+      '/doctors',
+    )
 
-  async getRecentCheckins(): Promise<RecentCheckin[]> {
-    return []
+    return response.data
   },
 }
