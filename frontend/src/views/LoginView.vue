@@ -115,7 +115,7 @@ async function handleLogin() {
     // Điều hướng theo vai trò
     switch (selectedRole.value) {
       case 'Receptionist':
-        router.replace('/reception')
+        router.replace('/reception/queue')
         break
 
       case 'Doctor':

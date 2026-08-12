@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
 import { queueApi } from '@/features/queue/queue.api'
+
 import type {
   QueueItem,
   CheckInRequest,
@@ -16,14 +17,18 @@ export const useReceptionistStore = defineStore(
 
     // =========================
     // Load queue
+    // GET /doctors/{doctorId}/queue
     // =========================
 
-    async function loadQueue(doctorId: number) {
+    async function loadQueue(
+      doctorId: number,
+    ) {
       loading.value = true
       error.value = null
 
       try {
-        const response = await queueApi.getQueue(doctorId)
+        const response =
+          await queueApi.getQueue(doctorId)
 
         queue.value = response.items
       } catch (err) {
@@ -31,6 +36,8 @@ export const useReceptionistStore = defineStore(
           err instanceof Error
             ? err.message
             : 'Không thể tải hàng đợi'
+
+        throw err
       } finally {
         loading.value = false
       }
@@ -38,6 +45,7 @@ export const useReceptionistStore = defineStore(
 
     // =========================
     // Check-in
+    // POST /queue-tickets/check-in
     // =========================
 
     async function checkIn(
@@ -47,9 +55,7 @@ export const useReceptionistStore = defineStore(
       error.value = null
 
       try {
-        const result = await queueApi.checkIn(data)
-
-        return result
+        return await queueApi.checkIn(data)
       } catch (err) {
         error.value =
           err instanceof Error
@@ -64,17 +70,19 @@ export const useReceptionistStore = defineStore(
 
     // =========================
     // Call
+    // PATCH /queue-tickets/{id}/call
     // =========================
 
-    async function call(queueTicketId: string) {
+    async function call(
+      queueTicketId: string,
+    ) {
       loading.value = true
       error.value = null
 
       try {
-        const result =
-          await queueApi.callQueueTicket(queueTicketId)
-
-        return result
+        return await queueApi.call(
+          queueTicketId,
+        )
       } catch (err) {
         error.value =
           err instanceof Error
@@ -89,17 +97,19 @@ export const useReceptionistStore = defineStore(
 
     // =========================
     // Skip
+    // PATCH /queue-tickets/{id}/skip
     // =========================
 
-    async function skip(queueTicketId: string) {
+    async function skip(
+      queueTicketId: string,
+    ) {
       loading.value = true
       error.value = null
 
       try {
-        const result =
-          await queueApi.skipQueueTicket(queueTicketId)
-
-        return result
+        return await queueApi.skip(
+          queueTicketId,
+        )
       } catch (err) {
         error.value =
           err instanceof Error
@@ -114,6 +124,7 @@ export const useReceptionistStore = defineStore(
 
     // =========================
     // Priority
+    // PATCH /queue-tickets/{id}/priority
     // =========================
 
     async function setPriority(
@@ -124,15 +135,12 @@ export const useReceptionistStore = defineStore(
       error.value = null
 
       try {
-        const result =
-          await queueApi.setPriority(
-            queueTicketId,
-            {
-              priority,
-            },
-          )
-
-        return result
+        return await queueApi.setPriority(
+          queueTicketId,
+          {
+            priority,
+          },
+        )
       } catch (err) {
         error.value =
           err instanceof Error

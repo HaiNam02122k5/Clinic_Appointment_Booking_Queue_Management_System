@@ -1,25 +1,67 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import {
+  computed,
+  onMounted,
+  ref,
+} from 'vue'
 
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 
 import {
-  DOCTORS,
-  RECENT_CHECKINS,
-} from '@/features/receptionist/receptionist.data'
+  doctorApi,
+} from '@/features/doctor/doctor.api'
+
+import type {
+  Doctor,
+} from '@/features/doctor/doctor.types'
+
+import {
+  useReceptionistStore,
+} from '@/stores/receptionist'
 
 const name = ref('')
 const phone = ref('')
-const bookingCode = ref('')
+const appointmentId = ref('')
 const docId = ref('')
 const urgent = ref(false)
+const doctors = ref<Doctor[]>([])
+const loadingDoctors = ref(false)
+const doctorError = ref<string | null>(null)
+const queueTicketId = ref<string | null>(null)
 
 const done = ref(false)
 const issued = ref('')
 
+const receptionistStore =
+  useReceptionistStore()
+
+async function loadDoctors() {
+  loadingDoctors.value = true
+  doctorError.value = null
+
+  try {
+    const response = await doctorApi.getDoctors({
+      status: 'ACTIVE',
+    })
+
+    doctors.value = response.items
+  } catch (error) {
+    doctorError.value =
+      error instanceof Error
+        ? error.message
+        : 'Không thể tải danh sách bác sĩ'
+  } finally {
+    loadingDoctors.value = false
+  }
+}
+
+onMounted(() => {
+  loadDoctors()
+})
+
 const selectedDoctor = computed(() => {
-  return DOCTORS.find(
+  return doctors.value.find(
     (doctor) => doctor.id === Number(docId.value),
   )
 })
@@ -31,27 +73,47 @@ const currentTime = computed(() => {
   })
 })
 
-function handleCheckin() {
+async function handleCheckin() {
   const doctor = selectedDoctor.value
 
   if (!doctor) return
   if (!name.value.trim()) return
+  if (!appointmentId.value.trim()) return
 
-  issued.value = `${doctor.prefix}00${
-    Math.floor(Math.random() * 9) + 5
-  }`
+  try {
+      const response =
+      await receptionistStore.checkIn({
+      appointmentId:
+      appointmentId.value.trim(),
+    priority: urgent.value,
+  })
 
-  done.value = true
+    // Lưu ID của QueueTicket
+    queueTicketId.value = response.id
+
+    // Số thứ tự do BE sinh
+    issued.value = String(
+      response.queueNumber,
+    )
+
+    done.value = true
+  } catch (error) {
+    console.error(
+      'Check-in failed:',
+      error,
+    )
+  }
 }
 
 function resetCheckin() {
   done.value = false
   name.value = ''
   phone.value = ''
-  bookingCode.value = ''
+  appointmentId.value = ''
   docId.value = ''
   urgent.value = false
   issued.value = ''
+  queueTicketId.value = null
 }
 </script>
 
@@ -107,7 +169,7 @@ function resetCheckin() {
       <p
         class="text-sm text-slate-400 mb-1"
       >
-        {{ selectedDoctor?.name }}
+        {{ selectedDoctor?.fullName }}
       </p>
 
       <!-- Time -->
@@ -216,7 +278,7 @@ function resetCheckin() {
             </label>
 
             <input
-              v-model="bookingCode"
+              v-model="appointmentId"
               type="text"
               placeholder="VD: A001"
               class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0E4D92]"
@@ -234,24 +296,35 @@ function resetCheckin() {
               </span>
             </label>
 
-            <select
-              v-model="docId"
-              class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0E4D92]"
-            >
-              <option value="">
-                Chọn bác sĩ…
-              </option>
-
-              <option
-                v-for="doctor in DOCTORS"
-                :key="doctor.id"
-                :value="doctor.id"
+              <select
+                v-model="docId"
+                :disabled="loadingDoctors"
+                class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0E4D92]"
               >
-                {{ doctor.name }}
-                —
-                {{ doctor.specialty }}
-              </option>
-            </select>
+                <option value="">
+                  {{
+                    loadingDoctors
+                      ? 'Đang tải bác sĩ…'
+                      : 'Chọn bác sĩ…'
+                  }}
+                </option>
+
+                <option
+                  v-for="doctor in doctors"
+                  :key="doctor.id"
+                  :value="doctor.id"
+                >
+                  {{ doctor.fullName }}
+                  —
+                  {{ doctor.specialty.name }}
+                </option>
+              </select>
+              <p
+                v-if="doctorError"
+                class="text-xs text-red-500 mt-1"
+              >
+                {{ doctorError }}
+              </p>
           </div>
 
         </div>
@@ -291,7 +364,9 @@ function resetCheckin() {
         <BaseButton
           class="w-full"
           :disabled="
-            !name.trim() || !docId
+            !name.trim() ||
+            !docId ||
+            !appointmentId.trim()
           "
           @click="handleCheckin"
         >
@@ -315,44 +390,13 @@ function resetCheckin() {
 
         <div class="space-y-2">
 
-          <div
-            v-for="item in RECENT_CHECKINS"
-            :key="item.ticket"
-            class="flex items-center gap-3 p-2.5 bg-slate-50 rounded-xl"
-          >
-
-            <!-- Ticket -->
-            <span
-              class="text-xs font-bold text-[#0E4D92] w-10"
-            >
-              {{ item.ticket }}
-            </span>
-
-            <!-- Patient -->
-            <div
-              class="flex-1 min-w-0"
-            >
+            <div class="space-y-2">
               <p
-                class="text-sm font-medium text-slate-800 truncate"
+                class="text-xs text-slate-400 text-center py-4"
               >
-                {{ item.name }}
-              </p>
-
-              <p
-                class="text-[10px] text-slate-400 truncate"
-              >
-                {{ item.doc }}
+                Chưa có dữ liệu check-in gần đây
               </p>
             </div>
-
-            <!-- Time -->
-            <span
-              class="text-xs text-slate-400 shrink-0"
-            >
-              {{ item.time }}
-            </span>
-
-          </div>
 
         </div>
 

@@ -1,175 +1,228 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import {
+  computed,
+  onMounted,
+  ref,
+} from 'vue'
 
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 
-import { DOCTORS, INIT_QUEUE } from '@/features/receptionist/receptionist.data'
-import type { QueueItem } from '@/features/receptionist/receptionist.types'
+import { useReceptionistStore } from '@/stores/receptionist'
 
-const queue = ref<QueueItem[]>(
-  INIT_QUEUE.map((item) => ({ ...item })),
-)
+import { doctorApi } from '@/features/doctor/doctor.api'
+
+import type { Doctor } from '@/features/doctor/doctor.types'
+
+
+const receptionistStore =
+  useReceptionistStore()
+
+
+// =========================
+// Doctors
+// =========================
+
+const doctors = ref<Doctor[]>([])
+const loadingDoctors = ref(false)
+const doctorError = ref<string | null>(null)
+
+
+// =========================
+// Search / Filter
+// =========================
 
 const search = ref('')
 const filterDoc = ref<number | null>(null)
 
-const total = computed(() => queue.value.length)
+
+// =========================
+// Statistics
+// =========================
+
+const total = computed(() =>
+  receptionistStore.queue.length,
+)
 
 const done = computed(() =>
-  queue.value.filter(
-    (q) => q.status === 'completed',
+  receptionistStore.queue.filter(
+    (q) => q.status === 'ACTIVE',
   ).length,
 )
 
 const waiting = computed(() =>
-  queue.value.filter(
-    (q) => q.status === 'waiting',
+  receptionistStore.queue.filter(
+    (q) =>
+      q.status === 'WAITING' ||
+      q.status === 'EMERGENCY',
   ).length,
 )
 
 const urgent = computed(() =>
-  queue.value.filter(
-    (q) =>
-      q.status === 'waiting' &&
-      q.urgent,
+  receptionistStore.queue.filter(
+    (q) => q.status === 'EMERGENCY',
   ).length,
 )
 
+
+// =========================
+// Search
+// =========================
+
 const filtered = computed(() => {
-  return queue.value.filter((q) => {
-    const keyword = search.value
-      .trim()
-      .toLowerCase()
+  const keyword = search.value
+    .trim()
+    .toLowerCase()
 
-    const matchSearch =
-      !keyword ||
-      q.name
-        .toLowerCase()
-        .includes(keyword) ||
-      q.ticket.includes(
-        search.value
-          .trim()
-          .toUpperCase(),
+  return receptionistStore.queue.filter(
+    (q) => {
+      if (!keyword) return true
+
+      return (
+        q.patient.name
+          .toLowerCase()
+          .includes(keyword) ||
+        String(q.queueNumber).includes(
+          search.value.trim(),
+        )
       )
-
-    const matchDoctor =
-      filterDoc.value === null ||
-      q.docId === filterDoc.value
-
-    return matchSearch && matchDoctor
-  })
+    },
+  )
 })
 
-function getDoctorQueue(
-  docId: number,
-) {
-  return filtered.value.filter(
-    (q) => q.docId === docId,
-  )
-}
 
-function getCurrent(
-  docId: number,
-) {
-  return getDoctorQueue(docId).find(
-    (q) => q.status === 'in-progress',
-  )
-}
+// =========================
+// Load doctors
+// =========================
 
-function getWaitingList(
-  docId: number,
-) {
-  return getDoctorQueue(docId).filter(
-    (q) => q.status === 'waiting',
-  )
-}
+async function loadDoctors() {
+  loadingDoctors.value = true
+  doctorError.value = null
 
-function getUrgentList(
-  docId: number,
-) {
-  return getWaitingList(docId).filter(
-    (q) => q.urgent,
-  )
-}
+  try {
+    const response =
+      await doctorApi.getDoctors({
+        status: 'ACTIVE',
+      })
 
-function callNext(docId: number) {
-  const current = queue.value.find(
-    (q) =>
-      q.docId === docId &&
-      q.status === 'in-progress',
-  )
-
-  const next =
-    queue.value.find(
-      (q) =>
-        q.docId === docId &&
-        q.status === 'waiting' &&
-        q.urgent,
-    ) ??
-    queue.value.find(
-      (q) =>
-        q.docId === docId &&
-        q.status === 'waiting',
-    )
-
-  if (!next) return
-
-  queue.value = queue.value.map((q) => {
-    if (q.ticket === current?.ticket) {
-      return {
-        ...q,
-        status: 'completed',
-      }
-    }
-
-    if (q.ticket === next.ticket) {
-      return {
-        ...q,
-        status: 'in-progress',
-      }
-    }
-
-    return q
-  })
-}
-
-function skip(ticket: string) {
-  queue.value = queue.value.map((q) =>
-    q.ticket === ticket
-      ? {
-          ...q,
-          status: 'skipped',
-        }
-      : q,
-  )
-}
-
-function doctorHeaderClass(
-  color: string,
-) {
-  const classes: Record<
-    string,
-    string
-  > = {
-    blue:
-      'border-blue-200 bg-blue-50 text-[#0E4D92]',
-    violet:
-      'border-violet-200 bg-violet-50 text-violet-700',
-    emerald:
-      'border-emerald-200 bg-emerald-50 text-emerald-700',
+    doctors.value = response.items
+  } catch (error) {
+    doctorError.value =
+      error instanceof Error
+        ? error.message
+        : 'Không thể tải danh sách bác sĩ'
+  } finally {
+    loadingDoctors.value = false
   }
+}
 
-  return classes[color] ?? ''
+
+// =========================
+// Load queue
+// =========================
+
+async function loadQueue() {
+  const firstDoctor = doctors.value[0]
+
+  if (!firstDoctor) return
+
+  try {
+    await receptionistStore.loadQueue(
+      firstDoctor.id,
+    )
+  } catch (error) {
+    console.error(
+      'Không thể tải hàng đợi:',
+      error,
+    )
+  }
+}
+
+
+// =========================
+// Initial load
+// =========================
+
+async function initialize() {
+  await loadDoctors()
+  await loadQueue()
+}
+
+onMounted(() => {
+  initialize()
+})
+
+
+// =========================
+// Queue helpers
+// =========================
+//
+// API:
+// GET /doctors/{doctorId}/queue
+//
+// QueueItem BE trả về:
+//
+// {
+//   queueNumber,
+//   patient,
+//   reason,
+//   status
+// }
+//
+// Không có doctorId trong QueueItem.
+// Vì vậy không dùng q.doctorId.
+
+
+function getDoctorQueue() {
+  return filtered.value
+}
+
+
+// =========================
+// Current patient
+// =========================
+
+function getCurrent() {
+  return getDoctorQueue().find(
+    (q) => q.status === 'ACTIVE',
+  )
+}
+
+
+// =========================
+// Waiting patients
+// =========================
+
+function getWaitingList() {
+  return getDoctorQueue().filter(
+    (q) =>
+      q.status === 'WAITING' ||
+      q.status === 'EMERGENCY',
+  )
+}
+
+
+// =========================
+// Emergency patients
+// =========================
+
+function getUrgentList() {
+  return getDoctorQueue().filter(
+    (q) => q.status === 'EMERGENCY',
+  )
 }
 </script>
+
 
 <template>
   <div
     class="max-w-5xl mx-auto space-y-5"
   >
 
-    <!-- Header -->
+    <!-- =========================
+         HEADER
+         ========================= -->
+
     <div
       class="flex items-center justify-between"
     >
@@ -192,7 +245,7 @@ function doctorHeaderClass(
       >
         <span
           class="w-2 h-2 bg-[#00A878] rounded-full animate-pulse"
-        />
+        ></span>
 
         <span
           class="text-xs text-[#00A878] font-medium"
@@ -202,10 +255,17 @@ function doctorHeaderClass(
       </div>
     </div>
 
-    <!-- Stats -->
+
+    <!-- =========================
+         STATS
+         ========================= -->
+
     <div
       class="grid grid-cols-2 lg:grid-cols-4 gap-3"
     >
+
+      <!-- Total -->
+
       <BaseCard class="p-4">
         <p
           class="text-xs text-slate-400"
@@ -222,15 +282,18 @@ function doctorHeaderClass(
         <p
           class="text-xs text-slate-400"
         >
-          lịch hẹn
+          lượt khám
         </p>
       </BaseCard>
+
+
+      <!-- Active -->
 
       <BaseCard class="p-4">
         <p
           class="text-xs text-slate-400"
         >
-          Đã hoàn thành
+          Đang khám
         </p>
 
         <p
@@ -245,6 +308,9 @@ function doctorHeaderClass(
           lượt khám
         </p>
       </BaseCard>
+
+
+      <!-- Waiting -->
 
       <BaseCard class="p-4">
         <p
@@ -266,6 +332,9 @@ function doctorHeaderClass(
         </p>
       </BaseCard>
 
+
+      <!-- Emergency -->
+
       <BaseCard class="p-4">
         <p
           class="text-xs text-slate-400"
@@ -285,12 +354,18 @@ function doctorHeaderClass(
           cần xử lý
         </p>
       </BaseCard>
+
     </div>
 
-    <!-- Search -->
+
+    <!-- =========================
+         SEARCH / FILTER
+         ========================= -->
+
     <div
       class="flex flex-wrap items-center gap-3"
     >
+
       <input
         v-model="search"
         type="text"
@@ -299,6 +374,8 @@ function doctorHeaderClass(
       />
 
       <div class="flex gap-2">
+
+        <!-- All -->
 
         <button
           type="button"
@@ -313,8 +390,11 @@ function doctorHeaderClass(
           Tất cả
         </button>
 
+
+        <!-- Doctors -->
+
         <button
-          v-for="doctor in DOCTORS"
+          v-for="doctor in doctors"
           :key="doctor.id"
           type="button"
           class="px-3 py-2 rounded-xl text-xs font-medium border"
@@ -325,45 +405,46 @@ function doctorHeaderClass(
           "
           @click="filterDoc = doctor.id"
         >
-          {{ doctor.prefix }}
+          {{ doctor.fullName }}
         </button>
 
       </div>
     </div>
 
-    <!-- Doctors -->
+
+    <!-- =========================
+         DOCTORS
+         ========================= -->
+
     <div
       class="grid grid-cols-1 md:grid-cols-3 gap-4"
     >
 
       <BaseCard
-        v-for="doctor in DOCTORS"
+        v-for="doctor in doctors"
         :key="doctor.id"
         class="flex flex-col overflow-hidden"
       >
 
-        <!-- Doctor -->
+        <!-- =========================
+             DOCTOR HEADER
+             ========================= -->
+
         <div
-          class="p-4 flex items-center justify-between border-b"
-          :class="
-            doctorHeaderClass(
-              doctor.color,
-            )
-          "
+          class="p-4 flex items-center justify-between border-b bg-slate-50"
         >
+
           <div>
             <p
               class="font-bold text-sm"
             >
-              {{ doctor.name }}
+              {{ doctor.fullName }}
             </p>
 
             <p
-              class="text-xs opacity-70"
+              class="text-xs text-slate-500"
             >
-              {{ doctor.specialty }}
-              ·
-              {{ doctor.room }}
+              {{ doctor.specialty.name }}
             </p>
           </div>
 
@@ -373,50 +454,58 @@ function doctorHeaderClass(
             <p
               class="text-lg font-bold"
             >
-              {{
-                getWaitingList(
-                  doctor.id,
-                ).length
-              }}
+              {{ getWaitingList().length }}
             </p>
 
             <p
-              class="text-[10px] opacity-70"
+              class="text-[10px] text-slate-400"
             >
               đang chờ
             </p>
           </div>
+
         </div>
 
-        <!-- Urgent -->
+
+        <!-- =========================
+             DOCTOR ERROR
+             ========================= -->
+
+        <p
+          v-if="doctorError"
+          class="px-4 pt-3 text-xs text-red-500"
+        >
+          {{ doctorError }}
+        </p>
+
+
+        <!-- =========================
+             URGENT
+             ========================= -->
+
         <div
-          v-if="
-            getUrgentList(
-              doctor.id,
-            ).length
-          "
+          v-if="getUrgentList().length"
           class="mx-4 mt-3 bg-red-50 border border-red-200 rounded-xl p-2.5 text-xs text-red-700"
         >
-          ⚠️
-          <span class="font-semibold">
-            {{
-              getUrgentList(
-                doctor.id,
-              ).length
-            }}
+          <span
+            class="font-semibold"
+          >
+            ⚠️
+            {{ getUrgentList().length }}
             trường hợp ưu tiên
           </span>
         </div>
 
-        <!-- Current -->
+
+        <!-- =========================
+             CURRENT
+             ========================= -->
+
         <div
-          v-if="
-            getCurrent(
-              doctor.id,
-            )
-          "
+          v-if="getCurrent()"
           class="mx-4 mt-3 bg-emerald-50 border border-emerald-200 rounded-xl p-3"
         >
+
           <p
             class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1.5"
           >
@@ -426,137 +515,139 @@ function doctorHeaderClass(
           <div
             class="flex items-center gap-2"
           >
+
             <span
               class="text-2xl font-bold text-emerald-700"
             >
-              {{
-                getCurrent(
-                  doctor.id,
-                )?.ticket
-              }}
+              {{ getCurrent()?.queueNumber }}
             </span>
 
             <div>
               <p
                 class="text-sm font-semibold text-slate-800"
               >
-                {{
-                  getCurrent(
-                    doctor.id,
-                  )?.name
-                }}
+                {{ getCurrent()?.patient.name }}
               </p>
 
               <p
                 class="text-xs text-slate-400"
               >
-                {{
-                  getCurrent(
-                    doctor.id,
-                  )?.time
-                }}
+                {{ getCurrent()?.reason }}
               </p>
             </div>
+
           </div>
+
         </div>
 
-        <!-- Waiting -->
+
+        <!-- =========================
+             WAITING LIST
+             ========================= -->
+
         <div
           class="flex-1 overflow-y-auto max-h-48 px-4 py-3 space-y-1.5"
         >
 
           <p
-            v-if="
-              !getWaitingList(
-                doctor.id,
-              ).length
-            "
+            v-if="!getWaitingList().length"
             class="text-xs text-slate-400 text-center py-4"
           >
             Không còn bệnh nhân chờ
           </p>
 
+
           <div
-            v-for="patient in getWaitingList(
-              doctor.id,
-            )"
-            :key="patient.ticket"
+            v-for="patient in getWaitingList()"
+            :key="patient.queueNumber"
             class="group flex items-center gap-2 px-2.5 py-2 rounded-xl hover:bg-slate-50"
           >
+
+            <!-- Emergency -->
+
             <span
-              v-if="patient.urgent"
+              v-if="
+                patient.status ===
+                'EMERGENCY'
+              "
               class="text-red-500"
             >
               ⚠️
             </span>
 
+
+            <!-- Queue number -->
+
             <span
               class="text-xs font-bold text-slate-400 w-9"
             >
-              {{ patient.ticket }}
+              {{ patient.queueNumber }}
             </span>
+
+
+            <!-- Patient -->
 
             <span
               class="flex-1 text-sm text-slate-700 truncate"
             >
-              {{ patient.name }}
+              {{ patient.patient.name }}
             </span>
 
+
+            <!-- Reason -->
+
             <span
-              class="text-xs text-slate-400"
+              class="text-xs text-slate-400 truncate max-w-24"
             >
-              {{ patient.time }}
+              {{ patient.reason }}
             </span>
+
+
+            <!-- Skip -->
 
             <button
               type="button"
-              class="text-[10px] text-red-400 opacity-0 group-hover:opacity-100"
-              @click="
-                skip(patient.ticket)
-              "
+              disabled
+              class="text-[10px] text-slate-300 cursor-not-allowed"
             >
               Bỏ
             </button>
+
           </div>
 
         </div>
 
-        <!-- Call next -->
+
+        <!-- =========================
+             CALL NEXT
+             ========================= -->
+
         <div
           class="p-4 border-t border-slate-100"
         >
+
           <BaseButton
             class="w-full"
-            :disabled="
-              !getWaitingList(
-                doctor.id,
-              ).length
-            "
-            @click="
-              callNext(doctor.id)
-            "
+            disabled
           >
             📢 Gọi tiếp
 
             <span
-              v-if="
-                getWaitingList(
-                  doctor.id,
-                ).length
-              "
+              v-if="getWaitingList().length"
               class="ml-2 bg-white/20 px-2 py-0.5 rounded-lg"
             >
               {{
-                getWaitingList(
-                  doctor.id,
-                )[0]?.ticket
+                getWaitingList()[0]
+                  ?.queueNumber
               }}
             </span>
           </BaseButton>
+
         </div>
 
       </BaseCard>
 
     </div>
+
   </div>
 </template>
