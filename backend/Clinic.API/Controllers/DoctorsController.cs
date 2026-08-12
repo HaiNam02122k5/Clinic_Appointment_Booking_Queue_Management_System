@@ -1,3 +1,4 @@
+using Clinic.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,6 +8,13 @@ namespace Clinic.API.Controllers
     [Route("/doctors")]
     public class DoctorsController : ControllerBase
     {
+        private readonly ICurrentUser _currentUser;
+
+        public DoctorsController(ICurrentUser currentUser)
+        {
+            _currentUser = currentUser;
+        }
+
         [HttpGet]
         [Authorize(Policy = "Permission:doctor.view")]
         public IActionResult GetAll()
@@ -39,7 +47,7 @@ namespace Clinic.API.Controllers
         [Authorize(Policy = "Permission:doctor.edit")]
         public IActionResult UpdateOwnProfile()
         {
-            var doctorId = _currentUser.DoctorId;
+            var userId = _currentUser.UserId;
             return NoContent();
         }
 
@@ -49,7 +57,7 @@ namespace Clinic.API.Controllers
         {
             return NoContent();
         }
-        
+
         [HttpPost("{doctorId}/shifts")]
         [Authorize(Roles = "Admin")]
         public IActionResult CreateShift([FromRoute] string doctorId)

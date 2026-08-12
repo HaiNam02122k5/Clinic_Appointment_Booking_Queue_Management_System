@@ -37,7 +37,11 @@ builder.Services
 builder.Services.AddAuthorization();
 builder.Services.AddSingleton<Microsoft.AspNetCore.Authorization.IAuthorizationPolicyProvider, Clinic.API.Authorization.PermissionPolicyProvider>();
 builder.Services.AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, Clinic.API.Authorization.PermissionAuthorizationHandler>();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+
+// Register current-user accessor (đọc UserId từ ClaimsPrincipal của request hiện tại)
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<Clinic.Application.Interfaces.ICurrentUser, Clinic.API.Authentication.CurrentUser>();
+
 builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen();
 
