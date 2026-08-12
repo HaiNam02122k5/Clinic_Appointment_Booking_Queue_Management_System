@@ -28,6 +28,7 @@ namespace Clinic.API.Common
             var (statusCode, messages) = exception switch
             {
                 NotFoundException => (HttpStatusCode.NotFound, new[] { exception.Message }),
+                ForbiddenException => (HttpStatusCode.Forbidden, new[] { exception.Message }),
                 // Domain ném ArgumentException khi dữ liệu đầu vào không hợp lệ.
                 ArgumentException => (HttpStatusCode.BadRequest, new[] { exception.Message }),
                 UnauthorizedAccessException => (HttpStatusCode.Unauthorized, new[] { exception.Message }),

@@ -1,14 +1,15 @@
 using Microsoft.AspNetCore.Authorization;
+using System;
 
 namespace Clinic.API.Authorization
 {
     public class PermissionRequirement : IAuthorizationRequirement
     {
-        public string Permission { get; }
+        public string[] Permissions { get; }
 
-        public PermissionRequirement(string permission)
+        public PermissionRequirement(string policyValue)
         {
-            Permission = permission;
+            Permissions = policyValue.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         }
     }
 }

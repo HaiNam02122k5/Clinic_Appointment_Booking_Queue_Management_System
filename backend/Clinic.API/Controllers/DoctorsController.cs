@@ -37,14 +37,14 @@ namespace Clinic.API.Controllers
         }
 
         [HttpPut("{doctorId}")]
-        [Authorize(Policy = "Permission:doctor.edit")]
+        [Authorize(Policy = "Permission:doctor.edit.any")]
         public IActionResult Update([FromRoute] string doctorId)
         {
             return NoContent();
         }
 
         [HttpPut("me")]
-        [Authorize(Policy = "Permission:doctor.edit")]
+        [Authorize(Policy = "Permission:doctor.edit.own")]
         public IActionResult UpdateOwnProfile()
         {
             var userId = _currentUser.UserId;

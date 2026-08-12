@@ -28,5 +28,33 @@ namespace Clinic.API.Authentication
                 return Guid.TryParse(value, out var id) ? id : null;
             }
         }
+        public Guid? PatientId
+        {
+            get
+            {
+                var value = _httpContextAccessor.HttpContext?.User?
+                    .FindFirst("patientId")?.Value;
+
+                return Guid.TryParse(value, out var id) ? id : null;
+            }
+        }
+
+        public Guid? DoctorId
+        {
+            get
+            {
+                var value = _httpContextAccessor.HttpContext?.User?
+                    .FindFirst("doctorId")?.Value;
+
+                return Guid.TryParse(value, out var id) ? id : null;
+            }
+        }
+
+        public bool HasPermission(string permission)
+        {
+            return _httpContextAccessor.HttpContext?.User?
+                .HasClaim(c => c.Type == "permission" && c.Value == permission)
+                ?? false;
+        }
     }
 }

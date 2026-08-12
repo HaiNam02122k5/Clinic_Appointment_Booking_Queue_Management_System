@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -15,8 +16,8 @@ namespace Clinic.API.Authorization
                 return Task.CompletedTask;
             }
 
-            // Check permission claim
-            if (context.User.HasClaim(c => c.Type == "permission" && c.Value == requirement.Permission))
+            // Check permission claim - pass nếu có BẤT KỲ permission nào trong requirement (OR).
+            if (context.User.HasClaim(c => c.Type == "permission" && requirement.Permissions.Contains(c.Value)))
             {
                 context.Succeed(requirement);
                 return Task.CompletedTask;

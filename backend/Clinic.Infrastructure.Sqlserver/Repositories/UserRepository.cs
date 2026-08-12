@@ -40,6 +40,10 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
         {
             return await _context.Users
                 .Include(u => u.Person)
+                    .ThenInclude(p => p.Patient)
+                .Include(u => u.Person)
+                    .ThenInclude(p => p.Employee)
+                        .ThenInclude(e => e!.Doctor)
                 .Include(u => u.UserRoles)
                     .ThenInclude(ur => ur.Role)
                         .ThenInclude(r => r.RolePermissions)

@@ -340,9 +340,25 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         {
                             Id = new Guid("10000000-0000-0000-0000-000000000003"),
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Cancel appointments",
-                            IsDeleted = false,
+                            Description = "Cancel appointments (deprecated - dùng appointment.cancel.own/.any)",
+                            IsDeleted = true,
                             Name = "appointment.cancel"
+                        },
+                        new
+                        {
+                            Id = new Guid("10000000-0000-0000-0000-00000000000e"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Cancel own appointment (Patient)",
+                            IsDeleted = false,
+                            Name = "appointment.cancel.own"
+                        },
+                        new
+                        {
+                            Id = new Guid("10000000-0000-0000-0000-00000000000f"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Cancel any appointment (Admin/Receptionist)",
+                            IsDeleted = false,
+                            Name = "appointment.cancel.any"
                         },
                         new
                         {
@@ -364,8 +380,8 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         {
                             Id = new Guid("10000000-0000-0000-0000-000000000006"),
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Edit doctor profile",
-                            IsDeleted = false,
+                            Description = "Edit doctor profile (deprecated - dùng doctor.edit.own/.any)",
+                            IsDeleted = true,
                             Name = "doctor.edit"
                         },
                         new
@@ -423,6 +439,22 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                             Description = "Create doctor profile",
                             IsDeleted = false,
                             Name = "doctor.create"
+                        },
+                        new
+                        {
+                            Id = new Guid("10000000-0000-0000-0000-000000000013"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Edit own doctor profile (Doctor)",
+                            IsDeleted = false,
+                            Name = "doctor.edit.own"
+                        },
+                        new
+                        {
+                            Id = new Guid("10000000-0000-0000-0000-000000000014"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Edit any doctor profile (Admin)",
+                            IsDeleted = false,
+                            Name = "doctor.edit.any"
                         },
                         new
                         {
@@ -755,7 +787,7 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         new
                         {
                             RoleId = new Guid("00000000-0000-0000-0000-000000000001"),
-                            PermissionId = new Guid("10000000-0000-0000-0000-000000000003")
+                            PermissionId = new Guid("10000000-0000-0000-0000-00000000000f")
                         },
                         new
                         {
@@ -770,7 +802,7 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         new
                         {
                             RoleId = new Guid("00000000-0000-0000-0000-000000000001"),
-                            PermissionId = new Guid("10000000-0000-0000-0000-000000000006")
+                            PermissionId = new Guid("10000000-0000-0000-0000-000000000014")
                         },
                         new
                         {
@@ -880,7 +912,7 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         new
                         {
                             RoleId = new Guid("00000000-0000-0000-0000-000000000003"),
-                            PermissionId = new Guid("10000000-0000-0000-0000-000000000003")
+                            PermissionId = new Guid("10000000-0000-0000-0000-00000000000f")
                         },
                         new
                         {
@@ -905,7 +937,12 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         new
                         {
                             RoleId = new Guid("00000000-0000-0000-0000-000000000003"),
-                            PermissionId = new Guid("20000000-0000-0000-0000-000000000004")
+                            PermissionId = new Guid("1000000a-0000-0000-0000-000000000001")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000003"),
+                            PermissionId = new Guid("2000000a-0000-0000-0000-000000000006")
                         },
                         new
                         {
@@ -950,7 +987,7 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         new
                         {
                             RoleId = new Guid("00000000-0000-0000-0000-000000000004"),
-                            PermissionId = new Guid("10000000-0000-0000-0000-000000000006")
+                            PermissionId = new Guid("10000000-0000-0000-0000-000000000013")
                         },
                         new
                         {
@@ -1010,7 +1047,7 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         new
                         {
                             RoleId = new Guid("00000000-0000-0000-0000-000000000002"),
-                            PermissionId = new Guid("10000000-0000-0000-0000-000000000003")
+                            PermissionId = new Guid("10000000-0000-0000-0000-00000000000e")
                         },
                         new
                         {

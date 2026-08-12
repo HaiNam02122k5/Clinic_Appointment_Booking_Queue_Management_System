@@ -8,7 +8,7 @@ namespace Clinic.API.Controllers
     public class SlotsController : ControllerBase
     {
         [HttpGet]
-        [Authorize(Policy = "Permission:slot.view")]
+        [AllowAnonymous]
         public IActionResult GetAll()
         {
             return Ok(new { message = "list slots" });

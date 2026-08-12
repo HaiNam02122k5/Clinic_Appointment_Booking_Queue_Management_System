@@ -7,8 +7,10 @@ namespace Clinic.Application.Interfaces
     public interface ICurrentUser
     {
         bool IsAuthenticated { get; }
-
+        Guid? PatientId { get; }
+        Guid? DoctorId { get; }
         /// <summary>Id của User hiện tại, lấy từ claim "sub". Null nếu chưa đăng nhập.</summary>
         Guid? UserId { get; }
+        bool HasPermission(string permission);
     }
 }

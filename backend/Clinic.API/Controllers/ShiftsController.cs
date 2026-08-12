@@ -36,14 +36,14 @@ namespace Clinic.API.Controllers
         }
 
         [HttpPatch("suggestions/{suggestionId}")]
-        [Authorize(Policy = "Permission:shift.manage")]
+        [Authorize(Policy = "Permission:shift.suggestion.manage")]
         public IActionResult PatchSuggestion([FromRoute] string suggestionId)
         {
             return NoContent();
         }
 
         [HttpDelete("suggestions")]
-        [Authorize(Policy = "Permission:shift.manage")]
+        [Authorize(Policy = "Permission:shift.suggestion.manage")]
         public IActionResult DeleteSuggestion()
         {
             return NoContent();

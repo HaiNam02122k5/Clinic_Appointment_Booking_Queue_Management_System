@@ -1,3 +1,5 @@
+using Clinic.Application.Features.Appointments.Commands;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,6 +9,13 @@ namespace Clinic.API.Controllers
     [Route("/appointments")]
     public class AppointmentsController : ControllerBase
     {
+        private readonly ISender _sender;
+
+        public AppointmentsController(ISender sender)
+        {
+            _sender = sender;
+        }
+
         [HttpPost]
         [Authorize(Policy = "Permission:appointment.create")]
         public IActionResult Create()
@@ -30,9 +39,10 @@ namespace Clinic.API.Controllers
         public IActionResult Reschedule([FromRoute] string appointmentId) => NoContent();
 
         [HttpPost("{appointmentId}/cancel")]
-        [Authorize(Policy = "Permission:appointment.cancel")]
-        public IActionResult Cancel([FromRoute] string appointmentId)
+        [Authorize(Policy = "Permission:appointment.cancel.own,appointment.cancel.any")]
+        public async Task<IActionResult> Cancel([FromRoute] Guid appointmentId)
         {
+            await _sender.Send(new CancelAppointmentCommand(appointmentId));
             return NoContent();
         }
     }

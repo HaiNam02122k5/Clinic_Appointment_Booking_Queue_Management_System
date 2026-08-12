@@ -23,10 +23,12 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
             builder.HasData(
                 new Permission(Guid.Parse("10000000-0000-0000-0000-000000000001"), "appointment.create", "Create appointments", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("10000000-0000-0000-0000-000000000002"), "appointment.view", "View appointments", new DateTime(2026, 1, 1), null, false),
-                new Permission(Guid.Parse("10000000-0000-0000-0000-000000000003"), "appointment.cancel", "Cancel appointments", new DateTime(2026, 1, 1), null, false),
+                new Permission(Guid.Parse("10000000-0000-0000-0000-000000000003"), "appointment.cancel", "Cancel appointments (deprecated - dùng appointment.cancel.own/.any)", new DateTime(2026, 1, 1), null, true),
+                new Permission(Guid.Parse("10000000-0000-0000-0000-00000000000E"), "appointment.cancel.own", "Cancel own appointment (Patient)", new DateTime(2026, 1, 1), null, false),
+                new Permission(Guid.Parse("10000000-0000-0000-0000-00000000000F"), "appointment.cancel.any", "Cancel any appointment (Admin/Receptionist)", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("10000000-0000-0000-0000-000000000004"), "queue.call-next", "Call next in queue", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("10000000-0000-0000-0000-000000000005"), "doctor.view", "View doctor profile", new DateTime(2026, 1, 1), null, false),
-                new Permission(Guid.Parse("10000000-0000-0000-0000-000000000006"), "doctor.edit", "Edit doctor profile", new DateTime(2026, 1, 1), null, false),
+                new Permission(Guid.Parse("10000000-0000-0000-0000-000000000006"), "doctor.edit", "Edit doctor profile (deprecated - dùng doctor.edit.own/.any)", new DateTime(2026, 1, 1), null, true),
                 new Permission(Guid.Parse("10000000-0000-0000-0000-000000000007"), "user.manage", "Manage users", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("10000000-0000-0000-0000-000000000008"), "role.manage", "Manage roles and permissions", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("10000000-0000-0000-0000-000000000009"), "appointment.update", "Update appointments", new DateTime(2026, 1, 1), null, false),
@@ -34,6 +36,8 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
                 new Permission(Guid.Parse("1000000A-0000-0000-0000-000000000002"), "appointment.reschedule", "Reschedule appointments", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("10000000-0000-0000-0000-00000000000C"), "doctor.queue.view", "View doctor's queue", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("10000000-0000-0000-0000-00000000000D"), "doctor.create", "Create doctor profile", new DateTime(2026, 1, 1), null, false),
+                new Permission(Guid.Parse("10000000-0000-0000-0000-000000000013"), "doctor.edit.own", "Edit own doctor profile (Doctor)", new DateTime(2026, 1, 1), null, false),
+                new Permission(Guid.Parse("10000000-0000-0000-0000-000000000014"), "doctor.edit.any", "Edit any doctor profile (Admin)", new DateTime(2026, 1, 1), null, false),
 
                 new Permission(Guid.Parse("20000000-0000-0000-0000-000000000001"), "medical-report.view", "View medical reports", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("20000000-0000-0000-0000-000000000002"), "medical-report.create", "Create medical reports", new DateTime(2026, 1, 1), null, false),
