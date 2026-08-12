@@ -1,15 +1,14 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import {computed, onMounted, ref, watch} from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-
 import { usePatientStore } from '@/stores/patient'
 
 const router = useRouter()
 const patient = usePatientStore()
+const auth = useAuthStore()
 
 const step = ref(1)
-
 const specialty = ref('')
 const doctorId = ref<number | null>(null)
 const appointmentDate = ref('')
@@ -19,7 +18,13 @@ const symptoms = ref('')
 const success = ref(false)
 const createdAppointment = ref<any>(null)
 
-const auth = useAuthStore()
+const todayDate = new Date().toLocaleDateString('sv-SE')
+
+watch(specialty, () => {
+  doctorId.value = null
+  appointmentTime.value = ''
+  patient.slots = []
+})
 
 const specialties = [
   'Nội tổng quát',
@@ -31,20 +36,12 @@ const specialties = [
 ]
 
 const filteredDoctors = computed(() => {
-  if (!specialty.value) {
-    return patient.doctors
-  }
-
-  return patient.doctors.filter(
-    (doctor) =>
-      doctor.specialty === specialty.value,
-  )
+  if (!specialty.value) return patient.doctors
+  return patient.doctors.filter((doctor) => doctor.specialty === specialty.value)
 })
 
 const selectedDoctor = computed(() =>
-  patient.doctors.find(
-    (doctor) => doctor.id === doctorId.value,
-  ),
+  patient.doctors.find((doctor) => doctor.id === doctorId.value)
 )
 
 onMounted(async () => {
@@ -54,41 +51,28 @@ onMounted(async () => {
 async function selectDoctor(id: number) {
   doctorId.value = id
   appointmentTime.value = ''
+  patient.slots = [] 
 
   if (appointmentDate.value) {
-    await patient.loadSlots(
-      id,
-      appointmentDate.value,
-    )
+    await patient.loadSlots(id, appointmentDate.value)
   }
 }
 
 async function changeDate() {
   appointmentTime.value = ''
+  patient.slots = []
 
   if (doctorId.value && appointmentDate.value) {
-    await patient.loadSlots(
-      doctorId.value,
-      appointmentDate.value,
-    )
+    await patient.loadSlots(doctorId.value, appointmentDate.value)
   }
 }
 
 function nextStep() {
   if (step.value === 1) {
-    if (
-      !doctorId.value ||
-      !appointmentDate.value ||
-      !appointmentTime.value
-    ) {
+    if (!doctorId.value || !appointmentDate.value || !appointmentTime.value) {
       return
     }
   }
-
-  if (step.value === 2) {
-    if (!appointmentDate.value) return
-  }
-
   step.value++
 }
 
@@ -102,17 +86,15 @@ async function confirmBooking() {
   if (!doctorId.value) return
 
   try {
-    createdAppointment.value =
-      await patient.createAppointment({
-        doctorId: doctorId.value,
-        appointmentDate: appointmentDate.value,
-        appointmentTime: appointmentTime.value,
-        symptoms: symptoms.value,
-      })
-
+    createdAppointment.value = await patient.createAppointment({
+      doctorId: doctorId.value,
+      appointmentDate: appointmentDate.value,
+      appointmentTime: appointmentTime.value,
+      symptoms: symptoms.value,
+    })
     success.value = true
   } catch {
-    // Store đã lưu lỗi
+    // Store xử lý lỗi
   }
 }
 
@@ -125,7 +107,6 @@ function newBooking() {
   symptoms.value = ''
   success.value = false
   createdAppointment.value = null
-
   patient.slots = []
 }
 </script>
@@ -328,6 +309,7 @@ function newBooking() {
           <input
             v-model="appointmentDate"
             type="date"
+            :min="todayDate"
             class="w-full rounded-xl border border-slate-200
                    px-4 py-2.5 text-sm"
             @change="changeDate"
