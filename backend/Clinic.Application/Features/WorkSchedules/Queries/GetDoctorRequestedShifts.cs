@@ -3,7 +3,7 @@ using Clinic.Application.Contracts;
 using Clinic.Application.Interfaces;
 using MediatR;
 
-namespace Clinic.Application.Features.Doctors.Queries
+namespace Clinic.Application.Features.WorkSchedules.Queries
 {
     // Use-case: Get a list of doctor schedules
     public record GetDoctorRequestedShiftsQuery(

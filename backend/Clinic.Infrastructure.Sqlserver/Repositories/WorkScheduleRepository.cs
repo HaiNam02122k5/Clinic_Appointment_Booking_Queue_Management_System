@@ -36,7 +36,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             }
 
             return await _context.WorkSchedules
-                .Where(ws => ws.DoctorId == doctorId && ws.IsDeleted == false &&
+                .Where(ws => ws.DoctorId == doctorId && ws.IsDeleted == false && ws.Status != Domain.Enums.WorkScheduleStatus.Cancelled &&
                     ((DateOnly.FromDateTime(ws.ShiftStart) >= startDate && DateOnly.FromDateTime(ws.ShiftStart) <= endDate) ||
                     (DateOnly.FromDateTime(ws.ShiftEnd) >= startDate && DateOnly.FromDateTime(ws.ShiftEnd) <= endDate))
                 ).AsNoTracking().ToListAsync();
@@ -51,7 +51,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             }
 
             return await _context.ShiftRequests
-                .Where(sr => sr.DoctorId == doctorId && sr.IsDeleted == false &&
+                .Where(sr => sr.DoctorId == doctorId && sr.IsDeleted == false && sr.Status != Domain.Enums.ShiftRequestStatus.Cancelled &&
                     ((DateOnly.FromDateTime(sr.ShiftStart) >= startDate && DateOnly.FromDateTime(sr.ShiftStart) <= endDate) ||
                     (DateOnly.FromDateTime(sr.ShiftEnd) >= startDate && DateOnly.FromDateTime(sr.ShiftEnd) <= endDate))
                 ).AsNoTracking().ToListAsync();
@@ -59,20 +59,20 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
 
         public async Task<ShiftRequest?> GetShiftRequestByIdAsync(Guid scheduleId)
         {
-            return await _context.ShiftRequests
+            return await _context.ShiftRequests.Include(sr => sr.Doctor)
                 .FirstOrDefaultAsync(sr => sr.Id == scheduleId && sr.IsDeleted == false);
         }
 
         public async Task<WorkSchedule?> GetWorkScheduleByIdAsync(Guid scheduleId)
         {
-            return await _context.WorkSchedules
+            return await _context.WorkSchedules.Include(ws => ws.Doctor).Include(ws => ws.Appointments)
                 .FirstOrDefaultAsync(ws => ws.Id == scheduleId && ws.IsDeleted == false);
         }
 
         public async Task<bool> HasDuplicateShiftRequest(Guid doctorId, DateTime startTime, DateTime endTime)
         {
             var hasDuplicate = await _context.ShiftRequests
-                .AnyAsync(sr => sr.DoctorId == doctorId && sr.IsDeleted == false && sr.Status != Domain.Enums.ShiftRequestStatus.Rejected && sr.Status != Domain.Enums.ShiftRequestStatus.Cancelled &&
+                .AnyAsync(sr => sr.DoctorId == doctorId && sr.IsDeleted == false && sr.Status != Domain.Enums.ShiftRequestStatus.Cancelled &&
                     sr.ShiftStart == startTime && sr.ShiftEnd == endTime);
             return hasDuplicate;
         }

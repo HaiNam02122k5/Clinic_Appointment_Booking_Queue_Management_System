@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Clinic.Application.Features.Doctors.Queries
+namespace Clinic.Application.Features.WorkSchedules.Queries
 {
     // Use-case: Get a list of doctor schedules
     public record GetDoctorSchedulesQuery(

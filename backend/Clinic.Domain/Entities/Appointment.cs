@@ -22,5 +22,10 @@ namespace Clinic.Domain.Entities
 
         /// <summary>0..1 - chỉ có sau khi bệnh nhân check-in.</summary>
         public QueueTicket? QueueTicket { get; set; }
+
+        internal void AdminCancelWithReason()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

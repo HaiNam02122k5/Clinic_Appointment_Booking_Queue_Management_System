@@ -18,6 +18,7 @@ namespace Clinic.Domain.Entities
         public int PatientLimitPerSlot { get; set; }
 
         public WorkScheduleStatus Status { get; set; } = WorkScheduleStatus.Active;
+        public string? CancellationReason { get; set; }
 
         public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 
@@ -58,7 +59,6 @@ namespace Clinic.Domain.Entities
 
         public void UpdateStatus(WorkScheduleStatus newStatus)
         {
-            if (ShiftEnd <= DateTime.UtcNow) throw new InvalidOperationException("Cannot update a shift that has already ended.");
             if (Status != newStatus)
             {
                 Status = newStatus;
@@ -69,7 +69,15 @@ namespace Clinic.Domain.Entities
         public void Delete()
         {
             if (ShiftStart <= DateTime.UtcNow) throw new InvalidOperationException("Cannot delete a shift that has already started.");
+            if (Appointments.Count > 0) throw new InvalidOperationException("Cannot delete a shift that has appointments.");
             IsDeleted = true;
+            MarkUpdated();
+        }
+
+        public void Cancel(string reason)
+        {
+            CancellationReason = reason;
+            Status = WorkScheduleStatus.Cancelled;
             MarkUpdated();
         }
     }

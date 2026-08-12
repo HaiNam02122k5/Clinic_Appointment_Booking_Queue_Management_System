@@ -4,8 +4,9 @@ using Clinic.Application.Interfaces;
 using Clinic.Domain.Entities;
 using MediatR;
 
-namespace Clinic.Application.Features.Doctors.Commands
+namespace Clinic.Application.Features.WorkSchedules.Commands
 {
+    // Use-case: Admin adds a new work schedule for a doctor
     public record AddDoctorScheduleCommand(Guid DoctorId, DateTime StartTime, DateTime EndTime, int PatientLimitPerSlot) : IRequest<WorkScheduleDto>;
 
     public class AddDoctorScheduleCommandHandler : IRequestHandler<AddDoctorScheduleCommand, WorkScheduleDto>

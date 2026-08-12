@@ -10,14 +10,14 @@ namespace Clinic.Application.UnitTests.Common
     {
         private readonly List<WorkSchedule> _workSchedules = [];
         private readonly List<ShiftRequest> _shiftRequests = [];
-        public Task AddShiftRequestAsync(ShiftRequest shiftRequest)
+        public async Task AddShiftRequestAsync(ShiftRequest shiftRequest)
         {
-            throw new NotImplementedException();
+            _shiftRequests.Add(shiftRequest);
         }
 
-        public Task AddWorkScheduleAsync(WorkSchedule workSchedule)
+        public async Task AddWorkScheduleAsync(WorkSchedule workSchedule)
         {
-            throw new NotImplementedException();
+            _workSchedules.Add(workSchedule);
         }
 
         public async Task<IEnumerable<WorkSchedule>> GetPlannedSchedulesByDoctorIdAsync(Guid doctorId, DateOnly startDate, DateOnly endDate)
@@ -48,24 +48,26 @@ namespace Clinic.Application.UnitTests.Common
             ).ToList();
         }
 
-        public Task<ShiftRequest?> GetShiftRequestByIdAsync(Guid scheduleId)
+        public async Task<ShiftRequest?> GetShiftRequestByIdAsync(Guid scheduleId)
         {
-            throw new NotImplementedException();
+            return _shiftRequests.FirstOrDefault(sr => sr.Id == scheduleId && sr.IsDeleted == false);
         }
 
-        public Task<WorkSchedule?> GetWorkScheduleByIdAsync(Guid scheduleId)
+        public async Task<WorkSchedule?> GetWorkScheduleByIdAsync(Guid scheduleId)
         {
-            throw new NotImplementedException();
+            return _workSchedules.FirstOrDefault(ws => ws.Id == scheduleId && ws.IsDeleted == false);
         }
 
-        public Task<bool> HasDuplicateShiftRequest(Guid doctorId, DateTime startTime, DateTime endTime)
+        public async Task<bool> HasDuplicateShiftRequest(Guid doctorId, DateTime startTime, DateTime endTime)
         {
-            throw new NotImplementedException();
+            return _shiftRequests.Any(sr => sr.DoctorId == doctorId &&
+                ((sr.ShiftStart == endTime && sr.ShiftEnd == startTime)));
         }
 
-        public Task<bool> HasOverlappingWorkSchedule(Guid doctorId, DateTime startTime, DateTime endTime)
+        public async Task<bool> HasOverlappingWorkSchedule(Guid doctorId, DateTime startTime, DateTime endTime)
         {
-            throw new NotImplementedException();
+            return _workSchedules.Any(ws => ws.DoctorId == doctorId &&
+                ((ws.ShiftStart < endTime && ws.ShiftEnd > startTime)));
         }
     }
 }

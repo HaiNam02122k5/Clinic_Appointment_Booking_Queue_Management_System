@@ -62,5 +62,20 @@ namespace Clinic.Domain.UnitTests
             Assert.Equal(15, nowShift.PatientLimitPerSlot);
             Assert.Throws<InvalidOperationException>(() => nowShift.Delete());
         }
+
+        [Fact]
+        public void TestDeleteWorkSchedule()
+        {
+            var person = new Person("Full name", "00000000", "email@example.com", DateOnly.FromDateTime(DateTime.UtcNow), Enums.Gender.Male, "");
+            var employee = new Employee(person, DateOnly.FromDateTime(DateTime.UtcNow));
+            var doctor = new Doctor(employee, "123ABC", "Tien si", new Specialty("name", "", DateOnly.FromDateTime(DateTime.UtcNow)), 0);
+            var workSchedule = new WorkSchedule(doctor, DateTime.UtcNow.AddHours(1), DateTime.UtcNow.AddHours(2), 5);
+            workSchedule.Delete();
+            Assert.True(workSchedule.IsDeleted);
+
+            var nowShift = new WorkSchedule(doctor, DateTime.UtcNow.AddSeconds(1), DateTime.UtcNow.AddHours(2), 5);
+            Thread.Sleep(2000); // Wait for 2 seconds to ensure the shift has started
+            Assert.Throws<InvalidOperationException>(() => nowShift.Delete());
+        }
     }
 }
