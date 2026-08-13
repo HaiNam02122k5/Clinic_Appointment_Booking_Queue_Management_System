@@ -1,460 +1,275 @@
 <script setup lang="ts">
-import {
-  computed,
-  onMounted,
-  ref,
-} from 'vue'
+import { ref } from 'vue'
 
-import BaseCard from '@/components/ui/BaseCard.vue'
-import BaseButton from '@/components/ui/BaseButton.vue'
+import CheckInResult from '@/features/receptionist/components/CheckInResult.vue'
+import { useReceptionistStore } from '@/stores/receptionist'
 
-import {
-  doctorApi,
-} from '@/features/doctor/doctor.api'
+import type { AppointmentPatient } from '@/features/receptionist/receptionist.mock'
 
-import type {
-  Doctor,
-} from '@/features/doctor/doctor.types'
+const receptionistStore = useReceptionistStore()
 
-import {
-  useReceptionistStore,
-} from '@/stores/receptionist'
+const searchValue = ref('')
 
-const name = ref('')
-const phone = ref('')
-const appointmentId = ref('')
-const docId = ref('')
-const urgent = ref(false)
-const doctors = ref<Doctor[]>([])
-const loadingDoctors = ref(false)
-const doctorError = ref<string | null>(null)
-const queueTicketId = ref<string | null>(null)
+const patient = ref<AppointmentPatient | null>(null)
 
-const done = ref(false)
-const issued = ref('')
+const errorMessage = ref('')
 
-const receptionistStore =
-  useReceptionistStore()
+const queueNumber = ref<string | null>(null)
 
-async function loadDoctors() {
-  loadingDoctors.value = true
-  doctorError.value = null
+function searchPatient() {
+  errorMessage.value = ''
+  patient.value = null
+  queueNumber.value = null
 
-  try {
-    const response = await doctorApi.getDoctors({
-      status: 'ACTIVE',
-    })
+  const keyword = searchValue.value.trim()
 
-    doctors.value = response.items
-  } catch (error) {
-    doctorError.value =
-      error instanceof Error
-        ? error.message
-        : 'Không thể tải danh sách bác sĩ'
-  } finally {
-    loadingDoctors.value = false
+  if (!keyword) {
+    errorMessage.value =
+      'Vui lòng nhập mã lịch hẹn hoặc số điện thoại.'
+
+    return
   }
+
+  const result =
+    receptionistStore.findAppointment(keyword)
+
+  if (!result) {
+    errorMessage.value =
+      'Không tìm thấy lịch hẹn phù hợp.'
+
+    return
+  }
+
+  if (result.checkedIn) {
+    errorMessage.value =
+      'Bệnh nhân này đã check-in.'
+
+    return
+  }
+
+  patient.value = result
 }
 
-onMounted(() => {
-  loadDoctors()
-})
+function checkIn() {
+  if (!patient.value) {
+    return
+  }
 
-const selectedDoctor = computed(() => {
-  return doctors.value.find(
-    (doctor) => doctor.id === Number(docId.value),
+  const result = receptionistStore.checkIn(
+    patient.value.appointmentId
   )
-})
 
-const currentTime = computed(() => {
-  return new Date().toLocaleTimeString('vi-VN', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-})
+  if (!result) {
+    errorMessage.value =
+      'Không thể check-in bệnh nhân này.'
 
-async function handleCheckin() {
-  const doctor = selectedDoctor.value
-
-  if (!doctor) return
-  if (!name.value.trim()) return
-  if (!appointmentId.value.trim()) return
-
-  try {
-      const response =
-      await receptionistStore.checkIn({
-      appointmentId:
-      appointmentId.value.trim(),
-    priority: urgent.value,
-  })
-
-    // Lưu ID của QueueTicket
-    queueTicketId.value = response.id
-
-    // Số thứ tự do BE sinh
-    issued.value = String(
-      response.queueNumber,
-    )
-
-    done.value = true
-  } catch (error) {
-    console.error(
-      'Check-in failed:',
-      error,
-    )
+    return
   }
-}
 
-function resetCheckin() {
-  done.value = false
-  name.value = ''
-  phone.value = ''
-  appointmentId.value = ''
-  docId.value = ''
-  urgent.value = false
-  issued.value = ''
-  queueTicketId.value = null
+  queueNumber.value = result.no
+
+  patient.value = {
+    ...patient.value,
+    checkedIn: true,
+  }
 }
 </script>
 
 <template>
-  <!-- =========================
-       PHIẾU XẾP HÀNG
-       ========================= -->
-  <div
-    v-if="done"
-    class="max-w-sm mx-auto mt-4"
-  >
-    <BaseCard class="p-8 text-center">
+  <div class="space-y-5 max-w-2xl">
 
-      <p
-        class="text-xs text-slate-400 uppercase tracking-widest mb-3 font-semibold"
-      >
-        Phiếu xếp hàng
-      </p>
-
-      <!-- Ticket number -->
-      <div
-        class="w-32 h-32 rounded-full mx-auto mb-4 flex items-center justify-center"
-        :class="
-          urgent
-            ? 'bg-red-500'
-            : 'bg-[#0E4D92]'
-        "
-      >
-        <div>
-          <p
-            class="text-3xl font-bold text-white"
-          >
-            {{ issued }}
-          </p>
-
-          <p
-            v-if="urgent"
-            class="text-[10px] text-red-200 font-bold"
-          >
-            ƯU TIÊN
-          </p>
-        </div>
-      </div>
-
-      <!-- Patient -->
-      <p
-        class="font-bold text-slate-800 text-lg mb-1"
-      >
-        {{ name }}
-      </p>
-
-      <!-- Doctor -->
-      <p
-        class="text-sm text-slate-400 mb-1"
-      >
-        {{ selectedDoctor?.fullName }}
-      </p>
-
-      <!-- Time -->
-      <p
-        class="text-xs text-slate-400 mb-6"
-      >
-        {{ currentTime }}
-      </p>
-
-      <!-- New check-in -->
-      <BaseButton
-        class="w-full"
-        @click="resetCheckin"
-      >
-        Check-in tiếp theo
-      </BaseButton>
-
-    </BaseCard>
-  </div>
-
-  <!-- =========================
-       FORM CHECK-IN
-       ========================= -->
-  <div
-    v-else
-    class="max-w-4xl mx-auto space-y-5"
-  >
-
-    <!-- Header -->
+    <!-- TITLE -->
     <div>
-      <h1
-        class="text-2xl font-bold text-slate-800"
-      >
+      <h1 class="text-xl font-semibold text-slate-800">
         Check-in bệnh nhân
       </h1>
 
-      <p
-        class="text-sm text-slate-400 mt-1"
-      >
-        Xác nhận và cấp số thứ tự
+      <p class="mt-1 text-sm text-slate-500">
+        Tra cứu lịch hẹn và xác nhận bệnh nhân đến khám
       </p>
     </div>
 
+    <!-- SEARCH CARD -->
     <div
-      class="grid grid-cols-1 md:grid-cols-5 gap-5"
+      class="bg-white border border-slate-200
+             rounded-xl p-6"
     >
 
-      <!-- =========================
-           CHECK-IN FORM
-           ========================= -->
-      <BaseCard
-        class="md:col-span-3 p-5 space-y-4"
+      <h2
+        class="text-sm font-semibold
+               text-slate-800 mb-4"
       >
+        Tra cứu lịch hẹn
+      </h2>
 
-        <h3
-          class="font-semibold text-slate-700"
-        >
-          Thông tin check-in
-        </h3>
+      <div>
 
-        <div
-          class="grid grid-cols-1 sm:grid-cols-2 gap-4"
-        >
-
-          <!-- Họ tên -->
-          <div>
-            <label
-              class="block text-sm font-medium text-slate-700 mb-1.5"
-            >
-              Họ tên bệnh nhân
-              <span class="text-red-500">
-                *
-              </span>
-            </label>
-
-            <input
-              v-model="name"
-              type="text"
-              placeholder="Nguyễn Văn A"
-              class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0E4D92]"
-            />
-          </div>
-
-          <!-- Số điện thoại -->
-          <div>
-            <label
-              class="block text-sm font-medium text-slate-700 mb-1.5"
-            >
-              Số điện thoại
-            </label>
-
-            <input
-              v-model="phone"
-              type="tel"
-              placeholder="0912 345 678"
-              class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0E4D92]"
-            />
-          </div>
-
-          <!-- Mã đặt lịch -->
-          <div>
-            <label
-              class="block text-sm font-medium text-slate-700 mb-1.5"
-            >
-              Mã đặt lịch (nếu có)
-            </label>
-
-            <input
-              v-model="appointmentId"
-              type="text"
-              placeholder="VD: A001"
-              class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0E4D92]"
-            />
-          </div>
-
-          <!-- Bác sĩ -->
-          <div>
-            <label
-              class="block text-sm font-medium text-slate-700 mb-1.5"
-            >
-              Bác sĩ phụ trách
-              <span class="text-red-500">
-                *
-              </span>
-            </label>
-
-              <select
-                v-model="docId"
-                :disabled="loadingDoctors"
-                class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#0E4D92]"
-              >
-                <option value="">
-                  {{
-                    loadingDoctors
-                      ? 'Đang tải bác sĩ…'
-                      : 'Chọn bác sĩ…'
-                  }}
-                </option>
-
-                <option
-                  v-for="doctor in doctors"
-                  :key="doctor.id"
-                  :value="doctor.id"
-                >
-                  {{ doctor.fullName }}
-                  —
-                  {{ doctor.specialty.name }}
-                </option>
-              </select>
-              <p
-                v-if="doctorError"
-                class="text-xs text-red-500 mt-1"
-              >
-                {{ doctorError }}
-              </p>
-          </div>
-
-        </div>
-
-        <!-- =========================
-             ƯU TIÊN KHẨN CẤP
-             ========================= -->
         <label
-          class="flex items-center gap-3 p-3 border-2 border-dashed border-red-200 bg-red-50 rounded-xl cursor-pointer hover:bg-red-100 transition-colors"
+          class="block text-xs font-medium
+                 text-slate-600 mb-1.5"
         >
-
-          <input
-            v-model="urgent"
-            type="checkbox"
-            class="w-4 h-4"
-          />
-
-          <div>
-            <p
-              class="text-sm font-semibold text-red-700"
-            >
-              Ưu tiên khẩn cấp
-            </p>
-
-            <p
-              class="text-xs text-red-500"
-            >
-              Đưa lên đầu hàng đợi của bác sĩ
-            </p>
-          </div>
-
+          Mã lịch hẹn hoặc Số điện thoại
         </label>
 
-        <!-- =========================
-             CẤP SỐ
-             ========================= -->
-        <BaseButton
-          class="w-full"
-          :disabled="
-            !name.trim() ||
-            !docId ||
-            !appointmentId.trim()
-          "
-          @click="handleCheckin"
-        >
-          Cấp số thứ tự
-        </BaseButton>
+          <input
+            v-model="searchValue"
+            type="text"
+            placeholder="Ví dụ: APT-001 hoặc 0901234567"
+            class="w-full px-3 py-2.5
+                  text-sm text-slate-900
+                  border border-slate-200
+                  rounded-lg
+                  focus:outline-none
+                  focus:border-violet-600
+                  focus:ring-1
+                  focus:ring-violet-600"
+            @keyup.enter="searchPatient"
+          />
 
-      </BaseCard>
+      </div>
 
-      <!-- =========================
-           CHECK-IN GẦN ĐÂY
-           ========================= -->
-      <BaseCard
-        class="md:col-span-2 p-5"
+      <!-- ERROR -->
+      <div
+        v-if="errorMessage"
+        class="mt-3 px-3 py-2
+               bg-red-50 border border-red-200
+               rounded-lg text-sm text-red-600"
       >
+        {{ errorMessage }}
+      </div>
 
-        <h3
-          class="font-semibold text-slate-700 mb-4"
-        >
-          Check-in gần đây
-        </h3>
-
-        <div class="space-y-2">
-
-            <div class="space-y-2">
-              <p
-                class="text-xs text-slate-400 text-center py-4"
-              >
-                Chưa có dữ liệu check-in gần đây
-              </p>
-            </div>
-
-        </div>
-
-        <!-- =========================
-             TÓM TẮT HÔM NAY
-             ========================= -->
-        <div
-          class="mt-5 pt-4 border-t border-slate-100"
-        >
-
-          <p
-            class="text-xs text-slate-400 font-medium uppercase tracking-wide mb-2"
-          >
-            Tóm tắt hôm nay
-          </p>
-
-          <div
-            class="grid grid-cols-2 gap-2"
-          >
-
-            <div
-              class="bg-blue-50 rounded-xl p-2.5 text-center"
-            >
-              <p
-                class="font-bold text-[#0E4D92] text-xl"
-              >
-                23
-              </p>
-
-              <p
-                class="text-xs text-slate-400"
-              >
-                Check-in
-              </p>
-            </div>
-
-            <div
-              class="bg-emerald-50 rounded-xl p-2.5 text-center"
-            >
-              <p
-                class="font-bold text-emerald-600 text-xl"
-              >
-                18
-              </p>
-
-              <p
-                class="text-xs text-slate-400"
-              >
-                Đã khám
-              </p>
-            </div>
-
-          </div>
-
-        </div>
-
-      </BaseCard>
+      <button
+        type="button"
+        class="mt-4 w-full py-2.5
+               bg-violet-600 text-white
+               text-sm font-semibold
+               rounded-lg
+               hover:bg-violet-700
+               transition-colors"
+        @click="searchPatient"
+      >
+        Tra cứu
+      </button>
 
     </div>
+
+    <!-- PATIENT INFORMATION -->
+    <div
+      v-if="patient && !queueNumber"
+      class="bg-white border border-slate-200
+             rounded-xl p-6"
+    >
+
+      <h2
+        class="text-sm font-semibold
+               text-slate-800 mb-4"
+      >
+        Thông tin bệnh nhân
+      </h2>
+
+      <div class="space-y-3">
+
+        <div
+          class="flex justify-between
+                 py-2 border-b border-slate-100"
+        >
+          <span class="text-sm text-slate-500">
+            Họ tên
+          </span>
+
+          <span class="text-sm font-medium text-slate-800">
+            {{ patient.name }}
+          </span>
+        </div>
+
+        <div
+          class="flex justify-between
+                 py-2 border-b border-slate-100"
+        >
+          <span class="text-sm text-slate-500">
+            Mã lịch hẹn
+          </span>
+
+          <span class="text-sm font-medium text-slate-800">
+            {{ patient.appointmentId }}
+          </span>
+        </div>
+
+        <div
+          class="flex justify-between
+                 py-2 border-b border-slate-100"
+        >
+          <span class="text-sm text-slate-500">
+            Số điện thoại
+          </span>
+
+          <span class="text-sm font-medium text-slate-800">
+            {{ patient.phone }}
+          </span>
+        </div>
+
+        <div
+          class="flex justify-between
+                 py-2 border-b border-slate-100"
+        >
+          <span class="text-sm text-slate-500">
+            Bác sĩ
+          </span>
+
+          <span class="text-sm font-medium text-slate-800">
+            {{ patient.doctor }}
+          </span>
+        </div>
+
+        <div
+          class="flex justify-between
+                 py-2 border-b border-slate-100"
+        >
+          <span class="text-sm text-slate-500">
+            Chuyên khoa
+          </span>
+
+          <span class="text-sm font-medium text-slate-800">
+            {{ patient.specialty }}
+          </span>
+        </div>
+
+        <div class="flex justify-between py-2">
+
+          <span class="text-sm text-slate-500">
+            Giờ hẹn
+          </span>
+
+          <span class="text-sm font-medium text-slate-800">
+            {{ patient.appointmentTime }}
+          </span>
+
+        </div>
+
+      </div>
+
+      <!-- CHECK IN -->
+      <button
+        type="button"
+        class="mt-5 w-full py-2.5
+               bg-violet-600 text-white
+               text-sm font-semibold
+               rounded-lg
+               hover:bg-violet-700
+               transition-colors"
+        @click="checkIn"
+      >
+        Xác nhận Check-in
+      </button>
+
+    </div>
+
+    <!-- RESULT -->
+    <CheckInResult
+      v-if="queueNumber && patient"
+      :queue-number="queueNumber"
+      :patient-name="patient.name"
+    />
+
   </div>
 </template>

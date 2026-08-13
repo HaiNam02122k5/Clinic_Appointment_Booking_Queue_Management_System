@@ -1,168 +1,206 @@
+import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
 
-import { queueApi } from '@/features/queue/queue.api'
-
-import type {
-  QueueItem,
-  CheckInRequest,
-} from '@/features/queue/queue.types'
+import {
+  mockAppointments,
+  queueData,
+  type AppointmentPatient,
+  type QueuePatient,
+} from '@/features/receptionist/receptionist.mock'
 
 export const useReceptionistStore = defineStore(
   'receptionist',
   () => {
-    const queue = ref<QueueItem[]>([])
-    const loading = ref(false)
-    const error = ref<string | null>(null)
+    // ================================
+    // STATE
+    // ================================
 
-    // =========================
-    // Load queue
-    // GET /doctors/{doctorId}/queue
-    // =========================
+    const appointments = ref<AppointmentPatient[]>(
+      mockAppointments.map((appointment) => ({
+        ...appointment,
+      }))
+    )
 
-    async function loadQueue(
-      doctorId: number,
-    ) {
-      loading.value = true
-      error.value = null
+    const queue = ref<QueuePatient[]>(
+      queueData.map((patient) => ({
+        ...patient,
+      }))
+    )
 
-      try {
-        const response =
-          await queueApi.getQueue(doctorId)
+    // ================================
+    // GETTERS
+    // ================================
 
-        queue.value = response.items
-      } catch (err) {
-        error.value =
-          err instanceof Error
-            ? err.message
-            : 'Không thể tải hàng đợi'
+    const waitingCount = computed(() => {
+      return queue.value.filter(
+        (patient) => patient.status === 'waiting'
+      ).length
+    })
 
-        throw err
-      } finally {
-        loading.value = false
+    const examiningCount = computed(() => {
+      return queue.value.filter(
+        (patient) => patient.status === 'examining'
+      ).length
+    })
+
+    const completedCount = computed(() => {
+      return queue.value.filter(
+        (patient) => patient.status === 'completed'
+      ).length
+    })
+
+    // ================================
+    // SEARCH APPOINTMENT
+    // ================================
+
+    function findAppointment(
+      keyword: string
+    ): AppointmentPatient | null {
+      const value = keyword.trim().toLowerCase()
+
+      if (!value) {
+        return null
       }
+
+      return (
+        appointments.value.find(
+          (appointment) =>
+            appointment.appointmentId.toLowerCase() === value ||
+            appointment.phone === value
+        ) ?? null
+      )
     }
 
-    // =========================
-    // Check-in
-    // POST /queue-tickets/check-in
-    // =========================
+    // ================================
+    // GENERATE QUEUE NUMBER
+    // ================================
 
-    async function checkIn(
-      data: CheckInRequest,
-    ) {
-      loading.value = true
-      error.value = null
+    function generateQueueNumber(): string {
+      const numbers = queue.value
+        .map((patient) => {
+          const match = patient.no.match(/^A-(\d+)$/)
 
-      try {
-        return await queueApi.checkIn(data)
-      } catch (err) {
-        error.value =
-          err instanceof Error
-            ? err.message
-            : 'Không thể check-in bệnh nhân'
+          return match ? Number(match[1]) : 0
+        })
+        .filter((number) => number > 0)
 
-        throw err
-      } finally {
-        loading.value = false
-      }
+      const maxNumber = numbers.length
+        ? Math.max(...numbers)
+        : 0
+
+      return `A-${String(maxNumber + 1).padStart(3, '0')}`
     }
 
-    // =========================
-    // Call
-    // PATCH /queue-tickets/{id}/call
-    // =========================
+    // ================================
+    // CHECK-IN
+    // ================================
 
-    async function call(
-      queueTicketId: string,
-    ) {
-      loading.value = true
-      error.value = null
+    function checkIn(
+      appointmentId: string
+    ): QueuePatient | null {
+      const appointment = appointments.value.find(
+        (item) => item.appointmentId === appointmentId
+      )
 
-      try {
-        return await queueApi.call(
-          queueTicketId,
-        )
-      } catch (err) {
-        error.value =
-          err instanceof Error
-            ? err.message
-            : 'Không thể gọi bệnh nhân'
-
-        throw err
-      } finally {
-        loading.value = false
+      if (!appointment) {
+        return null
       }
+
+      // Không cho check-in 2 lần
+      if (appointment.checkedIn) {
+        return null
+      }
+
+      const queueNumber = generateQueueNumber()
+
+      // Đánh dấu lịch hẹn đã check-in
+      appointment.checkedIn = true
+
+      // Tạo bệnh nhân trong queue
+      const newPatient: QueuePatient = {
+        no: queueNumber,
+        name: appointment.name,
+        doctor: appointment.doctor,
+        time: appointment.appointmentTime,
+        status: 'waiting',
+      }
+
+      // Thêm vào hàng đợi
+      queue.value.push(newPatient)
+
+      return newPatient
     }
 
-    // =========================
-    // Skip
-    // PATCH /queue-tickets/{id}/skip
-    // =========================
+    // ================================
+    // CALL PATIENT
+    // ================================
 
-    async function skip(
-      queueTicketId: string,
-    ) {
-      loading.value = true
-      error.value = null
+    function callPatient(no: string) {
+      const patient = queue.value.find(
+        (item) => item.no === no
+      )
 
-      try {
-        return await queueApi.skip(
-          queueTicketId,
-        )
-      } catch (err) {
-        error.value =
-          err instanceof Error
-            ? err.message
-            : 'Không thể bỏ lượt'
-
-        throw err
-      } finally {
-        loading.value = false
+      if (!patient) {
+        return
       }
+
+      if (patient.status !== 'waiting') {
+        return
+      }
+
+      patient.status = 'examining'
     }
 
-    // =========================
-    // Priority
-    // PATCH /queue-tickets/{id}/priority
-    // =========================
+    // ================================
+    // COMPLETE PATIENT
+    // ================================
 
-    async function setPriority(
-      queueTicketId: string,
-      priority: boolean,
-    ) {
-      loading.value = true
-      error.value = null
+    function completePatient(no: string) {
+      const patient = queue.value.find(
+        (item) => item.no === no
+      )
 
-      try {
-        return await queueApi.setPriority(
-          queueTicketId,
-          {
-            priority,
-          },
-        )
-      } catch (err) {
-        error.value =
-          err instanceof Error
-            ? err.message
-            : 'Không thể cập nhật ưu tiên'
-
-        throw err
-      } finally {
-        loading.value = false
+      if (!patient) {
+        return
       }
+
+      if (patient.status !== 'examining') {
+        return
+      }
+
+      patient.status = 'completed'
+    }
+
+    // ================================
+    // RESET MOCK DATA
+    // ================================
+
+    function resetMockData() {
+      queue.value = queueData.map((patient) => ({
+        ...patient,
+      }))
+
+      appointments.value = mockAppointments.map(
+        (appointment) => ({
+          ...appointment,
+        })
+      )
     }
 
     return {
+      appointments,
       queue,
-      loading,
-      error,
 
-      loadQueue,
+      waitingCount,
+      examiningCount,
+      completedCount,
+
+      findAppointment,
       checkIn,
-      call,
-      skip,
-      setPriority,
+      callPatient,
+      completePatient,
+
+      resetMockData,
     }
-  },
+  }
 )

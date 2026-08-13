@@ -67,22 +67,30 @@ const routes: RouteRecordRaw[] = [
       },
       // --- Luồng Lễ tân Điều phối ---
       {
-        path: 'reception/queue',
-        name: 'reception-queue',
-        component: () =>
-          import('@/views/receptionist/ReceptionistDashboardView.vue'),
+        path: 'reception',
         meta: {
-          roles: ['Receptionist'],
+          roles: ['Receptionist']
         },
-      },
-      {
-        path: 'reception/checkin',
-        name: 'reception-checkin',
-        component: () =>
-          import('@/views/receptionist/ReceptionistCheckinView.vue'),
-        meta: {
-          roles: ['Receptionist',],
-        },
+        children: [
+          {
+            path: '',
+            name: 'reception-dashboard',
+            component: () =>
+              import('@/views/receptionist/ReceptionistDashboardView.vue')
+          },
+          {
+            path: 'queue',
+            name: 'reception-queue',
+            component: () =>
+              import('@/views/receptionist/ReceptionistQueueView.vue')
+          },
+          {
+            path: 'checkin',
+            name: 'reception-checkin',
+            component: () =>
+              import('@/views/receptionist/ReceptionistCheckinView.vue')
+          }
+        ]
       },
       // --- Luồng Bác sĩ Khám bệnh ---
       {
@@ -195,7 +203,7 @@ router.beforeEach((to) => {
       }
 
       if (auth.hasRole(['Receptionist'])) {
-        return { name: 'reception-queue' }
+        return { name: 'reception-dashboard' }
       }
 
       if (auth.hasRole(['Doctor'])) {
@@ -233,7 +241,7 @@ router.beforeEach((to) => {
       }
 
       if (auth.hasRole(['Receptionist'])) {
-        return { name: 'reception-queue' }
+        return { name: 'reception-dashboard' }
       }
 
       if (auth.hasRole(['Doctor'])) {
