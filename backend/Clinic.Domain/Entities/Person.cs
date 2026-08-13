@@ -44,7 +44,7 @@ namespace Clinic.Domain.Entities
             if (!string.IsNullOrWhiteSpace(phoneNumber) &&
                 !Regex.IsMatch(phoneNumber, @"^\+?[0-9]+$"))
                 throw new ArgumentException("Invalid phone number");
-            if (dateOfBirth > DateOnly.FromDateTime(DateTime.UtcNow))
+            if (dateOfBirth > new TimeConverter().Today)
                 throw new ArgumentException("Date of birth cannot be in the future.", nameof(dateOfBirth));
             FullName = fullName;
             PhoneNumber = string.IsNullOrWhiteSpace(phoneNumber) ? null : phoneNumber;
@@ -94,7 +94,7 @@ namespace Clinic.Domain.Entities
             if (string.IsNullOrWhiteSpace(phoneNumber) ||
                 !Regex.IsMatch(phoneNumber, @"^\+?[0-9]+$"))
                 throw new ArgumentException("Invalid phone number");
-            if (dateOfBirth > DateOnly.FromDateTime(DateTime.UtcNow))
+            if (dateOfBirth > new TimeConverter().Today)
                 throw new ArgumentException("Date of birth cannot be in the future.", nameof(dateOfBirth));
             if (string.IsNullOrWhiteSpace(email)) // RegEx for email validation too complex lol
                 throw new ArgumentException("Email cannot be null or empty.", nameof(email));

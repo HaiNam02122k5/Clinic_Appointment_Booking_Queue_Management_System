@@ -9,8 +9,9 @@ namespace Clinic.Application.Features.WorkSchedules.Commands
     public record UpdateShiftRequestCommand(
         Guid Id,
         Guid DoctorId,
-        DateTime StartTime,
-        DateTime EndTime,
+        DateOnly Date,
+        TimeOnly StartTime,
+        TimeOnly EndTime,
         int PatientLimit,
         string Reason
     ) : IRequest<Guid>;
@@ -35,7 +36,7 @@ namespace Clinic.Application.Features.WorkSchedules.Commands
             {
                 throw new UnauthorizedAccessException("You are not authorized to update this shift request");
             }
-            shiftRequest.UpdateShift(request.StartTime, request.EndTime, request.PatientLimit, request.Reason);
+            shiftRequest.UpdateShift(request.Date, request.StartTime, request.EndTime, request.PatientLimit, request.Reason);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return shiftRequest.Id;
         }

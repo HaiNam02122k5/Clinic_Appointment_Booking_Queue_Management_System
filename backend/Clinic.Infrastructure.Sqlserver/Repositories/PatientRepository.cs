@@ -1,0 +1,20 @@
+﻿using Clinic.Application.Interfaces;
+using Clinic.Domain.Entities;
+using Clinic.Infrastructure.Sqlserver.Persistence;
+using Microsoft.EntityFrameworkCore;
+
+namespace Clinic.Infrastructure.Sqlserver.Repositories
+{
+    public class PatientRepository : IPatientRepository
+    {
+        private readonly ApplicationDbContext _context;
+        public PatientRepository(ApplicationDbContext context)
+        {
+            _context = context;
+        }
+        public Task<Patient?> GetPatientByUserIdAsync(Guid userId)
+        {
+            return _context.Patients.Include(p => p.Person).ThenInclude(p => p.User).FirstOrDefaultAsync(p => p.Person.User.Id == userId);
+        }
+    }
+}

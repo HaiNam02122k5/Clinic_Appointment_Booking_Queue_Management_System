@@ -1,7 +1,9 @@
 using Clinic.Domain.Common;
+using Clinic.Domain.Common.Exceptions;
 using Clinic.Domain.Enums;
 using System;
 using System.Collections.Generic;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Clinic.Domain.Entities
 {
@@ -9,47 +11,56 @@ namespace Clinic.Domain.Entities
     public class WorkSchedule : BaseEntity
     {
         public const int SlotIntervalMinutes = 15; // Khoảng thời gian giữa các slot hẹn (15 phút)
-        public Guid DoctorId { get; set; }
-        public Doctor Doctor { get; set; } = null!;
+        public Guid DoctorId { get; protected set; }
+        public Doctor Doctor { get; protected set; } = null!;
 
-        public DateTime ShiftStart { get; set; }
+        public DateOnly Date {  get; protected set; }
 
-        public DateTime ShiftEnd { get; set; }
+        public TimeOnly ShiftStart { get; protected set; }
 
-        public int PatientLimit { get; set; }
+        public TimeOnly ShiftEnd { get; protected set; }
 
-        public WorkScheduleStatus Status { get; set; } = WorkScheduleStatus.Active;
-        public string? CancellationReason { get; set; }
+        public int PatientLimit { get; protected set; }
 
-        public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
+        public WorkScheduleStatus Status { get; protected set; } = WorkScheduleStatus.Active;
+        public string? CancellationReason { get; protected set; }
 
-        public WorkSchedule(Doctor doctor, DateTime shiftStart, DateTime shiftEnd, int patientLimit)
+        public ICollection<Appointment> Appointments { get; protected set; } = new List<Appointment>();
+
+        public WorkSchedule(Doctor doctor, DateOnly date, TimeOnly shiftStart, TimeOnly shiftEnd, int patientLimit)
         {
+            var utcStart = new TimeConverter().ConvertToUtc(new DateTime(date, shiftStart));
+
             if (doctor == null) throw new ArgumentNullException(nameof(doctor));
-            if (shiftStart < DateTime.UtcNow.ToLocalTime()) throw new ArgumentException("Shift start time must be in the future.");
+            if (utcStart < DateTime.UtcNow) throw new ArgumentException("Shift start time must be in the future.");
             if (shiftStart >= shiftEnd) throw new ArgumentException("Shift start time must be before shift end time.");
             if (patientLimit <= 0) throw new ArgumentException("Patient limit per slot must be greater than zero.");
             Doctor = doctor;
             DoctorId = doctor.Id;
+            Date = date;
             ShiftStart = shiftStart;
             ShiftEnd = shiftEnd;
             PatientLimit = patientLimit;
         }
 
-        public WorkSchedule(Guid id, Guid doctorId, DateTime shiftStart, DateTime shiftEnd, int patientLimit, WorkScheduleStatus status, DateTime createdAt, DateTime? updatedAt, bool isDeleted)
+        public WorkSchedule(Guid id, Guid doctorId, DateOnly date, TimeOnly shiftStart, TimeOnly shiftEnd, int patientLimit, WorkScheduleStatus status, DateTime createdAt, DateTime? updatedAt, bool isDeleted)
             : base(id, createdAt, updatedAt, isDeleted)
         {
             DoctorId = doctorId;
+            Date = date;
             ShiftStart = shiftStart;
             ShiftEnd = shiftEnd;
             PatientLimit = patientLimit;
             Status = status;
         }
 
-        public void UpdateShift(DateTime newShiftStart, DateTime newShiftEnd, int newPatientLimit)
+        public void UpdateShift(DateOnly newDate, TimeOnly newShiftStart, TimeOnly newShiftEnd, int newPatientLimit)
         {
-            if (ShiftStart <= DateTime.UtcNow && newShiftStart != ShiftStart) throw new InvalidOperationException("Cannot update the start time of a shift that has already started.");
-            if (newShiftStart != ShiftStart && newShiftStart < DateTime.UtcNow) throw new ArgumentException("New shift start time must be in the future.");
+            var utcStart = new TimeConverter().ConvertToUtc(new DateTime(Date, ShiftStart));
+            var utcNewStart = new TimeConverter().ConvertToUtc(new DateTime(newDate, newShiftStart));
+
+            if (utcStart <= DateTime.UtcNow && utcNewStart != utcStart) throw new InvalidOperationException("Cannot update the start time of a shift that has already started.");
+            if (utcNewStart != utcStart && utcNewStart < DateTime.UtcNow) throw new ArgumentException("New shift start time must be in the future.");
             if (newShiftStart >= newShiftEnd) throw new ArgumentException("New shift start time must be before new shift end time.");
             if (newPatientLimit <= 0) throw new ArgumentException("New patient limit per slot must be greater than zero.");
             ShiftStart = newShiftStart;
@@ -69,7 +80,8 @@ namespace Clinic.Domain.Entities
 
         public void Delete()
         {
-            if (ShiftStart <= DateTime.UtcNow) throw new InvalidOperationException("Cannot delete a shift that has already started.");
+            var utcStart = new TimeConverter().ConvertToUtc(new DateTime(Date, ShiftStart));
+            if (utcStart <= DateTime.UtcNow) throw new InvalidOperationException("Cannot delete a shift that has already started.");
             if (Appointments.Count > 0) throw new InvalidOperationException("Cannot delete a shift that has appointments.");
             IsDeleted = true;
             MarkUpdated();
@@ -80,6 +92,25 @@ namespace Clinic.Domain.Entities
             CancellationReason = reason;
             Status = WorkScheduleStatus.Cancelled;
             MarkUpdated();
+        }
+
+        public void AddAppointment(Appointment appointment)
+        {
+            if (Appointments.Any(a => a.TimeSlot == appointment.TimeSlot))
+                throw new ConflictException("An appointment already exists for this time slot.");
+            if (Status == WorkScheduleStatus.Cancelled)
+            {
+                throw new InvalidOperationException("Cannot add an appointment to a cancelled work schedule.");
+            }
+            if (Status == WorkScheduleStatus.Full)
+            {
+                throw new InvalidOperationException("Cannot add an appointment to a full work schedule.");
+            }
+            Appointments.Add(appointment);
+            if (Appointments.Count(a => a.Status != AppointmentStatus.Cancelled && a.IsDeleted == false) >= PatientLimit)
+            {
+                Status = WorkScheduleStatus.Full;
+            }
         }
     }
 }

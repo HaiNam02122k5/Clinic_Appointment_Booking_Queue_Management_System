@@ -12,8 +12,9 @@ namespace Clinic.Application.Features.WorkSchedules.Commands
     // Use-case: Admin updates an existing work schedule for a doctor
     public record UpdateWorkScheduleCommand(
         Guid Id,
-        DateTime StartTime,
-        DateTime EndTime,
+        DateOnly Date,
+        TimeOnly StartTime,
+        TimeOnly EndTime,
         int PatientLimit
     ) : IRequest<Guid>;
     public class UpdateWorkScheduleCommandHandler : IRequestHandler<UpdateWorkScheduleCommand, Guid>
@@ -33,7 +34,7 @@ namespace Clinic.Application.Features.WorkSchedules.Commands
             {
                 throw new NotFoundException("Work schedule not found");
             }
-            workSchedule.UpdateShift(request.StartTime, request.EndTime, request.PatientLimit);
+            workSchedule.UpdateShift(request.Date, request.StartTime, request.EndTime, request.PatientLimit);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return workSchedule.Id;
         }

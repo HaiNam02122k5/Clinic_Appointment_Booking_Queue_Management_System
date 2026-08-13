@@ -31,8 +31,12 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
         public async Task<IEnumerable<WorkSchedule>> GetDoctorSchedulesWithAppointmentByDateAsync(Guid doctorId, DateOnly date)
         {
             return await _context.WorkSchedules.Include(ws => ws.Appointments.Where(a => a.IsDeleted == false && a.Status != AppointmentStatus.Cancelled))
-                .Where(ws => ws.DoctorId == doctorId && ws.IsDeleted == false && ws.Status == Domain.Enums.WorkScheduleStatus.Active && 
-                DateOnly.FromDateTime(ws.ShiftStart) == date).AsNoTracking().ToListAsync();
+                .Where(ws =>
+                    ws.DoctorId == doctorId &&
+                    ws.IsDeleted == false &&
+                    ws.Status == WorkScheduleStatus.Active &&
+                    ws.Date == date)
+                .AsNoTracking().ToListAsync();
         }
 
         public async Task<IEnumerable<WorkSchedule>> GetPlannedSchedulesByDoctorIdAsync(Guid doctorId, DateOnly startDate, DateOnly endDate)
@@ -44,9 +48,12 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             }
 
             return await _context.WorkSchedules
-                .Where(ws => ws.DoctorId == doctorId && ws.IsDeleted == false && ws.Status != Domain.Enums.WorkScheduleStatus.Cancelled &&
-                    ((DateOnly.FromDateTime(ws.ShiftStart) >= startDate && DateOnly.FromDateTime(ws.ShiftStart) <= endDate) ||
-                    (DateOnly.FromDateTime(ws.ShiftEnd) >= startDate && DateOnly.FromDateTime(ws.ShiftEnd) <= endDate))
+                .Where(ws =>
+                    ws.DoctorId == doctorId &&
+                    ws.IsDeleted == false &&
+                    ws.Status != WorkScheduleStatus.Cancelled &&
+                    ws.Date >= startDate &&
+                    ws.Date <= endDate
                 ).AsNoTracking().ToListAsync();
         }
 
@@ -59,9 +66,12 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             }
 
             return await _context.ShiftRequests
-                .Where(sr => sr.DoctorId == doctorId && sr.IsDeleted == false && sr.Status != Domain.Enums.ShiftRequestStatus.Cancelled &&
-                    ((DateOnly.FromDateTime(sr.ShiftStart) >= startDate && DateOnly.FromDateTime(sr.ShiftStart) <= endDate) ||
-                    (DateOnly.FromDateTime(sr.ShiftEnd) >= startDate && DateOnly.FromDateTime(sr.ShiftEnd) <= endDate))
+                .Where(sr =>
+                    sr.DoctorId == doctorId &&
+                    sr.IsDeleted == false &&
+                    sr.Status != ShiftRequestStatus.Cancelled &&
+                    sr.Date >= startDate &&
+                    sr.Date <= endDate
                 ).AsNoTracking().ToListAsync();
         }
 
@@ -73,23 +83,24 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
 
         public async Task<WorkSchedule?> GetWorkScheduleByIdAsync(Guid scheduleId)
         {
-            return await _context.WorkSchedules.Include(ws => ws.Doctor).Include(ws => ws.Appointments)
+            return await _context.WorkSchedules.Include(ws => ws.Doctor).ThenInclude(d => d.Employee).ThenInclude(e => e.Person)
+                .Include(ws => ws.Appointments.Where(a => a.IsDeleted == false && a.Status != AppointmentStatus.Cancelled))
                 .FirstOrDefaultAsync(ws => ws.Id == scheduleId && ws.IsDeleted == false);
         }
 
-        public async Task<bool> HasDuplicateShiftRequest(Guid doctorId, DateTime startTime, DateTime endTime)
+        public async Task<bool> HasDuplicateShiftRequest(Guid doctorId, DateOnly date, TimeOnly startTime, TimeOnly endTime)
         {
             var hasDuplicate = await _context.ShiftRequests
                 .AnyAsync(sr => sr.DoctorId == doctorId && sr.IsDeleted == false && sr.Status != Domain.Enums.ShiftRequestStatus.Cancelled &&
-                    sr.ShiftStart == startTime && sr.ShiftEnd == endTime);
+                    sr.Date == date && sr.ShiftStart == startTime && sr.ShiftEnd == endTime);
             return hasDuplicate;
         }
 
-        public async Task<bool> HasOverlappingWorkSchedule(Guid doctorId, DateTime startTime, DateTime endTime)
+        public async Task<bool> HasOverlappingWorkSchedule(Guid doctorId, DateOnly date, TimeOnly startTime, TimeOnly endTime)
         {
             var hasOverlapping = await _context.WorkSchedules
                 .AnyAsync(ws => ws.DoctorId == doctorId && ws.IsDeleted == false && ws.Status != Domain.Enums.WorkScheduleStatus.Cancelled &&
-                    ws.ShiftStart < endTime && ws.ShiftEnd > startTime);
+                    ws.Date == date && ws.ShiftStart < endTime && ws.ShiftEnd > startTime);
             return hasOverlapping;
         }
     }

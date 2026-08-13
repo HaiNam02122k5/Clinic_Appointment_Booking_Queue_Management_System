@@ -6,12 +6,15 @@ namespace Clinic.Domain.Entities
 {
     public class ShiftRequest : BaseEntity
     {
+        private readonly TimeSpan VietnamTimeOffset = TimeSpan.FromHours(7); // Giờ Việt Nam (UTC+7)
+
         public Guid DoctorId { get; protected set; }
         public Doctor Doctor { get; protected set; } = null!;
+        public DateOnly Date { get; set; }
 
-        public DateTime ShiftStart { get; protected set; }
+        public TimeOnly ShiftStart { get; protected set; }
 
-        public DateTime ShiftEnd { get; protected set; }
+        public TimeOnly ShiftEnd { get; protected set; }
 
         public int PatientLimit { get; protected set; }
 
@@ -19,11 +22,12 @@ namespace Clinic.Domain.Entities
 
         public ShiftRequestStatus Status { get; protected set; } = ShiftRequestStatus.Pending;
 
-        public ShiftRequest(Doctor doctor, DateTime shiftStart, DateTime shiftEnd, int patientLimit, string? reason)
+        public ShiftRequest(Doctor doctor, DateOnly date, TimeOnly shiftStart, TimeOnly shiftEnd, int patientLimit, string? reason)
         {
+            var utcStart = new TimeConverter().ConvertToUtc(new DateTime(date, shiftStart));
             if (doctor == null) throw new ArgumentNullException(nameof(doctor));
             if (shiftStart >= shiftEnd) throw new ArgumentException("Shift start time must be before shift end time.");
-            if (shiftStart < DateTime.UtcNow) throw new ArgumentException("Shift start time must be in the future.");
+            if (utcStart < DateTime.UtcNow) throw new ArgumentException("Shift start time must be in the future.");
             if (patientLimit <= 0) throw new ArgumentException("Patient limit per slot must be greater than zero.");
             Doctor = doctor;
             DoctorId = doctor.Id;
@@ -33,10 +37,11 @@ namespace Clinic.Domain.Entities
             Reason = reason;
         }
 
-        public ShiftRequest(Guid id, Guid doctorId, DateTime shiftStart, DateTime shiftEnd, int patientLimit, string? reason, ShiftRequestStatus status, DateTime createdAt, DateTime? updatedAt, bool isDeleted)
+        public ShiftRequest(Guid id, Guid doctorId, DateOnly date, TimeOnly shiftStart, TimeOnly shiftEnd, int patientLimit, string? reason, ShiftRequestStatus status, DateTime createdAt, DateTime? updatedAt, bool isDeleted)
             : base(id, createdAt, updatedAt, isDeleted)
         {
             DoctorId = doctorId;
+            Date = date;
             ShiftStart = shiftStart;
             ShiftEnd = shiftEnd;
             PatientLimit = patientLimit;
@@ -44,12 +49,14 @@ namespace Clinic.Domain.Entities
             Status = status;
         }
 
-        public void UpdateShift(DateTime newShiftStart, DateTime newShiftEnd, int newPatientLimit, string? newReason)
+        public void UpdateShift(DateOnly date, TimeOnly newShiftStart, TimeOnly newShiftEnd, int newPatientLimit, string? newReason)
         {
-            if (ShiftStart <= DateTime.UtcNow) throw new InvalidOperationException("Cannot update a shift that has already started.");
+            var utcStart = new TimeConverter().ConvertToUtc(new DateTime(date, ShiftStart));
+            var newUtcStart = new TimeConverter().ConvertToUtc(new DateTime(date, newShiftStart));
+            if (utcStart <= DateTime.UtcNow) throw new InvalidOperationException("Cannot update a shift that has already started.");
             if (Status != ShiftRequestStatus.Pending) throw new InvalidOperationException("Only pending shift requests can be updated.");
             if (newShiftStart >= newShiftEnd) throw new ArgumentException("New shift start time must be before new shift end time.");
-            if (newShiftStart < DateTime.UtcNow) throw new ArgumentException("New shift start time must be in the future.");
+            if (newUtcStart < DateTime.UtcNow) throw new ArgumentException("New shift start time must be in the future.");
             if (newPatientLimit <= 0) throw new ArgumentException("Patient limit per slot must be greater than zero.");
             ShiftStart = newShiftStart;
             ShiftEnd = newShiftEnd;
@@ -68,7 +75,7 @@ namespace Clinic.Domain.Entities
         {
             if (Status != ShiftRequestStatus.Pending) throw new InvalidOperationException("Only pending shift requests can be approved.");
             Status = ShiftRequestStatus.Approved;
-            Doctor.AddWorkSchedule(new WorkSchedule(Doctor, ShiftStart, ShiftEnd, PatientLimit));
+            Doctor.AddWorkSchedule(new WorkSchedule(Doctor, Date, ShiftStart, ShiftEnd, PatientLimit));
             MarkUpdated();
         }
 

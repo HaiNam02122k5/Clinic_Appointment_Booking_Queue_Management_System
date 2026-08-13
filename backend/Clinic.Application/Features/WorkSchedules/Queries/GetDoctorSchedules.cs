@@ -46,6 +46,7 @@ namespace Clinic.Application.Features.WorkSchedules.Queries
                 {
                     Id = ws.Id,
                     DoctorId = ws.DoctorId,
+                    Date = ws.Date,
                     StartTime = ws.ShiftStart,
                     EndTime = ws.ShiftEnd,
                     PatientLimit = ws.PatientLimit,

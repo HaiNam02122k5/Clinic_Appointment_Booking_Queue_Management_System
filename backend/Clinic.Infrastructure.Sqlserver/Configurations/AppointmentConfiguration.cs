@@ -28,6 +28,8 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
                 .HasConversion<string>()
                 .HasMaxLength(20);
 
+            builder.HasIndex(a => new { a.TimeSlot, a.WorkScheduleId }).IsUnique().HasFilter("[IsWalkIn] = 0 AND [Status] <> 'Cancelled' AND [IsDeleted] = 0");
+
             // IsWalkIn: đánh dấu Appointment do Lễ tân tạo tại quầy cho khách
             // vãng lai (Cách B) - dùng để loại khỏi thống kê tỷ lệ hủy lịch.
             builder.Property(a => a.IsWalkIn).IsRequired();

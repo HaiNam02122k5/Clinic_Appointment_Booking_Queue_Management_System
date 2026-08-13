@@ -40,7 +40,7 @@ namespace Clinic.Domain.Entities
             ExperienceYears = experienceYears;
             Qualification = qualification;
             Biography = biography;
-            WorkHistories.Add(new WorkHistory(this, specialty, DateOnly.FromDateTime(DateTime.UtcNow)));
+            WorkHistories.Add(new WorkHistory(this, specialty, new TimeConverter().Today));
         }
 
         public Doctor(Guid id, Guid employeeId, string licenseNumber, string qualification, int experienceYears, string? biography, DoctorStatus status, DateTime createdAt, DateTime? updatedAt, bool isDeleted)
@@ -125,7 +125,7 @@ namespace Clinic.Domain.Entities
             currentWorkHistory?.EndWorkHistory();
             if (newSpecialty != null && newSpecialty.IsDeleted == false)
             {
-                var newWorkHistory = new WorkHistory(this, newSpecialty, DateOnly.FromDateTime(DateTime.UtcNow));
+                var newWorkHistory = new WorkHistory(this, newSpecialty, new TimeConverter().Today);
                 WorkHistories.Add(newWorkHistory);
             }
             MarkUpdated();

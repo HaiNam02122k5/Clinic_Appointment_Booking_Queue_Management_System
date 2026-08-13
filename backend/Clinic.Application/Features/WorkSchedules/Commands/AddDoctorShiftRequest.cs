@@ -7,7 +7,7 @@ using MediatR;
 namespace Clinic.Application.Features.WorkSchedules.Commands
 {
     // Use-case: Doctor adds a new shift request
-    public record AddDoctorShiftRequestCommand(Guid DoctorId, DateTime StartTime, DateTime EndTime, int PatientLimit, string reason) : IRequest<RequestedShiftDto>;
+    public record AddDoctorShiftRequestCommand(Guid DoctorId, DateOnly Date, TimeOnly StartTime, TimeOnly EndTime, int PatientLimit, string reason) : IRequest<RequestedShiftDto>;
 
     public class AddDoctorShiftRequestCommandHandler : IRequestHandler<AddDoctorShiftRequestCommand, RequestedShiftDto>
     {
@@ -27,13 +27,14 @@ namespace Clinic.Application.Features.WorkSchedules.Commands
             {
                 throw new NotFoundException("Doctor not found.");
             }
-            if (await _workScheduleRepository.HasDuplicateShiftRequest(request.DoctorId, request.StartTime, request.EndTime))
+            if (await _workScheduleRepository.HasDuplicateShiftRequest(request.DoctorId, request.Date, request.StartTime, request.EndTime))
             {
                 throw new InvalidOperationException("The doctor has a duplicate shift request in the specified time range.");
             }
             var shiftRequest = new ShiftRequest
             (
                 doctor: doctor,
+                date: request.Date,
                 shiftStart: request.StartTime,
                 shiftEnd: request.EndTime,
                 patientLimit: request.PatientLimit,
@@ -45,6 +46,7 @@ namespace Clinic.Application.Features.WorkSchedules.Commands
             {
                 Id = shiftRequest.Id,
                 DoctorId = doctor.Id,
+                Date = request.Date,
                 StartTime = request.StartTime,
                 EndTime = request.EndTime,
                 PatientLimit = request.PatientLimit,

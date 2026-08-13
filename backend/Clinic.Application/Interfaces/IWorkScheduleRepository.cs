@@ -22,12 +22,12 @@ namespace Clinic.Application.Interfaces
         Task<IEnumerable<ShiftRequest>> GetRequestedSchedulesByDoctorIdAsync(Guid doctorId, DateOnly startDate, DateOnly endDate);
 
         /// <summary>
-        /// Retrieves a work schedule by its unique identifier asynchronously.
+        /// Retrieves a work schedule by its unique identifier asynchronously, including its associated doctor-person info.
         /// </summary>
         Task<WorkSchedule?> GetWorkScheduleByIdAsync(Guid scheduleId);
 
         /// <summary>
-        /// Retrieves a requested shift by its unique identifier asynchronously.
+        /// Retrieves a requested shift by its unique identifier asynchronously, including its associated doctor and active appointments.
         /// </summary>
         Task<ShiftRequest?> GetShiftRequestByIdAsync(Guid scheduleId);
 
@@ -44,12 +44,12 @@ namespace Clinic.Application.Interfaces
         /// <summary>
         /// Checks if a doctor has overlapping work schedules within the specified time range asynchronously.
         /// </summary>
-        Task<bool> HasOverlappingWorkSchedule(Guid doctorId, DateTime startTime, DateTime endTime);
+        Task<bool> HasOverlappingWorkSchedule(Guid doctorId, DateOnly date, TimeOnly startTime, TimeOnly endTime);
 
         /// <summary>
         /// Checks if a doctor has already requested a shift that has exact same time range asynchronously.
         /// </summary>
-        Task<bool> HasDuplicateShiftRequest(Guid doctorId, DateTime startTime, DateTime endTime);
+        Task<bool> HasDuplicateShiftRequest(Guid doctorId, DateOnly date, TimeOnly startTime, TimeOnly endTime);
 
         /// <summary>
         /// Retrieves work schedules for a doctor on a specific date, including their associated appointments asynchronously.

@@ -32,6 +32,9 @@ namespace Clinic.Infrastructure.Sqlserver
             services.AddScoped<IDoctorRepository, DoctorRepository>();
             services.AddScoped<IEmployeeRepository, EmployeeRepository>();
             services.AddScoped<IWorkScheduleRepository, WorkScheduleRepository>();
+            services.AddScoped<IPatientRepository, PatientRepository>();
+            services.AddScoped<IAppointmentRepository, AppointmentRepository>();
+
             services.AddScoped<DatabaseInitializer>();
             // TODO: đăng ký các Repository implement từ Clinic.Domain.Interfaces
             // tại đây khi nhóm bắt đầu viết Repository thật (VD: services.AddScoped<IAppointmentRepository, AppointmentRepository>()).
