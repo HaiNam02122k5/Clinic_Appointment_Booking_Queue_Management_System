@@ -36,7 +36,11 @@ namespace Clinic.API.Controllers
 
         [HttpPost("{appointmentId}/reschedule")]
         [Authorize(Policy = "Permission:appointment.reschedule")]
-        public IActionResult Reschedule([FromRoute] string appointmentId) => NoContent();
+        public async Task<IActionResult> Reschedule([FromRoute] Guid appointmentId, [FromBody] RescheduleAppointmentRequest request)
+        {
+            await _sender.Send(new RescheduleAppointmentCommand(appointmentId, request.NewTimeSlot));
+            return NoContent();
+        }
 
         [HttpPost("{appointmentId}/cancel")]
         [Authorize(Policy = "Permission:appointment.cancel.own,appointment.cancel.any")]
@@ -46,6 +50,8 @@ namespace Clinic.API.Controllers
             return NoContent();
         }
     }
+
+    public record RescheduleAppointmentRequest(DateTime NewTimeSlot);
 
     [ApiController]
     [Route("/me/appointments")]

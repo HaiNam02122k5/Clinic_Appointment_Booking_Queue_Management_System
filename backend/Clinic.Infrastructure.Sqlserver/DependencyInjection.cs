@@ -30,8 +30,6 @@ namespace Clinic.Infrastructure.Sqlserver
             services.AddScoped<IPasswordHasher, PasswordHasher>();
             services.AddScoped<IAppointmentRepository, AppointmentRepository>();
             services.AddScoped<IMedicalReportRepository, MedicalReportRepository>();
-            // TODO: đăng ký các Repository implement từ Clinic.Domain.Interfaces
-            // tại đây khi nhóm bắt đầu viết Repository thật.
 
             return services;
         }
