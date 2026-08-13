@@ -115,7 +115,7 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                     { new Guid("10000000-0000-0000-0000-000000000002"), new Guid("00000000-0000-0000-0000-000000000003") },
                     { new Guid("10000000-0000-0000-0000-000000000009"), new Guid("00000000-0000-0000-0000-000000000003") },
                     { new Guid("1000000a-0000-0000-0000-000000000001"), new Guid("00000000-0000-0000-0000-000000000003") },
-                    { new Guid("2000000a-0000-0000-0000-000000000006"), new Guid("00000000-0000-0000-0000-000000000003") },
+                    //{ new Guid("2000000a-0000-0000-0000-000000000006"), new Guid("00000000-0000-0000-0000-000000000003") },
                     { new Guid("10000000-0000-0000-0000-000000000002"), new Guid("00000000-0000-0000-0000-000000000004") },
                     { new Guid("10000000-0000-0000-0000-000000000014"), new Guid("00000000-0000-0000-0000-000000000001") },
                     { new Guid("10000000-0000-0000-0000-000000000013"), new Guid("00000000-0000-0000-0000-000000000004") }
@@ -155,10 +155,10 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                 keyColumns: new[] { "PermissionId", "RoleId" },
                 keyValues: new object[] { new Guid("1000000a-0000-0000-0000-000000000001"), new Guid("00000000-0000-0000-0000-000000000003") });
 
-            migrationBuilder.DeleteData(
-                table: "RolePermissions",
-                keyColumns: new[] { "PermissionId", "RoleId" },
-                keyValues: new object[] { new Guid("2000000a-0000-0000-0000-000000000006"), new Guid("00000000-0000-0000-0000-000000000003") });
+            //migrationBuilder.DeleteData(
+            //    table: "RolePermissions",
+            //    keyColumns: new[] { "PermissionId", "RoleId" },
+            //    keyValues: new object[] { new Guid("2000000a-0000-0000-0000-000000000006"), new Guid("00000000-0000-0000-0000-000000000003") });
 
             migrationBuilder.DeleteData(
                 table: "RolePermissions",

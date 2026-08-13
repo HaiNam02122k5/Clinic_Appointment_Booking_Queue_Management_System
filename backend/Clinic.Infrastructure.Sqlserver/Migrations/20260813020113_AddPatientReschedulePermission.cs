@@ -71,6 +71,7 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                     { new Guid("20000000-0000-0000-0000-00000000000f"), new Guid("00000000-0000-0000-0000-000000000001") },
                     { new Guid("20000000-0000-0000-0000-00000000000a"), new Guid("00000000-0000-0000-0000-000000000002") },
                     { new Guid("20000000-0000-0000-0000-00000000000d"), new Guid("00000000-0000-0000-0000-000000000002") },
+                    { new Guid("2000000a-0000-0000-0000-000000000006"), new Guid("00000000-0000-0000-0000-000000000003") },
                     { new Guid("20000000-0000-0000-0000-00000000000b"), new Guid("00000000-0000-0000-0000-000000000004") },
                     { new Guid("20000000-0000-0000-0000-00000000000e"), new Guid("00000000-0000-0000-0000-000000000004") }
                 });
@@ -108,6 +109,11 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                 table: "RolePermissions",
                 keyColumns: new[] { "PermissionId", "RoleId" },
                 keyValues: new object[] { new Guid("20000000-0000-0000-0000-00000000000d"), new Guid("00000000-0000-0000-0000-000000000002") });
+
+            migrationBuilder.DeleteData(
+                table: "RolePermissions",
+                keyColumns: new[] { "PermissionId", "RoleId" },
+                keyValues: new object[] { new Guid("2000000a-0000-0000-0000-000000000006"), new Guid("00000000-0000-0000-0000-000000000003") });
 
             migrationBuilder.DeleteData(
                 table: "RolePermissions",
