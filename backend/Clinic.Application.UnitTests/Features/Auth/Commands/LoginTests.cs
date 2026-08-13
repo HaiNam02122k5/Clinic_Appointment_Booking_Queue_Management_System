@@ -30,7 +30,7 @@ namespace Clinic.Application.UnitTests.Features.Auth.Commands
             Assert.NotNull(await refreshTokenRepository.GetByTokenHashAsync(tokenProvider.HashToken(response.RefreshToken)));
 
             LoginCommand wrongCommand = new("testuser", hasher.HashPassword("wrongpassword"));
-            await Assert.ThrowsAsync<ArgumentException>(async () =>
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
             {
                 await handler.Handle(wrongCommand, CancellationToken.None);
             });

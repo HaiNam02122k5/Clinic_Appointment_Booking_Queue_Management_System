@@ -1,7 +1,9 @@
 using Clinic.API;
 using Clinic.Application;
 using Clinic.Infrastructure.Sqlserver;
+using Clinic.Infrastructure.Sqlserver.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.OpenApi;
 using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -49,9 +51,37 @@ builder.Services.AddScoped<Clinic.Application.Interfaces.IAppointmentPolicySetti
     sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Clinic.API.Configuration.AppointmentPolicySettings>>().Value);
 
 builder.Services.AddOpenApi();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter your JWT token"
+    });
+
+    options.AddSecurityRequirement(document =>
+        new OpenApiSecurityRequirement
+        {
+            [new OpenApiSecuritySchemeReference("Bearer", document)] =
+                new List<string>()
+        });
+
+});
 
 var app = builder.Build();
+
+// Seed the database with an initial admin user if it doesn't exist
+using (var scope = app.Services.CreateScope())
+{
+    var initializer = scope.ServiceProvider
+        .GetRequiredService<DatabaseInitializer>();
+
+    await initializer.CreateInitialAdminAsync(builder.Configuration["Initial_Admin:Username"] ?? "admin", builder.Configuration["Initial_Admin:Password"] ?? "AdminPassowrd123!");
+}
 
 // Bắt mọi exception chưa xử lý và trả về envelope ApiResponse (qua GlobalExceptionHandler).
 app.UseExceptionHandler();

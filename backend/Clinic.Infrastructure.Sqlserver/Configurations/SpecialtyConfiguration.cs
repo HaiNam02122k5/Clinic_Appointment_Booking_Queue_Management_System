@@ -16,7 +16,9 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
                 .IsRequired()
                 .HasMaxLength(150);
 
-            builder.HasIndex(s => s.Name).IsUnique();
+            builder.Property(s => s.EstablishedDate).IsRequired();
+
+            builder.HasIndex(s => s.Name).IsUnique().HasFilter("[IsDeleted] = 0");
 
             builder.Property(s => s.Description).HasMaxLength(500);
         }
