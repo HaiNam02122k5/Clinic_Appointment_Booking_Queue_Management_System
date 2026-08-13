@@ -19,8 +19,19 @@ export const usePatientStore = defineStore('patient', () => {
   const queue = ref<QueueStatus | null>(null)
   const history = ref<MedicalRecord[]>([])
 
-  const loading = ref(false)
-  const error = ref<string | null>(null)
+  // Loading riêng
+  const doctorsLoading = ref(false)
+  const slotsLoading = ref(false)
+  const appointmentsLoading = ref(false)
+  const queueLoading = ref(false)
+  const historyLoading = ref(false)
+
+  // Error riêng
+  const doctorsError = ref<string | null>(null)
+  const slotsError = ref<string | null>(null)
+  const appointmentsError = ref<string | null>(null)
+  const queueError = ref<string | null>(null)
+  const historyError = ref<string | null>(null)
 
   const upcomingAppointments = computed(() =>
     appointments.value.filter(
@@ -32,23 +43,23 @@ export const usePatientStore = defineStore('patient', () => {
   )
 
   async function loadDoctors(specialty?: string) {
-    loading.value = true
-    error.value = null
+    doctorsLoading.value = true
+    doctorsError.value = null
 
     try {
       doctors.value = await patientApi.getDoctors(specialty)
     } catch (e: any) {
-      error.value =
+      doctorsError.value =
         e.response?.data?.message ||
         'Không thể tải danh sách bác sĩ'
     } finally {
-      loading.value = false
+      doctorsLoading.value = false
     }
   }
 
   async function loadSlots(doctorId: number, date: string) {
-    loading.value = true
-    error.value = null
+    slotsLoading.value = true
+    slotsError.value = null
 
     try {
       slots.value = await patientApi.getAvailableSlots(
@@ -56,19 +67,23 @@ export const usePatientStore = defineStore('patient', () => {
         date,
       )
     } catch (e: any) {
-      error.value =
+      slotsError.value =
         e.response?.data?.message ||
         'Không thể tải khung giờ'
     } finally {
-      loading.value = false
+      slotsLoading.value = false
     }
+  }
+
+  function clearSlots() {
+    slots.value = []
   }
 
   async function createAppointment(
     payload: CreateAppointmentRequest,
   ) {
-    loading.value = true
-    error.value = null
+    appointmentsLoading.value = true
+    appointmentsError.value = null
 
     try {
       const appointment =
@@ -78,35 +93,35 @@ export const usePatientStore = defineStore('patient', () => {
 
       return appointment
     } catch (e: any) {
-      error.value =
+      appointmentsError.value =
         e.response?.data?.message ||
         'Đặt lịch thất bại'
 
       throw e
     } finally {
-      loading.value = false
+      appointmentsLoading.value = false
     }
   }
 
   async function loadAppointments() {
-    loading.value = true
-    error.value = null
+    appointmentsLoading.value = true
+    appointmentsError.value = null
 
     try {
       appointments.value =
         await patientApi.getMyAppointments()
     } catch (e: any) {
-      error.value =
+      appointmentsError.value =
         e.response?.data?.message ||
         'Không thể tải lịch hẹn'
     } finally {
-      loading.value = false
+      appointmentsLoading.value = false
     }
   }
 
   async function cancelAppointment(id: number) {
-    loading.value = true
-    error.value = null
+    appointmentsLoading.value = true
+    appointmentsError.value = null
 
     try {
       await patientApi.cancelAppointment(id)
@@ -119,47 +134,49 @@ export const usePatientStore = defineStore('patient', () => {
         appointment.status = 'Cancelled'
       }
     } catch (e: any) {
-      error.value =
+      appointmentsError.value =
         e.response?.data?.message ||
         'Không thể hủy lịch'
+
       throw e
     } finally {
-      loading.value = false
+      appointmentsLoading.value = false
     }
   }
 
   async function loadQueue() {
-    loading.value = true
-    error.value = null
+    queueLoading.value = true
+    queueError.value = null
 
     try {
       queue.value = await patientApi.getMyQueue()
     } catch (e: any) {
-      error.value =
+      queueError.value =
         e.response?.data?.message ||
         'Không thể tải hàng đợi'
     } finally {
-      loading.value = false
+      queueLoading.value = false
     }
   }
 
   async function loadHistory() {
-    loading.value = true
-    error.value = null
+    historyLoading.value = true
+    historyError.value = null
 
     try {
       history.value =
         await patientApi.getMedicalHistory()
     } catch (e: any) {
-      error.value =
+      historyError.value =
         e.response?.data?.message ||
         'Không thể tải lịch sử khám'
     } finally {
-      loading.value = false
+      historyLoading.value = false
     }
   }
 
   return {
+    // Data
     doctors,
     slots,
     appointments,
@@ -167,11 +184,24 @@ export const usePatientStore = defineStore('patient', () => {
     queue,
     history,
 
-    loading,
-    error,
+    // Loading
+    doctorsLoading,
+    slotsLoading,
+    appointmentsLoading,
+    queueLoading,
+    historyLoading,
 
+    // Error
+    doctorsError,
+    slotsError,
+    appointmentsError,
+    queueError,
+    historyError,
+
+    // Actions
     loadDoctors,
     loadSlots,
+    clearSlots,
     createAppointment,
     loadAppointments,
     cancelAppointment,

@@ -3,6 +3,7 @@ import {computed, onMounted, ref, watch} from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { usePatientStore } from '@/stores/patient'
+import type { Appointment } from '@/features/patients/patient.types'
 
 const router = useRouter()
 const patient = usePatientStore()
@@ -16,14 +17,14 @@ const appointmentTime = ref('')
 const symptoms = ref('')
 
 const success = ref(false)
-const createdAppointment = ref<any>(null)
-
+const createdAppointment = ref<Appointment | null>(null)
+  
 const todayDate = new Date().toLocaleDateString('sv-SE')
 
 watch(specialty, () => {
   doctorId.value = null
   appointmentTime.value = ''
-  patient.slots = []
+  patient.clearSlots()
 })
 
 const specialties = [
@@ -51,7 +52,7 @@ onMounted(async () => {
 async function selectDoctor(id: number) {
   doctorId.value = id
   appointmentTime.value = ''
-  patient.slots = [] 
+  patient.clearSlots()
 
   if (appointmentDate.value) {
     await patient.loadSlots(id, appointmentDate.value)
@@ -60,7 +61,7 @@ async function selectDoctor(id: number) {
 
 async function changeDate() {
   appointmentTime.value = ''
-  patient.slots = []
+  patient.clearSlots()
 
   if (doctorId.value && appointmentDate.value) {
     await patient.loadSlots(doctorId.value, appointmentDate.value)
@@ -107,7 +108,7 @@ function newBooking() {
   symptoms.value = ''
   success.value = false
   createdAppointment.value = null
-  patient.slots = []
+  patient.clearSlots()
 }
 </script>
 
@@ -571,11 +572,11 @@ function newBooking() {
             class="flex-1 rounded-xl bg-[#00A878]
                    py-3 text-sm font-semibold text-white
                    disabled:opacity-50"
-            :disabled="patient.loading"
+            :disabled="patient.appointmentsLoading"
             @click="confirmBooking"
           >
             {{
-              patient.loading
+              patient.appointmentsLoading
                 ? 'Đang xử lý...'
                 : '✓ Xác nhận đặt lịch'
             }}
@@ -584,11 +585,11 @@ function newBooking() {
         </div>
 
         <p
-          v-if="patient.error"
+          v-if="patient.appointmentsError"
           class="rounded-xl bg-red-50 p-3 text-sm
                  text-red-600"
         >
-          {{ patient.error }}
+          {{ patient.appointmentsError }}
         </p>
 
       </section>

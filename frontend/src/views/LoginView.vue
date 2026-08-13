@@ -166,7 +166,7 @@ function goBackToRoleSelect() {
         </p>
 
         <div class="mt-8 space-y-3">
-          <div v-for="feature in ['Dữ liệu mã hóa bảo mật', 'Phân quyền theo vai trò', 'Tự động đăng xuất sau 30 phút']" :key="feature" class="flex items-center gap-3 text-sm text-white/80">
+          <div v-for="feature in ['Dữ liệu mã hóa bảo mật', 'Phân quyền theo vai trò']" :key="feature" class="flex items-center gap-3 text-sm text-white/80">
             <span class="text-white">✓</span>
             {{ feature }}
           </div>

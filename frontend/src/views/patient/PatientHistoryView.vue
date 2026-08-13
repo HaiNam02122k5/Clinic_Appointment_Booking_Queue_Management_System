@@ -31,7 +31,7 @@ const formatDate = (dateString?: string) => {
 
     <!-- Trạng thái 1: Đang tải -->
     <div
-      v-if="patient.loading"
+      v-if="patient.historyLoading"
       class="py-10 text-center text-sm text-slate-400"
     >
       Đang tải lịch sử khám...
@@ -39,10 +39,10 @@ const formatDate = (dateString?: string) => {
 
     <!-- Trạng thái 2: Lỗi -->
     <div
-      v-else-if="patient.error"
+      v-else-if="patient.historyError"
       class="rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-600"
     >
-      {{ patient.error }}
+      {{ patient.historyError }}
     </div>
 
     <!-- Trạng thái 3: Trống dữ liệu -->

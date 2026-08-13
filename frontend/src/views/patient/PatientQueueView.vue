@@ -107,7 +107,7 @@ const fetchQueue = async () => {
     if (!isMounted) return
 
     // Store báo lỗi
-    if (patient.error) {
+    if (patient.queueError) {
       isError.value = true
       return
     }
