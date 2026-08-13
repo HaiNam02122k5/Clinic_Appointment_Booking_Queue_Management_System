@@ -6,14 +6,14 @@ using MediatR;
 namespace Clinic.Application.Features.Specialties.Queries
 {
     public record GetSpecialtyQuery(Guid Id) : IRequest<SpecialtyDto?>;
-    public class GetSpecialty
+    public class GetSpecialtyQueryHandler : IRequestHandler<GetSpecialtyQuery, SpecialtyDto?>
     {
         private readonly ISpecialtyRepository _specialtyRepository;
-        public GetSpecialty(ISpecialtyRepository specialtyRepository)
+        public GetSpecialtyQueryHandler(ISpecialtyRepository specialtyRepository)
         {
             _specialtyRepository = specialtyRepository;
         }
-        public async Task<SpecialtyDto?> Handle(GetSpecialtyQuery request)
+        public async Task<SpecialtyDto?> Handle(GetSpecialtyQuery request, CancellationToken cancellationToken)
         {
             var specialty = await _specialtyRepository.GetByIdAsync(request.Id);
             if (specialty == null)

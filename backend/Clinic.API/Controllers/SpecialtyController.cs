@@ -51,7 +51,7 @@ namespace Clinic.API.Controllers
         {
             var command = _mapper.Map<CreateSpecialtyCommand>(request);
             var result = await _sender.Send(command);
-            return CreatedAtAction(nameof(GetSpecialty), result.Id, result);
+            return CreatedAtAction(nameof(GetSpecialty), new { id = result.Id }, result);
         }
 
         [HttpPut("{id}")]
