@@ -50,7 +50,7 @@ namespace Clinic.Application.Services
                 || !_passwordHasher.VerifyPassword(password, user.PasswordHash)
                 || !user.IsActive
             ){
-                throw new ArgumentException("Username or password is incorrect.");
+                throw new UnauthorizedAccessException("Username or password is incorrect.");
             }
 
             return user;

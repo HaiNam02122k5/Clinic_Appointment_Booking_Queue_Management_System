@@ -22,6 +22,8 @@ namespace Clinic.API.Controllers
 
         [HttpPost("login")]
         [AllowAnonymous]
+        [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             var command = _mapper.Map<LoginCommand>(request);
@@ -42,6 +44,8 @@ namespace Clinic.API.Controllers
 
         [HttpPost("register")]
         [AllowAnonymous]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Email))
@@ -55,6 +59,7 @@ namespace Clinic.API.Controllers
 
         [HttpPost("logout")]
         [AllowAnonymous]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         public async Task<IActionResult> Logout()
         {
             var refreshToken = Request.Cookies["refreshToken"];
@@ -76,6 +81,8 @@ namespace Clinic.API.Controllers
 
         [HttpPost("refresh")]
         [AllowAnonymous]
+        [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> Refresh()
         {
             if (!Request.Cookies.TryGetValue("refreshToken", out var refreshToken))
