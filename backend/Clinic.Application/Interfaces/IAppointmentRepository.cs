@@ -11,7 +11,7 @@ namespace Clinic.Application.Interfaces
         /// <summary>
         /// Gets a paged list of appointments for a specific patient, filtered by category.
         /// </summary>
-        Task<PagedResult<Appointment>> GetAppointmentsByPatientIdAsync(Guid id, string category);
+        Task<PagedResult<Appointment>> GetAppointmentsByPatientIdAsync(Guid patientId, string category);
         Task<Appointment?> GetByIdAsync(Guid appointmentId);
         Task<bool> IsTimeSlotTakenAsync(Guid doctorId, DateTime timeSlot);
     }

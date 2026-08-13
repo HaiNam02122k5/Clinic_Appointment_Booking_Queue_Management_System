@@ -12,9 +12,9 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
         {
             _context = context;
         }
-        public Task<Patient?> GetPatientByUserIdAsync(Guid userId)
+        public async Task<Patient?> GetPatientByUserIdAsync(Guid userId)
         {
-            return _context.Patients.Include(p => p.Person).ThenInclude(p => p.User).FirstOrDefaultAsync(p => p.Person.User.Id == userId);
+            return await _context.Patients.Include(p => p.Person).ThenInclude(p => p.User).FirstOrDefaultAsync(p => p.Person.User.Id == userId);
         }
     }
 }

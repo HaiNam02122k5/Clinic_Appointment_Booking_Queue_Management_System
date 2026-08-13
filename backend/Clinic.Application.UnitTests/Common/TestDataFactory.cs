@@ -51,5 +51,27 @@ namespace Clinic.Application.UnitTests.Common
             var doctor = new Doctor(employee ?? CreateEmployee(), licenseNumber, qualification, specialty ?? CreateSpecialty(), yoe, bio);
             return doctor;
         }
+
+        internal static Patient CreatePatient(Person? person = null)
+        {
+            person ??= CreatePerson();
+            return new Patient
+            {
+                Person = person,
+                PersonId = person.Id,
+                InsuranceNumber = "INS123456",
+                EmergencyContact = "Jane Doe - 0987654321"
+            };
+        }
+
+        internal static WorkSchedule CreateWorkSchedule(Doctor? doctor = null)
+        {
+            return new WorkSchedule(doctor ?? CreateDoctor(), DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)), new TimeOnly(9, 0), new TimeOnly(17, 0), 10);
+        }
+
+        internal static Appointment CreateAppointment(Patient? patient = null, WorkSchedule? workSchedule = null, TimeOnly? timeSlot = null)
+        {
+            return new Appointment(patient ?? CreatePatient(), workSchedule ?? CreateWorkSchedule(), timeSlot ?? new TimeOnly(10, 0));
+        }
     }
 }

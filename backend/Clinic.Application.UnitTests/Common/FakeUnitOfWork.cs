@@ -4,19 +4,19 @@ namespace Clinic.Application.UnitTests.Common
 {
     public class FakeUnitOfWork : IUnitOfWork
     {
-        public Task CommitTransactionAsync(CancellationToken cancellationToken = default)
+        public async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            return;
         }
 
-        public Task InitializeTransactionLockAsync(CancellationToken cancellationToken = default)
+        public async Task InitializeTransactionLockAsync(CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            return;
         }
 
-        public Task RollbackTransactionAsync(CancellationToken cancellationToken = default)
+        public async Task RollbackTransactionAsync(CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException();
+            return;
         }
 
         public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

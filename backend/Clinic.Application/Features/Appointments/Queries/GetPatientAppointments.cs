@@ -10,8 +10,8 @@ namespace Clinic.Application.Features.Appointments.Queries
     public record GetPatientAppointmentsQuery(
         Guid UserId,
         string Category = "upcoming"
-    ) : IRequest<PaginationResponse<AppointmentDto>>;
-    public class GetPatientAppointmentsQueryHandler : IRequestHandler<GetPatientAppointmentsQuery, PaginationResponse<AppointmentDto>>
+    ) : IRequest<List<AppointmentDto>>;
+    public class GetPatientAppointmentsQueryHandler : IRequestHandler<GetPatientAppointmentsQuery, List<AppointmentDto>>
     {
         private readonly IAppointmentRepository _appointmentRepository;
         private readonly IPatientRepository _patientRepository;
@@ -22,7 +22,7 @@ namespace Clinic.Application.Features.Appointments.Queries
             _patientRepository = patientRepository;
         }
 
-        public async Task<PaginationResponse<AppointmentDto>> Handle(GetPatientAppointmentsQuery request, CancellationToken cancellationToken)
+        public async Task<List<AppointmentDto>> Handle(GetPatientAppointmentsQuery request, CancellationToken cancellationToken)
         {
             var patient = await _patientRepository.GetPatientByUserIdAsync(request.UserId);
             if (patient == null)
@@ -31,9 +31,7 @@ namespace Clinic.Application.Features.Appointments.Queries
             }
 
             var appointments = await _appointmentRepository.GetAppointmentsByPatientIdAsync(patient.Id, request.Category);
-            return new PaginationResponse<AppointmentDto>
-            {
-                Items = appointments.Items.Select(a => new AppointmentDto
+            return appointments.Items.Select(a => new AppointmentDto
                 {
                     Id = a.Id,
                     PatientId = a.PatientId,
@@ -44,9 +42,7 @@ namespace Clinic.Application.Features.Appointments.Queries
                     Date = a.WorkSchedule.Date,
                     Status = a.Status,
                     CreatedAt = a.CreatedAt
-                }).ToList(),
-                TotalCount = appointments.TotalCount
-            };
+                }).ToList();
         }
     }
 }

@@ -2,28 +2,16 @@
 using Clinic.Application.Interfaces;
 using Clinic.Domain.Entities;
 using Clinic.Domain.Enums;
-using Clinic.Infrastructure.Sqlserver.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace Clinic.Infrastructure.Sqlserver.Repositories
+namespace Clinic.Application.UnitTests.Common
 {
-    public class AppointmentRepository : IAppointmentRepository
+    public class FakeAppointmentRepository : IAppointmentRepository
     {
-        private readonly ApplicationDbContext _context;
-        public AppointmentRepository(ApplicationDbContext context)
-        {
-            _context = context;
-        }
-
+        private readonly List<Appointment> _appointments = [];
         public async Task<PagedResult<Appointment>> GetAppointmentsByPatientIdAsync(Guid patientId, string category)
         {
-            var query = _context.Appointments
-                .Include(a => a.WorkSchedule)
-                    .ThenInclude(ws => ws.Doctor)
-                        .ThenInclude(d => d.Employee)
-                            .ThenInclude(e => e.Person)
-                .Include(a => a.Patient)
-                    .ThenInclude(p => p.Person)
+            var query = _appointments
                 .Where(a => a.IsDeleted == false && a.PatientId == patientId);
 
             // Apply category filter if provided
@@ -35,26 +23,28 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                 _ => query
             };
 
-            var count = await query.CountAsync();
-            var items = await query.OrderByDescending(a => a.WorkSchedule.Date).ThenByDescending(a => a.TimeSlot).AsNoTracking().ToListAsync();
+            var items = query.OrderByDescending(a => a.WorkSchedule.Date).ThenByDescending(a => a.TimeSlot).ToList();
 
             return new PagedResult<Appointment>
             (
                 items: items,
-                totalCount: count
+                totalCount: items.Count
             );
         }
 
         public async Task<Appointment?> GetByIdAsync(Guid appointmentId)
         {
-            return await _context.Appointments.Include(a => a.WorkSchedule).ThenInclude(ws => ws.Doctor).ThenInclude(d => d.Employee).ThenInclude(e => e.Person)
-                .Include(a => a.Patient).ThenInclude(p => p.Person)
-                .FirstOrDefaultAsync(a => a.Id == appointmentId && a.IsDeleted == false);
+            return _appointments.FirstOrDefault(a => a.Id == appointmentId && !a.IsDeleted);
         }
 
         public Task<bool> IsTimeSlotTakenAsync(Guid doctorId, DateTime timeSlot)
         {
             throw new NotImplementedException();
+        }
+
+        internal async Task AddAsync(Appointment appointment)
+        {
+            _appointments.Add(appointment);
         }
     }
 }

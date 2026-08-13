@@ -67,5 +67,14 @@ namespace Clinic.Domain.Entities
             }
             Status = AppointmentStatus.Cancelled;
         }
+
+        public void UpdateStatus(AppointmentStatus newStatus)
+        {
+            if (Status != newStatus)
+            {
+                Status = newStatus;
+                MarkUpdated();
+            }
+        }
     }
 }

@@ -16,17 +16,17 @@ namespace Clinic.Application.Features.Appointments.Commands
     public class PatientCreateAppointmentCommandHandler : IRequestHandler<PatientCreateAppointmentCommand, AppointmentDto>
     {
         private readonly IWorkScheduleRepository _workScheduleRepository;
-        private readonly IPatientRepository _petientRepository;
+        private readonly IPatientRepository _patientRepository;
         private readonly IUnitOfWork _unitOfWork;
         public PatientCreateAppointmentCommandHandler(IWorkScheduleRepository workScheduleRepository, IPatientRepository patientRepository, IUnitOfWork unitOfWork)
         {
             _workScheduleRepository = workScheduleRepository;
-            _petientRepository = patientRepository;
+            _patientRepository = patientRepository;
             _unitOfWork = unitOfWork;
         }
         public async Task<AppointmentDto> Handle(PatientCreateAppointmentCommand request, CancellationToken cancellationToken)
         {
-            var patient = await _petientRepository.GetPatientByUserIdAsync(request.UserId);
+            var patient = await _patientRepository.GetPatientByUserIdAsync(request.UserId);
             if (patient == null) {
                 throw new NotFoundException($"Patient not found.");
             }
