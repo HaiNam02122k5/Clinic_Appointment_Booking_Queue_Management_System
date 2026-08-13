@@ -1,511 +1,365 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
+
+import {
+  REPORT_SUMMARY,
+  SPEC_STATS,
+} from '@/features/admin/admin.mock'
 
 const period = ref('month')
 const specialty = ref('all')
-const fromDate = ref('')
-const toDate = ref('')
+
+const filteredStats = computed(() => {
+  if (specialty.value === 'all') {
+    return SPEC_STATS
+  }
+
+  return SPEC_STATS.filter(
+    (item) => item.name === specialty.value,
+  )
+})
+
+const specialties = computed(() => {
+  return SPEC_STATS.map((item) => item.name)
+})
+
+const maxVisits = computed(() => {
+  return Math.max(
+    ...filteredStats.value.map((item) => item.visits),
+  )
+})
 </script>
 
 <template>
   <div class="space-y-5">
 
-    <!-- =========================
-         PAGE HEADER
-    ========================== -->
+    <!-- TITLE -->
 
     <div>
-      <h1 class="text-2xl font-bold text-slate-800">
-        Báo cáo thống kê
+      <h1 class="text-xl font-semibold text-slate-800">
+        Báo cáo
       </h1>
 
       <p class="mt-1 text-sm text-slate-500">
-        Theo dõi và phân tích hoạt động của phòng khám
+        Theo dõi và phân tích hoạt động khám bệnh
       </p>
     </div>
 
+    <!-- FILTER -->
 
-    <!-- =========================
-         FILTER
-    ========================== -->
+    <div
+      class="flex flex-col gap-3
+             rounded-xl border border-slate-200
+             bg-white p-5
+             lg:flex-row lg:items-center
+             lg:justify-between"
+    >
 
-    <section class="rounded-xl border border-slate-200 bg-white p-5">
-
-      <div class="flex flex-wrap items-end gap-4">
-
-        <!-- Period -->
-        <div>
-          <label
-            class="mb-1.5 block text-xs font-medium text-slate-600"
-          >
-            Thời gian
-          </label>
-
-          <select
-            v-model="period"
-            class="h-10 min-w-[150px] rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-brand-500"
-          >
-            <option value="week">
-              Tuần
-            </option>
-
-            <option value="month">
-              Tháng
-            </option>
-
-            <option value="quarter">
-              Quý
-            </option>
-
-            <option value="year">
-              Năm
-            </option>
-
-            <option value="custom">
-              Tùy chọn
-            </option>
-          </select>
-        </div>
-
-
-        <!-- From date -->
-        <div v-if="period === 'custom'">
-          <label
-            class="mb-1.5 block text-xs font-medium text-slate-600"
-          >
-            Từ ngày
-          </label>
-
-          <input
-            v-model="fromDate"
-            type="date"
-            class="h-10 rounded-lg border border-slate-200 px-3 text-sm text-slate-700 outline-none focus:border-brand-500"
-          />
-        </div>
-
-
-        <!-- To date -->
-        <div v-if="period === 'custom'">
-          <label
-            class="mb-1.5 block text-xs font-medium text-slate-600"
-          >
-            Đến ngày
-          </label>
-
-          <input
-            v-model="toDate"
-            type="date"
-            class="h-10 rounded-lg border border-slate-200 px-3 text-sm text-slate-700 outline-none focus:border-brand-500"
-          />
-        </div>
-
-
-        <!-- Specialty -->
-        <div>
-          <label
-            class="mb-1.5 block text-xs font-medium text-slate-600"
-          >
-            Chuyên khoa
-          </label>
-
-          <select
-            v-model="specialty"
-            class="h-10 min-w-[180px] rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none focus:border-brand-500"
-          >
-            <option value="all">
-              Tất cả chuyên khoa
-            </option>
-
-            <option value="cardiology">
-              Tim mạch
-            </option>
-
-            <option value="internal">
-              Nội khoa
-            </option>
-
-            <option value="surgery">
-              Ngoại khoa
-            </option>
-
-            <option value="dermatology">
-              Da liễu
-            </option>
-
-            <option value="neurology">
-              Thần kinh
-            </option>
-          </select>
-        </div>
-
-
-        <!-- Apply -->
-        <button
-          class="h-10 rounded-lg bg-brand-600 px-5 text-sm font-medium text-white transition hover:bg-brand-700"
-        >
-          Áp dụng
-        </button>
-
-      </div>
-
-    </section>
-
-
-    <!-- =========================
-         SUMMARY CARDS
-    ========================== -->
-
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-
-      <!-- Total appointments -->
-      <div class="rounded-xl border border-slate-200 bg-white p-5">
-
-        <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
-          <span class="text-lg">
-            📅
-          </span>
-        </div>
-
-        <p class="text-sm text-slate-500">
-          Tổng lượt khám
-        </p>
-
-        <p class="mt-1 text-2xl font-bold text-slate-800">
-          -
-        </p>
-
-        <p class="mt-2 text-xs text-slate-400">
-          Chưa có dữ liệu
-        </p>
-
-      </div>
-
-
-      <!-- Completion -->
-      <div class="rounded-xl border border-slate-200 bg-white p-5">
-
-        <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-green-50">
-          <span class="text-lg">
-            ✓
-          </span>
-        </div>
-
-        <p class="text-sm text-slate-500">
-          Tỷ lệ hoàn thành
-        </p>
-
-        <p class="mt-1 text-2xl font-bold text-slate-800">
-          -
-        </p>
-
-        <p class="mt-2 text-xs text-slate-400">
-          Chưa có dữ liệu
-        </p>
-
-      </div>
-
-
-      <!-- Waiting -->
-      <div class="rounded-xl border border-slate-200 bg-white p-5">
-
-        <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-orange-50">
-          <span class="text-lg">
-            🕐
-          </span>
-        </div>
-
-        <p class="text-sm text-slate-500">
-          Thời gian chờ trung bình
-        </p>
-
-        <p class="mt-1 text-2xl font-bold text-slate-800">
-          -
-        </p>
-
-        <p class="mt-2 text-xs text-slate-400">
-          Chưa có dữ liệu
-        </p>
-
-      </div>
-
-
-      <!-- Cancel -->
-      <div class="rounded-xl border border-slate-200 bg-white p-5">
-
-        <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-red-50">
-          <span class="text-lg">
-            ↩
-          </span>
-        </div>
-
-        <p class="text-sm text-slate-500">
-          Tỷ lệ hủy lịch
-        </p>
-
-        <p class="mt-1 text-2xl font-bold text-slate-800">
-          -
-        </p>
-
-        <p class="mt-2 text-xs text-slate-400">
-          Chưa có dữ liệu
-        </p>
-
-      </div>
-
-    </div>
-
-
-    <!-- =========================
-         CHART 1
-    ========================== -->
-
-    <section class="rounded-xl border border-slate-200 bg-white p-6">
-
-      <div class="mb-5">
+      <div>
         <h2 class="text-sm font-semibold text-slate-800">
-          Lượt khám theo thời gian
+          Báo cáo tổng hợp
         </h2>
 
         <p class="mt-1 text-xs text-slate-400">
-          Thống kê số lượt khám trong khoảng thời gian đã chọn
+          Thống kê theo khoảng thời gian
         </p>
       </div>
 
-      <div class="flex h-72 items-center justify-center rounded-lg bg-slate-50">
+      <div class="flex gap-2">
 
-        <div class="text-center">
+        <select
+          v-model="period"
+          class="rounded-lg border border-slate-200
+                 bg-white px-3 py-2
+                 text-sm text-slate-600
+                 focus:border-violet-500
+                 focus:outline-none"
+        >
+          <option value="week">
+            Tuần này
+          </option>
 
-          <div
-            class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm"
-          >
-            <span class="text-xl">
-              📊
-            </span>
-          </div>
+          <option value="month">
+            Tháng này
+          </option>
 
-          <p class="text-sm font-medium text-slate-600">
-            Chưa có dữ liệu
-          </p>
-
-          <p class="mt-1 text-xs text-slate-400">
-            Biểu đồ sẽ được hiển thị khi kết nối API
-          </p>
-
-        </div>
-
-      </div>
-
-    </section>
-
-
-    <!-- =========================
-         CHART 2 + 3
-    ========================== -->
-
-    <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
-
-      <!-- Specialty chart -->
-      <section class="rounded-xl border border-slate-200 bg-white p-6">
-
-        <div class="mb-5">
-
-          <h2 class="text-sm font-semibold text-slate-800">
-            Lượt khám theo chuyên khoa
-          </h2>
-
-          <p class="mt-1 text-xs text-slate-400">
-            So sánh số lượt khám giữa các chuyên khoa
-          </p>
-
-        </div>
-
-        <div class="flex h-64 items-center justify-center rounded-lg bg-slate-50">
-
-          <div class="text-center">
-
-            <div
-              class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm"
-            >
-              <span class="text-xl">
-                📈
-              </span>
-            </div>
-
-            <p class="text-sm font-medium text-slate-600">
-              Chưa có dữ liệu
-            </p>
-
-            <p class="mt-1 text-xs text-slate-400">
-              Dữ liệu sẽ được tải từ API
-            </p>
-
-          </div>
-
-        </div>
-
-      </section>
-
-
-      <!-- Status chart -->
-      <section class="rounded-xl border border-slate-200 bg-white p-6">
-
-        <div class="mb-5">
-
-          <h2 class="text-sm font-semibold text-slate-800">
-            Thống kê trạng thái lịch hẹn
-          </h2>
-
-          <p class="mt-1 text-xs text-slate-400">
-            Tỷ lệ hoàn thành, hủy và không đến
-          </p>
-
-        </div>
-
-        <div class="flex h-64 items-center justify-center rounded-lg bg-slate-50">
-
-          <div class="text-center">
-
-            <div
-              class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm"
-            >
-              <span class="text-xl">
-                ◔
-              </span>
-            </div>
-
-            <p class="text-sm font-medium text-slate-600">
-              Chưa có dữ liệu
-            </p>
-
-            <p class="mt-1 text-xs text-slate-400">
-              Dữ liệu sẽ được tải từ API
-            </p>
-
-          </div>
-
-        </div>
-
-      </section>
-
-    </div>
-
-
-    <!-- =========================
-         REPORT TABLE
-    ========================== -->
-
-    <section class="rounded-xl border border-slate-200 bg-white p-6">
-
-      <div class="mb-5 flex items-center justify-between">
-
-        <div>
-          <h2 class="text-sm font-semibold text-slate-800">
-            Báo cáo chi tiết
-          </h2>
-
-          <p class="mt-1 text-xs text-slate-400">
-            Chi tiết thống kê theo chuyên khoa
-          </p>
-        </div>
+          <option value="quarter">
+            Quý này
+          </option>
+        </select>
 
         <button
-          class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+          class="rounded-lg bg-violet-600
+                 px-4 py-2 text-sm font-semibold
+                 text-white hover:bg-violet-700"
         >
           Xuất báo cáo
         </button>
 
       </div>
+    </div>
 
+    <!-- SUMMARY -->
 
-      <div class="overflow-x-auto rounded-lg border border-slate-200">
+    <div
+      class="grid grid-cols-1 gap-4
+             sm:grid-cols-2
+             xl:grid-cols-4"
+    >
+      <div
+        v-for="item in REPORT_SUMMARY"
+        :key="item.label"
+        class="rounded-xl border
+               border-slate-200
+               bg-white p-5"
+      >
+        <div class="text-sm text-slate-500">
+          {{ item.label }}
+        </div>
 
-        <table class="w-full min-w-[800px]">
+        <div
+          class="mt-2 text-2xl font-bold
+                 text-slate-800"
+        >
+          {{ item.value }}
+        </div>
+
+        <div
+          class="mt-1 text-xs"
+          :class="
+            item.change.startsWith('-')
+              ? 'text-green-600'
+              : 'text-green-600'
+          "
+        >
+          {{ item.change }}
+          so với kỳ trước
+        </div>
+      </div>
+    </div>
+
+    <!-- CHART -->
+
+    <div
+      class="rounded-xl border border-slate-200
+             bg-white p-6"
+    >
+
+      <div
+        class="mb-6 flex flex-col gap-3
+               sm:flex-row sm:items-center
+               sm:justify-between"
+      >
+        <div>
+          <h2
+            class="text-sm font-semibold
+                   text-slate-800"
+          >
+            Lượt khám theo chuyên khoa
+          </h2>
+
+          <p class="mt-1 text-xs text-slate-400">
+            Số lượt khám và tỷ lệ hoàn thành
+          </p>
+        </div>
+
+        <select
+          v-model="specialty"
+          class="rounded-lg
+                 border border-slate-200
+                 bg-white px-3 py-2
+                 text-sm text-slate-600
+                 focus:border-violet-500
+                 focus:outline-none"
+        >
+          <option value="all">
+            Tất cả chuyên khoa
+          </option>
+
+          <option
+            v-for="item in specialties"
+            :key="item"
+            :value="item"
+          >
+            {{ item }}
+          </option>
+        </select>
+      </div>
+
+      <div class="space-y-5">
+
+        <div
+          v-for="item in filteredStats"
+          :key="item.name"
+        >
+
+          <div
+            class="mb-2 flex items-center
+                   justify-between"
+          >
+            <div>
+              <span
+                class="text-sm font-medium
+                       text-slate-700"
+              >
+                {{ item.name }}
+              </span>
+
+              <span
+                class="ml-2 text-xs
+                       text-slate-400"
+              >
+                {{ item.visits }} lượt khám
+              </span>
+            </div>
+
+            <span
+              class="text-xs font-semibold
+                     text-slate-600"
+            >
+              {{ item.pct }}%
+            </span>
+          </div>
+
+          <div
+            class="h-3 overflow-hidden
+                   rounded-full bg-slate-100"
+          >
+            <div
+              class="h-full rounded-full
+                     bg-violet-600
+                     transition-all"
+              :style="{
+                width: `${(item.visits / maxVisits) * 100}%`,
+              }"
+            />
+          </div>
+
+          <div
+            class="mt-1 text-xs
+                   text-slate-400"
+          >
+            Thời gian khám trung bình:
+            {{ item.avg }} phút
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- DETAIL TABLE -->
+
+    <div
+      class="rounded-xl border
+             border-slate-200
+             bg-white p-5"
+    >
+
+      <div class="mb-4">
+        <h2
+          class="text-sm font-semibold
+                 text-slate-800"
+        >
+          Chi tiết theo chuyên khoa
+        </h2>
+      </div>
+
+      <div
+        class="overflow-hidden rounded-lg
+               border border-slate-200"
+      >
+        <table class="w-full text-sm">
 
           <thead>
-
-            <tr class="border-b border-slate-200 bg-slate-50">
-
+            <tr
+              class="border-b border-slate-200
+                     bg-slate-50"
+            >
               <th
-                class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
+                class="px-4 py-3 text-left
+                       text-xs font-semibold
+                       uppercase tracking-wide
+                       text-slate-500"
               >
                 Chuyên khoa
               </th>
 
               <th
-                class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
+                class="px-4 py-3 text-right
+                       text-xs font-semibold
+                       uppercase tracking-wide
+                       text-slate-500"
               >
-                Tổng lượt khám
+                Lượt khám
               </th>
 
               <th
-                class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
+                class="px-4 py-3 text-right
+                       text-xs font-semibold
+                       uppercase tracking-wide
+                       text-slate-500"
               >
-                Hoàn thành
+                Thời gian TB
               </th>
 
               <th
-                class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
+                class="px-4 py-3 text-right
+                       text-xs font-semibold
+                       uppercase tracking-wide
+                       text-slate-500"
               >
-                Đã hủy
+                Tỷ lệ hoàn thành
               </th>
-
-              <th
-                class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
-              >
-                Không đến
-              </th>
-
-              <th
-                class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
-              >
-                Thời gian chờ TB
-              </th>
-
             </tr>
-
           </thead>
 
+          <tbody class="divide-y divide-slate-100">
 
-          <tbody>
-
-            <tr>
-
+            <tr
+              v-for="item in filteredStats"
+              :key="item.name"
+              class="hover:bg-slate-50"
+            >
               <td
-                colspan="6"
-                class="px-5 py-14 text-center"
+                class="px-4 py-3
+                       font-medium
+                       text-slate-800"
               >
-
-                <div class="flex flex-col items-center">
-
-                  <div
-                    class="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100"
-                  >
-                    <span class="text-xl">
-                      📋
-                    </span>
-                  </div>
-
-                  <p class="text-sm font-medium text-slate-600">
-                    Chưa có dữ liệu báo cáo
-                  </p>
-
-                  <p class="mt-1 text-xs text-slate-400">
-                    Dữ liệu thống kê sẽ được tải từ API
-                  </p>
-
-                </div>
-
+                {{ item.name }}
               </td>
 
+              <td
+                class="px-4 py-3 text-right
+                       text-slate-600"
+              >
+                {{ item.visits }}
+              </td>
+
+              <td
+                class="px-4 py-3 text-right
+                       text-slate-600"
+              >
+                {{ item.avg }} phút
+              </td>
+
+              <td
+                class="px-4 py-3 text-right"
+              >
+                <span
+                  class="font-medium
+                         text-green-600"
+                >
+                  {{ item.pct }}%
+                </span>
+              </td>
             </tr>
 
           </tbody>
 
         </table>
-
       </div>
-
-    </section>
+    </div>
 
   </div>
 </template>

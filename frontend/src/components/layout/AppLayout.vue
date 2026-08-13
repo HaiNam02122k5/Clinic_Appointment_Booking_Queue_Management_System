@@ -211,7 +211,6 @@ function logout() {
             class="mb-2 px-3 text-xs font-semibold
                    uppercase tracking-wider text-slate-400"
           >
-            Quản trị
           </div>
 
           <div class="space-y-1">

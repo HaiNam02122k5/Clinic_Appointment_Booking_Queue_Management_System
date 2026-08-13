@@ -1,284 +1,428 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
-const currentWeek = ref('Tuần hiện tại')
+import {
+  DAYS,
+  SCHEDULE_ROWS,
+} from '@/features/admin/admin.mock'
+
+const selectedWeek = ref('11/08/2026 - 17/08/2026')
 const search = ref('')
-const specialtyFilter = ref('all')
+const selectedSpecialty = ref('all')
+
+const specialties = computed(() => {
+  return [...new Set(SCHEDULE_ROWS.map((doctor) => doctor.spec))]
+})
+
+const filteredRows = computed(() => {
+  const keyword = search.value.trim().toLowerCase()
+
+  return SCHEDULE_ROWS.filter((doctor) => {
+    const matchesSearch =
+      !keyword ||
+      doctor.name.toLowerCase().includes(keyword) ||
+      doctor.spec.toLowerCase().includes(keyword)
+
+    const matchesSpecialty =
+      selectedSpecialty.value === 'all' ||
+      doctor.spec === selectedSpecialty.value
+
+    return matchesSearch && matchesSpecialty
+  })
+})
+
+function slotClass(slot: string | null) {
+  if (!slot) {
+    return ''
+  }
+
+  if (slot === 'Cả ngày') {
+    return 'bg-violet-50 text-violet-700 border-violet-100'
+  }
+
+  if (slot === 'Sáng') {
+    return 'bg-blue-50 text-blue-700 border-blue-100'
+  }
+
+  return 'bg-amber-50 text-amber-700 border-amber-100'
+}
+
+function resetFilters() {
+  search.value = ''
+  selectedSpecialty.value = 'all'
+}
+
+function previousWeek() {
+  // Chưa nối API nên hiện chỉ là UI.
+}
+
+function nextWeek() {
+  // Chưa nối API nên hiện chỉ là UI.
+}
 </script>
 
 <template>
   <div class="space-y-5">
 
     <!-- =========================
-         PAGE HEADER
+         TITLE
     ========================== -->
 
-    <div class="flex flex-wrap items-start justify-between gap-4">
-      <div>
-        <h1 class="text-2xl font-bold text-slate-800">
-          Quản lý lịch làm việc
-        </h1>
+    <div>
+      <h1 class="text-xl font-semibold text-slate-800">
+        Lịch làm việc
+      </h1>
 
-        <p class="mt-1 text-sm text-slate-500">
-          Theo dõi và quản lý lịch làm việc của bác sĩ
-        </p>
-      </div>
-
-      <button
-        class="rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-brand-700"
-      >
-        + Thêm lịch làm việc
-      </button>
+      <p class="mt-1 text-sm text-slate-500">
+        Quản lý lịch làm việc của bác sĩ
+      </p>
     </div>
 
-
     <!-- =========================
-         FILTER / TOOLBAR
+         TOOLBAR
     ========================== -->
 
-    <div class="rounded-xl border border-slate-200 bg-white p-4">
+    <div
+      class="rounded-xl border border-slate-200
+             bg-white p-5"
+    >
+      <div
+        class="flex flex-col gap-3
+               lg:flex-row lg:items-center"
+      >
 
-      <div class="flex flex-wrap items-center gap-3">
+        <!-- SEARCH -->
 
-        <!-- Search -->
-        <div class="min-w-[240px] flex-1">
+        <div class="relative flex-1">
           <input
             v-model="search"
             type="text"
-            placeholder="Tìm tên bác sĩ..."
-            class="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+            placeholder="Tìm kiếm bác sĩ..."
+            class="w-full rounded-lg
+                   border border-slate-200
+                   bg-white px-3 py-2.5 pl-10
+                   text-sm text-slate-800
+                   placeholder:text-slate-400
+                   focus:border-violet-500
+                   focus:outline-none"
           />
+
+          <svg
+            class="absolute left-3 top-1/2
+                   h-4 w-4 -translate-y-1/2
+                   text-slate-400"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-3.5-3.5" />
+          </svg>
         </div>
 
-        <!-- Specialty -->
+        <!-- SPECIALTY -->
+
         <select
-          v-model="specialtyFilter"
-          class="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-600 outline-none focus:border-brand-500"
+          v-model="selectedSpecialty"
+          class="rounded-lg border border-slate-200
+                 bg-white px-3 py-2.5
+                 text-sm text-slate-600
+                 focus:border-violet-500
+                 focus:outline-none"
         >
           <option value="all">
             Tất cả chuyên khoa
           </option>
 
-          <option value="cardiology">
-            Tim mạch
-          </option>
-
-          <option value="internal">
-            Nội khoa
-          </option>
-
-          <option value="surgery">
-            Ngoại khoa
-          </option>
-
-          <option value="dermatology">
-            Da liễu
-          </option>
-
-          <option value="neurology">
-            Thần kinh
+          <option
+            v-for="specialty in specialties"
+            :key="specialty"
+            :value="specialty"
+          >
+            {{ specialty }}
           </option>
         </select>
 
-        <!-- Week -->
+        <!-- WEEK -->
+
         <select
-          v-model="currentWeek"
-          class="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-600 outline-none focus:border-brand-500"
+          v-model="selectedWeek"
+          class="rounded-lg border border-slate-200
+                 bg-white px-3 py-2.5
+                 text-sm text-slate-600
+                 focus:border-violet-500
+                 focus:outline-none"
         >
-          <option value="Tuần hiện tại">
-            Tuần hiện tại
+          <option value="11/08/2026 - 17/08/2026">
+            11/08/2026 - 17/08/2026
           </option>
 
-          <option value="Tuần trước">
-            Tuần trước
-          </option>
-
-          <option value="Tuần sau">
-            Tuần sau
+          <option value="18/08/2026 - 24/08/2026">
+            18/08/2026 - 24/08/2026
           </option>
         </select>
+
+        <!-- RESET -->
+
+        <button
+          class="rounded-lg border border-slate-200
+                 px-4 py-2.5 text-sm font-medium
+                 text-slate-600 hover:bg-slate-50"
+          @click="resetFilters"
+        >
+          Đặt lại
+        </button>
+
+        <!-- ADD -->
+
+        <button
+          class="rounded-lg bg-violet-600
+                 px-4 py-2.5 text-sm font-semibold
+                 text-white hover:bg-violet-700"
+        >
+          + Thêm lịch
+        </button>
 
       </div>
-
     </div>
 
+    <!-- =========================
+         WEEK NAVIGATION
+    ========================== -->
+
+    <div
+      class="flex items-center justify-between
+             rounded-xl border border-slate-200
+             bg-white px-5 py-4"
+    >
+      <button
+        class="rounded-lg border border-slate-200
+               px-3 py-2 text-sm text-slate-600
+               hover:bg-slate-50"
+        @click="previousWeek"
+      >
+        ← Tuần trước
+      </button>
+
+      <div class="text-center">
+        <div class="text-sm font-semibold text-slate-800">
+          Tuần làm việc
+        </div>
+
+        <div class="mt-1 text-xs text-slate-400">
+          {{ selectedWeek }}
+        </div>
+      </div>
+
+      <button
+        class="rounded-lg border border-slate-200
+               px-3 py-2 text-sm text-slate-600
+               hover:bg-slate-50"
+        @click="nextWeek"
+      >
+        Tuần sau →
+      </button>
+    </div>
 
     <!-- =========================
          SCHEDULE TABLE
     ========================== -->
 
-    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+    <div
+      class="overflow-hidden rounded-xl
+             border border-slate-200 bg-white"
+    >
+
+      <div class="border-b border-slate-200 p-5">
+        <h2 class="text-sm font-semibold text-slate-800">
+          Lịch làm việc bác sĩ
+        </h2>
+
+        <p class="mt-1 text-xs text-slate-400">
+          {{ filteredRows.length }} bác sĩ
+        </p>
+      </div>
 
       <div class="overflow-x-auto">
+        <table class="w-full min-w-[1000px] text-sm">
 
-        <table class="w-full min-w-[1100px] border-collapse">
+          <!-- HEADER -->
 
-          <!-- Table header -->
           <thead>
-
-            <tr class="border-b border-slate-200 bg-slate-50">
-
+            <tr
+              class="border-b border-slate-200
+                     bg-slate-50"
+            >
               <th
-                class="sticky left-0 z-10 w-56 min-w-56 border-r border-slate-200 bg-slate-50 px-5 py-4 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
+                class="w-64 px-5 py-4 text-left
+                       text-xs font-semibold
+                       uppercase tracking-wide
+                       text-slate-500"
               >
                 Bác sĩ
               </th>
 
               <th
-                v-for="day in [
-                  'Thứ 2',
-                  'Thứ 3',
-                  'Thứ 4',
-                  'Thứ 5',
-                  'Thứ 6',
-                  'Thứ 7',
-                  'Chủ nhật',
-                ]"
+                class="w-32 px-4 py-4 text-left
+                       text-xs font-semibold
+                       uppercase tracking-wide
+                       text-slate-500"
+              >
+                Chuyên khoa
+              </th>
+
+              <th
+                v-for="day in DAYS"
                 :key="day"
-                class="min-w-[130px] border-r border-slate-200 px-4 py-4 text-center text-xs font-semibold uppercase tracking-wide text-slate-500 last:border-r-0"
+                class="px-3 py-4 text-center
+                       text-xs font-semibold
+                       text-slate-500"
               >
                 {{ day }}
               </th>
 
+              <th
+                class="px-4 py-4 text-right
+                       text-xs font-semibold
+                       uppercase tracking-wide
+                       text-slate-500"
+              >
+                Thao tác
+              </th>
             </tr>
-
           </thead>
 
+          <!-- BODY -->
 
-          <!-- Table body -->
-          <tbody>
+          <tbody class="divide-y divide-slate-100">
 
-            <!-- Empty state -->
-            <tr>
+            <tr
+              v-for="doctor in filteredRows"
+              :key="doctor.name"
+              class="hover:bg-slate-50"
+            >
 
-              <td
-                colspan="8"
-                class="px-5 py-20 text-center"
-              >
+              <!-- DOCTOR -->
 
-                <div class="flex flex-col items-center">
-
-                  <div
-                    class="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100"
-                  >
-                    <span class="text-2xl">
-                      🗓️
-                    </span>
-                  </div>
-
-                  <p class="text-sm font-medium text-slate-600">
-                    Chưa có lịch làm việc
-                  </p>
-
-                  <p class="mt-1 max-w-md text-xs text-slate-400">
-                    Lịch làm việc của bác sĩ sẽ được hiển thị tại đây
-                    sau khi dữ liệu được tải từ API.
-                  </p>
-
+              <td class="px-5 py-4">
+                <div class="font-medium text-slate-800">
+                  {{ doctor.name }}
                 </div>
-
               </td>
 
+              <!-- SPECIALTY -->
+
+              <td class="px-4 py-4">
+                <span class="text-xs text-slate-500">
+                  {{ doctor.spec }}
+                </span>
+              </td>
+
+              <!-- SLOTS -->
+
+              <td
+                v-for="(slot, index) in doctor.slots"
+                :key="`${doctor.name}-${index}`"
+                class="px-2 py-3 text-center"
+              >
+                <div
+                  v-if="slot"
+                  class="mx-auto rounded-md border
+                         px-2 py-2 text-xs font-medium"
+                  :class="slotClass(slot)"
+                >
+                  {{ slot }}
+                </div>
+
+                <span
+                  v-else
+                  class="text-slate-300"
+                >
+                  —
+                </span>
+              </td>
+
+              <!-- ACTIONS -->
+
+              <td class="px-4 py-4">
+                <div
+                  class="flex justify-end gap-2"
+                >
+                  <button
+                    class="rounded-md px-2.5 py-1.5
+                           text-xs font-medium
+                           text-slate-600
+                           hover:bg-slate-100"
+                  >
+                    Xem
+                  </button>
+
+                  <button
+                    class="rounded-md px-2.5 py-1.5
+                           text-xs font-medium
+                           text-violet-600
+                           hover:bg-violet-50"
+                  >
+                    Sửa
+                  </button>
+                </div>
+              </td>
+
+            </tr>
+
+            <!-- EMPTY -->
+
+            <tr v-if="filteredRows.length === 0">
+              <td
+                :colspan="DAYS.length + 3"
+                class="px-5 py-12 text-center
+                       text-sm text-slate-400"
+              >
+                Không tìm thấy lịch làm việc phù hợp.
+              </td>
             </tr>
 
           </tbody>
 
         </table>
-
       </div>
 
     </div>
-
 
     <!-- =========================
          LEGEND
     ========================== -->
 
-    <div class="rounded-xl border border-slate-200 bg-white p-5">
-
-      <h2 class="mb-4 text-sm font-semibold text-slate-800">
-        Chú thích
-      </h2>
-
-      <div class="flex flex-wrap gap-6">
-
-        <!-- Morning -->
-        <div class="flex items-center gap-2">
-          <span
-            class="h-3 w-3 rounded bg-blue-100 ring-1 ring-blue-200"
-          />
-
-          <span class="text-sm text-slate-600">
-            Ca sáng
-          </span>
-        </div>
-
-        <!-- Afternoon -->
-        <div class="flex items-center gap-2">
-          <span
-            class="h-3 w-3 rounded bg-purple-100 ring-1 ring-purple-200"
-          />
-
-          <span class="text-sm text-slate-600">
-            Ca chiều
-          </span>
-        </div>
-
-        <!-- Full day -->
-        <div class="flex items-center gap-2">
-          <span
-            class="h-3 w-3 rounded bg-green-100 ring-1 ring-green-200"
-          />
-
-          <span class="text-sm text-slate-600">
-            Cả ngày
-          </span>
-        </div>
-
-        <!-- Off -->
-        <div class="flex items-center gap-2">
-          <span
-            class="h-3 w-3 rounded bg-slate-100 ring-1 ring-slate-200"
-          />
-
-          <span class="text-sm text-slate-600">
-            Nghỉ
-          </span>
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <!-- =========================
-         PAGINATION / SUMMARY
-    ========================== -->
-
-    <div class="flex items-center justify-between">
-
-      <span class="text-xs text-slate-400">
-        Chưa có dữ liệu lịch làm việc
+    <div
+      class="flex flex-wrap items-center gap-5
+             rounded-xl border border-slate-200
+             bg-white px-5 py-4"
+    >
+      <span class="text-xs font-semibold text-slate-600">
+        Chú thích:
       </span>
 
-      <div class="flex items-center gap-1">
-
-        <button
-          disabled
-          class="flex h-8 w-8 items-center justify-center rounded border border-slate-200 text-slate-300"
-        >
-          ‹
-        </button>
-
-        <button
-          disabled
-          class="flex h-8 w-8 items-center justify-center rounded border border-slate-200 text-slate-300"
-        >
-          ›
-        </button>
-
+      <div class="flex items-center gap-2">
+        <span class="h-3 w-3 rounded bg-blue-100" />
+        <span class="text-xs text-slate-500">
+          Sáng
+        </span>
       </div>
 
+      <div class="flex items-center gap-2">
+        <span class="h-3 w-3 rounded bg-amber-100" />
+        <span class="text-xs text-slate-500">
+          Chiều
+        </span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <span class="h-3 w-3 rounded bg-violet-100" />
+        <span class="text-xs text-slate-500">
+          Cả ngày
+        </span>
+      </div>
     </div>
 
   </div>
