@@ -20,7 +20,7 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Commands
             var unitOfWork = new FakeUnitOfWork();
             var handler = new DeleteWorkScheduleCommandHandler(workScheduleRepository, unitOfWork);
             var doctor = TestDataFactory.CreateDoctor();
-            var now = DateTime.UtcNow.AddHours(7);
+            var now = new DateTime(2027, 1, 1, 6, 0, 0);
             var workSchedule = new WorkSchedule(doctor, DateOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddDays(1).AddHours(1)), 5);
             await workScheduleRepository.AddWorkScheduleAsync(workSchedule);
 
@@ -41,7 +41,7 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Commands
             var unitOfWork = new FakeUnitOfWork();
             var handler = new DeleteWorkScheduleCommandHandler(workScheduleRepository, unitOfWork);
             var doctor = TestDataFactory.CreateDoctor();
-            var now = DateTime.UtcNow.AddHours(7);
+            var now = new DateTime(2027, 1, 1, 6, 0, 0);
             var workSchedule = new ShiftRequest(doctor, DateOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddDays(1).AddHours(1)), 5, "");
             await workScheduleRepository.AddShiftRequestAsync(workSchedule);
 

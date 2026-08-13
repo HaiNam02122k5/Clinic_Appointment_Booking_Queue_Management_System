@@ -7,7 +7,6 @@ namespace Clinic.Domain.Entities
     public class Appointment : BaseEntity
     {
         private const int CancelLimitHours = 2;
-        private readonly TimeSpan VietnamTimeOffset = TimeSpan.FromHours(7); // Giờ Việt Nam (UTC+7)
 
         public Guid PatientId { get; protected set; }
         public Patient Patient { get; protected set; } = null!;
@@ -15,7 +14,7 @@ namespace Clinic.Domain.Entities
         public Guid WorkScheduleId { get; protected set; }
         public WorkSchedule WorkSchedule { get; protected set; } = null!;
 
-        public string? Reason { get; protected set; }
+        public string Reason { get; protected set; }
 
         public TimeOnly TimeSlot { get; protected set; }
 
@@ -23,19 +22,40 @@ namespace Clinic.Domain.Entities
 
         public bool IsWalkIn { get; protected set; } = false;
 
+        public Guid CreatedByUserId { get; protected set; }
+
+        public Guid? CancelledByUserId {  get; protected set; } = null;
+
         /// <summary>0..1 - chỉ có sau khi bệnh nhân check-in.</summary>
         public QueueTicket? QueueTicket { get; protected set; }
 
+        public ICollection<AppointmentSnapshot> Snapshots { get; protected set; } = [];
+
         private Appointment() { } // For EF Core
 
-        public Appointment(Patient patient, WorkSchedule workSchedule, TimeOnly timeSlot, bool isWalkIn = false)
+        public Appointment(Patient patient, WorkSchedule workSchedule, TimeOnly timeSlot, string reason, Guid createdByUserId, bool isWalkIn = false)
         {
-            Patient = patient ?? throw new ArgumentNullException(nameof(patient));
-            PatientId = patient.Id;
             WorkSchedule = workSchedule ?? throw new ArgumentNullException(nameof(workSchedule));
+            Patient = patient ?? throw new ArgumentNullException(nameof(patient));
+            Reason = reason;
+            if (timeSlot < workSchedule.ShiftStart || timeSlot >= workSchedule.ShiftEnd)
+            {
+                throw new ArgumentOutOfRangeException(nameof(timeSlot), $"Time slot {timeSlot} must be within the work schedule ({workSchedule.ShiftStart} - {workSchedule.ShiftEnd}).");
+            }
+            var bookingTimeUtc = new TimeConverter().ConvertToUtc(new DateTime(workSchedule.Date, timeSlot));
+            if (bookingTimeUtc < DateTime.UtcNow)
+            {
+                throw new ArgumentException("Cannot create an appointment for a past time.", nameof(workSchedule));
+            }
+            if (string.IsNullOrWhiteSpace(reason))
+            {
+                throw new ArgumentException("Reason cannot be null or whitespace.", nameof(reason));
+            }
+            PatientId = patient.Id;
             WorkScheduleId = workSchedule.Id;
             TimeSlot = timeSlot;
             IsWalkIn = isWalkIn;
+            CreatedByUserId = createdByUserId;
         }
 
         public void AdminCancelWithReason()
@@ -43,35 +63,69 @@ namespace Clinic.Domain.Entities
             throw new NotImplementedException();
         }
 
-        public void Update(WorkSchedule workSchedule, TimeOnly timeSlot)
+        public void Update(WorkSchedule workSchedule, TimeOnly timeSlot, string reason, Guid updatedByUserId)
         {
             if (Status is AppointmentStatus.Completed or AppointmentStatus.Cancelled)
             {
                 throw new InvalidOperationException($"{Enum.GetName(Status)} appointments can't be updated.");
             }
-            WorkSchedule = workSchedule ?? throw new ArgumentNullException(nameof(workSchedule));
+            ArgumentNullException.ThrowIfNull(workSchedule);
+            if (timeSlot < workSchedule.ShiftStart || timeSlot >= workSchedule.ShiftEnd)
+            {
+                throw new ArgumentOutOfRangeException(nameof(timeSlot), $"Time slot must be within the work schedule ({workSchedule.ShiftStart} - {workSchedule.ShiftEnd}).");
+            }
+            if (string.IsNullOrWhiteSpace(reason))
+            {
+                throw new ArgumentException("Reason cannot be null or whitespace.", nameof(reason));
+            }
+            if (WorkScheduleId == workSchedule.Id && TimeSlot == timeSlot && Reason == reason)
+            {
+                throw new InvalidOperationException("No changes detected in the appointment details.");
+            }
+            var bookingTimeUtc = new TimeConverter().ConvertToUtc(new DateTime(workSchedule.Date, timeSlot));
+            if (bookingTimeUtc < DateTime.UtcNow)
+            {
+                throw new ArgumentException("Cannot create an appointment for a past time.", nameof(workSchedule));
+            }
+            Snapshots.Add(new AppointmentSnapshot(this));
+            Reason = reason;
+            WorkSchedule = workSchedule;
             WorkScheduleId = workSchedule.Id;
             TimeSlot = timeSlot;
+            CreatedByUserId = updatedByUserId;
+            MarkUpdated();
         }
 
-        public void Cancel()
+        public void Cancel(Guid cancelledByUserId)
         {
             if (Status is AppointmentStatus.Completed or AppointmentStatus.Cancelled)
             {
                 throw new InvalidOperationException($"{Enum.GetName(Status)} appointments can't be cancelled.");
             }
             var utcSlot = new TimeConverter().ConvertToUtc(new DateTime(WorkSchedule.Date, TimeSlot));
+            Console.WriteLine($"utcSlot: {utcSlot}  |  Now+2: {DateTime.UtcNow.AddHours(CancelLimitHours)}");
             if (DateTime.UtcNow.AddHours(CancelLimitHours) > utcSlot)
             {
                 throw new InvalidOperationException($"Appointments can only be cancelled at least {CancelLimitHours} hours before the scheduled time.");
             }
+            Snapshots.Add(new AppointmentSnapshot(this));
             Status = AppointmentStatus.Cancelled;
+            CancelledByUserId = cancelledByUserId;
         }
 
-        public void UpdateStatus(AppointmentStatus newStatus)
+        public void UpdateStatus(AppointmentStatus newStatus, Guid updatedByUserId)
         {
+            if (Status is AppointmentStatus.Completed or AppointmentStatus.Cancelled)
+            {
+                throw new InvalidOperationException($"{Enum.GetName(Status)} appointments can't be updated.");
+            }
+            if (newStatus is AppointmentStatus.Cancelled)
+            {
+                throw new InvalidOperationException($"Use the Cancel() method to cancel an appointment.");
+            }
             if (Status != newStatus)
             {
+                Snapshots.Add(new AppointmentSnapshot(this));
                 Status = newStatus;
                 MarkUpdated();
             }

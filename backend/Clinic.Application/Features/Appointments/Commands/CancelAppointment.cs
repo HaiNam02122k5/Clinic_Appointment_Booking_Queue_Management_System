@@ -7,25 +7,27 @@ using System.Text;
 
 namespace Clinic.Application.Features.Appointments.Commands
 {
-    public record PatientCancelAppointmentCommand(
+    // Use-case: Patient or Receptionist cancels an appointment
+    public record CancelAppointmentCommand(
         Guid AppointmentId,
-        Guid UserId
+        Guid UserId,
+        Guid? PatientId = null
     ) : IRequest<Guid>;
-    public class PatientCancelAppointmentCommandHandler : IRequestHandler<PatientCancelAppointmentCommand, Guid>
+    public class CancelAppointmentCommandHandler : IRequestHandler<CancelAppointmentCommand, Guid>
     {
         private readonly IAppointmentRepository _appointmentRepository;
         private readonly IPatientRepository _patientRepository;
         private readonly IUnitOfWork _unitOfWork;
 
-        public PatientCancelAppointmentCommandHandler(IAppointmentRepository appointmentRepository, IPatientRepository patientRepository, IUnitOfWork unitOfWork)
+        public CancelAppointmentCommandHandler(IAppointmentRepository appointmentRepository, IPatientRepository patientRepository, IUnitOfWork unitOfWork)
         {
             _appointmentRepository = appointmentRepository;
             _patientRepository = patientRepository;
             _unitOfWork = unitOfWork;
         }
-        public async Task<Guid> Handle(PatientCancelAppointmentCommand request, CancellationToken cancellationToken)
+        public async Task<Guid> Handle(CancelAppointmentCommand request, CancellationToken cancellationToken)
         {
-            var patient = await _patientRepository.GetPatientByUserIdAsync(request.UserId);
+            var patient = request.PatientId == null ? await _patientRepository.GetPatientByUserIdAsync(request.UserId) : await _patientRepository.GetByIdAsync(request.PatientId);
             if (patient == null)
             {
                 throw new NotFoundException("Patient not found.");
@@ -35,11 +37,11 @@ namespace Clinic.Application.Features.Appointments.Commands
             {
                 throw new NotFoundException("Appointment not found.");
             }
-            if (appointment.PatientId != patient.Id)
+            if (request.PatientId == null && appointment.PatientId != patient.Id)
             {
                 throw new UnauthorizedAccessException("You are not authorized to cancel this appointment.");
             }
-            appointment.Cancel();
+            appointment.Cancel(request.UserId);
             await _unitOfWork.SaveChangesAsync();
             return request.AppointmentId;
         }

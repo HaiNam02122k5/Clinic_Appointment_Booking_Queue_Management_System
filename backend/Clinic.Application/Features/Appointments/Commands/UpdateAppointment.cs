@@ -7,20 +7,22 @@ using MediatR;
 
 namespace Clinic.Application.Features.Appointments.Commands
 {
-    // Use-case: Patient updates an existing appointment
-    public record PatientUpdateAppointmentCommand(
+    // Use-case: Patient or Receptionist updates an existing appointment
+    public record UpdateAppointmentCommand(
         Guid UserId,
         Guid AppointmentId,
         Guid NewWorkScheduleId,
-        TimeOnly TimeSlot
+        TimeOnly TimeSlot,
+        string Reason,
+        Guid? PatientId = null
     ) : IRequest<AppointmentDto>;
-    public class PatientUpdateAppointmentCommandHandler : IRequestHandler<PatientUpdateAppointmentCommand, AppointmentDto>
+    public class UpdateAppointmentCommandHandler : IRequestHandler<UpdateAppointmentCommand, AppointmentDto>
     {
         private readonly IAppointmentRepository _appointmentRepository;
         private readonly IPatientRepository _patientRepository;
         private readonly IWorkScheduleRepository _workScheduleRepository;
         private readonly IUnitOfWork _unitOfWork;
-        public PatientUpdateAppointmentCommandHandler(IAppointmentRepository appointmentRepository, IPatientRepository patientRepository, IWorkScheduleRepository workScheduleRepository, IUnitOfWork unitOfWork)
+        public UpdateAppointmentCommandHandler(IAppointmentRepository appointmentRepository, IPatientRepository patientRepository, IWorkScheduleRepository workScheduleRepository, IUnitOfWork unitOfWork)
         {
             _appointmentRepository = appointmentRepository;
             _patientRepository = patientRepository;
@@ -28,9 +30,9 @@ namespace Clinic.Application.Features.Appointments.Commands
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<AppointmentDto> Handle(PatientUpdateAppointmentCommand request, CancellationToken cancellationToken)
+        public async Task<AppointmentDto> Handle(UpdateAppointmentCommand request, CancellationToken cancellationToken)
         {
-            var patient = await _patientRepository.GetPatientByUserIdAsync(request.UserId);
+            var patient = request.PatientId == null ? await _patientRepository.GetPatientByUserIdAsync(request.UserId) : await _patientRepository.GetByIdAsync(request.PatientId);
             if (patient == null)
             {
                 throw new NotFoundException($"Patient not found.");
@@ -40,9 +42,9 @@ namespace Clinic.Application.Features.Appointments.Commands
             {
                 throw new NotFoundException($"Appointment not found.");
             }
-            if (appointment.PatientId != patient.Id)
+            if (request.PatientId == null && appointment.PatientId != patient.Id)
             {
-                throw new UnauthorizedAccessException($"Patient is not authorized to update this appointment.");
+                throw new UnauthorizedAccessException($"You are not authorized to update this appointment.");
             }
             // Begin transaction
             await _unitOfWork.InitializeTransactionLockAsync(cancellationToken);
@@ -53,7 +55,7 @@ namespace Clinic.Application.Features.Appointments.Commands
                 {
                     throw new NotFoundException($"Work schedule not found.");
                 }
-                appointment.Update(workSchedule, request.TimeSlot);
+                appointment.Update(workSchedule, request.TimeSlot, request.Reason, request.UserId);
                 workSchedule.AddAppointment(appointment);
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
                 await _unitOfWork.CommitTransactionAsync(cancellationToken);
@@ -67,7 +69,8 @@ namespace Clinic.Application.Features.Appointments.Commands
                     TimeSlot = request.TimeSlot,
                     Date = workSchedule.Date,
                     Status = appointment.Status,
-                    CreatedAt = appointment.CreatedAt
+                    CreatedAt = appointment.CreatedAt,
+                    Reason = request.Reason
                 };
             }
             catch (Exception ex)

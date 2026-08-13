@@ -9,6 +9,12 @@ namespace Clinic.Application.UnitTests.Common
     public class FakePatientRepository : IPatientRepository
     {
         private readonly List<Patient> _patients = [];
+
+        public async Task<Patient?> GetByIdAsync(Guid? patientId)
+        {
+            return _patients.FirstOrDefault(p => p.Id == patientId);
+        }
+
         public async Task<Patient?> GetPatientByUserIdAsync(Guid userId)
         {
             return _patients.FirstOrDefault(p => p.Person.User.Id == userId);

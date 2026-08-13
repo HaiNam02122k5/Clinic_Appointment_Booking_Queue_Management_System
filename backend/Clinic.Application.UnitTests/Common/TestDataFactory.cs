@@ -69,9 +69,9 @@ namespace Clinic.Application.UnitTests.Common
             return new WorkSchedule(doctor ?? CreateDoctor(), DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)), new TimeOnly(9, 0), new TimeOnly(17, 0), 10);
         }
 
-        internal static Appointment CreateAppointment(Patient? patient = null, WorkSchedule? workSchedule = null, TimeOnly? timeSlot = null)
+        internal static Appointment CreateAppointment(Patient? patient = null, WorkSchedule? workSchedule = null, TimeOnly? timeSlot = null, string? reason = null, Guid? createdBy = null)
         {
-            return new Appointment(patient ?? CreatePatient(), workSchedule ?? CreateWorkSchedule(), timeSlot ?? new TimeOnly(10, 0));
+            return new Appointment(patient ?? CreatePatient(), workSchedule ?? CreateWorkSchedule(), timeSlot ?? new TimeOnly(10, 0), reason ?? "Reason", createdBy ?? Guid.NewGuid());
         }
     }
 }

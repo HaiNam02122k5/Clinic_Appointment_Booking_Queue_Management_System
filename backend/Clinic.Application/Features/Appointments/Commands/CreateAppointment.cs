@@ -7,26 +7,28 @@ using Clinic.Domain.Common.Exceptions;
 
 namespace Clinic.Application.Features.Appointments.Commands
 {
-    // Use-case: Patient creates an appointment
-    public record PatientCreateAppointmentCommand(
+    // Use-case: Patient or Receptionist creates an appointment
+    public record CreateAppointmentCommand(
         Guid UserId,
         Guid WorkScheduleId,
-        TimeOnly TimeSlot
+        TimeOnly TimeSlot,
+        string Reason,
+        Guid? PatientId = null
     ) : IRequest<AppointmentDto>;
-    public class PatientCreateAppointmentCommandHandler : IRequestHandler<PatientCreateAppointmentCommand, AppointmentDto>
+    public class CreateAppointmentCommandHandler : IRequestHandler<CreateAppointmentCommand, AppointmentDto>
     {
         private readonly IWorkScheduleRepository _workScheduleRepository;
         private readonly IPatientRepository _patientRepository;
         private readonly IUnitOfWork _unitOfWork;
-        public PatientCreateAppointmentCommandHandler(IWorkScheduleRepository workScheduleRepository, IPatientRepository patientRepository, IUnitOfWork unitOfWork)
+        public CreateAppointmentCommandHandler(IWorkScheduleRepository workScheduleRepository, IPatientRepository patientRepository, IUnitOfWork unitOfWork)
         {
             _workScheduleRepository = workScheduleRepository;
             _patientRepository = patientRepository;
             _unitOfWork = unitOfWork;
         }
-        public async Task<AppointmentDto> Handle(PatientCreateAppointmentCommand request, CancellationToken cancellationToken)
+        public async Task<AppointmentDto> Handle(CreateAppointmentCommand request, CancellationToken cancellationToken)
         {
-            var patient = await _patientRepository.GetPatientByUserIdAsync(request.UserId);
+            var patient = request.PatientId == null ? await _patientRepository.GetPatientByUserIdAsync(request.UserId) : await _patientRepository.GetByIdAsync(request.PatientId);
             if (patient == null) {
                 throw new NotFoundException($"Patient not found.");
             }
@@ -39,7 +41,7 @@ namespace Clinic.Application.Features.Appointments.Commands
                 {
                     throw new NotFoundException($"Work schedule not found.");
                 }
-                var appointment = new Appointment(patient, workSchedule, request.TimeSlot);
+                var appointment = new Appointment(patient, workSchedule, request.TimeSlot, request.Reason, request.UserId);
                 workSchedule.AddAppointment(appointment);
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
                 await _unitOfWork.CommitTransactionAsync(cancellationToken);
@@ -51,6 +53,7 @@ namespace Clinic.Application.Features.Appointments.Commands
                     PatientName = patient.Person.FullName,
                     DoctorName = workSchedule.Doctor.Employee.Person.FullName,
                     TimeSlot = request.TimeSlot,
+                    Reason = request.Reason,
                     Date = workSchedule.Date,
                     Status = appointment.Status,
                     CreatedAt = appointment.CreatedAt

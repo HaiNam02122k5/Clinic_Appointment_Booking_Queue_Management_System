@@ -9,7 +9,8 @@ namespace Clinic.Application.Features.Appointments.Queries
     // Use-case: Patient gets their appointments
     public record GetPatientAppointmentsQuery(
         Guid UserId,
-        string Category = "upcoming"
+        string Category = "upcoming",
+        Guid? PatientId = null
     ) : IRequest<List<AppointmentDto>>;
     public class GetPatientAppointmentsQueryHandler : IRequestHandler<GetPatientAppointmentsQuery, List<AppointmentDto>>
     {
@@ -24,7 +25,7 @@ namespace Clinic.Application.Features.Appointments.Queries
 
         public async Task<List<AppointmentDto>> Handle(GetPatientAppointmentsQuery request, CancellationToken cancellationToken)
         {
-            var patient = await _patientRepository.GetPatientByUserIdAsync(request.UserId);
+            var patient = request.PatientId == null ? await _patientRepository.GetPatientByUserIdAsync(request.UserId) : await _patientRepository.GetByIdAsync(request.PatientId.Value);
             if (patient == null)
             {
                 throw new NotFoundException("Patient not found.");
@@ -40,6 +41,7 @@ namespace Clinic.Application.Features.Appointments.Queries
                     DoctorName = a.WorkSchedule.Doctor.Employee.Person.FullName,
                     TimeSlot = a.TimeSlot,
                     Date = a.WorkSchedule.Date,
+                    Reason = a.Reason,
                     Status = a.Status,
                     CreatedAt = a.CreatedAt
                 }).ToList();

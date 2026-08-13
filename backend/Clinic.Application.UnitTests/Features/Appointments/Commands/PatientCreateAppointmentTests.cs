@@ -5,15 +5,15 @@ using Clinic.Domain.Enums;
 
 namespace Clinic.Application.UnitTests.Features.Appointments.Commands
 {
-    public class PatientCreateAppointmentTests
+    public class CreateAppointmentTests
     {
         [Fact]
-        public async Task TestPatientCreateAppointment()
+        public async Task TestCreateAppointment()
         {
             var workScheduleRepository = new FakeWorkScheduleRepository();
             var patientRepository = new FakePatientRepository();
             var unitOfWork = new FakeUnitOfWork();
-            var handler = new PatientCreateAppointmentCommandHandler(workScheduleRepository, patientRepository, unitOfWork);
+            var handler = new CreateAppointmentCommandHandler(workScheduleRepository, patientRepository, unitOfWork);
             var person = TestDataFactory.CreatePerson();
             var user = TestDataFactory.CreateUser(person: person);
             var patient = TestDataFactory.CreatePatient(person: person);
@@ -21,18 +21,24 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Commands
             await workScheduleRepository.AddWorkScheduleAsync(workSchedule);
             await patientRepository.AddAsync(patient);
 
-            var command = new PatientCreateAppointmentCommand(user.Id, workSchedule.Id, new TimeOnly(10, 0));
+            var command = new CreateAppointmentCommand(user.Id, workSchedule.Id, new TimeOnly(10, 0), "Reason");
             var result = await handler.Handle(command, CancellationToken.None);
             Assert.NotNull(workSchedule.Appointments.FirstOrDefault(a => a.Id == result.Id));
+
+            var receptionist = TestDataFactory.CreateUser();
+            receptionist.AssignRole(TestDataFactory.RoleSet.First(r => r.Name == "Receptionist"));
+            var command2 = new CreateAppointmentCommand(receptionist.Id, workSchedule.Id, new TimeOnly(11, 0), "Reason", patient.Id);
+            var result2 = await handler.Handle(command2, CancellationToken.None);
+            Assert.Equal(receptionist.Id, workSchedule.Appointments.FirstOrDefault(a => a.Id == result2.Id)?.CreatedByUserId);
         }
 
         [Fact]
-        public async Task TestPatientCreateAppointmentInNonExistentWorkSchedule()
+        public async Task TestCreateAppointmentInNonExistentWorkSchedule()
         {
             var workScheduleRepository = new FakeWorkScheduleRepository();
             var patientRepository = new FakePatientRepository();
             var unitOfWork = new FakeUnitOfWork();
-            var handler = new PatientCreateAppointmentCommandHandler(workScheduleRepository, patientRepository, unitOfWork);
+            var handler = new CreateAppointmentCommandHandler(workScheduleRepository, patientRepository, unitOfWork);
             var person = TestDataFactory.CreatePerson();
             var user = TestDataFactory.CreateUser(person: person);
             var patient = TestDataFactory.CreatePatient(person: person);
@@ -40,17 +46,17 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Commands
             await workScheduleRepository.AddWorkScheduleAsync(workSchedule);
             await patientRepository.AddAsync(patient);
 
-            var command = new PatientCreateAppointmentCommand(user.Id, Guid.NewGuid(), new TimeOnly(10, 0));
+            var command = new CreateAppointmentCommand(user.Id, Guid.NewGuid(), new TimeOnly(10, 0), "Reason");
             await Assert.ThrowsAsync<NotFoundException>(async () => await handler.Handle(command, CancellationToken.None));
         }
 
         [Fact]
-        public async Task TestNonExistentPatientCreateAppointment()
+        public async Task TestNonExistentCreateAppointment()
         {
             var workScheduleRepository = new FakeWorkScheduleRepository();
             var patientRepository = new FakePatientRepository();
             var unitOfWork = new FakeUnitOfWork();
-            var handler = new PatientCreateAppointmentCommandHandler(workScheduleRepository, patientRepository, unitOfWork);
+            var handler = new CreateAppointmentCommandHandler(workScheduleRepository, patientRepository, unitOfWork);
             var person = TestDataFactory.CreatePerson();
             var user = TestDataFactory.CreateUser(person: person);
             var patient = TestDataFactory.CreatePatient(person: person);
@@ -58,7 +64,7 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Commands
             await workScheduleRepository.AddWorkScheduleAsync(workSchedule);
             await patientRepository.AddAsync(patient);
 
-            var command = new PatientCreateAppointmentCommand(Guid.NewGuid(), workSchedule.Id, new TimeOnly(10, 0));
+            var command = new CreateAppointmentCommand(Guid.NewGuid(), workSchedule.Id, new TimeOnly(10, 0), "Reason");
             await Assert.ThrowsAsync<NotFoundException>(async () => await handler.Handle(command, CancellationToken.None));
         }
     }

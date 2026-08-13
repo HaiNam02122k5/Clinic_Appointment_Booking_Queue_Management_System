@@ -19,7 +19,7 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Queries
             var workSchedule = TestDataFactory.CreateWorkSchedule();
             var appointment1 = TestDataFactory.CreateAppointment(patient: patient, workSchedule: workSchedule);
             var appointment2 = TestDataFactory.CreateAppointment(patient: patient, workSchedule: workSchedule, timeSlot: new TimeOnly(11, 0));
-            appointment2.UpdateStatus(AppointmentStatus.Completed);
+            appointment2.UpdateStatus(AppointmentStatus.Completed, user.Id);
             await appointmentRepository.AddAsync(appointment1);
             await appointmentRepository.AddAsync(appointment2);
             await patientRepository.AddAsync(patient);

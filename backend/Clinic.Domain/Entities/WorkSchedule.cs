@@ -89,22 +89,35 @@ namespace Clinic.Domain.Entities
 
         public void Cancel(string reason)
         {
+            var utcStart = new TimeConverter().ConvertToUtc(new DateTime(Date, ShiftStart));
+            if (utcStart <= DateTime.UtcNow) throw new InvalidOperationException("Cannot cancel a shift that has already started.");
             CancellationReason = reason;
             Status = WorkScheduleStatus.Cancelled;
             MarkUpdated();
         }
 
+        /// <summary>
+        /// Adds an appointment to the work schedule if it doesn't conflict with existing appointments and the schedule is not full or cancelled.
+        /// If the appointment already belongs to this work schedule, it will not be added again.
+        /// </summary>
+        /// <param name="appointment"></param>
+        /// <exception cref="ConflictException"></exception>
+        /// <exception cref="InvalidOperationException"></exception>
         public void AddAppointment(Appointment appointment)
         {
-            if (Appointments.Any(a => a.TimeSlot == appointment.TimeSlot))
+            if (Appointments.Any(a => a.TimeSlot == appointment.TimeSlot && a.Status != AppointmentStatus.Cancelled && !a.IsDeleted && a.Id != appointment.Id))
                 throw new ConflictException("An appointment already exists for this time slot.");
             if (Status == WorkScheduleStatus.Cancelled)
             {
                 throw new InvalidOperationException("Cannot add an appointment to a cancelled work schedule.");
             }
+            if (Appointments.Any(a => a.Id == appointment.Id))
+            {
+                return; // Appointment already belongs to this work schedule
+            }
             if (Status == WorkScheduleStatus.Full)
             {
-                throw new InvalidOperationException("Cannot add an appointment to a full work schedule.");
+                throw new ConflictException("Cannot add an appointment to a full work schedule.");
             }
             Appointments.Add(appointment);
             if (Appointments.Count(a => a.Status != AppointmentStatus.Cancelled && a.IsDeleted == false) >= PatientLimit)
