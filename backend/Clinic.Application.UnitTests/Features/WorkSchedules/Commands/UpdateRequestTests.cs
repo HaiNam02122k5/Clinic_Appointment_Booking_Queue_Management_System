@@ -19,17 +19,20 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Commands
             var unitOfWork = new FakeUnitOfWork();
             var handler = new UpdateShiftRequestCommandHandler(workScheduleRepository, unitOfWork);
             var doctor = TestDataFactory.CreateDoctor();
-            var shiftRequest = new ShiftRequest(doctor, DateTime.UtcNow.AddDays(1), DateTime.UtcNow.AddDays(1).AddHours(1), 5, "");
+            var now = DateTime.UtcNow.AddHours(7);
+            var shiftRequest = new ShiftRequest(doctor, DateOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddDays(1).AddHours(1)), 5, "");
             await workScheduleRepository.AddShiftRequestAsync(shiftRequest);
 
             // Act
-            var command = new UpdateShiftRequestCommand(shiftRequest.Id, doctor.Id, DateTime.UtcNow.AddDays(2), DateTime.UtcNow.AddDays(2).AddHours(1), 10, "");
+            var command = new UpdateShiftRequestCommand(shiftRequest.Id, doctor.Id, DateOnly.FromDateTime(now.AddDays(2)), TimeOnly.FromDateTime(now.AddDays(2)), TimeOnly.FromDateTime(now.AddDays(2).AddHours(1)), 10, "");
             var result = await handler.Handle(command, CancellationToken.None);
 
             // Assert
             Assert.Equal(shiftRequest.Id, result);
             Assert.Equal(10, shiftRequest.PatientLimit);
-            Assert.True(shiftRequest.ShiftStart > DateTime.UtcNow.AddDays(1));
+            Console.WriteLine($"Shift Request Date: {shiftRequest.Date}");
+            Console.WriteLine($"Expected Date: {DateOnly.FromDateTime(now.AddDays(1))}");
+            Assert.True(shiftRequest.Date > DateOnly.FromDateTime(now.AddDays(1)));
         }
 
         [Fact]
@@ -40,11 +43,12 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Commands
             var unitOfWork = new FakeUnitOfWork();
             var handler = new UpdateShiftRequestCommandHandler(workScheduleRepository, unitOfWork);
             var doctor = TestDataFactory.CreateDoctor();
-            var shiftRequest = new ShiftRequest(doctor, DateTime.UtcNow.AddDays(1), DateTime.UtcNow.AddDays(1).AddHours(1), 5, "");
+            var now = DateTime.UtcNow.AddHours(7);
+            var shiftRequest = new ShiftRequest(doctor, DateOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddDays(1).AddHours(1)), 5, "");
             await workScheduleRepository.AddShiftRequestAsync(shiftRequest);
 
             // Update non-existing request
-            var command = new UpdateShiftRequestCommand(Guid.NewGuid(), doctor.Id, DateTime.UtcNow.AddDays(2), DateTime.UtcNow.AddDays(2).AddHours(1), 10, "");
+            var command = new UpdateShiftRequestCommand(Guid.NewGuid(), doctor.Id, DateOnly.FromDateTime(now.AddDays(2)), TimeOnly.FromDateTime(now.AddDays(2)), TimeOnly.FromDateTime(now.AddDays(2).AddHours(1)), 10, "");
             await Assert.ThrowsAsync<NotFoundException>(async () =>
             {
                 await handler.Handle(command, CancellationToken.None);
@@ -60,11 +64,12 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Commands
             var handler = new UpdateShiftRequestCommandHandler(workScheduleRepository, unitOfWork);
             var doctor = TestDataFactory.CreateDoctor();
             var doctor2 = TestDataFactory.CreateDoctor();
-            var shiftRequest = new ShiftRequest(doctor, DateTime.UtcNow.AddDays(1), DateTime.UtcNow.AddDays(1).AddHours(1), 5, "");
+            var now = DateTime.UtcNow.AddHours(7);
+            var shiftRequest = new ShiftRequest(doctor, DateOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddDays(1).AddHours(1)), 5, "");
             await workScheduleRepository.AddShiftRequestAsync(shiftRequest);
 
             // Update unauthorized request
-            var command = new UpdateShiftRequestCommand(shiftRequest.Id, doctor2.Id, DateTime.UtcNow.AddDays(2), DateTime.UtcNow.AddDays(2).AddHours(1), 10, "");
+            var command = new UpdateShiftRequestCommand(shiftRequest.Id, doctor2.Id, DateOnly.FromDateTime(now.AddDays(2)), TimeOnly.FromDateTime(now.AddDays(2)), TimeOnly.FromDateTime(now.AddDays(2).AddHours(1)), 10, "");
             await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
             {
                 await handler.Handle(command, CancellationToken.None);

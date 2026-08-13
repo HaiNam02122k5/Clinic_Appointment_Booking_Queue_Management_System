@@ -20,7 +20,8 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Commands
             var unitOfWork = new FakeUnitOfWork();
             var handler = new DeleteWorkScheduleCommandHandler(workScheduleRepository, unitOfWork);
             var doctor = TestDataFactory.CreateDoctor();
-            var workSchedule = new WorkSchedule(doctor, DateTime.UtcNow.AddDays(1), DateTime.UtcNow.AddDays(1).AddHours(1), 5);
+            var now = DateTime.UtcNow.AddHours(7);
+            var workSchedule = new WorkSchedule(doctor, DateOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddDays(1).AddHours(1)), 5);
             await workScheduleRepository.AddWorkScheduleAsync(workSchedule);
 
             // Act
@@ -40,7 +41,8 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Commands
             var unitOfWork = new FakeUnitOfWork();
             var handler = new DeleteWorkScheduleCommandHandler(workScheduleRepository, unitOfWork);
             var doctor = TestDataFactory.CreateDoctor();
-            var workSchedule = new ShiftRequest(doctor, DateTime.UtcNow.AddDays(1), DateTime.UtcNow.AddDays(1).AddHours(1), 5, "");
+            var now = DateTime.UtcNow.AddHours(7);
+            var workSchedule = new ShiftRequest(doctor, DateOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddDays(1).AddHours(1)), 5, "");
             await workScheduleRepository.AddShiftRequestAsync(workSchedule);
 
             // Act

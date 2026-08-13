@@ -18,11 +18,12 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Commands
             var unitOfWork = new FakeUnitOfWork();
             var handler = new UpdateWorkScheduleCommandHandler(workScheduleRepository, unitOfWork);
             var doctor = TestDataFactory.CreateDoctor();
-            var workSchedule = new WorkSchedule(doctor, DateTime.UtcNow.AddDays(1), DateTime.UtcNow.AddDays(1).AddHours(1), 5);
+            var now = DateTime.UtcNow;
+            var workSchedule = new WorkSchedule(doctor, DateOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddDays(1).AddHours(1)), 5);
             await workScheduleRepository.AddWorkScheduleAsync(workSchedule);
 
             // Act
-            var command = new UpdateWorkScheduleCommand(workSchedule.Id, DateTime.UtcNow.AddDays(2), DateTime.UtcNow.AddDays(2).AddHours(1), 10);
+            var command = new UpdateWorkScheduleCommand(workSchedule.Id, DateOnly.FromDateTime(now.AddDays(2)), TimeOnly.FromDateTime(now.AddDays(2)), TimeOnly.FromDateTime(now.AddDays(2).AddHours(1)), 10);
             var result = await handler.Handle(command, CancellationToken.None);
 
             // Assert
@@ -38,11 +39,12 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Commands
             var unitOfWork = new FakeUnitOfWork();
             var handler = new UpdateWorkScheduleCommandHandler(workScheduleRepository, unitOfWork);
             var doctor = TestDataFactory.CreateDoctor();
-            var workSchedule = new WorkSchedule(doctor, DateTime.UtcNow.AddDays(1), DateTime.UtcNow.AddDays(1).AddHours(1), 5);
+            var now = DateTime.UtcNow.AddHours(7);
+            var workSchedule = new WorkSchedule(doctor, DateOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddDays(1).AddHours(1)), 5);
             await workScheduleRepository.AddWorkScheduleAsync(workSchedule);
 
             // Act
-            var command = new UpdateWorkScheduleCommand(Guid.NewGuid(), DateTime.UtcNow.AddDays(2), DateTime.UtcNow.AddDays(2).AddHours(1), 10);
+            var command = new UpdateWorkScheduleCommand(Guid.NewGuid(), DateOnly.FromDateTime(now.AddDays(2)), TimeOnly.FromDateTime(now.AddDays(2)), TimeOnly.FromDateTime(now.AddDays(2).AddHours(1)), 10);
             await Assert.ThrowsAsync<NotFoundException>(async () =>
             {
                 await handler.Handle(command, CancellationToken.None);
@@ -51,7 +53,7 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Commands
             workSchedule.Delete(); // Mark the work schedule as deleted
             await Assert.ThrowsAsync<NotFoundException>(async () =>
             {
-                await handler.Handle(new UpdateWorkScheduleCommand(workSchedule.Id, DateTime.UtcNow.AddDays(2), DateTime.UtcNow.AddDays(2).AddHours(1), 10), CancellationToken.None);
+                await handler.Handle(new UpdateWorkScheduleCommand(workSchedule.Id, DateOnly.FromDateTime(now.AddDays(2)), TimeOnly.FromDateTime(now.AddDays(2)), TimeOnly.FromDateTime(now.AddDays(2).AddHours(1)), 10), CancellationToken.None);
             });
         }
     }

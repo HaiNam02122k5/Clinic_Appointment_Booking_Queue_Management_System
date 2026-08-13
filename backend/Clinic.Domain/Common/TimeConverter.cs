@@ -10,6 +10,6 @@
             return TimeZoneInfo.ConvertTimeToUtc(localDateTime, VietnamTimeZone);
         }
 
-        public DateOnly Today => DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.Now, VietnamTimeZone));
+        public DateOnly Today => DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, VietnamTimeZone));
     }
 }

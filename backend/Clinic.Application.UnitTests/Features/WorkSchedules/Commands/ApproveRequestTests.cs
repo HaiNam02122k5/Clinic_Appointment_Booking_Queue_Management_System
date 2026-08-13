@@ -17,9 +17,9 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Commands
             var unitOfWork = new FakeUnitOfWork();
             var handler = new ApproveRequestCommandHandler(workScheduleRepository, unitOfWork);
             var doctor = TestDataFactory.CreateDoctor();
-            var now = DateTime.UtcNow;
-            var shiftRequest = new ShiftRequest(doctor, now.AddDays(1), now.AddDays(1).AddHours(1), 5, "");
-            var overlappingShiftRequest = new ShiftRequest(doctor, now.AddDays(1).AddMinutes(30), now.AddDays(1).AddHours(1).AddMinutes(30), 5, "");
+            var now = DateTime.UtcNow.AddHours(7);
+            var shiftRequest = new ShiftRequest(doctor, DateOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddDays(1).AddHours(1)), 5, "");
+            var overlappingShiftRequest = new ShiftRequest(doctor, DateOnly.FromDateTime(now.AddDays(1).AddMinutes(30)), TimeOnly.FromDateTime(now.AddDays(1).AddMinutes(30)), TimeOnly.FromDateTime(now.AddDays(1).AddHours(1).AddMinutes(30)), 5, "");
             //doctor.AddShiftRequest(shiftRequest);
             //doctor.AddShiftRequest(overlappingShiftRequest);
             await workScheduleRepository.AddShiftRequestAsync(shiftRequest);

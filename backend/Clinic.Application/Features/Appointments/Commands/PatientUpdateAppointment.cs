@@ -40,6 +40,10 @@ namespace Clinic.Application.Features.Appointments.Commands
             {
                 throw new NotFoundException($"Appointment not found.");
             }
+            if (appointment.PatientId != patient.Id)
+            {
+                throw new UnauthorizedAccessException($"Patient is not authorized to update this appointment.");
+            }
             // Begin transaction
             await _unitOfWork.InitializeTransactionLockAsync(cancellationToken);
             try

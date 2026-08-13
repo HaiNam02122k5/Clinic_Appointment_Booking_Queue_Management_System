@@ -19,14 +19,14 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Commands
             var unitOfWork = new FakeUnitOfWork();
             var handler = new AddDoctorScheduleCommandHandler(doctorRepository, workScheduleRepository, unitOfWork);
             var doctor = TestDataFactory.CreateDoctor();
-            var now = DateTime.UtcNow;
+            var now = DateTime.UtcNow.AddHours(7);
             await doctorRepository.AddAsync(doctor);
-            var schedule1 = new WorkSchedule(doctor, now.AddDays(1), now.AddDays(1).AddHours(1), 5);
+            var schedule1 = new WorkSchedule(doctor, DateOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now), TimeOnly.FromDateTime(now.AddHours(1)), 5);
             doctor.AddWorkSchedule(schedule1);
 
             await workScheduleRepository.AddWorkScheduleAsync(schedule1);
             var command = new AddDoctorScheduleCommand(
-                doctor.Id, now.AddDays(2), now.AddDays(2).AddHours(1), 5);
+                doctor.Id, DateOnly.FromDateTime(now.AddDays(2)), TimeOnly.FromDateTime(now.AddHours(1)), TimeOnly.FromDateTime(now.AddHours(2)), 5);
             var result = await handler.Handle(command, CancellationToken.None);
 
             Assert.NotNull(workScheduleRepository.GetWorkScheduleByIdAsync(result.Id));
@@ -36,7 +36,7 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Commands
             await Assert.ThrowsAsync<InvalidOperationException>(async () =>
             {
                 var overlappingCommand = new AddDoctorScheduleCommand(
-                    doctor.Id, now.AddDays(1).AddMinutes(30), now.AddDays(1).AddHours(1).AddMinutes(30), 5);
+                    doctor.Id, DateOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddMinutes(30)), TimeOnly.FromDateTime(now.AddHours(1).AddMinutes(30)), 5);
                 await handler.Handle(overlappingCommand, CancellationToken.None);
             });
         }
@@ -48,8 +48,9 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Commands
             var workScheduleRepository = new FakeWorkScheduleRepository();
             var unitOfWork = new FakeUnitOfWork();
             var handler = new AddDoctorScheduleCommandHandler(doctorRepository, workScheduleRepository, unitOfWork);
+            var now = DateTime.UtcNow.AddHours(7);
             var command = new AddDoctorScheduleCommand(
-                Guid.NewGuid(), DateTime.UtcNow.AddDays(2), DateTime.UtcNow.AddDays(2).AddHours(1), 5);
+                Guid.NewGuid(), DateOnly.FromDateTime(now.AddDays(2)), TimeOnly.FromDateTime(now.AddDays(2).AddHours(1)), TimeOnly.FromDateTime(now.AddDays(2).AddHours(2)), 5);
             await Assert.ThrowsAsync<NotFoundException>(async () =>
             {
                 await handler.Handle(command, CancellationToken.None);

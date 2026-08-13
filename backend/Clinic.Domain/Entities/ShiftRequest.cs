@@ -6,8 +6,6 @@ namespace Clinic.Domain.Entities
 {
     public class ShiftRequest : BaseEntity
     {
-        private readonly TimeSpan VietnamTimeOffset = TimeSpan.FromHours(7); // Giờ Việt Nam (UTC+7)
-
         public Guid DoctorId { get; protected set; }
         public Doctor Doctor { get; protected set; } = null!;
         public DateOnly Date { get; set; }
@@ -25,12 +23,13 @@ namespace Clinic.Domain.Entities
         public ShiftRequest(Doctor doctor, DateOnly date, TimeOnly shiftStart, TimeOnly shiftEnd, int patientLimit, string? reason)
         {
             var utcStart = new TimeConverter().ConvertToUtc(new DateTime(date, shiftStart));
+            if (utcStart < DateTime.UtcNow) throw new ArgumentException($"Shift start time must be in the future.");
             if (doctor == null) throw new ArgumentNullException(nameof(doctor));
             if (shiftStart >= shiftEnd) throw new ArgumentException("Shift start time must be before shift end time.");
-            if (utcStart < DateTime.UtcNow) throw new ArgumentException("Shift start time must be in the future.");
             if (patientLimit <= 0) throw new ArgumentException("Patient limit per slot must be greater than zero.");
             Doctor = doctor;
             DoctorId = doctor.Id;
+            Date = date;
             ShiftStart = shiftStart;
             ShiftEnd = shiftEnd;
             PatientLimit = patientLimit;
@@ -51,13 +50,14 @@ namespace Clinic.Domain.Entities
 
         public void UpdateShift(DateOnly date, TimeOnly newShiftStart, TimeOnly newShiftEnd, int newPatientLimit, string? newReason)
         {
-            var utcStart = new TimeConverter().ConvertToUtc(new DateTime(date, ShiftStart));
+            var utcStart = new TimeConverter().ConvertToUtc(new DateTime(Date, ShiftStart));
             var newUtcStart = new TimeConverter().ConvertToUtc(new DateTime(date, newShiftStart));
             if (utcStart <= DateTime.UtcNow) throw new InvalidOperationException("Cannot update a shift that has already started.");
             if (Status != ShiftRequestStatus.Pending) throw new InvalidOperationException("Only pending shift requests can be updated.");
             if (newShiftStart >= newShiftEnd) throw new ArgumentException("New shift start time must be before new shift end time.");
             if (newUtcStart < DateTime.UtcNow) throw new ArgumentException("New shift start time must be in the future.");
             if (newPatientLimit <= 0) throw new ArgumentException("Patient limit per slot must be greater than zero.");
+            Date = date;
             ShiftStart = newShiftStart;
             ShiftEnd = newShiftEnd;
             PatientLimit = newPatientLimit;

@@ -16,8 +16,8 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Queries
             var handler = new GetDoctorSchedulesForBookingQueryHandler(workScheduleRepository, doctorRepository);
             var doctor = TestDataFactory.CreateDoctor();
             var now = new DateTime(2026, 9, 5, 7, 0, 0, DateTimeKind.Unspecified);
-            var schedule1 = new WorkSchedule(doctor, now.AddDays(1), now.AddDays(1).AddHours(4), 5);
-            var schedule2 = new WorkSchedule(doctor, now.AddDays(1).AddHours(6), now.AddDays(1).AddHours(10), 5);
+            var schedule1 = new WorkSchedule(doctor, DateOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now), TimeOnly.FromDateTime(now.AddHours(4)), 5);
+            var schedule2 = new WorkSchedule(doctor, DateOnly.FromDateTime(now.AddDays(1).AddHours(6)), TimeOnly.FromDateTime(now.AddDays(1).AddHours(6)), TimeOnly.FromDateTime(now.AddDays(1).AddHours(10)), 5);
             await doctorRepository.AddAsync(doctor);
             doctor.AddWorkSchedule(schedule1);
             doctor.AddWorkSchedule(schedule2);
@@ -57,8 +57,8 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Queries
             var handler = new GetDoctorSchedulesForBookingQueryHandler(workScheduleRepository, doctorRepository);
             var doctor = TestDataFactory.CreateDoctor();
             DateTime now = DateTime.UtcNow;
-            var schedule1 = new WorkSchedule(doctor, now.AddDays(1), now.AddDays(1).AddHours(4), 5);
-            var schedule2 = new WorkSchedule(doctor, now.AddDays(1).AddHours(6), now.AddDays(1).AddHours(10), 5);
+            var schedule1 = new WorkSchedule(doctor, DateOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddDays(1).AddHours(4)), 5);
+            var schedule2 = new WorkSchedule(doctor, DateOnly.FromDateTime(now.AddDays(1).AddHours(6)), TimeOnly.FromDateTime(now.AddDays(1).AddHours(6)), TimeOnly.FromDateTime(now.AddDays(1).AddHours(10)), 5);
             await doctorRepository.AddAsync(doctor);
             doctor.AddWorkSchedule(schedule1);
             doctor.AddWorkSchedule(schedule2);
