@@ -2,6 +2,7 @@
 using Clinic.Application.Features.Auth.Commands;
 using MapsterMapper;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Clinic.API.Controllers
@@ -20,6 +21,7 @@ namespace Clinic.API.Controllers
         }
 
         [HttpPost("login")]
+        [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             var command = _mapper.Map<LoginCommand>(request);
@@ -39,6 +41,7 @@ namespace Clinic.API.Controllers
         }
 
         [HttpPost("register")]
+        [AllowAnonymous]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Email))
@@ -51,6 +54,7 @@ namespace Clinic.API.Controllers
         }
 
         [HttpPost("logout")]
+        [AllowAnonymous]
         public async Task<IActionResult> Logout()
         {
             var refreshToken = Request.Cookies["refreshToken"];
@@ -71,6 +75,7 @@ namespace Clinic.API.Controllers
         }
 
         [HttpPost("refresh")]
+        [AllowAnonymous]
         public async Task<IActionResult> Refresh()
         {
             if (!Request.Cookies.TryGetValue("refreshToken", out var refreshToken))

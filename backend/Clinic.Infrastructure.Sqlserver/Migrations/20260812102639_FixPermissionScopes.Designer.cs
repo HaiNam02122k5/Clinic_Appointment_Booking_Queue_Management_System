@@ -4,6 +4,7 @@ using Clinic.Infrastructure.Sqlserver.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Clinic.Infrastructure.Sqlserver.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260812102639_FixPermissionScopes")]
+    partial class FixPermissionScopes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -461,7 +464,7 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                             Id = new Guid("20000000-0000-0000-0000-000000000001"),
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "View medical reports",
-                            IsDeleted = true,
+                            IsDeleted = false,
                             Name = "medical-report.view"
                         },
                         new
@@ -477,7 +480,7 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                             Id = new Guid("20000000-0000-0000-0000-000000000003"),
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "View patient medical history",
-                            IsDeleted = true,
+                            IsDeleted = false,
                             Name = "patient-history.view"
                         },
                         new
@@ -530,54 +533,6 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         },
                         new
                         {
-                            Id = new Guid("20000000-0000-0000-0000-00000000000a"),
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "View own medical reports (Patient)",
-                            IsDeleted = false,
-                            Name = "medical-report.view.own"
-                        },
-                        new
-                        {
-                            Id = new Guid("20000000-0000-0000-0000-00000000000b"),
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "View medical reports of patients in own exam cases (Doctor)",
-                            IsDeleted = false,
-                            Name = "medical-report.view.related"
-                        },
-                        new
-                        {
-                            Id = new Guid("20000000-0000-0000-0000-00000000000c"),
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "View any medical report (Admin)",
-                            IsDeleted = false,
-                            Name = "medical-report.view.any"
-                        },
-                        new
-                        {
-                            Id = new Guid("20000000-0000-0000-0000-00000000000d"),
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "View own medical history (Patient)",
-                            IsDeleted = false,
-                            Name = "patient-history.view.own"
-                        },
-                        new
-                        {
-                            Id = new Guid("20000000-0000-0000-0000-00000000000e"),
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "View medical history of patients in own exam cases (Doctor)",
-                            IsDeleted = false,
-                            Name = "patient-history.view.related"
-                        },
-                        new
-                        {
-                            Id = new Guid("20000000-0000-0000-0000-00000000000f"),
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "View any patient's medical history (Admin)",
-                            IsDeleted = false,
-                            Name = "patient-history.view.any"
-                        },
-                        new
-                        {
                             Id = new Guid("2000000a-0000-0000-0000-000000000001"),
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Manage notifications",
@@ -615,14 +570,6 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                             Description = "Manage appointment slots",
                             IsDeleted = false,
                             Name = "slot.manage"
-                        },
-                        new
-                        {
-                            Id = new Guid("2000000a-0000-0000-0000-000000000006"),
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Approve/reject doctor shift-change suggestions (Receptionist)",
-                            IsDeleted = false,
-                            Name = "shift.suggestion.manage"
                         });
                 });
 
@@ -888,7 +835,7 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         new
                         {
                             RoleId = new Guid("00000000-0000-0000-0000-000000000001"),
-                            PermissionId = new Guid("20000000-0000-0000-0000-00000000000c")
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000001")
                         },
                         new
                         {
@@ -898,7 +845,7 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         new
                         {
                             RoleId = new Guid("00000000-0000-0000-0000-000000000001"),
-                            PermissionId = new Guid("20000000-0000-0000-0000-00000000000f")
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000003")
                         },
                         new
                         {
@@ -1063,7 +1010,7 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         new
                         {
                             RoleId = new Guid("00000000-0000-0000-0000-000000000004"),
-                            PermissionId = new Guid("20000000-0000-0000-0000-00000000000b")
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000001")
                         },
                         new
                         {
@@ -1073,7 +1020,7 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         new
                         {
                             RoleId = new Guid("00000000-0000-0000-0000-000000000004"),
-                            PermissionId = new Guid("20000000-0000-0000-0000-00000000000e")
+                            PermissionId = new Guid("20000000-0000-0000-0000-000000000003")
                         },
                         new
                         {
@@ -1108,22 +1055,7 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         new
                         {
                             RoleId = new Guid("00000000-0000-0000-0000-000000000002"),
-                            PermissionId = new Guid("1000000a-0000-0000-0000-000000000002")
-                        },
-                        new
-                        {
-                            RoleId = new Guid("00000000-0000-0000-0000-000000000002"),
                             PermissionId = new Guid("10000000-0000-0000-0000-000000000005")
-                        },
-                        new
-                        {
-                            RoleId = new Guid("00000000-0000-0000-0000-000000000002"),
-                            PermissionId = new Guid("20000000-0000-0000-0000-00000000000a")
-                        },
-                        new
-                        {
-                            RoleId = new Guid("00000000-0000-0000-0000-000000000002"),
-                            PermissionId = new Guid("20000000-0000-0000-0000-00000000000d")
                         },
                         new
                         {
