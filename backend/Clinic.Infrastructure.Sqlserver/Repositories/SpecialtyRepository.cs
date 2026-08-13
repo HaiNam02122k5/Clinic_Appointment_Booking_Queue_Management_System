@@ -39,7 +39,9 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
 
             if (!string.IsNullOrEmpty(search))
             {
-                query = query.Where(s => s.Name.Contains(search) || s.Description.Contains(search));
+                query = query.Where(s =>
+                    s.Name.Contains(search) ||
+                    (s.Description != null && s.Description.Contains(search)));
             }
 
             query = sortBy.ToLower() switch
