@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Clinic.API.Models;
 using Clinic.Application.Common.Exceptions;
+using Clinic.Domain.Common.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -28,9 +29,11 @@ namespace Clinic.API.Common
             var (statusCode, messages) = exception switch
             {
                 NotFoundException => (HttpStatusCode.NotFound, new[] { exception.Message }),
+                ForbiddenException => (HttpStatusCode.Forbidden, new[] { exception.Message }),
+                // Vi phạm business rule (vd: đổi lịch quá sát giờ hẹn) - request hợp lệ nhưng không thể xử lý ở trạng thái hiện tại.
+                ConflictException => (HttpStatusCode.Conflict, new[] { exception.Message }),
                 // Domain ném ArgumentException khi dữ liệu đầu vào không hợp lệ.
                 ArgumentException => (HttpStatusCode.BadRequest, new[] { exception.Message }),
-                ConflictException => (HttpStatusCode.Conflict, new[] { exception.Message }),
                 InvalidOperationException => (HttpStatusCode.BadRequest, new[] { exception.Message }),
                 UnauthorizedAccessException => (HttpStatusCode.Unauthorized, new[] { exception.Message }),
                 _ => (HttpStatusCode.InternalServerError, new[] { "An unexpected error occurred." })

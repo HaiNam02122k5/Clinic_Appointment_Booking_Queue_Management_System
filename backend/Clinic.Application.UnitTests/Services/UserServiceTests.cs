@@ -64,7 +64,7 @@ namespace Clinic.Application.UnitTests.Services
             await userRepository.AddAsync(user);
 
             Assert.NotNull(await userService.VerifyUser("testuser", "password"));
-            await Assert.ThrowsAsync<ArgumentException>(() => userService.VerifyUser("testuser", "wrongpassword"));
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(() => userService.VerifyUser("testuser", "wrongpassword"));
         }
     }
 }
