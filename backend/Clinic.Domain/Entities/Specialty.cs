@@ -49,11 +49,13 @@ namespace Clinic.Domain.Entities
             Name = name;
             Description = description;
             EstablishedDate = establishedDate;
+            MarkUpdated();
         }
 
         public void Delete()
         {
             IsDeleted = true;
+            MarkUpdated();
         }
     }
 }

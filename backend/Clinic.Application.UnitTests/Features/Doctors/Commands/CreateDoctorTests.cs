@@ -39,6 +39,7 @@ namespace Clinic.Application.UnitTests.Features.Doctors.Commands
                 LicenseNumber: "LIC123456",
                 Qualification: "MD",
                 Biography: "Experienced doctor in internal medicine.",
+                Status: DoctorStatus.Active,
                 ExperienceYears: 10,
                 SpecialtyId: specialty.Id
             );
@@ -73,6 +74,7 @@ namespace Clinic.Application.UnitTests.Features.Doctors.Commands
                 Address: "123 Main St",
                 HireDate: new DateOnly(2020, 1, 1),
                 LicenseNumber: "LIC123456",
+                Status: DoctorStatus.Active,
                 Qualification: "MD",
                 Biography: "Experienced doctor in internal medicine.",
                 ExperienceYears: 10,

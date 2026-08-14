@@ -7,27 +7,32 @@ using MediatR;
 namespace Clinic.Application.Features.WorkSchedules.Commands
 {
     // Use-case: Doctor adds a new shift request
-    public record AddDoctorShiftRequestCommand(Guid DoctorId, DateOnly Date, TimeOnly StartTime, TimeOnly EndTime, int PatientLimit, string reason) : IRequest<RequestedShiftDto>;
+    public record AddDoctorShiftRequestCommand(Guid? UserId, DateOnly Date, TimeOnly StartTime, TimeOnly EndTime, int PatientLimit, string reason) : IRequest<RequestedShiftDto>;
 
     public class AddDoctorShiftRequestCommandHandler : IRequestHandler<AddDoctorShiftRequestCommand, RequestedShiftDto>
     {
-        private readonly IDoctorRepository _doctorRepository;
+        private readonly IUserRepository _userRepository;
         private readonly IWorkScheduleRepository _workScheduleRepository;
         private readonly IUnitOfWork _unitOfWork;
-        public AddDoctorShiftRequestCommandHandler(IDoctorRepository doctorRepository, IWorkScheduleRepository workScheduleRepository, IUnitOfWork unitOfWork)
+        public AddDoctorShiftRequestCommandHandler(IUserRepository userRepository, IWorkScheduleRepository workScheduleRepository, IUnitOfWork unitOfWork)
         {
-            _doctorRepository = doctorRepository;
+            _userRepository = userRepository;
             _workScheduleRepository = workScheduleRepository;
             _unitOfWork = unitOfWork;
         }
         public async Task<RequestedShiftDto> Handle(AddDoctorShiftRequestCommand request, CancellationToken cancellationToken)
         {
-            var doctor = await _doctorRepository.GetInfoByIdAsync(request.DoctorId);
+            var user = await _userRepository.GetByIdAsync(request.UserId);
+            if (user == null)
+            {
+                throw new UnauthorizedAccessException("User not found.");
+            }
+            var doctor = user.Person.Employee?.Doctor;
             if (doctor == null)
             {
-                throw new NotFoundException("Doctor not found.");
+                throw new ForbiddenException("The user is not a doctor and cannot add shift requests.");
             }
-            if (await _workScheduleRepository.HasDuplicateShiftRequest(request.DoctorId, request.Date, request.StartTime, request.EndTime))
+            if (await _workScheduleRepository.HasDuplicateShiftRequest(doctor.Id, request.Date, request.StartTime, request.EndTime))
             {
                 throw new InvalidOperationException("The doctor has a duplicate shift request in the specified time range.");
             }

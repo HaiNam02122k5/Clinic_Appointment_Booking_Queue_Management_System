@@ -35,9 +35,21 @@ builder.Services
             RoleClaimType = ClaimTypes.Role
         };
     });
+// Register permission policy provider and handler for dynamic permission policies
+builder.Services.AddAuthorization();
+builder.Services.AddSingleton<Microsoft.AspNetCore.Authorization.IAuthorizationPolicyProvider, Clinic.API.Authorization.PermissionPolicyProvider>();
+builder.Services.AddScoped<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, Clinic.API.Authorization.PermissionAuthorizationHandler>();
 
+// Register current-user accessor (đọc UserId từ ClaimsPrincipal của request hiện tại)
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<Clinic.Application.Interfaces.ICurrentUser, Clinic.API.Authentication.CurrentUser>();
 
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+// Cấu hình business rule của Appointment (vd: số giờ tối thiểu Patient phải đổi lịch trước hạn), đọc từ section "Appointment".
+builder.Services.Configure<Clinic.API.Configuration.AppointmentPolicySettings>(
+    builder.Configuration.GetSection(Clinic.API.Configuration.AppointmentPolicySettings.SectionName));
+builder.Services.AddScoped<Clinic.Application.Interfaces.IAppointmentPolicySettings>(sp =>
+    sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<Clinic.API.Configuration.AppointmentPolicySettings>>().Value);
+
 builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen(options =>
 {

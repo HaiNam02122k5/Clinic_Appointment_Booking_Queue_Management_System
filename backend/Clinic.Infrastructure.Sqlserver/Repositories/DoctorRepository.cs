@@ -37,8 +37,12 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             return await query.ToListAsync();
         }
 
-        public async Task<Doctor?> GetInfoByIdAsync(Guid doctorId)
+        public async Task<Doctor?> GetInfoByIdAsync(Guid? doctorId)
         {
+            if (doctorId == null)
+            {
+                return null;
+            }
             return await _context.Doctors
                 .Include(d => d.Employee)
                     .ThenInclude(e => e.Person)

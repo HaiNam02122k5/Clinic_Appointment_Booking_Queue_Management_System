@@ -55,11 +55,12 @@ namespace Clinic.Application.Features.Employees.Commands
                     employee.Person.User.AssignRole(role);
                 }
             }
-            foreach (var role in employee.Person.User.UserRoles)
+            var existingRoles = employee.Person.User!.UserRoles.Select(ur => ur.Role).ToList();
+            foreach (var role in existingRoles)
             {
-                if (!request.Roles.Contains(role.Role.Name))
+                if (!request.Roles.Contains(role.Name))
                 {
-                    employee.Person.User.RemoveRole(role.Role);
+                    employee.Person.User.RemoveRole(role);
                 }
             }
             await _unitOfWork.SaveChangesAsync();

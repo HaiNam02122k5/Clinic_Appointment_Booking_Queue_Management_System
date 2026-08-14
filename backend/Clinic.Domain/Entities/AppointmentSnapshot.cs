@@ -14,7 +14,8 @@ namespace Clinic.Domain.Entities
         public TimeOnly TimeSlot { get; protected set; }
         public DateTime CreatedAt { get; protected set; }
         public Guid CreatedByUserId { get; protected set; }
-        public AppointmentStatus Status { get; set; }
+        public string Reason { get; protected set; }
+        public AppointmentStatus Status { get; protected set; }
 
         // Navigation properties
         public Appointment Appointment { get; protected set; }
@@ -32,6 +33,7 @@ namespace Clinic.Domain.Entities
             TimeSlot = appointment.TimeSlot;
             CreatedAt = appointment.CreatedAt;
             Status = appointment.Status;
+            Reason = appointment.Reason;
             CreatedByUserId = appointment.CreatedByUserId;
         }
     }

@@ -12,14 +12,14 @@ namespace Clinic.Application.Interfaces
         /// The range should be less than 1 month.
         /// </summary>
         /// <exception cref="ArgumentException">Thrown when the time range exceeds 1 month.</exception>
-        Task<IEnumerable<WorkSchedule>> GetPlannedSchedulesByDoctorIdAsync(Guid doctorId, DateOnly startDate, DateOnly endDate);
+        Task<IEnumerable<WorkSchedule>> GetPlannedSchedulesByDoctorIdAsync(Guid? doctorId, DateOnly startDate, DateOnly endDate);
 
         /// <summary>
         /// Retrieves requested shifts for a doctor in the specified time range.
         /// The range should be less than 1 month.
         /// </summary>
         /// <exception cref="ArgumentException">Thrown when the time range exceeds 1 month.</exception>
-        Task<IEnumerable<ShiftRequest>> GetRequestedSchedulesByDoctorIdAsync(Guid doctorId, DateOnly startDate, DateOnly endDate);
+        Task<IEnumerable<ShiftRequest>> GetRequestedSchedulesByDoctorIdAsync(Guid? doctorId, DateOnly startDate, DateOnly endDate);
 
         /// <summary>
         /// Retrieves a work schedule by its unique identifier asynchronously, including its associated doctor-person info.
@@ -54,6 +54,6 @@ namespace Clinic.Application.Interfaces
         /// <summary>
         /// Retrieves work schedules for a doctor on a specific date, including their associated appointments asynchronously.
         /// </summary>
-        Task<IEnumerable<WorkSchedule>> GetDoctorSchedulesWithAppointmentByDateAsync(Guid doctorId, DateOnly date);
+        Task<IEnumerable<WorkSchedule>> GetDoctorSchedulesWithAppointmentByDateAsync(Guid? doctorId, DateOnly date);
     }
 }

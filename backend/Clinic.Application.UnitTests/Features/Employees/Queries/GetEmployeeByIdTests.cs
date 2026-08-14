@@ -12,7 +12,7 @@ namespace Clinic.Application.UnitTests.Features.Employees.Queries
             var employeeRepository = new FakeEmployeeRepository();
             var handler = new GetEmployeeByIdHandler(employeeRepository);
             var person = TestDataFactory.CreatePerson("John Doe 2");
-            var user = TestDataFactory.CreateUser("johndoe2", "hashedpassword", person);
+            var user = TestDataFactory.CreateUser("Doctor", "johndoe2", "hashedpassword", person);
             var employee = TestDataFactory.CreateEmployee(person);
             var manager = TestDataFactory.CreateEmployee(TestDataFactory.CreatePerson("Manager Name"));
             employee.UpdateManager(manager);

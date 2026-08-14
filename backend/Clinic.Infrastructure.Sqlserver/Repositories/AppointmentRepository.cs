@@ -1,4 +1,4 @@
-﻿using Clinic.Application.Common.Models;
+using Clinic.Application.Common.Models;
 using Clinic.Application.Interfaces;
 using Clinic.Domain.Entities;
 using Clinic.Domain.Enums;
@@ -55,6 +55,12 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
         public Task<bool> IsTimeSlotTakenAsync(Guid doctorId, DateTime timeSlot)
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<bool> ExistsForDoctorAndPatientAsync(Guid doctorId, Guid patientId)
+        {
+            return await _context.Appointments
+                .AnyAsync(a => a.PatientId == patientId && a.WorkSchedule.DoctorId == doctorId);
         }
     }
 }

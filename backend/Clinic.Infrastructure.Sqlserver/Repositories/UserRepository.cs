@@ -40,17 +40,29 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
         {
             return await _context.Users
                 .Include(u => u.Person)
+                    .ThenInclude(p => p.Patient)
+                .Include(u => u.Person)
+                    .ThenInclude(p => p.Employee)
+                        .ThenInclude(e => e!.Doctor)
                 .Include(u => u.UserRoles)
-                .ThenInclude(ur => ur.Role)
+                    .ThenInclude(ur => ur.Role)
+                        .ThenInclude(r => r.RolePermissions)
+                            .ThenInclude(rp => rp.Permission)
                 .FirstOrDefaultAsync(u => u.Username == username);
         }
 
-        public async Task<User?> GetByIdAsync(Guid id)
+        public async Task<User?> GetByIdAsync(Guid? id)
         {
+            if (id == null)
+            {
+                return null;
+            }
             return await _context.Users
                 .Include(u => u.Person)
                 .Include(u => u.UserRoles)
-                .ThenInclude(ur => ur.Role)
+                    .ThenInclude(ur => ur.Role)
+                        .ThenInclude(r => r.RolePermissions)
+                            .ThenInclude(rp => rp.Permission)
                 .FirstOrDefaultAsync(u => u.Id == id);
         }
 
@@ -64,7 +76,9 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             return await _context.Users
                 .Include(u => u.Person)
                 .Include(u => u.UserRoles)
-                .ThenInclude(ur => ur.Role)
+                    .ThenInclude(ur => ur.Role)
+                        .ThenInclude(r => r.RolePermissions)
+                            .ThenInclude(rp => rp.Permission)
                 .FirstOrDefaultAsync(u => u.PersonId == id);
         }
     }

@@ -1,12 +1,13 @@
-﻿using Clinic.Application.Interfaces;
+﻿using Clinic.Application.Contracts;
+using Clinic.Application.Interfaces;
 using Clinic.Domain.Entities;
 using MediatR;
 
 namespace Clinic.Application.Features.Specialties.Commands
 {
     // Use-case: Create a new specialty
-    public record CreateSpecialtyCommand(string Name, string Description, DateOnly EstablishedDate) : IRequest<Specialty>;
-    public class CreateSpecialtyCommandHandler : IRequestHandler<CreateSpecialtyCommand, Specialty>
+    public record CreateSpecialtyCommand(string Name, string Description, DateOnly EstablishedDate) : IRequest<SpecialtyDto>;
+    public class CreateSpecialtyCommandHandler : IRequestHandler<CreateSpecialtyCommand, SpecialtyDto>
     {
         private readonly ISpecialtyRepository _specialtyRepository;
         private readonly IUnitOfWork _unitOfWork;
@@ -15,7 +16,7 @@ namespace Clinic.Application.Features.Specialties.Commands
             _specialtyRepository = specialtyRepository;
             _unitOfWork = unitOfWork;
         }
-        public async Task<Specialty> Handle(CreateSpecialtyCommand request, CancellationToken cancellationToken)
+        public async Task<SpecialtyDto> Handle(CreateSpecialtyCommand request, CancellationToken cancellationToken)
         {
             if (string.IsNullOrWhiteSpace(request.Name))
             {
@@ -28,7 +29,13 @@ namespace Clinic.Application.Features.Specialties.Commands
             var specialty = new Specialty(request.Name, request.Description, request.EstablishedDate);
             await _specialtyRepository.AddAsync(specialty);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
-            return specialty;
+            return new SpecialtyDto
+            {
+                Id = specialty.Id,
+                Name = specialty.Name,
+                Description = specialty.Description,
+                EstablishedDate = specialty.EstablishedDate
+            };
         }
     }
 }

@@ -8,9 +8,11 @@ using System.Text;
 
 namespace Clinic.Application.Features.WorkSchedules.Queries
 {
+    // Changed in another branch
+
     // Use-case: Get a list of doctor schedules
     public record GetDoctorSchedulesQuery(
-        Guid DoctorId,
+        Guid? DoctorId,
         DateOnly StartDate,
         DateOnly EndDate
     ) : IRequest<DoctorScheduleDto<WorkScheduleDto>>;

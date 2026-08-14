@@ -16,7 +16,7 @@ namespace Clinic.Application.UnitTests.Features.Auth.Commands
             FakeUnitOfWork unitOfWork = new FakeUnitOfWork();
             LoginCommandHandler handler = new LoginCommandHandler(new UserService(userRepository, hasher), new TokenService(tokenProvider, refreshTokenRepository), unitOfWork);
             var person = TestDataFactory.CreatePerson();
-            var user = TestDataFactory.CreateUser("testuser", hasher.HashPassword("password"), person);
+            var user = TestDataFactory.CreateUser("Patient", "testuser", hasher.HashPassword("password"), person);
             await userRepository.AddAsync(user);
 
             LoginCommand command = new(
@@ -30,7 +30,7 @@ namespace Clinic.Application.UnitTests.Features.Auth.Commands
             Assert.NotNull(await refreshTokenRepository.GetByTokenHashAsync(tokenProvider.HashToken(response.RefreshToken)));
 
             LoginCommand wrongCommand = new("testuser", hasher.HashPassword("wrongpassword"));
-            await Assert.ThrowsAsync<ArgumentException>(async () =>
+            await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
             {
                 await handler.Handle(wrongCommand, CancellationToken.None);
             });
@@ -46,7 +46,7 @@ namespace Clinic.Application.UnitTests.Features.Auth.Commands
             FakeUnitOfWork unitOfWork = new FakeUnitOfWork();
             LoginCommandHandler handler = new LoginCommandHandler(new UserService(userRepository, hasher), new TokenService(tokenProvider, refreshTokenRepository), unitOfWork);
             var person = TestDataFactory.CreatePerson();
-            var user = TestDataFactory.CreateUser("testuser", hasher.HashPassword("password"), person);
+            var user = TestDataFactory.CreateUser("Patient", "testuser", hasher.HashPassword("password"), person);
             await userRepository.AddAsync(user);
 
             LoginCommand command = new(

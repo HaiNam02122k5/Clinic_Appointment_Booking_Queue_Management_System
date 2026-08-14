@@ -28,7 +28,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             await _context.WorkSchedules.AddAsync(workSchedule);
         }
 
-        public async Task<IEnumerable<WorkSchedule>> GetDoctorSchedulesWithAppointmentByDateAsync(Guid doctorId, DateOnly date)
+        public async Task<IEnumerable<WorkSchedule>> GetDoctorSchedulesWithAppointmentByDateAsync(Guid? doctorId, DateOnly date)
         {
             return await _context.WorkSchedules.Include(ws => ws.Appointments.Where(a => a.IsDeleted == false && a.Status != AppointmentStatus.Cancelled))
                 .Where(ws =>
@@ -39,7 +39,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                 .AsNoTracking().ToListAsync();
         }
 
-        public async Task<IEnumerable<WorkSchedule>> GetPlannedSchedulesByDoctorIdAsync(Guid doctorId, DateOnly startDate, DateOnly endDate)
+        public async Task<IEnumerable<WorkSchedule>> GetPlannedSchedulesByDoctorIdAsync(Guid? doctorId, DateOnly startDate, DateOnly endDate)
         {
             // Check if the time range exceeds 1 month
             if (startDate.AddMonths(1) < endDate)
@@ -57,12 +57,16 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                 ).AsNoTracking().ToListAsync();
         }
 
-        public async Task<IEnumerable<ShiftRequest>> GetRequestedSchedulesByDoctorIdAsync(Guid doctorId, DateOnly startDate, DateOnly endDate)
+        public async Task<IEnumerable<ShiftRequest>> GetRequestedSchedulesByDoctorIdAsync(Guid? doctorId, DateOnly startDate, DateOnly endDate)
         {
             // Check if the time range exceeds 1 month
             if (startDate.AddMonths(1) < endDate)
             {
                 throw new ArgumentException("The time range cannot exceed 1 month.");
+            }
+            if (doctorId == null)
+            {
+                throw new ArgumentException("DoctorId cannot be null.");
             }
 
             return await _context.ShiftRequests

@@ -45,7 +45,31 @@ namespace Clinic.Application.UnitTests.Common
             return returnAns;
         }
 
-        public async Task<IEnumerable<WorkSchedule>> GetPlannedSchedulesByDoctorIdAsync(Guid doctorId, DateOnly startDate, DateOnly endDate)
+        public async Task<IEnumerable<WorkSchedule>> GetDoctorSchedulesWithAppointmentByDateAsync(Guid? doctorId, DateOnly date)
+        {
+            List<WorkSchedule> result = _workSchedules
+                .Where(ws => ws.DoctorId == doctorId &&
+                ws.IsDeleted == false &&
+                ws.Status == WorkScheduleStatus.Active &&
+                ws.Date == date).ToList();
+            List<WorkSchedule> returnAns = new List<WorkSchedule>();
+            foreach (var schedule in result)
+            {
+                // workaround to filter inclusion to preserve object stored in context, but lose the reference to other entity
+                var ws = new WorkSchedule(schedule.Id, schedule.DoctorId, schedule.Date, schedule.ShiftStart, schedule.ShiftEnd, schedule.PatientLimit, schedule.Status, schedule.CreatedAt, schedule.UpdatedAt, schedule.IsDeleted);
+                foreach (var appointment in schedule.Appointments)
+                {
+                    if (!appointment.IsDeleted && appointment.Status != AppointmentStatus.Cancelled)
+                    {
+                        ws.AddAppointment(appointment);
+                    }
+                }
+                returnAns.Add(ws);
+            }
+            return returnAns;
+        }
+
+        public async Task<IEnumerable<WorkSchedule>> GetPlannedSchedulesByDoctorIdAsync(Guid? doctorId, DateOnly startDate, DateOnly endDate)
         {
             // Check if the time range exceeds 1 month
             if (startDate.AddMonths(1) < endDate)
@@ -58,7 +82,7 @@ namespace Clinic.Application.UnitTests.Common
             ).ToList();
         }
 
-        public async Task<IEnumerable<ShiftRequest>> GetRequestedSchedulesByDoctorIdAsync(Guid doctorId, DateOnly startDate, DateOnly endDate)
+        public async Task<IEnumerable<ShiftRequest>> GetRequestedSchedulesByDoctorIdAsync(Guid? doctorId, DateOnly startDate, DateOnly endDate)
         {
             // Check if the time range exceeds 1 month
             if (startDate.AddMonths(1) < endDate)

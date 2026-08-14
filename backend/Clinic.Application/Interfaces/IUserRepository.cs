@@ -12,7 +12,7 @@ namespace Clinic.Application.Interfaces
         /// <summary>
         /// Gets a user by their unique identifier (ID).
         /// </summary>
-        Task<User?> GetByIdAsync(Guid id);
+        Task<User?> GetByIdAsync(Guid? id);
 
         /// <summary>
         /// Gets all users in the system.
