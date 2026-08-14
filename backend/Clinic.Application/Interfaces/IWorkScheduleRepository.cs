@@ -12,7 +12,7 @@ namespace Clinic.Application.Interfaces
         /// The range should be less than 1 month.
         /// </summary>
         /// <exception cref="ArgumentException">Thrown when the time range exceeds 1 month.</exception>
-        Task<IEnumerable<WorkSchedule>> GetPlannedSchedulesByDoctorIdAsync(Guid doctorId, DateOnly startDate, DateOnly endDate);
+        Task<IEnumerable<WorkSchedule>> GetPlannedSchedulesByDoctorIdAsync(Guid? doctorId, DateOnly startDate, DateOnly endDate);
 
         /// <summary>
         /// Retrieves requested shifts for a doctor in the specified time range.

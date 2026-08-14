@@ -10,7 +10,7 @@ namespace Clinic.Application.Features.WorkSchedules.Queries
 
     // Use-case: Get a list of doctor schedules
     public record GetDoctorRequestedShiftsQuery(
-        Guid UserId,
+        Guid? UserId,
         DateOnly StartDate,
         DateOnly EndDate,
         Guid? DoctorId = null

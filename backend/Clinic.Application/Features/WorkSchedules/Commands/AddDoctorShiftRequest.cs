@@ -7,7 +7,7 @@ using MediatR;
 namespace Clinic.Application.Features.WorkSchedules.Commands
 {
     // Use-case: Doctor adds a new shift request
-    public record AddDoctorShiftRequestCommand(Guid UserId, DateTime StartTime, DateTime EndTime, int PatientLimitPerSlot, string reason) : IRequest<RequestedShiftDto>;
+    public record AddDoctorShiftRequestCommand(Guid? UserId, DateTime StartTime, DateTime EndTime, int PatientLimitPerSlot, string reason) : IRequest<RequestedShiftDto>;
 
     public class AddDoctorShiftRequestCommandHandler : IRequestHandler<AddDoctorShiftRequestCommand, RequestedShiftDto>
     {

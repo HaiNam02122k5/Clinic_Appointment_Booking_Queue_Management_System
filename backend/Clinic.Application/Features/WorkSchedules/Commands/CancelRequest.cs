@@ -7,7 +7,7 @@ namespace Clinic.Application.Features.WorkSchedules.Commands
     // Use-case: Doctor cancels a shift request
     public record CancelRequestCommand(
         Guid Id,
-        Guid UserId
+        Guid? UserId
     ) : IRequest<Guid>;
     public class CancelRequestCommandHandler : IRequestHandler<CancelRequestCommand, Guid>
     {

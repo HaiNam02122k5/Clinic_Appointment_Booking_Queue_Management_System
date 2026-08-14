@@ -8,7 +8,7 @@ namespace Clinic.Application.Features.WorkSchedules.Commands
     // Use-case: Doctor updates an existing shift request
     public record UpdateShiftRequestCommand(
         Guid Id,
-        Guid UserId,
+        Guid? UserId,
         DateTime StartTime,
         DateTime EndTime,
         int PatientLimitPerSlot,

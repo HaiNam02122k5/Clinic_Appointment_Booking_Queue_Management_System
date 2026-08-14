@@ -12,7 +12,7 @@ namespace Clinic.Application.Features.WorkSchedules.Queries
 
     // Use-case: Get a list of doctor schedules
     public record GetDoctorSchedulesQuery(
-        Guid DoctorId,
+        Guid? DoctorId,
         DateOnly StartDate,
         DateOnly EndDate
     ) : IRequest<DoctorScheduleDto<WorkScheduleDto>>;
