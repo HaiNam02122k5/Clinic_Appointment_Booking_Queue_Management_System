@@ -1,4 +1,5 @@
 using Clinic.Application.Features.Appointments.Commands;
+using Clinic.Application.Features.Queue.Commands;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -32,7 +33,19 @@ namespace Clinic.API.Controllers
 
         [HttpPost("{appointmentId}/confirm")]
         [Authorize(Policy = "Permission:appointment.confirm")]
-        public IActionResult Confirm([FromRoute] string appointmentId) => NoContent();
+        public async Task<IActionResult> Confirm([FromRoute] Guid appointmentId)
+        {
+            await _sender.Send(new ConfirmAppointmentCommand(appointmentId));
+            return NoContent();
+        }
+
+        [HttpPost("{appointmentId}/check-in")]
+        [Authorize(Policy = "Permission:queue.check-in")]
+        public async Task<IActionResult> CheckIn([FromRoute] Guid appointmentId)
+        {
+            await _sender.Send(new CheckInCommand(appointmentId));
+            return NoContent();
+        }
 
         [HttpPost("{appointmentId}/reschedule")]
         [Authorize(Policy = "Permission:appointment.reschedule")]

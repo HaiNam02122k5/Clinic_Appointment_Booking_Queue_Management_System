@@ -1,4 +1,7 @@
+using Clinic.Application.Features.Queue.Commands;
+using Clinic.Application.Features.Queue.Queries;
 using Clinic.Application.Interfaces;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,10 +12,12 @@ namespace Clinic.API.Controllers
     public class DoctorsController : ControllerBase
     {
         private readonly ICurrentUser _currentUser;
+        private readonly ISender _sender;
 
-        public DoctorsController(ICurrentUser currentUser)
+        public DoctorsController(ICurrentUser currentUser, ISender sender)
         {
             _currentUser = currentUser;
+            _sender = sender;
         }
 
         [HttpGet]
@@ -66,17 +71,19 @@ namespace Clinic.API.Controllers
         }
 
         [HttpGet("{doctorId}/queue")]
-        [Authorize(Policy = "Permission:doctor.queue.view")]
-        public IActionResult GetQueue([FromRoute] string doctorId)
+        [Authorize(Policy = "Permission:doctor.queue.view,queue.view")]
+        public async Task<IActionResult> GetQueue([FromRoute] Guid doctorId)
         {
-            return Ok(new { doctorId });
+            var result = await _sender.Send(new GetQueueByDoctorQuery(doctorId));
+            return Ok(result);
         }
 
         [HttpPost("{doctorId}/queue/next")]
         [Authorize(Policy = "Permission:queue.call-next")]
-        public IActionResult CallNext([FromRoute] string doctorId)
+        public async Task<IActionResult> CallNext([FromRoute] Guid doctorId)
         {
-            return Ok(new { doctorId });
+            var result = await _sender.Send(new CallNextQueueCommand(doctorId));
+            return Ok(result);
         }
     }
 }

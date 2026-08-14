@@ -24,10 +24,62 @@ namespace Clinic.Application.UnitTests.Common
             return newUser;
         }
 
+        /// <summary>
+        /// Tạo 1 QueueTicket hợp lệ, liên kết 2 chiều với appointment (giống CheckInHandler thật).
+        /// </summary>
+        public static QueueTicket CreateQueueTicket(Appointment appointment, int queueNumber, bool priority = false)
+        {
+            var queueTicket = new QueueTicket
+            {
+                AppointmentId = appointment.Id,
+                Appointment = appointment,
+                QueueNumber = queueNumber,
+                CheckInTime = DateTime.UtcNow
+            };
+            appointment.QueueTicket = queueTicket;
+
+            if (priority)
+            {
+                queueTicket.SetPriority(true);
+            }
+
+            return queueTicket;
+        }
         public static RefreshToken CreateRefreshToken(string hashedToken, User user)
         {
             var refreshToken = new RefreshToken(hashedToken, DateTime.UtcNow.AddDays(7), user);
             return refreshToken;
+        }
+
+        /// <summary>
+        /// Tạo 1 Appointment hợp lệ (kèm WorkSchedule gắn với doctorId) để dùng cho test
+        /// Confirm/CheckIn. status mặc định là Pending (trạng thái khởi tạo của Appointment);
+        /// truyền confirmed = true để có sẵn Appointment ở trạng thái Confirmed (phục vụ test CheckIn).
+        /// </summary>
+        public static Appointment CreateAppointment(Guid? patientId = null, Guid? doctorId = null, bool confirmed = false)
+        {
+            var workSchedule = new WorkSchedule
+            {
+                DoctorId = doctorId ?? Guid.NewGuid(),
+                ShiftStart = DateTime.UtcNow.AddHours(1),
+                ShiftEnd = DateTime.UtcNow.AddHours(2),
+                PatientLimitPerSlot = 5,
+            };
+
+            var appointment = new Appointment
+            {
+                PatientId = patientId ?? Guid.NewGuid(),
+                WorkScheduleId = workSchedule.Id,
+                WorkSchedule = workSchedule,
+                TimeSlot = DateTime.UtcNow.AddHours(1),
+            };
+
+            if (confirmed)
+            {
+                appointment.Confirm();
+            }
+
+            return appointment;
         }
     }
 }
