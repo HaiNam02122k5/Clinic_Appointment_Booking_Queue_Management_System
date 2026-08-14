@@ -42,12 +42,16 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                 ).AsNoTracking().ToListAsync();
         }
 
-        public async Task<IEnumerable<ShiftRequest>> GetRequestedSchedulesByDoctorIdAsync(Guid doctorId, DateOnly startDate, DateOnly endDate)
+        public async Task<IEnumerable<ShiftRequest>> GetRequestedSchedulesByDoctorIdAsync(Guid? doctorId, DateOnly startDate, DateOnly endDate)
         {
             // Check if the time range exceeds 1 month
             if (startDate.AddMonths(1) < endDate)
             {
                 throw new ArgumentException("The time range cannot exceed 1 month.");
+            }
+            if (doctorId == null)
+            {
+                throw new ArgumentException("DoctorId cannot be null.");
             }
 
             return await _context.ShiftRequests

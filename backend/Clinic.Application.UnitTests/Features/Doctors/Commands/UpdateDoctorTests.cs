@@ -18,17 +18,13 @@ namespace Clinic.Application.UnitTests.Features.Doctors.Commands
             var unitOfWork = new FakeUnitOfWork();
             var userRepo = new FakeUserRepository();
             var handler = new UpdateDoctorCommandHandler(doctorRepository, userRepo, unitOfWork);
-            var doctorPerson = TestDataFactory.CreatePerson(fullName: "Dr. John Doe");
-            var user = TestDataFactory.CreateUser(person: doctorPerson);
-            user.AssignRole(TestDataFactory.RoleSet.First(r => r.Name == "Doctor"));
-            var doctor = TestDataFactory.CreateDoctor(employee: TestDataFactory.CreateEmployee(person: doctorPerson));
-            var admin = TestDataFactory.CreateUser(username: "admin", person: TestDataFactory.CreatePerson(fullName: "Admin User"));
-            admin.AssignRole(TestDataFactory.RoleSet.First(r => r.Name == "Admin"));
-            await userRepo.AddAsync(user);
-            await userRepo.AddAsync(admin);
+            var doctor = TestDataFactory.CreateDoctor();
+            var admin = TestDataFactory.CreateEmployee(role: "Admin");
+            await userRepo.AddAsync(doctor.Employee.Person.User);
+            await userRepo.AddAsync(admin.Person.User);
             await doctorRepository.AddAsync(doctor);
             var command = new UpdateDoctorCommand(
-                admin.Id,
+                admin.Person.User.Id,
                 "Updated Name",
                 "1234567890",
                 "abc@gmail.com",
@@ -47,7 +43,7 @@ namespace Clinic.Application.UnitTests.Features.Doctors.Commands
             
             // self update
             var command2 = new UpdateDoctorCommand(
-                user.Id,
+                doctor.Employee.Person.User.Id,
                 "Updated Name",
                 "1234567890",
                 "abc@gmail.com",
@@ -71,17 +67,13 @@ namespace Clinic.Application.UnitTests.Features.Doctors.Commands
             var unitOfWork = new FakeUnitOfWork();
             var userRepo = new FakeUserRepository();
             var handler = new UpdateDoctorCommandHandler(doctorRepository, userRepo, unitOfWork);
-            var doctorPerson = TestDataFactory.CreatePerson(fullName: "Dr. John Doe");
-            var user = TestDataFactory.CreateUser(person: doctorPerson);
-            user.AssignRole(TestDataFactory.RoleSet.First(r => r.Name == "Doctor"));
-            var doctor = TestDataFactory.CreateDoctor(employee: TestDataFactory.CreateEmployee(person: doctorPerson));
-            var admin = TestDataFactory.CreateUser(username: "admin", person: TestDataFactory.CreatePerson(fullName: "Admin User"));
-            admin.AssignRole(TestDataFactory.RoleSet.First(r => r.Name == "Admin"));
-            await userRepo.AddAsync(user);
-            await userRepo.AddAsync(admin);
+            var doctor = TestDataFactory.CreateDoctor();
+            var admin = TestDataFactory.CreateEmployee(role: "Admin");
+            await userRepo.AddAsync(doctor.Employee.Person.User);
+            await userRepo.AddAsync(admin.Person.User);
             await doctorRepository.AddAsync(doctor);
             var command = new UpdateDoctorCommand(
-                admin.Id,
+                admin.Person.User.Id,
                 "Updated Name",
                 "1234567890",
                 "abc@gmail.com",
@@ -98,7 +90,7 @@ namespace Clinic.Application.UnitTests.Features.Doctors.Commands
 
             // self update, admin not a doctor
             var command2 = new UpdateDoctorCommand(
-                admin.Id,
+                admin.Person.User.Id,
                 "Updated Name",
                 "1234567890",
                 "abc@gmail.com",
@@ -121,14 +113,10 @@ namespace Clinic.Application.UnitTests.Features.Doctors.Commands
             var unitOfWork = new FakeUnitOfWork();
             var userRepo = new FakeUserRepository();
             var handler = new UpdateDoctorCommandHandler(doctorRepository, userRepo, unitOfWork);
-            var doctorPerson = TestDataFactory.CreatePerson(fullName: "Dr. John Doe");
-            var user = TestDataFactory.CreateUser(person: doctorPerson);
-            user.AssignRole(TestDataFactory.RoleSet.First(r => r.Name == "Doctor"));
-            var doctor = TestDataFactory.CreateDoctor(employee: TestDataFactory.CreateEmployee(person: doctorPerson));
-            var admin = TestDataFactory.CreateUser(username: "admin", person: TestDataFactory.CreatePerson(fullName: "Admin User"));
-            admin.AssignRole(TestDataFactory.RoleSet.First(r => r.Name == "Admin"));
-            await userRepo.AddAsync(user);
-            await userRepo.AddAsync(admin);
+            var doctor = TestDataFactory.CreateDoctor();
+            var admin = TestDataFactory.CreateEmployee(role: "Admin");
+            await userRepo.AddAsync(doctor.Employee.Person.User);
+            await userRepo.AddAsync(admin.Person.User);
             await doctorRepository.AddAsync(doctor);
             var command = new UpdateDoctorCommand(
                 null,

@@ -10,18 +10,21 @@ namespace Clinic.Application.Features.WorkSchedules.Queries
 
     // Use-case: Get a list of doctor schedules
     public record GetDoctorRequestedShiftsQuery(
-        Guid DoctorId,
+        Guid UserId,
         DateOnly StartDate,
-        DateOnly EndDate
+        DateOnly EndDate,
+        Guid? DoctorId = null
     ) : IRequest<DoctorScheduleDto<RequestedShiftDto>>;
     public class GetDoctorRequestedShiftsHandler : IRequestHandler<GetDoctorRequestedShiftsQuery, DoctorScheduleDto<RequestedShiftDto>>
     {
         private readonly IDoctorRepository _doctorRepository;
         private readonly IWorkScheduleRepository _workScheduleRepository;
-        public GetDoctorRequestedShiftsHandler(IDoctorRepository doctorRepository, IWorkScheduleRepository workScheduleRepository)
+        private readonly IUserRepository _userRepository;
+        public GetDoctorRequestedShiftsHandler(IDoctorRepository doctorRepository, IWorkScheduleRepository workScheduleRepository, IUserRepository userRepository)
         {
             _doctorRepository = doctorRepository;
             _workScheduleRepository = workScheduleRepository;
+            _userRepository = userRepository;
         }
 
         public async Task<DoctorScheduleDto<RequestedShiftDto>> Handle(GetDoctorRequestedShiftsQuery request, CancellationToken cancellationToken)
@@ -30,12 +33,21 @@ namespace Clinic.Application.Features.WorkSchedules.Queries
             {
                 throw new ArgumentException("The date range cannot exceed one month");
             }
-            var doctor = await _doctorRepository.GetInfoByIdAsync(request.DoctorId);
+            var user = await _userRepository.GetByIdAsync(request.UserId);
+            if (user == null)
+            {
+                throw new UnauthorizedAccessException();
+            }
+            if (!(user.UserRoles.Any(ur => ur.Role.Name == "Admin") || (user.UserRoles.Any(ur => ur.Role.Name == "Doctor") && request.DoctorId == null)))
+            {
+                throw new ForbiddenException("You are not authorized to make this request");
+            }
+            var doctor = request.DoctorId == null ? user.Person.Employee.Doctor : await _doctorRepository.GetInfoByIdAsync(request.DoctorId);
             if (doctor == null)
             {
                 throw new NotFoundException("Doctor not found");
             }
-            var schedules = await _workScheduleRepository.GetRequestedSchedulesByDoctorIdAsync(request.DoctorId, request.StartDate, request.EndDate);
+            var schedules = await _workScheduleRepository.GetRequestedSchedulesByDoctorIdAsync(doctor.Id, request.StartDate, request.EndDate);
 
             // Map the doctor's schedules to the DTO
             var scheduleDto = new DoctorScheduleDto<RequestedShiftDto>

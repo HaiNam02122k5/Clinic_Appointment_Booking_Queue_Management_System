@@ -34,7 +34,7 @@ namespace Clinic.Application.UnitTests.Common
             ).ToList();
         }
 
-        public async Task<IEnumerable<ShiftRequest>> GetRequestedSchedulesByDoctorIdAsync(Guid doctorId, DateOnly startDate, DateOnly endDate)
+        public async Task<IEnumerable<ShiftRequest>> GetRequestedSchedulesByDoctorIdAsync(Guid? doctorId, DateOnly startDate, DateOnly endDate)
         {
             // Check if the time range exceeds 1 month
             if (startDate.AddMonths(1) < endDate)
@@ -61,7 +61,7 @@ namespace Clinic.Application.UnitTests.Common
         public async Task<bool> HasDuplicateShiftRequest(Guid doctorId, DateTime startTime, DateTime endTime)
         {
             return _shiftRequests.Any(sr => sr.DoctorId == doctorId &&
-                ((sr.ShiftStart == endTime && sr.ShiftEnd == startTime)));
+                ((sr.ShiftStart == startTime && sr.ShiftEnd == endTime)));
         }
 
         public async Task<bool> HasOverlappingWorkSchedule(Guid doctorId, DateTime startTime, DateTime endTime)
