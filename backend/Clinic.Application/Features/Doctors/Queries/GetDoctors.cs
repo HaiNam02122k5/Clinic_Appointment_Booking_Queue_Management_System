@@ -7,12 +7,12 @@ using MediatR;
 namespace Clinic.Application.Features.Doctors.Queries
 {
     public record GetDoctorsQuery(
-        string? searchTerm = null,
-        string? sortBy = "fullName",
-        string? qualification = null,
-        DoctorStatus? status = null,
-        Guid? specialtyId = null,
-        bool descending = false,
+        string? Search = null,
+        string? SortBy = "fullName",
+        string? Qualification = null,
+        DoctorStatus? Status = null,
+        Guid? SpecialtyId = null,
+        bool Descending = false,
         int pageNumber = 1,
         int pageSize = 10
     ) : IRequest<PaginationResponse<DoctorSummaryDto>>;
@@ -27,12 +27,12 @@ namespace Clinic.Application.Features.Doctors.Queries
         public async Task<PaginationResponse<DoctorSummaryDto>> Handle(GetDoctorsQuery request, CancellationToken cancellationToken)
         {
             var doctors = await _doctorRepository.GetPagedAsync(
-                request.searchTerm,
-                request.sortBy,
-                request.qualification,
-                request.status,
-                request.specialtyId,
-                request.descending,
+                request.Search,
+                request.SortBy,
+                request.Qualification,
+                request.Status,
+                request.SpecialtyId,
+                request.Descending,
                 request.pageNumber,
                 request.pageSize
             );

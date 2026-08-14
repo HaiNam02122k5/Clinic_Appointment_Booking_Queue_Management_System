@@ -12,9 +12,9 @@ namespace Clinic.Application.Interfaces
         Task AddAsync(Doctor doctor);
 
         /// <summary>
-        /// Retrieves personal information for a doctor by their unique identifier asynchronously. Includes related entities Employee, Person, and WorkHistories.
+        /// Retrieves personal information for a doctor by their unique identifier asynchronously. Includes related entities Employee, Person, User, and WorkHistories.
         /// </summary>
-        Task<Doctor?> GetInfoByIdAsync(Guid doctorId);
+        Task<Doctor?> GetInfoByIdAsync(Guid? doctorId);
 
         /// <summary>
         /// Retrieves a paginated list of doctors based on the provided search term, sorting options, status filter, specialty filter, and pagination parameters asynchronously.

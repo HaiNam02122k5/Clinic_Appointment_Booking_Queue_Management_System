@@ -75,9 +75,7 @@ namespace Clinic.Application.UnitTests.Features.Employees.Queries
             var person1 = TestDataFactory.CreatePerson(fullName: "A");
             var person2 = TestDataFactory.CreatePerson(fullName: "B");
             var user1 = TestDataFactory.CreateUser(username: "user1", person: person1);
-            user1.AssignRole(TestDataFactory.RoleSet.First(r => r.Name == "Admin"));
-            var user2 = TestDataFactory.CreateUser(username: "user2", person: person2);
-            user2.AssignRole(TestDataFactory.RoleSet.First(r => r.Name == "Doctor"));
+            var user2 = TestDataFactory.CreateUser(username: "user2", person: person2, role: "Doctor");
             var employee1 = TestDataFactory.CreateEmployee(person: person1);
             var employee2 = TestDataFactory.CreateEmployee(person: person2);
             await employeeRepository.AddAsync(employee1);

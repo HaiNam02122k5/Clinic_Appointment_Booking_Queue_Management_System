@@ -9,8 +9,8 @@ namespace Clinic.Application.Features.Doctors.Commands
     // Use-case: Change the specialty of an existing doctor
     public record ChangeSpecialtyCommand(
         Guid DoctorId,
-        Guid NewSpecialtyId) : IRequest<int>;
-    public class ChangeSpecialtyCommandHandler : IRequestHandler<ChangeSpecialtyCommand, int>
+        Guid NewSpecialtyId) : IRequest<Guid>;
+    public class ChangeSpecialtyCommandHandler : IRequestHandler<ChangeSpecialtyCommand, Guid>
     {
         private readonly IDoctorRepository _doctorRepository;
         private readonly ISpecialtyRepository _specialtyRepository;
@@ -21,7 +21,7 @@ namespace Clinic.Application.Features.Doctors.Commands
             _specialtyRepository = specialtyRepository;
             _unitOfWork = unitOfWork;
         }
-        public async Task<int> Handle(ChangeSpecialtyCommand request, CancellationToken cancellationToken)
+        public async Task<Guid> Handle(ChangeSpecialtyCommand request, CancellationToken cancellationToken)
         {
             var doctor = await _doctorRepository.GetInfoByIdAsync(request.DoctorId);
             if (doctor == null)
@@ -35,7 +35,7 @@ namespace Clinic.Application.Features.Doctors.Commands
             }
             doctor.ChangeSpecialty(newSpecialty);
             await _unitOfWork.SaveChangesAsync();
-            return doctor.ExperienceYears; // Return the doctor's experience years as an example
+            return doctor.Id; 
         }
     }
 }

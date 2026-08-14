@@ -28,18 +28,50 @@ namespace Clinic.Infrastructure.Authentication
                     JwtRegisteredClaimNames.Jti,
                     Guid.NewGuid().ToString())
             };
-            
+
             foreach (var userRole in user.UserRoles)
             {
                 var role = userRole.Role;
                 claims.Add(new Claim(ClaimTypes.Role, role.Name));
             }
 
+            // Nếu user là Patient, thêm claim patientId để dùng cho ownership check (vd: appointment.cancel.own).
+            var patientId = user.Person?.Patient?.Id;
+            if (patientId is not null)
+            {
+                claims.Add(new Claim("patientId", patientId.Value.ToString()));
+            }
+
+            // Nếu user là Doctor (qua Employee), thêm claim doctorId tương tự.
+            var doctorId = user.Person?.Employee?.Doctor?.Id;
+            if (doctorId is not null)
+            {
+                claims.Add(new Claim("doctorId", doctorId.Value.ToString()));
+            }
+
+            // Add permission claims from role -> rolepermissions if available
+            var permissionClaimType = "permission";
+            var addedPermissions = new HashSet<string>();
+            foreach (var userRole in user.UserRoles)
+            {
+                var role = userRole.Role;
+                if (role.RolePermissions == null) continue;
+                foreach (var rp in role.RolePermissions)
+                {
+                    var permName = rp.Permission?.Name;
+                    if (string.IsNullOrWhiteSpace(permName)) continue;
+                    if (addedPermissions.Add(permName))
+                    {
+                        claims.Add(new Claim(permissionClaimType, permName));
+                    }
+                }
+            }
+
             var key = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(
                     _configuration["Jwt:Key"]!
                 ));
-            
+
             var credentials =
                 new SigningCredentials(
                     key,
@@ -53,7 +85,7 @@ namespace Clinic.Infrastructure.Authentication
                     expires: DateTime.UtcNow.AddMinutes(15),
                     signingCredentials: credentials);
 
-            
+
             return new JwtSecurityTokenHandler()
                 .WriteToken(token);
         }

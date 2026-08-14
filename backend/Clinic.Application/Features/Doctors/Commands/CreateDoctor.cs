@@ -21,6 +21,7 @@ namespace Clinic.Application.Features.Doctors.Commands
         string Qualification,
         string? Biography,
         int ExperienceYears,
+        DoctorStatus Status,
         Guid SpecialtyId) : IRequest<DoctorSummaryDto>;
     public class CreateDoctorCommandHandler : IRequestHandler<CreateDoctorCommand, DoctorSummaryDto>
     {
@@ -57,7 +58,7 @@ namespace Clinic.Application.Features.Doctors.Commands
             {
                 throw new ArgumentException($"Specialty with ID {request.SpecialtyId} does not exist.");
             }
-            var doctor = new Doctor(employee, request.LicenseNumber, request.Qualification, specialty, request.ExperienceYears, request.Biography);
+            var doctor = new Doctor(employee, request.LicenseNumber, request.Qualification, specialty, request.ExperienceYears, request.Biography, request.Status);
             await _employeeRepository.AddAsync(employee);
             await _doctorRepository.AddAsync(doctor);
             await _unitOfWork.SaveChangesAsync();

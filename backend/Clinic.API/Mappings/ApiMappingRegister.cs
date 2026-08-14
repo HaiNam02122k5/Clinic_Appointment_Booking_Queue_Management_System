@@ -1,6 +1,7 @@
 using System;
 using Clinic.API.Models;
 using Clinic.Application.Contracts;
+using Clinic.Application.Features.Doctors.Queries;
 using Mapster;
 
 namespace Clinic.API.Mappings
@@ -21,6 +22,7 @@ namespace Clinic.API.Mappings
             // DTO -> Response
             //config.NewConfig<FarmDto, FarmResponse>();
             //config.NewConfig<CropDto, CropResponse>();
+            config.NewConfig<DoctorsQueryRequest, GetDoctorsQuery>().Map(dest => dest.Descending, src => src.OrderBy == "desc");
         }
     }
 }

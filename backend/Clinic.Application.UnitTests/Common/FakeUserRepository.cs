@@ -21,7 +21,7 @@ namespace Clinic.Application.UnitTests.Common
             throw new NotImplementedException();
         }
 
-        public async Task<User?> GetByIdAsync(Guid id)
+        public async Task<User?> GetByIdAsync(Guid? id)
         {
             return _users.FirstOrDefault(u => u.Id == id);
         }

@@ -17,7 +17,7 @@ namespace Clinic.Application.UnitTests.Features.Auth.Commands
             var unitOfWork = new FakeUnitOfWork();
             var handler = new RefreshCommandHandler(new UserService(userRepository, hasher), new TokenService(tokenProvider, refreshTokenRepository), unitOfWork);
             var person = TestDataFactory.CreatePerson();
-            var user = TestDataFactory.CreateUser("testuser", hasher.HashPassword("password"), person);
+            var user = TestDataFactory.CreateUser("Patient", "testuser", hasher.HashPassword("password"), person);
             await userRepository.AddAsync(user);
             var refreshToken = tokenProvider.GenerateRefreshToken();
             var hashedToken = tokenProvider.HashToken(refreshToken);
