@@ -33,12 +33,17 @@ namespace Clinic.Application.Features.Appointments.Queries
 
             // Only the receptionist, the patient who owns the appointment, or the doctor assigned to the appointment can access it
             var user = await _userRepository.GetByIdAsync(request.UserId);
-            if (user == null ||
-                (!user.UserRoles.Any(ur => ur.Role.Name == "Receptionist") && // Not a receptionist
-                (!user.UserRoles.Any(ur => ur.Role.Name == "Patient") || user.Id != appointment.PatientId) && // Not a patient, or not the patient who owns the appointment
-                (!user.UserRoles.Any(ur => ur.Role.Name == "Doctor") || user.Id != appointment.WorkSchedule.DoctorId)) // Not a doctor, or not the doctor assigned to the appointment
-            ){
-                throw new UnauthorizedAccessException("Forbidden.");
+            if (user == null)
+            {
+                throw new UnauthorizedAccessException("Unauthorized.");
+            }
+
+            if (!user.UserRoles.Any(ur => ur.Role.Name == "Receptionist") && // Not a receptionist
+                (!user.UserRoles.Any(ur => ur.Role.Name == "Patient") || user.Person.Patient.Id != appointment.PatientId) && // Not a patient, or not the patient who owns the appointment
+                (!user.UserRoles.Any(ur => ur.Role.Name == "Doctor") || user.Person.Employee.Doctor.Id != appointment.WorkSchedule.DoctorId) // Not a doctor, or not the doctor assigned to the appointment
+            )
+            {
+                throw new ForbiddenException("Forbidden.");
             }
 
             return new AppointmentDetailDto

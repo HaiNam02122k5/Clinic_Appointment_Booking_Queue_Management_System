@@ -62,19 +62,21 @@ namespace Clinic.Application.UnitTests.Common
 
         internal static Patient CreatePatient(Person? person = null)
         {
-            person ??= CreatePerson();
-            return new Patient
+            person ??= CreatePerson(userRole: "Patient");
+            var patient = new Patient
             {
                 Person = person,
                 PersonId = person.Id,
                 InsuranceNumber = "INS123456",
                 EmergencyContact = "Jane Doe - 0987654321"
             };
+            person.Patient = patient;
+            return patient;
         }
 
-        internal static WorkSchedule CreateWorkSchedule(Doctor? doctor = null)
+        internal static WorkSchedule CreateWorkSchedule(Doctor? doctor = null, DateOnly? date = null, TimeOnly? startTime = null, TimeOnly? endTime = null, int slotDuration = 15)
         {
-            return new WorkSchedule(doctor ?? CreateDoctor(), DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)), new TimeOnly(9, 0), new TimeOnly(17, 0), 10);
+            return new WorkSchedule(doctor ?? CreateDoctor(), date ?? DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)), startTime ?? new TimeOnly(9, 0), endTime ?? new TimeOnly(17, 0), slotDuration);
         }
 
         internal static Appointment CreateAppointment(Patient? patient = null, WorkSchedule? workSchedule = null, TimeOnly? timeSlot = null, string? reason = null, Guid? createdBy = null)

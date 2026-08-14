@@ -16,16 +16,27 @@ namespace Clinic.Application.Features.Appointments.Queries
     {
         private readonly IAppointmentRepository _appointmentRepository;
         private readonly IPatientRepository _patientRepository;
+        private readonly IUserRepository _userRepository;
 
-        public GetPatientAppointmentsQueryHandler(IAppointmentRepository appointmentRepository, IPatientRepository patientRepository)
+        public GetPatientAppointmentsQueryHandler(IAppointmentRepository appointmentRepository, IPatientRepository patientRepository, IUserRepository userRepository)
         {
             _appointmentRepository = appointmentRepository;
             _patientRepository = patientRepository;
+            _userRepository = userRepository;
         }
 
         public async Task<List<AppointmentDto>> Handle(GetPatientAppointmentsQuery request, CancellationToken cancellationToken)
         {
-            var patient = request.PatientId == null ? await _patientRepository.GetPatientByUserIdAsync(request.UserId) : await _patientRepository.GetByIdAsync(request.PatientId.Value);
+            var user = await _userRepository.GetByIdAsync(request.UserId);
+            if (user == null)
+            {
+                throw new UnauthorizedAccessException();
+            }
+            if (!user.UserRoles.Any(ur => ur.Role.Name == "Receptionist") && request.PatientId != null)
+            {
+                throw new ForbiddenException("You do not have permission to view other patients' appointments.");
+            }
+            var patient = request.PatientId == null ? user.Person.Patient : await _patientRepository.GetByIdAsync(request.PatientId);
             if (patient == null)
             {
                 throw new NotFoundException("Patient not found.");

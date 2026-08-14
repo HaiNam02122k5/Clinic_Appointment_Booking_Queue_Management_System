@@ -9,6 +9,12 @@ namespace Clinic.Application.UnitTests.Common
     public class FakeAppointmentRepository : IAppointmentRepository
     {
         private readonly List<Appointment> _appointments = [];
+
+        public Task<bool> ExistsForDoctorAndPatientAsync(Guid doctorId, Guid patientId)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<PagedResult<Appointment>> GetAppointmentsByPatientIdAsync(Guid patientId, string category)
         {
             var query = _appointments

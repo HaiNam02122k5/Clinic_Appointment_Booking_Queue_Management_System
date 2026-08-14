@@ -6,7 +6,7 @@ namespace Clinic.Domain.Entities
 {
     public class Appointment : BaseEntity
     {
-        private const int CancelLimitHours = 2;
+        private const int CancelLimitHours = 24;
 
         public Guid PatientId { get; protected set; }
         public Patient Patient { get; protected set; } = null!;
@@ -103,7 +103,6 @@ namespace Clinic.Domain.Entities
                 throw new InvalidOperationException($"{Enum.GetName(Status)} appointments can't be cancelled.");
             }
             var utcSlot = new TimeConverter().ConvertToUtc(new DateTime(WorkSchedule.Date, TimeSlot));
-            Console.WriteLine($"utcSlot: {utcSlot}  |  Now+2: {DateTime.UtcNow.AddHours(CancelLimitHours)}");
             if (DateTime.UtcNow.AddHours(CancelLimitHours) > utcSlot)
             {
                 throw new InvalidOperationException($"Appointments can only be cancelled at least {CancelLimitHours} hours before the scheduled time.");
@@ -113,22 +112,28 @@ namespace Clinic.Domain.Entities
             CancelledByUserId = cancelledByUserId;
         }
 
-        public void UpdateStatus(AppointmentStatus newStatus, Guid updatedByUserId)
+        public void Confirm(Guid confirmedByUserId)
         {
-            if (Status is AppointmentStatus.Completed or AppointmentStatus.Cancelled)
+            if (Status != AppointmentStatus.Pending)
             {
-                throw new InvalidOperationException($"{Enum.GetName(Status)} appointments can't be updated.");
+                throw new InvalidOperationException();
             }
-            if (newStatus is AppointmentStatus.Cancelled)
+            Snapshots.Add(new AppointmentSnapshot(this));
+            Status = AppointmentStatus.Confirmed;
+            CreatedByUserId = confirmedByUserId;
+            MarkUpdated();
+        }
+
+        public void Complete(Guid completedByUserId)
+        {
+            if (Status is AppointmentStatus.Completed or AppointmentStatus.Cancelled or AppointmentStatus.NoShow)
             {
-                throw new InvalidOperationException($"Use the Cancel() method to cancel an appointment.");
+                throw new InvalidOperationException();
             }
-            if (Status != newStatus)
-            {
-                Snapshots.Add(new AppointmentSnapshot(this));
-                Status = newStatus;
-                MarkUpdated();
-            }
+            Snapshots.Add(new AppointmentSnapshot(this));
+            Status = AppointmentStatus.Completed;
+            CreatedByUserId = completedByUserId;
+            MarkUpdated();
         }
     }
 }

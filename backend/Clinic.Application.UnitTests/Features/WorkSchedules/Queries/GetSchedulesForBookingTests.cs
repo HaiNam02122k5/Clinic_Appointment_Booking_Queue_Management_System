@@ -16,8 +16,8 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Queries
             var handler = new GetDoctorSchedulesForBookingQueryHandler(workScheduleRepository, doctorRepository);
             var doctor = TestDataFactory.CreateDoctor();
             var now = new DateTime(2026, 9, 5, 7, 0, 0, DateTimeKind.Unspecified);
-            var schedule1 = new WorkSchedule(doctor, DateOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now), TimeOnly.FromDateTime(now.AddHours(4)), 5);
-            var schedule2 = new WorkSchedule(doctor, DateOnly.FromDateTime(now.AddDays(1).AddHours(6)), TimeOnly.FromDateTime(now.AddDays(1).AddHours(6)), TimeOnly.FromDateTime(now.AddDays(1).AddHours(10)), 5);
+            var schedule1 = new WorkSchedule(doctor, DateOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now), TimeOnly.FromDateTime(now.AddHours(2)), 5);
+            var schedule2 = new WorkSchedule(doctor, DateOnly.FromDateTime(now.AddDays(1).AddHours(6)), TimeOnly.FromDateTime(now.AddDays(1).AddHours(2)), TimeOnly.FromDateTime(now.AddDays(1).AddHours(4)), 5);
             await doctorRepository.AddAsync(doctor);
             doctor.AddWorkSchedule(schedule1);
             doctor.AddWorkSchedule(schedule2);
@@ -27,11 +27,11 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Queries
             var query = new GetDoctorSchedulesForBookingQuery(doctor.Id, DateOnly.FromDateTime(now.AddDays(1)));
             var result = await handler.Handle(query, CancellationToken.None);
             // Assert
-            // 2 schedules, each with 4 hours and 4 slots/hour (15-minute intervals)
+            // 2 schedules, each with 2 hours and 4 slots/hour (15-minute intervals)
             Assert.Equal(2, result.Count);
             foreach (var item in result)
             {
-                Assert.Equal(16, item.TimeSlot.Count); // Each schedule has 4 hours * 4 slots/hour = 16 slots
+                Assert.Equal(8, item.TimeSlot.Count); // Each schedule has 2 hours * 4 slots/hour = 8 slots
             }
         }
 
@@ -61,8 +61,8 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Queries
             {
                 now = now.AddHours(12);
             }
-            var schedule1 = new WorkSchedule(doctor, DateOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddDays(1).AddHours(4)), 5);
-            var schedule2 = new WorkSchedule(doctor, DateOnly.FromDateTime(now.AddDays(1).AddHours(6)), TimeOnly.FromDateTime(now.AddDays(1).AddHours(6)), TimeOnly.FromDateTime(now.AddDays(1).AddHours(10)), 5);
+            var schedule1 = new WorkSchedule(doctor, DateOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddDays(1).AddHours(2)), 5);
+            var schedule2 = new WorkSchedule(doctor, DateOnly.FromDateTime(now.AddDays(1).AddHours(6)), TimeOnly.FromDateTime(now.AddDays(1).AddHours(2)), TimeOnly.FromDateTime(now.AddDays(1).AddHours(4)), 5);
             await doctorRepository.AddAsync(doctor);
             doctor.AddWorkSchedule(schedule1);
             doctor.AddWorkSchedule(schedule2);

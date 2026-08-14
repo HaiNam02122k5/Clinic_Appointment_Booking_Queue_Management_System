@@ -9,7 +9,7 @@ namespace Clinic.Application.Features.Appointments.Commands
 {
     // Use-case: Patient or Receptionist creates an appointment
     public record CreateAppointmentCommand(
-        Guid UserId,
+        Guid? UserId,
         Guid WorkScheduleId,
         TimeOnly TimeSlot,
         string Reason,
@@ -28,7 +28,11 @@ namespace Clinic.Application.Features.Appointments.Commands
         }
         public async Task<AppointmentDto> Handle(CreateAppointmentCommand request, CancellationToken cancellationToken)
         {
-            var patient = request.PatientId == null ? await _patientRepository.GetPatientByUserIdAsync(request.UserId) : await _patientRepository.GetByIdAsync(request.PatientId);
+            if (request.UserId == null)
+            {
+                throw new UnauthorizedAccessException();
+            }
+            var patient = request.PatientId == null ? await _patientRepository.GetPatientByUserIdAsync((Guid)request.UserId) : await _patientRepository.GetByIdAsync(request.PatientId);
             if (patient == null) {
                 throw new NotFoundException($"Patient not found.");
             }
@@ -41,7 +45,7 @@ namespace Clinic.Application.Features.Appointments.Commands
                 {
                     throw new NotFoundException($"Work schedule not found.");
                 }
-                var appointment = new Appointment(patient, workSchedule, request.TimeSlot, request.Reason, request.UserId);
+                var appointment = new Appointment(patient, workSchedule, request.TimeSlot, request.Reason, (Guid)request.UserId);
                 workSchedule.AddAppointment(appointment);
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
                 await _unitOfWork.CommitTransactionAsync(cancellationToken);

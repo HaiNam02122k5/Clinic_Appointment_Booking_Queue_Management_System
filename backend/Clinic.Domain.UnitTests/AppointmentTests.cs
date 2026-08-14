@@ -57,10 +57,9 @@ namespace Clinic.Domain.UnitTests
             Assert.Throws<ArgumentOutOfRangeException>(() => appointment.Update(workSchedule, new TimeOnly(6, 0), "Reason", Guid.NewGuid()));
             Assert.Throws<ArgumentOutOfRangeException>(() => appointment.Update(workSchedule, new TimeOnly(12, 0), "Reason", Guid.NewGuid()));
             Assert.Throws<ArgumentNullException>(() => appointment.Update(null, new TimeOnly(7, 15), "Reason", Guid.NewGuid()));
-            appointment.UpdateStatus(AppointmentStatus.Completed, Guid.NewGuid());
+            appointment.Complete(Guid.NewGuid());
             Assert.Equal(AppointmentStatus.Completed, appointment.Status);
             Assert.Throws<InvalidOperationException>(() => appointment.Update(workSchedule, new TimeOnly(7, 30), "Reason", Guid.NewGuid()));
-            Assert.Throws<InvalidOperationException>(() => appointment.UpdateStatus(AppointmentStatus.Cancelled, Guid.NewGuid()));
         }
 
         [Fact]
@@ -76,7 +75,7 @@ namespace Clinic.Domain.UnitTests
             {
                 now = now.AddHours(12);
             }
-            var workSchedule = new WorkSchedule(doctor, DateOnly.FromDateTime(now), TimeOnly.FromDateTime(now.AddHours(1)), TimeOnly.FromDateTime(now.AddHours(3)), 20);
+            var workSchedule = new WorkSchedule(doctor, DateOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddHours(1)), TimeOnly.FromDateTime(now.AddHours(3)), 20);
             var patient = new Patient
             {
                 Person = patientPerson,

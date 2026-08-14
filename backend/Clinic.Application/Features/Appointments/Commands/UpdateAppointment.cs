@@ -13,38 +13,39 @@ namespace Clinic.Application.Features.Appointments.Commands
         Guid AppointmentId,
         Guid NewWorkScheduleId,
         TimeOnly TimeSlot,
-        string Reason,
-        Guid? PatientId = null
+        string Reason
     ) : IRequest<AppointmentDto>;
     public class UpdateAppointmentCommandHandler : IRequestHandler<UpdateAppointmentCommand, AppointmentDto>
     {
         private readonly IAppointmentRepository _appointmentRepository;
-        private readonly IPatientRepository _patientRepository;
+        private readonly IUserRepository _userRepository;
         private readonly IWorkScheduleRepository _workScheduleRepository;
         private readonly IUnitOfWork _unitOfWork;
-        public UpdateAppointmentCommandHandler(IAppointmentRepository appointmentRepository, IPatientRepository patientRepository, IWorkScheduleRepository workScheduleRepository, IUnitOfWork unitOfWork)
+        public UpdateAppointmentCommandHandler(IAppointmentRepository appointmentRepository, IUserRepository userRepository, IWorkScheduleRepository workScheduleRepository, IUnitOfWork unitOfWork)
         {
             _appointmentRepository = appointmentRepository;
-            _patientRepository = patientRepository;
+            _userRepository = userRepository;
             _workScheduleRepository = workScheduleRepository;
             _unitOfWork = unitOfWork;
         }
 
         public async Task<AppointmentDto> Handle(UpdateAppointmentCommand request, CancellationToken cancellationToken)
         {
-            var patient = request.PatientId == null ? await _patientRepository.GetPatientByUserIdAsync(request.UserId) : await _patientRepository.GetByIdAsync(request.PatientId);
-            if (patient == null)
+            var user = await _userRepository.GetByIdAsync(request.UserId);
+            if (user == null)
             {
-                throw new NotFoundException($"Patient not found.");
+                throw new UnauthorizedAccessException($"User not found.");
             }
             var appointment = await _appointmentRepository.GetByIdAsync(request.AppointmentId);
             if (appointment == null)
             {
                 throw new NotFoundException($"Appointment not found.");
             }
-            if (request.PatientId == null && appointment.PatientId != patient.Id)
+            if (!(user.UserRoles.Any(ur => ur.Role.Name == "Receptionist") || appointment.PatientId == user.Person.Patient?.Id))
             {
-                throw new UnauthorizedAccessException($"You are not authorized to update this appointment.");
+                Console.WriteLine($"First: {string.Join(", ", user.UserRoles.Select(x => x.Role.Name))} {user.UserRoles.Any(ur => ur.Role.Name == "Receptionist")}");
+                Console.WriteLine($"Second: {appointment.PatientId} | {user.Person.Patient?.Id} {appointment.PatientId == user.Person.Patient?.Id}");
+                throw new ForbiddenException($"You are not authorized to update this appointment.");
             }
             // Begin transaction
             await _unitOfWork.InitializeTransactionLockAsync(cancellationToken);
@@ -62,9 +63,9 @@ namespace Clinic.Application.Features.Appointments.Commands
                 return new AppointmentDto
                 {
                     Id = appointment.Id,
-                    PatientId = patient.Id,
+                    PatientId = appointment.PatientId,
                     DoctorId = workSchedule.DoctorId,
-                    PatientName = patient.Person.FullName,
+                    PatientName = appointment.Patient.Person.FullName,
                     DoctorName = workSchedule.Doctor.Employee.Person.FullName,
                     TimeSlot = request.TimeSlot,
                     Date = workSchedule.Date,

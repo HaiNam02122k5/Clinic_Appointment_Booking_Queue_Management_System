@@ -10,36 +10,35 @@ namespace Clinic.Application.Features.Appointments.Commands
     // Use-case: Patient or Receptionist cancels an appointment
     public record CancelAppointmentCommand(
         Guid AppointmentId,
-        Guid UserId,
-        Guid? PatientId = null
+        Guid UserId
     ) : IRequest<Guid>;
     public class CancelAppointmentCommandHandler : IRequestHandler<CancelAppointmentCommand, Guid>
     {
         private readonly IAppointmentRepository _appointmentRepository;
-        private readonly IPatientRepository _patientRepository;
+        private readonly IUserRepository _userRepository;
         private readonly IUnitOfWork _unitOfWork;
 
-        public CancelAppointmentCommandHandler(IAppointmentRepository appointmentRepository, IPatientRepository patientRepository, IUnitOfWork unitOfWork)
+        public CancelAppointmentCommandHandler(IAppointmentRepository appointmentRepository, IUserRepository userRepository, IUnitOfWork unitOfWork)
         {
             _appointmentRepository = appointmentRepository;
-            _patientRepository = patientRepository;
+            _userRepository = userRepository;
             _unitOfWork = unitOfWork;
         }
         public async Task<Guid> Handle(CancelAppointmentCommand request, CancellationToken cancellationToken)
         {
-            var patient = request.PatientId == null ? await _patientRepository.GetPatientByUserIdAsync(request.UserId) : await _patientRepository.GetByIdAsync(request.PatientId);
-            if (patient == null)
+            var user = await _userRepository.GetByIdAsync(request.UserId);
+            if (user == null)
             {
-                throw new NotFoundException("Patient not found.");
+                throw new UnauthorizedAccessException("User not found.");
             }
             var appointment = await _appointmentRepository.GetByIdAsync(request.AppointmentId);
             if (appointment == null)
             {
                 throw new NotFoundException("Appointment not found.");
             }
-            if (request.PatientId == null && appointment.PatientId != patient.Id)
+            if (!(user.UserRoles.Any(ur => ur.Role.Name == "Receptionist") || user.Person.Patient?.Id == appointment.PatientId))
             {
-                throw new UnauthorizedAccessException("You are not authorized to cancel this appointment.");
+                throw new ForbiddenException("You are not authorized to cancel this appointment.");
             }
             appointment.Cancel(request.UserId);
             await _unitOfWork.SaveChangesAsync();

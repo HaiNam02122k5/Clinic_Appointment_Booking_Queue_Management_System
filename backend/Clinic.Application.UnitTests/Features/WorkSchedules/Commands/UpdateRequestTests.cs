@@ -79,7 +79,7 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Commands
             {
                 await handler.Handle(command, CancellationToken.None);
             });
-            var command2 = new UpdateShiftRequestCommand(shiftRequest.Id, Guid.NewGuid(), DateTime.UtcNow.AddDays(2), DateTime.UtcNow.AddDays(2).AddHours(1), 10, "");
+            var command2 = new UpdateShiftRequestCommand(shiftRequest.Id, Guid.NewGuid(), DateOnly.FromDateTime(now.AddDays(2)), TimeOnly.FromDateTime(now.AddDays(2)), TimeOnly.FromDateTime(now.AddDays(2).AddHours(1)), 10, "");
             await Assert.ThrowsAsync<UnauthorizedAccessException>(async () =>
             {
                 await handler.Handle(command2, CancellationToken.None);

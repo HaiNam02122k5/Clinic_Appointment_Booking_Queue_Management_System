@@ -75,8 +75,9 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Queries
             var doctor2 = TestDataFactory.CreateDoctor();
             await doctorRepository.AddAsync(doctor);
             await doctorRepository.AddAsync(doctor2);
-            var schedule1 = new ShiftRequest(doctor, DateTime.UtcNow.AddDays(1), DateTime.UtcNow.AddDays(1).AddHours(1), 5, "");
-            var schedule2 = new ShiftRequest(doctor, DateTime.UtcNow.AddDays(10), DateTime.UtcNow.AddDays(10).AddHours(1), 5, "");
+            var now = DateTime.UtcNow;
+            var schedule1 = new ShiftRequest(doctor, DateOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now), TimeOnly.FromDateTime(now.AddHours(1)), 5, "");
+            var schedule2 = new ShiftRequest(doctor, DateOnly.FromDateTime(now.AddDays(10)), TimeOnly.FromDateTime(now.AddDays(10)), TimeOnly.FromDateTime(now.AddDays(10).AddHours(1)), 5, "");
             doctor.AddShiftRequest(schedule1);
             doctor.AddShiftRequest(schedule2);
             var receptionist = TestDataFactory.CreateEmployee(role: "Receptionist");
