@@ -45,6 +45,26 @@ namespace Clinic.Domain.Entities
             Status = status;
         }
 
+        public void AssignDoctor(Doctor doctor)
+        {
+            if (Person.User!.UserRoles.All(ur => ur.Role.Name != "Doctor"))
+            {
+                throw new InvalidOperationException("Cannot assign a doctor to an employee who is not a doctor.");
+            }
+            Doctor = doctor;
+        }
+
+        public void AssignManager(Employee? manager)
+        {
+            if (manager != null && manager.Id == Id)
+            {
+                throw new InvalidOperationException("An employee cannot be their own manager.");
+            }
+            Manager = manager;
+            ManagerId = manager?.Id;
+            MarkUpdated();
+        }
+
         public void UpdateStatus(EmployeeStatus newStatus)
         {
             if (Status != newStatus)

@@ -8,6 +8,8 @@ using System.Text;
 
 namespace Clinic.Application.Features.Doctors.Queries
 {
+    // Changed in another branch
+
     // Use-case: Get a list of doctor schedules
     public record GetDoctorSchedulesQuery(
         Guid DoctorId,

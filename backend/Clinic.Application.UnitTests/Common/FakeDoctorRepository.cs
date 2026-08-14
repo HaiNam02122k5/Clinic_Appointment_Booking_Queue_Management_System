@@ -13,7 +13,7 @@ namespace Clinic.Application.UnitTests.Common
             _doctors.Add(doctor);
         }
 
-        public async Task<Doctor?> GetInfoByIdAsync(Guid doctorId)
+        public async Task<Doctor?> GetInfoByIdAsync(Guid? doctorId)
         {
             return _doctors.FirstOrDefault(d => d.Id == doctorId);
         }

@@ -27,7 +27,7 @@ namespace Clinic.Domain.Entities
 
         public ICollection<ShiftRequest> ShiftRequests { get; protected set; } = new List<ShiftRequest>();
 
-        public Doctor(Employee employee, string licenseNumber, string qualification, Specialty specialty = null, int experienceYears = 0, string? biography = null)
+        public Doctor(Employee employee, string licenseNumber, string qualification, Specialty specialty = null, int experienceYears = 0, string? biography = null, DoctorStatus status = DoctorStatus.Active)
         {
             if (experienceYears < 0) throw new ArgumentException(nameof(experienceYears), "Experience years cannot be negative.");
             if (employee == null) throw new ArgumentNullException(nameof(employee));
@@ -40,6 +40,7 @@ namespace Clinic.Domain.Entities
             ExperienceYears = experienceYears;
             Qualification = qualification;
             Biography = biography;
+            Status = status;
             WorkHistories.Add(new WorkHistory(this, specialty, DateOnly.FromDateTime(DateTime.UtcNow)));
         }
 

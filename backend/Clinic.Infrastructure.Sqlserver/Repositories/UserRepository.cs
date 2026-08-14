@@ -51,8 +51,12 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                 .FirstOrDefaultAsync(u => u.Username == username);
         }
 
-        public async Task<User?> GetByIdAsync(Guid id)
+        public async Task<User?> GetByIdAsync(Guid? id)
         {
+            if (id == null)
+            {
+                return null;
+            }
             return await _context.Users
                 .Include(u => u.Person)
                 .Include(u => u.UserRoles)

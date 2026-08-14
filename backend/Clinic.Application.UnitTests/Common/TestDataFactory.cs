@@ -13,16 +13,24 @@ namespace Clinic.Application.UnitTests.Common
             new Role(Guid.NewGuid(), "Patient", "Patient role", DateTime.UtcNow, DateTime.UtcNow, false),
         };
 
-        public static Person CreatePerson(string fullName = "John Doe", string? phoneNumber = "1234567890", string? email = "", string? address = "", DateOnly? dateOfBirth = null)
+        public static Person CreatePerson(string fullName = "John Doe", string? phoneNumber = "1234567890", string? email = "", string? address = "", DateOnly? dateOfBirth = null, string? userRole = null)
         {
-            return new Person(fullName, phoneNumber, email, dateOfBirth ?? DateOnly.FromDateTime(DateTime.UtcNow), Gender.Male, address);
+            var person = new Person(fullName, phoneNumber, email, dateOfBirth ?? DateOnly.FromDateTime(DateTime.UtcNow), Gender.Male, address);
+            if (!string.IsNullOrEmpty(userRole))
+            {
+                var user = CreateUser(userRole, $"{fullName.Replace(" ", "").ToLower()}user", "hashedpassword", person);
+                user.AssignRole(RoleSet.FirstOrDefault(r => r.Name == userRole) ?? RoleSet.First());
+                person.User = user;
+            }
+            return person;
         }
 
-        public static User CreateUser(string username = "testuser", string passwordHash = "hashedpassword", Person? person = null)
+        public static User CreateUser(string role = "Admin", string username = "testuser", string passwordHash = "hashedpassword", Person? person = null)
         {
             person ??= CreatePerson();
             var newUser = new User(username, passwordHash, person);
             person.User = newUser;
+            newUser.AssignRole(RoleSet.FirstOrDefault(r => r.Name == role) ?? RoleSet.First());
             return newUser;
         }
 
@@ -38,9 +46,9 @@ namespace Clinic.Application.UnitTests.Common
             return specialty;
         }
 
-        public static Employee CreateEmployee(Person? person = null)
+        public static Employee CreateEmployee(Person? person = null, string role = "Admin")
         {
-            person ??= CreatePerson();
+            person ??= CreatePerson(userRole: role);
             var newEmployee = new Employee(person, DateOnly.FromDateTime(DateTime.UtcNow));
             person.Employee = newEmployee;
             return newEmployee;
@@ -48,7 +56,8 @@ namespace Clinic.Application.UnitTests.Common
 
         internal static Doctor CreateDoctor(Employee? employee = null, Specialty? specialty = null, string? licenseNumber = "ABC123", string? qualification = "MD", string? bio = "", int yoe = 0)
         {
-            var doctor = new Doctor(employee ?? CreateEmployee(), licenseNumber, qualification, specialty ?? CreateSpecialty(), yoe, bio);
+            var doctor = new Doctor(employee ?? CreateEmployee(role: "Doctor"), licenseNumber, qualification, specialty ?? CreateSpecialty(), yoe, bio);
+            doctor.Employee?.AssignDoctor(doctor);
             return doctor;
         }
     }
