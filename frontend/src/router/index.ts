@@ -54,15 +54,27 @@ const routes: RouteRecordRaw[] = [
     children: [
       // --- Luồng Bệnh nhân ---
       {
-        path: 'booking',
-        name: 'booking',
-        component: () => import('@/views/HomeView.vue'),
+        path: 'patient',
+        name: 'patient-home',
+        component: () => import('@/views/patient/PatientHomeView.vue'),
         meta: { roles: ['Patient'] },
       },
       {
-        path: 'my-appointments',
-        name: 'my-appointments',
-        component: () => import('@/views/HomeView.vue'),
+        path: 'patient/booking',
+        name: 'patient-booking',
+        component: () => import('@/views/patient/PatientBookingView.vue'),
+        meta: { roles: ['Patient'] },
+      },
+      {
+        path: 'patient/queue',
+        name: 'patient-queue',
+        component: () => import('@/views/patient/PatientQueueView.vue'),
+        meta: { roles: ['Patient'] },
+      },
+      {
+        path: 'patient/history',
+        name: 'patient-history',
+        component: () => import('@/views/patient/PatientHistoryView.vue'),
         meta: { roles: ['Patient'] },
       },
       // --- Luồng Lễ tân Điều phối ---
@@ -188,6 +200,7 @@ const router = createRouter({
 
 // Global Guard: Kiểm tra Xác thực & Phân quyền (RBAC)
 router.beforeEach((to) => {
+  // Lấy Auth Store trực tiếp bên trong callback của Navigation Guard
   const auth = useAuthStore()
 
   // 1. Nếu là trang Public

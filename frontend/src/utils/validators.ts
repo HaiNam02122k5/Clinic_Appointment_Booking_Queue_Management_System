@@ -13,7 +13,8 @@ export const validators = {
   },
 
   email(value: string): ValidationResult {
-    if (!value) return { isValid: true, message: '' }
+    if (!value)
+      return { isValid: true, message: '' }
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
     const isValid = emailRegex.test(value.trim())
     return {
@@ -24,7 +25,7 @@ export const validators = {
 
   phone(value: string): ValidationResult {
     if (!value) return { isValid: true, message: '' }
-    const phoneRegex = /(84|0[3|5|7|8|9])+([0-9]{8})\b/
+    const phoneRegex = /^(03|05|07|08|09)[0-9]{8}$/
     const isValid = phoneRegex.test(value.trim())
     return {
       isValid,

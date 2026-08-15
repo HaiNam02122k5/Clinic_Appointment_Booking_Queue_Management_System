@@ -17,6 +17,7 @@ function logout() {
   auth.logout()
   router.push('/login')
 }
+
 </script>
 
 <template>
@@ -331,7 +332,45 @@ function logout() {
           </div>
 
           <div class="space-y-1">
-            <!-- Menu bệnh nhân thêm sau -->
+          <RouterLink
+            to="/patient"
+            class="rounded-lg px-3 py-2 text-sm font-medium
+                  text-gray-600 hover:bg-gray-100
+                  dark:text-gray-300 dark:hover:bg-gray-800"
+            active-class="!bg-brand-50 !text-brand-700 dark:!bg-brand-500/10"
+          >
+            Trang chủ
+          </RouterLink>
+
+          <RouterLink
+            to="/patient/booking"
+            class="rounded-lg px-3 py-2 text-sm font-medium
+                  text-gray-600 hover:bg-gray-100
+                  dark:text-gray-300 dark:hover:bg-gray-800"
+            active-class="!bg-brand-50 !text-brand-700 dark:!bg-brand-500/10"
+          >
+            Đặt lịch khám
+          </RouterLink>
+
+          <RouterLink
+            to="/patient/queue"
+            class="rounded-lg px-3 py-2 text-sm font-medium
+                  text-gray-600 hover:bg-gray-100
+                  dark:text-gray-300 dark:hover:bg-gray-800"
+            active-class="!bg-brand-50 !text-brand-700 dark:!bg-brand-500/10"
+          >
+            Theo dõi hàng đợi
+          </RouterLink>
+
+          <RouterLink
+            to="/patient/history"
+            class="rounded-lg px-3 py-2 text-sm font-medium
+                  text-gray-600 hover:bg-gray-100
+                  dark:text-gray-300 dark:hover:bg-gray-800"
+            active-class="!bg-brand-50 !text-brand-700 dark:!bg-brand-500/10"
+          >
+            Lịch sử khám
+          </RouterLink>
           </div>
 
         </template>

@@ -4,6 +4,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import type { UserRole } from '@/features/auth/auth.types'
 import { validators } from '@/utils/validators'
+import BaseInput from '@/components/ui/BaseInput.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -11,7 +13,7 @@ const authStore = useAuthStore()
 
 const selectedRole = ref<UserRole>('Patient')
 const email = ref('')
-const password = ref('password')
+const password = ref('')
 const rememberMe = ref(false)
 
 const errors = ref({
@@ -100,7 +102,8 @@ async function handleLogin() {
   if (!validateLogin()) return
 
   try {
-    await authStore.login({
+    // 1. Chỉ gửi email và password
+    const loggedInUser = await authStore.login({
       email: email.value,
       password: password.value,
       role: selectedRole.value,
@@ -168,7 +171,7 @@ function goBackToRoleSelect() {
         </p>
 
         <div class="mt-8 space-y-3">
-          <div v-for="feature in ['Dữ liệu mã hóa bảo mật', 'Phân quyền theo vai trò', 'Tự động đăng xuất sau 30 phút']" :key="feature" class="flex items-center gap-3 text-sm text-white/80">
+          <div v-for="feature in ['Dữ liệu mã hóa bảo mật', 'Phân quyền theo vai trò']" :key="feature" class="flex items-center gap-3 text-sm text-white/80">
             <span class="text-white">✓</span>
             {{ feature }}
           </div>
@@ -199,7 +202,7 @@ function goBackToRoleSelect() {
 
         <!-- Thông báo Lỗi -->
         <div v-if="authStore.error" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600">
-          ⚠️ Email hoặc mật khẩu không đúng
+          ⚠️ {{ authStore.error }}
         </div>
 
         <form @submit.prevent="handleLogin" class="space-y-4 mb-6">

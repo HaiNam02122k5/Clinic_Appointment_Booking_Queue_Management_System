@@ -10,6 +10,7 @@ export const useAuthStore = defineStore('auth', () => {
   // Rehydrate identity from storage (tokens live in tokenStorage).
   const stored = localStorage.getItem(USER_KEY)
   const user = ref<AuthUser | null>(stored ? JSON.parse(stored) : null)
+
   const status = ref<'idle' | 'loading' | 'error'>('idle')
   const error = ref<string | null>(null)
 
@@ -46,42 +47,34 @@ export const useAuthStore = defineStore('auth', () => {
       setToken(res.accessToken, res.refreshToken)
       setUser(res.user)
       status.value = 'idle'
-    } catch (e) {
+      return res.user
+    } catch (e: any) {
       status.value = 'error'
-      error.value = e instanceof Error ? e.message : 'Đăng nhập không thành công'
+      error.value = e.response?.data?.message || (e instanceof Error ? e.message : 'Đăng nhập thất bại')
       throw e
     }
   }
 
-  async function register(payload: RegisterPayload) {
-    status.value = 'loading'
-    error.value = null
-
-    try {
-      // Giả lập API delay
-      await new Promise((resolve) => setTimeout(resolve, 800))
-
-      // Mock đăng ký thành công
-      const newUser: AuthUser = {
-        id: Date.now(),
-        name: payload.fullName,
-        email: payload.email,
-        role: 'Patient',
-      }
-
-      const mockAccessToken = 'mock-access-token-' + Date.now()
-      const mockRefreshToken = 'mock-refresh-token-' + Date.now()
-
-      setToken(mockAccessToken, mockRefreshToken)
-      setUser(newUser)
-
-      status.value = 'idle'
-    } catch (e: unknown) {
-      status.value = 'error'
-      error.value = e instanceof Error ? e.message : 'Đăng ký thất bại'
-      throw e
+ async function register(payload: RegisterPayload) {
+  status.value = 'loading'
+  error.value = null
+  try {
+    const res = await authApi.register(payload)
+    const token = res.accessToken || (res as any).token
+    
+    if (res && token) {
+      setToken(token, res.refreshToken)
+      setUser(res.user)
     }
+
+    status.value = 'idle'
+    return res
+  } catch (e: any) {
+    status.value = 'error'
+    error.value = e.response?.data?.message || (e instanceof Error ? e.message : 'Đăng ký thất bại')
+    throw e
   }
+}
 
   function logout() {
     tokenStorage.clear()
