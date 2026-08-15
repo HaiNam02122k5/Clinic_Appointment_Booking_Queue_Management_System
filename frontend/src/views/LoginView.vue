@@ -109,28 +109,33 @@ async function handleLogin() {
       role: selectedRole.value,
     })
 
-    // 2. Nếu có redirect từ URL thì ưu tiên chuyển hướng
-    const redirectQuery = route.query.redirect as string
-    if (redirectQuery) {
-      router.replace(redirectQuery)
+    // Nếu user đang được redirect từ một trang cụ thể
+    if (route.query.redirect) {
+      router.replace(route.query.redirect as string)
       return
     }
 
-    // 3. Tự động điều hướng theo Role thực tế do Backend trả về
-    const userRole = loggedInUser?.role || authStore.currentUserRole
-    if (userRole === 'Admin') {
-      router.replace('/admin')
-    } else if (userRole === 'Receptionist') {
-      router.replace('/reception/queue')
-    } else if (userRole === 'Doctor') {
-      router.replace('/doctor/examination')
-    } else {
-      router.replace('/patient')
-    }
+    // Điều hướng theo vai trò
+    switch (selectedRole.value) {
+      case 'Receptionist':
+        router.replace('/reception')
+        break
 
-    } catch {
-      /* authStore đã lưu lỗi vào authStore.error */
+      case 'Doctor':
+        router.replace('/doctor')
+        break
+
+      case 'Admin':
+        router.replace('/admin')
+        break
+
+      case 'Patient':
+        router.replace('/patient')
+        break
     }
+  } catch {
+    // authStore đã lưu lỗi vào authStore.error
+  }
 }
 
 function goBackToRoleSelect() {
