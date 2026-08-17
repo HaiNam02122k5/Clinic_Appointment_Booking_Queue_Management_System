@@ -10,17 +10,46 @@ namespace Clinic.Domain.Entities
     /// </summary>
     public class Notification : BaseEntity
     {
-        public Guid PersonId { get; set; }
-        public Person Person { get; set; } = null!;
+        public Guid PersonId { get; protected set; }
+        public Person Person { get; protected set; } = null!;
 
-        public NotificationType Type { get; set; }
+        public NotificationType Type { get; protected set; }
 
-        public string Message { get; set; } = string.Empty;
+        public string Message { get; protected set; } = string.Empty;
 
-        public NotificationChannel Channel { get; set; }
+        public bool? IsRead { get; protected set; } = null;
 
-        public DateTime? SendTime { get; set; }
+        public NotificationChannel Channel { get; protected set; }
 
-        public NotificationStatus Status { get; set; } = NotificationStatus.Pending;
+        public DateTime? SendTime { get; protected set; }
+
+        public NotificationStatus Status { get; protected set; } = NotificationStatus.Pending;
+
+        public Notification(Guid personId, NotificationType type, string message, NotificationChannel channel)
+        {
+            PersonId = personId;
+            Type = type;
+            Message = message;
+            Channel = channel;
+        }
+
+        /// Private constructor for EF Core
+        private Notification() { }
+
+        public void MarkAsRead()
+        {
+            IsRead = true;
+        }
+
+        public void MarkAsSent()
+        {
+            Status = NotificationStatus.Sent;
+            SendTime = DateTime.UtcNow;
+        }
+
+        public void MarkAsFailed()
+        {
+            Status = NotificationStatus.Failed;
+        }
     }
 }
