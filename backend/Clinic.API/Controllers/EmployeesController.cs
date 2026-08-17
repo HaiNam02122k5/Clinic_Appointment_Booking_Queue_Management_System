@@ -83,7 +83,7 @@ namespace Clinic.API.Controllers
         {
             var userId = _currentUser.UserId;
             var command = new UpdateEmployeeCommand(userId ?? throw new UnauthorizedAccessException(),
-                request.FullName, request.PhoneNumber, request.Email, request.DateOfBirth, request.Gender, request.Address, request.Roles, request.EmployeeId);
+                request.FullName, request.PhoneNumber, request.Email, request.DateOfBirth, request.Gender, request.Address, request.Roles, employeeId);
             await _sender.Send(command);
             return NoContent();
         }
