@@ -5,6 +5,7 @@ using Clinic.Application.Features.Doctors.Queries;
 using Clinic.Application.Features.Employees.Commands;
 using Clinic.Application.Features.Employees.Queries;
 using Clinic.Application.Interfaces;
+using Clinic.Domain.Entities;
 using Clinic.Domain.Enums;
 using MapsterMapper;
 using MediatR;
@@ -29,7 +30,7 @@ namespace Clinic.API.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = "Permission:employee.view")]
+        [Authorize(Policy = "Permission:employee.view.any")]
         [ProducesResponseType(typeof(PaginationResponse<EmployeeSummaryDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetAll([FromQuery] EmployeesQueryRequest request)
@@ -40,7 +41,7 @@ namespace Clinic.API.Controllers
         }
 
         [HttpGet("{employeeId}")]
-        [Authorize(Policy = "Permission:employee.view")]
+        [Authorize(Policy = "Permission:employee.view.any")]
         [ProducesResponseType(typeof(EmployeeDetailDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetById([FromRoute] Guid employeeId)
@@ -64,7 +65,7 @@ namespace Clinic.API.Controllers
             return CreatedAtAction(nameof(GetById), new { employeeId = result.Id }, result);
         }
 
-        [HttpPost]
+        [HttpPost("from-user")]
         [Authorize(Policy = "Permission:employee.create")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         public async Task<IActionResult> CreateFromUser([FromBody] CreateEmployeeFromUserRequest request)
@@ -108,6 +109,21 @@ namespace Clinic.API.Controllers
                 request.FullName, request.PhoneNumber, request.Email, request.DateOfBirth, request.Gender, request.Address, null);
             await _sender.Send(command);
             return NoContent();
+        }
+
+        [HttpGet("me")]
+        [Authorize(Policy = "Permission:employee.view.own")]
+        [ProducesResponseType(typeof(EmployeeDetailDto), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetOwnProfile()
+        {
+            var userId = _currentUser.UserId;
+            var query = _mapper.Map<GetEmployeeByIdQuery>(new { EmployeeId = userId });
+            var result = await _sender.Send(query);
+            if (result == null)
+            {
+                return Unauthorized();
+            }
+            return Ok(result);
         }
     }
 }
