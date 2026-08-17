@@ -6,11 +6,12 @@ namespace Clinic.Application.Interfaces
     public interface IQueueTicketRepository
     {
         /// <summary>
-        /// Tính số thứ tự hàng đợi tiếp theo cho 1 bác sĩ trong 1 ngày cụ thể
-        /// (dựa trên CheckInTime.Date của các QueueTicket đã tồn tại cho bác sĩ đó).
+        /// Tính số thứ tự hàng đợi tiếp theo cho 1 bác sĩ trong 1 ngày cụ thể một cách
+        /// ATOMIC (dùng MERGE + HOLDLOCK trên bảng QueueCounters ở tầng Infrastructure),
+        /// đảm bảo không phát sinh số trùng khi nhiều check-in xảy ra đồng thời.
         /// Trả về 1 nếu bác sĩ chưa có bệnh nhân nào check-in trong ngày.
         /// </summary>
-        Task<int> GetNextQueueNumberAsync(Guid doctorId, DateTime date);
+        Task<int> GetNextQueueNumberAsync(Guid doctorId, DateTime date, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Thêm mới 1 số thứ tự hàng đợi, sinh ra khi bệnh nhân check-in
@@ -40,5 +41,12 @@ namespace Clinic.Application.Interfaces
         /// Cập nhật 1 QueueTicket đã tồn tại (gọi số, bỏ qua lượt, đổi ưu tiên).
         /// </summary>
         Task UpdateAsync(QueueTicket queueTicket);
+
+        /// <summary>
+        /// Lấy vé đang "active" (Called hoặc InProgress) của 1 bác sĩ trong ngày - dùng để
+        /// ràng buộc mỗi bác sĩ chỉ có tối đa 1 vé đang được gọi/khám tại một thời điểm.
+        /// Trả về null nếu bác sĩ hiện không có vé nào đang active (đang rảnh, sẵn sàng gọi tiếp).
+        /// </summary>
+        Task<QueueTicket?> GetActiveTicketAsync(Guid doctorId, DateTime date);
     }
 }

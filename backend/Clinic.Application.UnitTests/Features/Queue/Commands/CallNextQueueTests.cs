@@ -87,5 +87,31 @@ namespace Clinic.Application.UnitTests.Features.Queue.Commands
             await Assert.ThrowsAsync<ConflictException>(() =>
                 handler.Handle(new CallNextQueueCommand(doctorId), CancellationToken.None));
         }
+
+        [Fact]
+        public async Task Handle_DoctorHasActiveCalledTicket_ShouldThrowConflictException()
+        {
+            // Arrange: bác sĩ đang có 1 vé Called chưa StartExam/Complete
+            var queueTicketRepository = new FakeQueueTicketRepository();
+            var unitOfWork = new FakeUnitOfWork();
+            var handler = new CallNextQueueHandler(queueTicketRepository, unitOfWork);
+
+            var doctorId = Guid.NewGuid();
+
+            var calledAppointment = TestDataFactory.CreateAppointment(doctorId: doctorId, confirmed: true);
+            var calledTicket = TestDataFactory.CreateQueueTicket(calledAppointment, queueNumber: 1);
+            calledTicket.Call();
+            await queueTicketRepository.AddAsync(calledTicket);
+
+            var waitingAppointment = TestDataFactory.CreateAppointment(doctorId: doctorId, confirmed: true);
+            var waitingTicket = TestDataFactory.CreateQueueTicket(waitingAppointment, queueNumber: 2);
+            await queueTicketRepository.AddAsync(waitingTicket);
+
+            // Act & Assert: dù còn vé Waiting (số 2), vẫn phải bị chặn vì vé số 1 chưa xong.
+            await Assert.ThrowsAsync<ConflictException>(() =>
+                handler.Handle(new CallNextQueueCommand(doctorId), CancellationToken.None));
+
+            Assert.Equal(QueueStatus.Waiting, waitingTicket.Status); // chưa bị gọi
+        }
     }
 }

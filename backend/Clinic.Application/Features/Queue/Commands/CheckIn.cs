@@ -32,7 +32,7 @@ namespace Clinic.Application.Features.Queue.Commands
 
             var doctorId = appointment.WorkSchedule.DoctorId;
             var checkInTime = DateTime.UtcNow;
-            var queueNumber = await _queueTicketRepository.GetNextQueueNumberAsync(doctorId, checkInTime.Date);
+            var queueNumber = await _queueTicketRepository.GetNextQueueNumberAsync(doctorId, checkInTime.Date, cancellationToken);
 
             var queueTicket = new QueueTicket
             {

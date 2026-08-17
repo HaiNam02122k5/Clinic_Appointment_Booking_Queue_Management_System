@@ -15,14 +15,30 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             _context = context;
         }
 
-        public async Task<int> GetNextQueueNumberAsync(Guid doctorId, DateTime date)
+        public async Task<int> GetNextQueueNumberAsync(Guid doctorId, DateTime date, CancellationToken cancellationToken = default)
         {
-            var maxQueueNumber = await _context.QueueTickets
-                .Where(q => q.Appointment.WorkSchedule.DoctorId == doctorId && q.CheckInTime.Date == date.Date)
-                .Select(q => (int?)q.QueueNumber)
-                .MaxAsync();
+            var day = DateOnly.FromDateTime(date.Date);
 
-            return (maxQueueNumber ?? 0) + 1;
+            // MERGE atomic: nếu đã có dòng counter cho (doctorId, day) thì +1,
+            // nếu chưa có thì tạo mới CurrentNumber = 1.
+            // WITH (HOLDLOCK) kết hợp khóa chính (DoctorId, Date) là combo chuẩn
+            // của SQL Server để chống race condition khi upsert đồng thời -
+            // request thứ 2 phải đợi request thứ 1 commit xong mới được chạy MERGE.
+            // Cột output phải đặt tên "Value" vì SqlQuery<int> map theo quy ước này.
+            var nextNumber = await _context.Database
+                .SqlQuery<int>($@"
+            MERGE INTO QueueCounters WITH (HOLDLOCK) AS target
+            USING (SELECT {doctorId} AS DoctorId, {day} AS [Date]) AS source
+                ON target.DoctorId = source.DoctorId AND target.[Date] = source.[Date]
+            WHEN MATCHED THEN
+                UPDATE SET CurrentNumber = target.CurrentNumber + 1
+            WHEN NOT MATCHED THEN
+                INSERT (DoctorId, [Date], CurrentNumber)
+                VALUES (source.DoctorId, source.[Date], 1)
+            OUTPUT INSERTED.CurrentNumber AS Value;")
+                .SingleAsync(cancellationToken);
+
+            return nextNumber;
         }
 
         public async Task AddAsync(QueueTicket queueTicket)
@@ -74,6 +90,20 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
         public async Task UpdateAsync(QueueTicket queueTicket)
         {
             _context.QueueTickets.Update(queueTicket);
+        }
+
+        public async Task<QueueTicket?> GetActiveTicketAsync(Guid doctorId, DateTime date)
+        {
+            return await _context.QueueTickets
+                .Include(q => q.Appointment)
+                    .ThenInclude(a => a.WorkSchedule)
+                .Include(q => q.Appointment)
+                    .ThenInclude(a => a.Patient)
+                        .ThenInclude(p => p.Person)
+                .Where(q => q.Appointment.WorkSchedule.DoctorId == doctorId
+                    && q.CheckInTime.Date == date.Date
+                    && (q.Status == QueueStatus.Called || q.Status == QueueStatus.InProgress))
+                .FirstOrDefaultAsync();
         }
     }
 }

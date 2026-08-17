@@ -16,6 +16,30 @@ namespace Clinic.API.Controllers
             _sender = sender;
         }
 
+        [HttpPost("call-next/{doctorId}")]
+        [Authorize(Policy = "Permission:queue.call-next")]
+        public async Task<IActionResult> CallNext([FromRoute] Guid doctorId)
+        {
+            var result = await _sender.Send(new CallNextQueueCommand(doctorId));
+            return Ok(result);
+        }
+
+        [HttpPost("{queueTicketId}/start-exam")]
+        [Authorize(Policy = "Permission:queue.start-exam")]
+        public async Task<IActionResult> StartExam([FromRoute] Guid queueTicketId)
+        {
+            await _sender.Send(new StartExamCommand(queueTicketId));
+            return NoContent();
+        }
+
+        [HttpPost("{queueTicketId}/complete-exam")]
+        [Authorize(Policy = "Permission:queue.complete-exam")]
+        public async Task<IActionResult> CompleteExam([FromRoute] Guid queueTicketId)
+        {
+            await _sender.Send(new CompleteExamCommand(queueTicketId));
+            return NoContent();
+        }
+
         [HttpPost("{queueTicketId}/skip")]
         [Authorize(Policy = "Permission:queue.skip")]
         public async Task<IActionResult> Skip([FromRoute] Guid queueTicketId)

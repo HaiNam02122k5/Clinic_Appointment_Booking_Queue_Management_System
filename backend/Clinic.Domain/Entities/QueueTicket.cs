@@ -24,6 +24,13 @@ namespace Clinic.Domain.Entities
 
         public DateTime? CalledAt { get; set; }
 
+        /// <summary>
+        /// Concurrency token (SQL Server rowversion) - EF Core tự động kiểm tra giá trị này
+        /// chưa đổi trước khi UPDATE. Nếu request khác đã ghi đè bản ghi này trước,
+        /// SaveChangesAsync sẽ ném DbUpdateConcurrencyException thay vì ghi đè âm thầm.
+        /// </summary>
+        public byte[] RowVersion { get; set; } = null!;
+
         /// <summary>0..1 - chỉ có sau khi bác sĩ khám xong.</summary>
         public MedicalReport? MedicalReport { get; set; }
 
@@ -57,6 +64,38 @@ namespace Clinic.Domain.Entities
             }
 
             Status = QueueStatus.Skipped;
+            MarkUpdated();
+        }
+
+        /// <summary>
+        /// Bắt đầu khám cho bệnh nhân vừa được gọi. Chỉ hợp lệ khi vé đang ở trạng thái Called
+        /// (đã gọi số nhưng chưa bắt đầu khám).
+        /// </summary>
+        /// <exception cref="ArgumentException"></exception>
+        public void StartExam()
+        {
+            if (Status != QueueStatus.Called)
+            {
+                throw new ArgumentException($"Cannot start exam for a queue ticket with status '{Status}'.");
+            }
+
+            Status = QueueStatus.InProgress;
+            MarkUpdated();
+        }
+
+        /// <summary>
+        /// Hoàn tất lượt khám. Chỉ hợp lệ khi vé đang ở trạng thái InProgress (đang khám).
+        /// Sau bước này, bác sĩ được coi là "rảnh" và có thể gọi số tiếp theo.
+        /// </summary>
+        /// <exception cref="ArgumentException"></exception>
+        public void Complete()
+        {
+            if (Status != QueueStatus.InProgress)
+            {
+                throw new ArgumentException($"Cannot complete a queue ticket with status '{Status}'.");
+            }
+
+            Status = QueueStatus.Completed;
             MarkUpdated();
         }
 

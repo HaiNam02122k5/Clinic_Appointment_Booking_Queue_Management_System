@@ -7,8 +7,7 @@ namespace Clinic.Application.UnitTests.Common
     public class FakeQueueTicketRepository : IQueueTicketRepository
     {
         private readonly List<QueueTicket> _queueTickets = [];
-
-        public async Task<int> GetNextQueueNumberAsync(Guid doctorId, DateTime date)
+        public async Task<int> GetNextQueueNumberAsync(Guid doctorId, DateTime date, CancellationToken cancellationToken = default)
         {
             var maxQueueNumber = _queueTickets
                 .Where(q => q.Appointment.WorkSchedule.DoctorId == doctorId && q.CheckInTime.Date == date.Date)
@@ -55,5 +54,14 @@ namespace Clinic.Application.UnitTests.Common
 
         /// <summary>Giúp test kiểm tra QueueTicket vừa được lưu (số lượng, dữ liệu) mà không cần expose List thô.</summary>
         public IReadOnlyList<QueueTicket> All => _queueTickets;
+
+        public async Task<QueueTicket?> GetActiveTicketAsync(Guid doctorId, DateTime date)
+        {
+            return _queueTickets
+                .Where(q => q.Appointment.WorkSchedule.DoctorId == doctorId
+                    && q.CheckInTime.Date == date.Date
+                    && (q.Status == QueueStatus.Called || q.Status == QueueStatus.InProgress))
+                .FirstOrDefault();
+        }
     }
 }
