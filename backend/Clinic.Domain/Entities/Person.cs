@@ -105,6 +105,7 @@ namespace Clinic.Domain.Entities
             PhoneNumber = phoneNumber;
             DateOfBirth = dateOfBirth;
             Gender = gender;
+            Address = address;
             MarkUpdated();
         }
 

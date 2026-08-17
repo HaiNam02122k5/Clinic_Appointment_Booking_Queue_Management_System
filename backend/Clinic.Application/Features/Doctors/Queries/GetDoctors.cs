@@ -47,6 +47,7 @@ namespace Clinic.Application.Features.Doctors.Queries
                 Qualification = d.Qualification,
                 CurrentSpecialty = d.WorkHistories.FirstOrDefault(wh => wh.EndDate == null)?.Specialty?.Name ?? "No specialty",
                 ExperienceYears = d.ExperienceYears,
+                Status = d.Status,
             }).ToList();
             return new PaginationResponse<DoctorSummaryDto>
             {

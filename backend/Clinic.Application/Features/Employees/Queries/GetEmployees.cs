@@ -15,7 +15,7 @@ namespace Clinic.Application.Features.Employees.Queries
         List<string>? Roles = null,
         Gender? Gender = null,
         EmployeeStatus? Status = null,
-        int Page = 1,
+        int PageNumber = 1,
         int PageSize = 10
     ) : IRequest<PaginationResponse<EmployeeSummaryDto>>;
     public class GetEmployeesHandler : IRequestHandler<GetEmployeesQuery, PaginationResponse<EmployeeSummaryDto>>
@@ -35,7 +35,7 @@ namespace Clinic.Application.Features.Employees.Queries
                 request.Roles,
                 request.Gender,
                 request.Status,
-                request.Page,
+                request.PageNumber,
                 request.PageSize);
             var employeeDtos = employees.Items.Select(e => new EmployeeSummaryDto
             {
@@ -52,7 +52,7 @@ namespace Clinic.Application.Features.Employees.Queries
             {
                 Items = employeeDtos,
                 TotalCount = employees.TotalCount,
-                PageNumber = request.Page,
+                PageNumber = request.PageNumber,
                 PageSize = request.PageSize
             };
         }

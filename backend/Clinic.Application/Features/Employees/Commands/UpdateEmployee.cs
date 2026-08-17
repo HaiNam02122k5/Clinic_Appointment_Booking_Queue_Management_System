@@ -19,16 +19,19 @@ namespace Clinic.Application.Features.Employees.Commands
     public class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmployeeCommand, Guid>
     {
         private readonly IUserRepository _userRepository;
+        private readonly IPersonRepository _personRepository;
         private readonly IEmployeeRepository _employeeRepository;
         private readonly IRoleRepository _roleRepository;
         private readonly IUnitOfWork _unitOfWork;
         public UpdateEmployeeCommandHandler(
             IUserRepository userRepository,
+            IPersonRepository personRepository,
             IEmployeeRepository employeeRepository,
             IRoleRepository roleRepository,
             IUnitOfWork unitOfWork)
         {
             _userRepository = userRepository;
+            _personRepository = personRepository;
             _employeeRepository = employeeRepository;
             _roleRepository = roleRepository;
             _unitOfWork = unitOfWork;
@@ -57,6 +60,15 @@ namespace Clinic.Application.Features.Employees.Commands
             {
                 throw new ArgumentException("At least one role must be assigned.");
             }
+            if (request.PhoneNumber != employee.Person.PhoneNumber && await _personRepository.GetByPhoneNumberAsync(request.PhoneNumber) != null)
+            {
+                throw new ArgumentException("Phone number already exists.");
+            }
+            if (request.Email != employee.Person.Email && await _personRepository.GetByEmailAsync(request.Email) != null)
+            {
+                throw new ArgumentException("Email already exists.");
+            }
+
             // Update the employee's properties
             employee.Person.UpdateAdvancedDetails(request.FullName, request.PhoneNumber, request.Email, request.Gender, request.DateOfBirth, request.Address);
 
