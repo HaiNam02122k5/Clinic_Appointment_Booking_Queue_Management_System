@@ -39,10 +39,19 @@ namespace Clinic.API.Controllers
         [HttpGet("users")]
         [Authorize(Policy = "Permission:user.manage")]
         [ProducesResponseType(typeof(PaginationResponse<UserSummaryDto>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetAllUsers([FromBody] UsersQueryRequest request)
+        public async Task<IActionResult> GetPagedUsers([FromBody] PagedUsersQueryRequest request)
         {
-            var command = _mapper.Map<UsersQueryRequest, GetUsersQuery>(request);
+            var command = _mapper.Map<PagedUsersQueryRequest, GetPagedUsersQuery>(request);
             var result = await _sender.Send(command);
+            return Ok(result);
+        }
+
+        [HttpGet("users/all-brief")]
+        [Authorize(Policy = "Permission:user.manage")]
+        [ProducesResponseType(typeof(PaginationResponse<UserSummaryDto>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var result = await _sender.Send(new GetAllUsersQuery());
             return Ok(result);
         }
 

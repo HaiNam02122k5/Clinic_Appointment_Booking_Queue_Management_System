@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Clinic.API.Models
 {
-    public class UsersQueryRequest
+    public class PagedUsersQueryRequest
     {
         [MaxLength(50, ErrorMessage = "Search term must be at most 50 characters.")]
         public string? Search { get; set; } = string.Empty;

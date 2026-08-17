@@ -111,7 +111,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
 
 
             var totalItems = await query.CountAsync();
-            var items = await query.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
+            var items = await query.Skip((pageNumber - 1) * pageSize).Take(pageSize).AsNoTracking().ToListAsync();
 
             return new PagedResult<User>(items, totalItems);
         }

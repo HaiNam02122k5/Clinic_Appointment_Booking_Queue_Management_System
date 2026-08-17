@@ -5,7 +5,7 @@ using MediatR;
 
 namespace Clinic.Application.Features.Users.Queries
 {
-    public record GetUsersQuery(
+    public record GetPagedUsersQuery(
         string? Search = null,
         string SortBy = "fullName",
         Gender? Gender = null,
@@ -13,14 +13,14 @@ namespace Clinic.Application.Features.Users.Queries
         int PageNumber = 1,
         int PageSize = 10
     ) : IRequest<PaginationResponse<UserSummaryDto>>;
-    public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, PaginationResponse<UserSummaryDto>>
+    public class GetPagedUsersQueryHandler : IRequestHandler<GetPagedUsersQuery, PaginationResponse<UserSummaryDto>>
     {
         private readonly IUserRepository _userRepository;
-        public GetUsersQueryHandler(IUserRepository userRepository)
+        public GetPagedUsersQueryHandler(IUserRepository userRepository)
         {
             _userRepository = userRepository;
         }
-        public async Task<PaginationResponse<UserSummaryDto>> Handle(GetUsersQuery request, CancellationToken cancellationToken)
+        public async Task<PaginationResponse<UserSummaryDto>> Handle(GetPagedUsersQuery request, CancellationToken cancellationToken)
         {
             var users = await _userRepository.GetPagedAsync(
                 request.Search,
