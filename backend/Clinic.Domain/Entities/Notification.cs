@@ -15,6 +15,7 @@ namespace Clinic.Domain.Entities
 
         public NotificationType Type { get; protected set; }
 
+        public string Title { get; protected set; } = string.Empty;
         public string Message { get; protected set; } = string.Empty;
 
         public bool? IsRead { get; protected set; } = null;
@@ -25,10 +26,12 @@ namespace Clinic.Domain.Entities
 
         public NotificationStatus Status { get; protected set; } = NotificationStatus.Pending;
 
-        public Notification(Guid personId, NotificationType type, string message, NotificationChannel channel)
+        public Notification(Person person, NotificationType type, string title, string message, NotificationChannel channel)
         {
-            PersonId = personId;
+            Person = person;
+            PersonId = person.Id;
             Type = type;
+            Title = title;
             Message = message;
             Channel = channel;
         }

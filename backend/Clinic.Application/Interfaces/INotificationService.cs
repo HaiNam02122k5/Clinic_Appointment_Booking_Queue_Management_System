@@ -3,7 +3,7 @@
     public interface INotificationService
     {
         Task SendAsync(
-            NotificationJob job,
+            INotificationJob job,
             CancellationToken cancellationToken = default);
     }
 }

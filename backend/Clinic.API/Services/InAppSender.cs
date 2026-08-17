@@ -14,9 +14,10 @@ namespace Clinic.API.Services
         }
 
         public async Task SendAsync(
-        Guid userId,
-        string content,
-        CancellationToken cancellationToken = default)
+            Guid userId,
+            string title,
+            string content,
+            CancellationToken cancellationToken = default)
         {
             await _hubContext.Clients
                 .User(userId.ToString())
@@ -24,6 +25,7 @@ namespace Clinic.API.Services
                     "NotificationReceived",
                     new
                     {
+                        title,
                         content
                     },
                     cancellationToken);

@@ -1,120 +1,42 @@
 ﻿using Clinic.Application.Interfaces;
+using Clinic.Application.Notifications;
+using Clinic.Application.Notifications.Dispatchers;
+using Clinic.Application.Notifications.Interfaces;
+using Clinic.Application.Notifications.Templates;
 using Clinic.Domain.Entities;
 using Clinic.Domain.Enums;
+using Microsoft.EntityFrameworkCore.Storage.Json;
 
 namespace Clinic.Application.Services
 {
     public class NotificationService : INotificationService
     {
-        private readonly IEmailSender _emailSender;
-        private readonly ISmsSender _smsSender;
-        private readonly IInAppSender _inAppSender;
-        private readonly INotificationRepository _notificationRepository;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IPersonRepository _personRepository;
+        private readonly IAppointmentHandler _appointmentHandler;
 
         public NotificationService(
-            IEmailSender emailSender,
-            ISmsSender smsSender,
-            IInAppSender inAppSender,
-            INotificationRepository notificationRepository,
-            IUnitOfWork unitOfWork,
-            IPersonRepository personRepository)
+            IAppointmentHandler appointmentHandler,
+            IUnitOfWork unitOfWork)
         {
-            _emailSender = emailSender;
-            _smsSender = smsSender;
-            _inAppSender = inAppSender;
-            _notificationRepository = notificationRepository;
             _unitOfWork = unitOfWork;
-            _personRepository = personRepository;
+            _appointmentHandler = appointmentHandler;
         }
 
         public async Task SendAsync(
-            NotificationJob job,
+            INotificationJob job,
             CancellationToken cancellationToken = default)
         {
-            var person = await _personRepository.GetByIdAsync(job.PersonId);
-            if (person == null)
+            switch (job)
             {
-                Console.WriteLine("Person with ID {0} not found.", job.PersonId);
-                return;
-            }
-            if (job.SendInApp && person.User != null)
-            {
-                var notification = new Notification(
-                    job.PersonId,
-                    job.NotificationType,
-                    job.Content,
-                    NotificationChannel.InApp);
-
-                await _notificationRepository.AddAsync(
-                    notification,
-                    cancellationToken);
-
-                notification.MarkAsSent();
-
-                await _inAppSender.SendAsync(
-                    person.User.Id,
-                    job.Content,
-                    cancellationToken);
+                case NotificationJob<Appointment> appointmentJob:
+                    await _appointmentHandler.HandleAsync(appointmentJob, cancellationToken);
+                    break;
+                default:
+                    throw new NotSupportedException($"Notification job type '{job.GetType().Name}' is not supported.");
             }
 
-            if (job.SendEmail && job.Email is not null)
-            {
-                var notification = new Notification(
-                    job.PersonId,
-                    job.NotificationType,
-                    job.Content,
-                    NotificationChannel.Email);
-
-                await _notificationRepository.AddAsync(
-                    notification,
-                    cancellationToken);
-
-                try
-                {
-                    await _emailSender.SendAsync(
-                        job.Email,
-                        job.Title,
-                        job.Content,
-                        cancellationToken);
-                    notification.MarkAsSent();
-                }
-                catch
-                {
-                    // Log the exception or handle it as needed
-                    Console.WriteLine("Failed to send email to {0}.", job.Email);
-                    notification.MarkAsFailed();
-                }
-            }
-
-            if (job.SendSms && job.PhoneNumber is not null)
-            {
-                var notification = new Notification(
-                    job.PersonId,
-                    job.NotificationType,
-                    job.Content,
-                    NotificationChannel.Sms);
-                await _notificationRepository.AddAsync(
-                    notification,
-                    cancellationToken);
-
-                try
-                {
-                    await _smsSender.SendAsync(
-                        job.PhoneNumber,
-                        job.Content,
-                        cancellationToken);
-                    notification.MarkAsSent();
-                }
-                catch
-                {
-                    // Log the exception or handle it as needed
-                    Console.WriteLine("Failed to send SMS to {0}.", job.PhoneNumber);
-                    notification.MarkAsFailed();
-                }
-            }
-
+            // Each dispatcher will handle the adding of the notification to the repository
+            // Save the notification to the repository
             await _unitOfWork.SaveChangesAsync(cancellationToken);
         }
     }

@@ -7,6 +7,6 @@ namespace Clinic.Application.Interfaces
 {
     public interface IInAppSender
     {
-        Task SendAsync(Guid userId, string message, CancellationToken cancellationToken = default);
+        Task SendAsync(Guid userId, string title, string message, CancellationToken cancellationToken = default);
     }
 }

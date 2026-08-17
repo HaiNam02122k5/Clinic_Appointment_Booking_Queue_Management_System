@@ -1,0 +1,100 @@
+﻿using Clinic.Application.Interfaces;
+using Clinic.Application.Notifications.Interfaces;
+using Clinic.Application.Notifications.Templates;
+using Clinic.Domain.Entities;
+using Clinic.Domain.Enums;
+
+namespace Clinic.Application.Notifications.Dispatchers
+{
+    public class AppointmentHandler : IAppointmentHandler
+    {
+        private readonly INotificationRepository _notificationRepository;
+        private readonly IEmailSender _emailSender;
+        private readonly ISmsSender _smsSender;
+        private readonly IInAppSender _inAppSender;
+
+        public AppointmentHandler(
+            INotificationRepository notificationRepository,
+            IEmailSender emailSender,
+            ISmsSender smsSender,
+            IInAppSender inAppSender)
+        {
+            _notificationRepository = notificationRepository;
+            _emailSender = emailSender;
+            _smsSender = smsSender;
+            _inAppSender = inAppSender;
+        }
+
+        public async Task HandleAsync(NotificationJob<Appointment> appointmentJob, CancellationToken cancellationToken)
+        {
+            if (appointmentJob.SendInApp && appointmentJob.Person.User != null)
+            {
+                InAppContent content = appointmentJob.NotificationType switch
+                {
+                    NotificationType.AppointmentConfirmation => new AppointmentConfirmationTemplate().RenderInApp(appointmentJob.Data),
+                    NotificationType.AppointmentReminder => new AppointmentReminderTemplate().RenderInApp(appointmentJob.Data),
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+                var notification = new Notification(
+                        appointmentJob.Person,
+                        appointmentJob.NotificationType,
+                        content.Title,
+                        content.Message,
+                        NotificationChannel.InApp
+                    );
+                await _inAppSender.SendAsync(appointmentJob.Person.User.Id, content.Title, content.Message, cancellationToken);
+                notification.MarkAsSent();
+            }
+            if (appointmentJob.SendEmail && appointmentJob.Person.Email != null)
+            {
+                EmailContent content = appointmentJob.NotificationType switch
+                {
+                    NotificationType.AppointmentConfirmation => new AppointmentConfirmationTemplate().RenderEmail(appointmentJob.Data),
+                    NotificationType.AppointmentReminder => new AppointmentReminderTemplate().RenderEmail(appointmentJob.Data),
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+                var notification = new Notification(
+                        appointmentJob.Person,
+                        appointmentJob.NotificationType,
+                        content.Subject,
+                        content.Body,
+                        NotificationChannel.Email
+                    );
+                try
+                {
+                    await _emailSender.SendAsync(appointmentJob.Person.Email, content.Subject, content.Body, cancellationToken);
+                    notification.MarkAsSent();
+                }
+                catch
+                {
+                    notification.MarkAsFailed();
+                }
+            }
+            if (appointmentJob.SendSms && appointmentJob.Person.PhoneNumber != null)
+            {
+                SmsContent content = appointmentJob.NotificationType switch
+                {
+                    NotificationType.AppointmentConfirmation => new AppointmentConfirmationTemplate().RenderSms(appointmentJob.Data),
+                    NotificationType.AppointmentReminder => new AppointmentReminderTemplate().RenderSms(appointmentJob.Data),
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+                var notification = new Notification(
+                        appointmentJob.Person,
+                        appointmentJob.NotificationType,
+                        null,
+                        content.Message,
+                        NotificationChannel.Sms
+                    );
+                try
+                {
+                    await _smsSender.SendAsync(appointmentJob.Person.PhoneNumber, content.Message, cancellationToken);
+                    notification.MarkAsSent();
+                }
+                catch
+                {
+                    notification.MarkAsFailed();
+                }
+            }
+        }
+    }
+}

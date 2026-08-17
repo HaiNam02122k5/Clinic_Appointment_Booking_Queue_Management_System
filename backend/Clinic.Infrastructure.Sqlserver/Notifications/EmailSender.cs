@@ -27,7 +27,7 @@ namespace Clinic.Infrastructure.Sqlserver.Notifications
 
             message.Subject = subject;
 
-            message.Body = new TextPart("plain")
+            message.Body = new TextPart("html")
             {
                 Text = body
             };
