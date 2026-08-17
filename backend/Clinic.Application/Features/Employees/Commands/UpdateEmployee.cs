@@ -2,49 +2,71 @@
 using Clinic.Application.Interfaces;
 using Clinic.Domain.Enums;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Clinic.Application.Features.Employees.Commands
 {
     public record UpdateEmployeeCommand(
-        Guid EmployeeId,
+        Guid UserId,
         string FullName,
         string PhoneNumber,
         string Email,
         DateOnly DateOfBirth,
         Gender Gender,
         string Address,
-        EmployeeStatus Status,
-        List<string> Roles
+        List<string>? Roles,
+        Guid? EmployeeId = null
     ) : IRequest<Guid>;
     public class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmployeeCommand, Guid>
     {
+        private readonly IUserRepository _userRepository;
         private readonly IEmployeeRepository _employeeRepository;
         private readonly IRoleRepository _roleRepository;
         private readonly IUnitOfWork _unitOfWork;
         public UpdateEmployeeCommandHandler(
+            IUserRepository userRepository,
             IEmployeeRepository employeeRepository,
             IRoleRepository roleRepository,
             IUnitOfWork unitOfWork)
         {
+            _userRepository = userRepository;
             _employeeRepository = employeeRepository;
             _roleRepository = roleRepository;
             _unitOfWork = unitOfWork;
         }
         public async Task<Guid> Handle(UpdateEmployeeCommand request, CancellationToken cancellationToken)
         {
-            var employee = await _employeeRepository.GetByIdAsync(request.EmployeeId);
+            var user = await _userRepository.GetByIdAsync(request.UserId);
+            if (user == null)
+            {
+                throw new UnauthorizedAccessException("User not found.");
+            }
+            var employee = request.EmployeeId != null ? await _employeeRepository.GetByIdAsync(request.EmployeeId.Value) : user.Person.Employee;
             if (employee == null)
             {
                 throw new NotFoundException("Employee not found.");
             }
+            if (!user.UserRoles.Any(r => r.Role.Name == "Admin") && request.EmployeeId != null)
+            {
+                throw new ForbiddenException("You do not have permission to update this employee.");
+            }
+            if (request.Roles != null && request.Roles.Any() && request.EmployeeId == null)
+            {
+                throw new ForbiddenException("You do not have permission to assign roles.");
+            }
+            if (request.Roles != null && !request.Roles.Any())
+            {
+                throw new ArgumentException("At least one role must be assigned.");
+            }
             // Update the employee's properties
-            employee.UpdateStatus(request.Status);
             employee.Person.UpdateAdvancedDetails(request.FullName, request.PhoneNumber, request.Email, request.Gender, request.DateOfBirth, request.Address);
+
+            // Only update roles that are not "Doctor" or "Patient"
             foreach (var roleName in request.Roles)
             {
+                if ((new[] { "Doctor", "Patient" }).Contains(roleName))
+                {
+                    continue;
+                } 
                 var role = await _roleRepository.GetByNameAsync(roleName);
                 if (role == null)
                 {
@@ -58,6 +80,10 @@ namespace Clinic.Application.Features.Employees.Commands
             var existingRoles = employee.Person.User!.UserRoles.Select(ur => ur.Role).ToList();
             foreach (var role in existingRoles)
             {
+                if ((new[] { "Doctor", "Patient" }).Contains(role.Name))
+                {
+                    continue;
+                }
                 if (!request.Roles.Contains(role.Name))
                 {
                     employee.Person.User.RemoveRole(role);

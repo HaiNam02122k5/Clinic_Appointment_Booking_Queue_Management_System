@@ -44,7 +44,7 @@ namespace Clinic.API.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetById([FromRoute] Guid doctorId)
         {
-            var query = _mapper.Map<GetDoctorQuery>(new { Id = doctorId });
+            var query = _mapper.Map<GetDoctorQuery>(new { DoctorId = doctorId });
             var result = await _sender.Send(query);
             if (result == null)
             {
@@ -59,6 +59,16 @@ namespace Clinic.API.Controllers
         public async Task<IActionResult> Create([FromBody] CreateDoctorRequest request)
         {
             var command = _mapper.Map<CreateDoctorCommand>(request);
+            var result = await _sender.Send(command);
+            return CreatedAtAction(nameof(GetById), new { doctorId = result.Id }, result);
+        }
+
+        [HttpPost("from-user")]
+        [Authorize(Policy = "Permission:doctor.create")]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        public async Task<IActionResult> CreateFromUser([FromBody] CreateDoctorFromUserRequest request)
+        {
+            var command = _mapper.Map<CreateDoctorFromUserCommand>(request);
             var result = await _sender.Send(command);
             return CreatedAtAction(nameof(GetById), new { doctorId = result.Id }, result);
         }

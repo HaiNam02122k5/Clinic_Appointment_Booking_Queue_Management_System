@@ -11,7 +11,7 @@ namespace Clinic.Application.Features.Employees.Queries
     // Use-case: Get a list of employees with optional search, sorting, and pagination
     public record GetEmployeesQuery(string? Search = null,
         string SortBy = "fullName",
-        string OrderBy = "asc",
+        bool Descending = false,
         List<string>? Roles = null,
         Gender? Gender = null,
         EmployeeStatus? Status = null,
@@ -31,7 +31,7 @@ namespace Clinic.Application.Features.Employees.Queries
             var employees = await _employeeRepository.GetPagedAsync(
                 request.Search,
                 request.SortBy,
-                request.OrderBy == "desc",
+                request.Descending,
                 request.Roles,
                 request.Gender,
                 request.Status,

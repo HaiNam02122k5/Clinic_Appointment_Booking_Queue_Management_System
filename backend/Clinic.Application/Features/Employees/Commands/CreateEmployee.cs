@@ -43,6 +43,7 @@ namespace Clinic.Application.Features.Employees.Commands
         public async Task<EmployeeSummaryDto> Handle(CreateEmployeeCommand request, CancellationToken cancellationToken)
         {
             var person = await _personService.CreateOrGetPersonAsync(request.FullName, request.PhoneNumber, request.Email, request.DateOfBirth, request.Gender, request.Address);
+
             var user = await _userService.CreateUserAsync(request.Username, request.Password, person);
             foreach (var roleName in request.Roles)
             {

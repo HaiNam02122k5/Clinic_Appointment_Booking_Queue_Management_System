@@ -73,7 +73,7 @@ namespace Clinic.Domain.Entities
         /// Updates the details of the person. Limited to email, gender, and address. Apply for patient only.
         /// For employee, use UpdateAdvancedDetails to update full name and phone number as well.
         /// </summary>
-        public void UpdateDetails(string? email, Gender gender, string address)
+        public void UpdateDetails(string? email, Gender gender, string? address)
         {
             Email = email;
             Gender = gender;

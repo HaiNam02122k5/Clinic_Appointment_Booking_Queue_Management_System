@@ -2,6 +2,8 @@
 using Clinic.Infrastructure.Sqlserver.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Clinic.Application.Interfaces;
+using Clinic.Application.Common.Models;
+using Clinic.Domain.Enums;
 
 namespace Clinic.Infrastructure.Sqlserver.Repositories
 {
@@ -80,6 +82,38 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                         .ThenInclude(r => r.RolePermissions)
                             .ThenInclude(rp => rp.Permission)
                 .FirstOrDefaultAsync(u => u.PersonId == id);
+        }
+
+        public async Task<PagedResult<User>> GetPagedAsync(string? search, string sortBy, Gender? gender, bool descending, int pageNumber, int pageSize)
+        {
+            var query = _context.Users
+                .Include(u => u.Person)
+                .Include(u => u.UserRoles)
+                    .ThenInclude(ur => ur.Role)
+                .Where(u => u.IsDeleted == false);
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(u => u.Username.Contains(search) || u.Person.FullName.Contains(search));
+            }
+
+            if (gender.HasValue)
+            {
+                query = query.Where(u => u.Person.Gender == gender.Value);
+            }
+
+            query = sortBy.ToLower() switch
+            {
+                "username" => descending ? query.OrderByDescending(u => u.Username) : query.OrderBy(u => u.Username),
+                "fullName" => descending ? query.OrderByDescending(u => u.Person.FullName) : query.OrderBy(u => u.Person.FullName),
+                _ => descending ? query.OrderByDescending(u => u.Person.FullName) : query.OrderBy(u => u.Person.FullName),
+            };
+
+
+            var totalItems = await query.CountAsync();
+            var items = await query.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
+
+            return new PagedResult<User>(items, totalItems);
         }
     }
 }

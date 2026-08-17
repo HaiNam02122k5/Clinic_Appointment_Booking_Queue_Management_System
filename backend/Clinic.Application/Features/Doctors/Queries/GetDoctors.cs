@@ -13,8 +13,8 @@ namespace Clinic.Application.Features.Doctors.Queries
         DoctorStatus? Status = null,
         Guid? SpecialtyId = null,
         bool Descending = false,
-        int pageNumber = 1,
-        int pageSize = 10
+        int PageNumber = 1,
+        int PageSize = 10
     ) : IRequest<PaginationResponse<DoctorSummaryDto>>;
     public class GetDoctorsHandler : IRequestHandler<GetDoctorsQuery, PaginationResponse<DoctorSummaryDto>>
     {
@@ -33,8 +33,8 @@ namespace Clinic.Application.Features.Doctors.Queries
                 request.Status,
                 request.SpecialtyId,
                 request.Descending,
-                request.pageNumber,
-                request.pageSize
+                request.PageNumber,
+                request.PageSize
             );
             var doctorDtos = doctors.Items.Select(d => new DoctorSummaryDto
             {
@@ -52,8 +52,8 @@ namespace Clinic.Application.Features.Doctors.Queries
             {
                 Items = doctorDtos,
                 TotalCount = doctors.TotalCount,
-                PageNumber = request.pageNumber,
-                PageSize = request.pageSize
+                PageNumber = request.PageNumber,
+                PageSize = request.PageSize
             };
         }
     }
