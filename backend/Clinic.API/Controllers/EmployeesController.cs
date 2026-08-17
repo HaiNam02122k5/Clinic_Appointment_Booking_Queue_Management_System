@@ -116,8 +116,8 @@ namespace Clinic.API.Controllers
         [ProducesResponseType(typeof(EmployeeDetailDto), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetOwnProfile()
         {
-            var userId = _currentUser.UserId;
-            var query = _mapper.Map<GetEmployeeByIdQuery>(new { EmployeeId = userId });
+            var employeeId = _currentUser.EmployeeId;
+            var query = _mapper.Map<GetEmployeeByIdQuery>(new { EmployeeId = employeeId });
             var result = await _sender.Send(query);
             if (result == null)
             {

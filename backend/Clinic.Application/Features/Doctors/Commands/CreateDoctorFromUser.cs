@@ -33,12 +33,14 @@ namespace Clinic.Application.Features.Doctors.Commands
 
         public CreateDoctorFromUserCommandHandler(
             IUserRepository userRepository,
+            IEmployeeRepository employeeRepository,
             IDoctorRepository doctorRepository,
             ISpecialtyRepository specialtyRepository,
             IRoleRepository roleRepository,
             IUnitOfWork unitOfWork)
         {
             _userRepository = userRepository;
+            _employeeRepository = employeeRepository;
             _doctorRepository = doctorRepository;
             _specialtyRepository = specialtyRepository;
             _roleRepository = roleRepository;

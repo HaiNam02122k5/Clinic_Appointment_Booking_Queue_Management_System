@@ -75,6 +75,7 @@ namespace Clinic.Application.Features.Employees.Commands
                 }
                 user.AssignRole(role);
             }
+            await _employeeRepository.AddAsync(employee);
             await _unitOfWork.SaveChangesAsync();
             return new EmployeeSummaryDto
             {

@@ -59,8 +59,8 @@ namespace Clinic.API.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> GetOwnProfile()
         {
-            var userId = _currentUser.UserId;
-            var query = _mapper.Map<GetDoctorQuery>(new { DoctorId = userId });
+            var doctorId = _currentUser.DoctorId;
+            var query = _mapper.Map<GetDoctorQuery>(new { DoctorId = doctorId });
             var result = await _sender.Send(query);
             if (result == null)
             {
