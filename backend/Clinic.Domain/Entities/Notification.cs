@@ -26,7 +26,9 @@ namespace Clinic.Domain.Entities
 
         public NotificationStatus Status { get; protected set; } = NotificationStatus.Pending;
 
-        public Notification(Person person, NotificationType type, string title, string message, NotificationChannel channel)
+        public DateTimeOffset? ScheduledAt { get; protected set; }
+
+        public Notification(Person person, NotificationType type, string title, string message, NotificationChannel channel, DateTimeOffset? scheduledTime = null)
         {
             Person = person;
             PersonId = person.Id;
@@ -34,6 +36,7 @@ namespace Clinic.Domain.Entities
             Title = title;
             Message = message;
             Channel = channel;
+            ScheduledAt = scheduledTime;
         }
 
         /// Private constructor for EF Core
@@ -53,6 +56,15 @@ namespace Clinic.Domain.Entities
         public void MarkAsFailed()
         {
             Status = NotificationStatus.Failed;
+        }
+
+        public void CancelSchedule()
+        {
+            if (Status == NotificationStatus.Pending && ScheduledAt.HasValue)
+            {
+                Status = NotificationStatus.Cancelled;
+                ScheduledAt = null;
+            }
         }
     }
 }

@@ -5,17 +5,17 @@ namespace Clinic.Application.Services
 {
     public class NotificationQueue : INotificationQueue
     {
-        private readonly Channel<NotificationJob> _queue =
-            Channel.CreateUnbounded<NotificationJob>();
+        private readonly Channel<INotificationJob> _queue =
+            Channel.CreateUnbounded<INotificationJob>();
 
         public ValueTask EnqueueAsync(
-            NotificationJob job,
+            INotificationJob job,
             CancellationToken cancellationToken = default)
         {
             return _queue.Writer.WriteAsync(job, cancellationToken);
         }
 
-        public IAsyncEnumerable<NotificationJob> ReadAllAsync(
+        public IAsyncEnumerable<INotificationJob> ReadAllAsync(
             CancellationToken cancellationToken)
         {
             return _queue.Reader.ReadAllAsync(cancellationToken);

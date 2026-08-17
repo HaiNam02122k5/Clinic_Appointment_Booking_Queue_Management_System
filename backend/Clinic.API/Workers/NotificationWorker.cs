@@ -19,8 +19,7 @@ namespace Clinic.API.Workers
         protected override async Task ExecuteAsync(
             CancellationToken stoppingToken)
         {
-            await foreach (
-                var job in _queue.ReadAllAsync(stoppingToken))
+            await foreach (var job in _queue.ReadAllAsync(stoppingToken))
             {
                 using var scope = _scopeFactory.CreateScope();
 

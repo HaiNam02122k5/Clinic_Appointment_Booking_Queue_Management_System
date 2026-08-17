@@ -1,5 +1,7 @@
 using System.Reflection;
 using Clinic.Application.Interfaces;
+using Clinic.Application.Notifications.Dispatchers;
+using Clinic.Application.Notifications.Interfaces;
 using Clinic.Application.Services;
 using Mapster;
 using MapsterMapper;
@@ -26,6 +28,10 @@ namespace Clinic.Application
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IPersonService, PersonService>();
             services.AddScoped<ITokenService, TokenService>();
+            services.AddScoped<INotificationService, NotificationService>();
+            services.AddScoped<INotificationQueue,  NotificationQueue>();
+            services.AddScoped<IAppointmentNotificatinHandler, AppointmentNotificationHandler>();
+            services.AddScoped<IDueNotificationHandler, DueNotificationHandler>();
             // Application services are registered via the infrastructure layer.
             // TODO: nếu dùng Mapster theo pattern IRegister, quét cấu hình mapping tại đây:
             // TypeAdapterConfig.GlobalSettings.Scan(Assembly.GetExecutingAssembly());

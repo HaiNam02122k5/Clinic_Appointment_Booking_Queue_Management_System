@@ -1,5 +1,6 @@
 ﻿using Clinic.Application.Interfaces;
 using Clinic.Domain.Entities;
+using Clinic.Domain.Enums;
 using Clinic.Infrastructure.Sqlserver.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,6 +16,11 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
         public async Task AddAsync(Notification notification, CancellationToken cancellationToken)
         {
             await _context.Notifications.AddAsync(notification, cancellationToken);
+        }
+
+        public async Task<IEnumerable<Notification>> GetAllScheduledAndFailedByAsync(DateTimeOffset time, CancellationToken stoppingToken)
+        {
+            return await _context.Notifications.Where(n => n.Status == NotificationStatus.Failed || (n.ScheduledAt != null && n.ScheduledAt <= time && n.Status == NotificationStatus.Pending)).ToListAsync(stoppingToken);
         }
 
         public async Task<Notification?> GetByIdAsync(Guid id, CancellationToken cancellationToken)

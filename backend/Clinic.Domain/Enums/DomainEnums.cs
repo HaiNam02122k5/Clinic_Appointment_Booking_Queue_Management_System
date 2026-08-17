@@ -62,7 +62,8 @@ namespace Clinic.Domain.Enums
     {
         Pending,
         Sent,
-        Failed
+        Failed,
+        Cancelled
     }
 
     /// <summary>Trạng thái 1 giai đoạn trong lịch sử chuyển khoa của bác sĩ.</summary>

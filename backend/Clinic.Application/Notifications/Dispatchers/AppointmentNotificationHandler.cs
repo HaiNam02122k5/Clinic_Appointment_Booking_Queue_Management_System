@@ -6,14 +6,14 @@ using Clinic.Domain.Enums;
 
 namespace Clinic.Application.Notifications.Dispatchers
 {
-    public class AppointmentHandler : IAppointmentHandler
+    public class AppointmentNotificationHandler : IAppointmentNotificatinHandler
     {
         private readonly INotificationRepository _notificationRepository;
         private readonly IEmailSender _emailSender;
         private readonly ISmsSender _smsSender;
         private readonly IInAppSender _inAppSender;
 
-        public AppointmentHandler(
+        public AppointmentNotificationHandler(
             INotificationRepository notificationRepository,
             IEmailSender emailSender,
             ISmsSender smsSender,
@@ -25,7 +25,7 @@ namespace Clinic.Application.Notifications.Dispatchers
             _inAppSender = inAppSender;
         }
 
-        public async Task HandleAsync(NotificationJob<Appointment> appointmentJob, CancellationToken cancellationToken)
+        public async Task HandleAsync(NotificationJob<Appointment> appointmentJob, CancellationToken cancellationToken = default, DateTimeOffset? scheduledTime = null)
         {
             if (appointmentJob.SendInApp && appointmentJob.Person.User != null)
             {
@@ -40,8 +40,16 @@ namespace Clinic.Application.Notifications.Dispatchers
                         appointmentJob.NotificationType,
                         content.Title,
                         content.Message,
-                        NotificationChannel.InApp
+                        NotificationChannel.InApp,
+                        scheduledTime
                     );
+                await _notificationRepository.AddAsync(notification, cancellationToken);
+
+                // For scheduling notifications, don't send the notification immediately if the scheduled time is in the future
+                if (scheduledTime.HasValue && scheduledTime.Value > DateTimeOffset.Now)
+                {
+                    return;
+                }
                 await _inAppSender.SendAsync(appointmentJob.Person.User.Id, content.Title, content.Message, cancellationToken);
                 notification.MarkAsSent();
             }
@@ -58,10 +66,17 @@ namespace Clinic.Application.Notifications.Dispatchers
                         appointmentJob.NotificationType,
                         content.Subject,
                         content.Body,
-                        NotificationChannel.Email
+                        NotificationChannel.Email,
+                        scheduledTime
                     );
+                await _notificationRepository.AddAsync(notification, cancellationToken);
                 try
                 {
+                    // For scheduling notifications, don't send the notification immediately if the scheduled time is in the future
+                    if (scheduledTime.HasValue && scheduledTime.Value > DateTimeOffset.Now)
+                    {
+                        return;
+                    }
                     await _emailSender.SendAsync(appointmentJob.Person.Email, content.Subject, content.Body, cancellationToken);
                     notification.MarkAsSent();
                 }
@@ -83,10 +98,17 @@ namespace Clinic.Application.Notifications.Dispatchers
                         appointmentJob.NotificationType,
                         null,
                         content.Message,
-                        NotificationChannel.Sms
+                        NotificationChannel.Sms,
+                        scheduledTime
                     );
+                await _notificationRepository.AddAsync(notification, cancellationToken);
                 try
                 {
+                    // For scheduling notifications, don't send the notification immediately if the scheduled time is in the future
+                    if (scheduledTime.HasValue && scheduledTime.Value > DateTimeOffset.Now)
+                    {
+                        return;
+                    }
                     await _smsSender.SendAsync(appointmentJob.Person.PhoneNumber, content.Message, cancellationToken);
                     notification.MarkAsSent();
                 }

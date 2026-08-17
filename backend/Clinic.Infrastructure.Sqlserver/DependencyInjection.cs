@@ -41,6 +41,7 @@ namespace Clinic.Infrastructure.Sqlserver
             services.AddScoped<IMedicalReportRepository, MedicalReportRepository>();
             services.AddScoped<INotificationRepository, NotificationRepository>();
             services.AddScoped<IEmailSender, EmailSender>();
+            services.AddScoped<ISmsSender, SmsSender>();
 
             return services;
         }
