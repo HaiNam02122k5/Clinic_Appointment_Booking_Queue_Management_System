@@ -1,4 +1,5 @@
 using Clinic.Application.Features.Appointments.Commands;
+using Clinic.Application.Features.Appointments.Queries;
 using Clinic.Application.Features.Queue.Commands;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -19,9 +20,10 @@ namespace Clinic.API.Controllers
 
         [HttpPost]
         [Authorize(Policy = "Permission:appointment.create")]
-        public IActionResult Create()
+        public async Task<IActionResult> Create([FromBody] CreateAppointmentRequest request)
         {
-            return StatusCode(StatusCodes.Status201Created);
+            var appointmentId = await _sender.Send(new CreateAppointmentCommand(request.WorkScheduleId, request.TimeSlot, request.Reason));
+            return StatusCode(StatusCodes.Status201Created, new { id = appointmentId });
         }
 
         [HttpPatch("{appointmentId}")]
@@ -66,15 +68,25 @@ namespace Clinic.API.Controllers
 
     public record RescheduleAppointmentRequest(DateTime NewTimeSlot);
 
+    public record CreateAppointmentRequest(Guid WorkScheduleId, DateTime TimeSlot, string? Reason);
+
     [ApiController]
     [Route("/me/appointments")]
     public class MeAppointmentsController : ControllerBase
     {
+        private readonly ISender _sender;
+
+        public MeAppointmentsController(ISender sender)
+        {
+            _sender = sender;
+        }
+
         [HttpGet]
         [Authorize(Policy = "Permission:appointment.view")]
-        public IActionResult GetMine()
+        public async Task<IActionResult> GetMine()
         {
-            return Ok(new { message = "my appointments" });
+            var result = await _sender.Send(new GetMyAppointmentsQuery());
+            return Ok(result);
         }
     }
 }

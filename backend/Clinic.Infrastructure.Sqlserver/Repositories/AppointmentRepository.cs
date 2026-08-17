@@ -32,6 +32,18 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             _context.Appointments.Update(appointment);
         }
 
+        public async Task<List<Appointment>> GetByPatientIdAsync(Guid patientId)
+        {
+            return await _context.Appointments
+                .Include(a => a.WorkSchedule)
+                    .ThenInclude(w => w.Doctor)
+                        .ThenInclude(d => d.Employee)
+                            .ThenInclude(e => e.Person)
+                .Where(a => a.PatientId == patientId)
+                .OrderByDescending(a => a.TimeSlot)
+                .ToListAsync();
+        }
+
         public async Task<bool> ExistsForDoctorAndPatientAsync(Guid doctorId, Guid patientId)
         {
             return await _context.Appointments

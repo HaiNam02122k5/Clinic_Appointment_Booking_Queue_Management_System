@@ -41,6 +41,8 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                     .ThenInclude(qt => qt.Appointment)
                         .ThenInclude(a => a.WorkSchedule)
                             .ThenInclude(ws => ws.Doctor)
+                                .ThenInclude(d => d.Employee)
+                                    .ThenInclude(e => e.Person)
                 .Where(mr => mr.QueueTicket.Appointment.PatientId == patientId)
                 .OrderByDescending(mr => mr.CreatedAt)
                 .ToListAsync();

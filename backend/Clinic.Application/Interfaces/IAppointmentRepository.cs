@@ -23,6 +23,12 @@ namespace Clinic.Application.Interfaces
         Task UpdateAsync(Appointment appointment);
 
         /// <summary>
+        /// Lấy toàn bộ lịch hẹn của 1 bệnh nhân, kèm WorkSchedule -> Doctor -> Employee -> Person
+        /// (để hiển thị tên bác sĩ), sắp xếp lịch hẹn mới nhất trước.
+        /// </summary>
+        Task<List<Appointment>> GetByPatientIdAsync(Guid patientId);
+
+        /// <summary>
         /// Kiểm tra bác sĩ có từng/đang phụ trách ca khám nào của bệnh nhân này không
         /// (tồn tại Appointment mà WorkSchedule.DoctorId = doctorId và PatientId = patientId).
         /// Dùng để scope "related" cho medical-report.view/patient-history.view của Doctor.

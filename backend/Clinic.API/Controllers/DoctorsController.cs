@@ -1,3 +1,4 @@
+using Clinic.Application.Features.Doctors.Queries;
 using Clinic.Application.Features.Queue.Commands;
 using Clinic.Application.Features.Queue.Queries;
 using Clinic.Application.Interfaces;
@@ -20,18 +21,22 @@ namespace Clinic.API.Controllers
             _sender = sender;
         }
 
+        // Public: bệnh nhân (kể cả chưa đăng nhập) cần xem được danh sách bác sĩ/chuyên khoa
+        // để chọn bác sĩ trước khi đặt lịch - cùng cách SpecialtiesController đang làm.
         [HttpGet]
-        [Authorize(Policy = "Permission:doctor.view")]
-        public IActionResult GetAll()
+        [AllowAnonymous]
+        public async Task<IActionResult> GetAll([FromQuery] string? search, [FromQuery] Guid? specialtyId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
-            return Ok(new { message = "list doctors" });
+            var result = await _sender.Send(new GetDoctorsQuery(search, specialtyId, page, pageSize));
+            return Ok(result);
         }
 
         [HttpGet("{doctorId}")]
-        [Authorize(Policy = "Permission:doctor.view")]
-        public IActionResult GetById([FromRoute] string doctorId)
+        [AllowAnonymous]
+        public async Task<IActionResult> GetById([FromRoute] Guid doctorId)
         {
-            return Ok(new { id = doctorId });
+            var result = await _sender.Send(new GetDoctorQuery(doctorId));
+            return Ok(result);
         }
 
         [HttpPost]

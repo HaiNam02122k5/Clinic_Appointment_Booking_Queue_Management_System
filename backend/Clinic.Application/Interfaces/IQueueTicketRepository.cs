@@ -43,6 +43,14 @@ namespace Clinic.Application.Interfaces
         Task UpdateAsync(QueueTicket queueTicket);
 
         /// <summary>
+        /// Lấy vé hàng đợi đang "sống" (Waiting/Called/InProgress) của 1 bệnh nhân trong 1 ngày cụ thể,
+        /// kèm Appointment -> WorkSchedule -> Doctor -> Employee -> Person. Trả về null nếu bệnh nhân
+        /// chưa check-in ngày hôm đó hoặc đã được khám xong/bỏ qua. Dùng cho "theo dõi vị trí hàng đợi"
+        /// của Patient.
+        /// </summary>
+        Task<QueueTicket?> GetActiveByPatientAsync(Guid patientId, DateTime date);
+
+        /// <summary>
         /// Lấy vé đang "active" (Called hoặc InProgress) của 1 bác sĩ trong ngày - dùng để
         /// ràng buộc mỗi bác sĩ chỉ có tối đa 1 vé đang được gọi/khám tại một thời điểm.
         /// Trả về null nếu bác sĩ hiện không có vé nào đang active (đang rảnh, sẵn sàng gọi tiếp).

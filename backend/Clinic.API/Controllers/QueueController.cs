@@ -25,7 +25,7 @@ namespace Clinic.API.Controllers
         }
 
         [HttpPost("{queueTicketId}/start-exam")]
-        [Authorize(Policy = "Permission:queue.start-exam")]
+        [Authorize(Policy = "Permission:queue.start-exam.own,queue.start-exam.any")]
         public async Task<IActionResult> StartExam([FromRoute] Guid queueTicketId)
         {
             await _sender.Send(new StartExamCommand(queueTicketId));
@@ -33,7 +33,7 @@ namespace Clinic.API.Controllers
         }
 
         [HttpPost("{queueTicketId}/complete-exam")]
-        [Authorize(Policy = "Permission:queue.complete-exam")]
+        [Authorize(Policy = "Permission:queue.complete-exam.own,queue.complete-exam.any")]
         public async Task<IActionResult> CompleteExam([FromRoute] Guid queueTicketId)
         {
             await _sender.Send(new CompleteExamCommand(queueTicketId));

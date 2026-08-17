@@ -26,5 +26,10 @@ namespace Clinic.Application.UnitTests.Common
         {
             return _appointments.Any(a => a.PatientId == patientId && a.WorkSchedule.DoctorId == doctorId);
         }
+
+        public async Task<List<Appointment>> GetByPatientIdAsync(Guid patientId)
+        {
+            return _appointments.Where(a => a.PatientId == patientId).ToList();
+        }
     }
 }
