@@ -73,32 +73,35 @@ namespace Clinic.Application.Features.Employees.Commands
             employee.Person.UpdateAdvancedDetails(request.FullName, request.PhoneNumber, request.Email, request.Gender, request.DateOfBirth, request.Address);
 
             // Only update roles that are not "Doctor" or "Patient"
-            foreach (var roleName in request.Roles)
+            if (request.Roles != null)
             {
-                if ((new[] { "Doctor", "Patient" }).Contains(roleName))
+                foreach (var roleName in request.Roles)
                 {
-                    continue;
-                } 
-                var role = await _roleRepository.GetByNameAsync(roleName);
-                if (role == null)
-                {
-                    throw new ArgumentException($"Role '{roleName}' not found.");
+                    if ((new[] { "Doctor", "Patient" }).Contains(roleName))
+                    {
+                        continue;
+                    } 
+                    var role = await _roleRepository.GetByNameAsync(roleName);
+                    if (role == null)
+                    {
+                        throw new ArgumentException($"Role '{roleName}' not found.");
+                    }
+                    if (!employee.Person.User.UserRoles.Any(r => r.Role.Name == roleName))
+                    {
+                        employee.Person.User.AssignRole(role);
+                    }
                 }
-                if (!employee.Person.User.UserRoles.Any(r => r.Role.Name == roleName))
+                var existingRoles = employee.Person.User!.UserRoles.Select(ur => ur.Role).ToList();
+                foreach (var role in existingRoles)
                 {
-                    employee.Person.User.AssignRole(role);
-                }
-            }
-            var existingRoles = employee.Person.User!.UserRoles.Select(ur => ur.Role).ToList();
-            foreach (var role in existingRoles)
-            {
-                if ((new[] { "Doctor", "Patient" }).Contains(role.Name))
-                {
-                    continue;
-                }
-                if (!request.Roles.Contains(role.Name))
-                {
-                    employee.Person.User.RemoveRole(role);
+                    if ((new[] { "Doctor", "Patient" }).Contains(role.Name))
+                    {
+                        continue;
+                    }
+                    if (!request.Roles.Contains(role.Name))
+                    {
+                        employee.Person.User.RemoveRole(role);
+                    }
                 }
             }
             await _unitOfWork.SaveChangesAsync();
