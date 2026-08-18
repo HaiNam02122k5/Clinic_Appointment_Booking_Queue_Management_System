@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import AppLayout from '@/components/layout/AppLayout.vue'
-import { useAuthStore } from '@/stores/auth'
 import type { UserRole } from '@/features/auth/auth.types'
 
 // Mở rộng kiểu dữ liệu RouteMeta cho TypeScript
@@ -115,31 +114,51 @@ const router = createRouter({
 })
 
 // Global Guard: Kiểm tra Xác thực & Phân quyền (RBAC)
-router.beforeEach((to) => {
-  // Lấy Auth Store trực tiếp bên trong callback của Navigation Guard
-  const auth = useAuthStore()
+router.beforeEach(async (to) => {
+  // Lazily import the auth store to avoid static circular imports at module load time.
+  const mod = await import('@/stores/auth')
+  const auth = mod.useAuthStore()
 
-  // 1. Nếu là trang Public
+  // If the store is hydrating (fetching profile), wait a short time for it to finish so we don't redirect prematurely.
+  if ((auth as any).hydrating) {
+    await new Promise((resolve) => {
+      const start = Date.now()
+      const iv = setInterval(() => {
+        if (!(auth as any).hydrating || Date.now() - start > 3000) {
+          clearInterval(iv)
+          resolve(true)
+        }
+      }, 50)
+    })
+  }
+
+  if (to.path === '/' && !auth.isAuthenticated) {
+    return { name: 'login' }
+  }
+
   if (to.meta.public) {
-    // Bổ sung 'register': Nếu đã đăng nhập (auth.isAuthenticated = true)
-    // mà cố truy cập vào login, register, hoặc select-role -> Chặn lại và đẩy về trang chủ
     if (['login', 'select-role', 'register'].includes(to.name as string) && auth.isAuthenticated) {
+      const userRoles = auth.user?.roles ?? []
+      if (userRoles.length > 1 && !auth.currentUserRole) {
+        return { name: 'select-role' }
+      }
       return { name: 'home' }
     }
     return true
   }
 
-  // 2. Kiểm tra nếu chưa đăng nhập (!auth.isAuthenticated)
-  // -> Chuyển hướng về trang Chọn Vai Trò (select-role) kèm query redirect
   if (!auth.isAuthenticated) {
+    return { name: 'login', query: { redirect: to.fullPath } }
+  }
+
+  if (!auth.currentUserRole) {
     return { name: 'select-role', query: { redirect: to.fullPath } }
   }
 
-  // 3. Kiểm tra Phân quyền theo Role (RBAC)
   const requiredRoles = to.meta.roles
   if (requiredRoles && requiredRoles.length > 0) {
     if (!auth.hasRole(requiredRoles)) {
-      return { name: 'home' } // Không đủ quyền thì đẩy về trang chủ
+      return { name: 'home' }
     }
   }
 

@@ -6,27 +6,55 @@ import type { LoginPayload, RegisterPayload, LoginResponse, AuthUser } from './a
 export const authApi = {
   login(payload: LoginPayload): Promise<LoginResponse> {
     if (env.enableMock) {
-      return Promise.resolve(mockLogin(payload.email, payload.password))
+      try {
+        const r = mockLogin(payload.email, payload.password, payload.role)
+        return Promise.resolve(r)
+      } catch (e) {
+        return Promise.reject(e)
+      }
     }
 
-    return http.post<LoginResponse>('/auth/login', payload).then((r) => r.data)
+    return http.post<LoginResponse>('/auth/login', payload).then((r) => {
+      const d = r.data as any
+      if (d && d.token && !d.accessToken) d.accessToken = d.token
+      return d as LoginResponse
+    })
   },
+
+
 
   register(payload: RegisterPayload): Promise<LoginResponse> {
     if (env.enableMock) {
-      return Promise.resolve(mockRegister(payload as any))
+      try {
+        const r = mockRegister(payload as any)
+        return Promise.resolve(r)
+      } catch (e) {
+        return Promise.reject(e)
+      }
     }
 
-    return http.post<LoginResponse>('/auth/register', payload).then((r) => r.data)
+    return http.post<LoginResponse>('/auth/register', payload).then((r) => {
+      const d = r.data as any
+      if (d && d.token && !d.accessToken) d.accessToken = d.token
+      return d as LoginResponse
+    })
   },
+
+
 
   getMe(): Promise<AuthUser> {
     if (env.enableMock) {
-      return Promise.resolve(mockGetMe())
+      try {
+        const r = mockGetMe()
+        return Promise.resolve(r)
+      } catch (e) {
+        return Promise.reject(e)
+      }
     }
 
     return http.get<AuthUser>('/auth/me').then((r) => r.data)
   },
+
 
   mockMultiRoleLogin(user: Partial<AuthUser> = {}): LoginResponse {
     return {

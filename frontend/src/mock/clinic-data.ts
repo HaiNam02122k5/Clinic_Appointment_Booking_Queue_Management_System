@@ -204,7 +204,10 @@ export function mockRegister(payload: { fullName: string; email: string; passwor
     throw error
   }
 
-  const maxId = Object.values(mockUsers).reduce((m, u) => Math.max(m, u.id), 0)
+  const maxId = Object.values(mockUsers).reduce((m, u) => {
+    const uid = Number(String((u as any).id))
+    return Number.isFinite(uid) ? Math.max(m, uid) : m
+  }, 0)
   const newId = maxId + 1
   const newUser: AuthUser = {
     id: newId,

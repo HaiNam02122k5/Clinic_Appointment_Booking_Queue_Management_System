@@ -25,7 +25,8 @@ const {
     password: '',
     confirmPassword: '',
     gender: 'Male' as 'Male' | 'Female' | 'Other',
-    dateOfBirth: ''
+  dateOfBirth: '',
+  rememberMe: true
   },
   {
     fullName: [(val) => validators.required(val, 'Họ và tên')],
@@ -53,9 +54,9 @@ async function handleRegister() {
     await authStore.register({ ...formData })
 
     if (authStore.isAuthenticated) {
-      router.push('/patient')
+      router.push('/select-role')
     } else {
-      router.push('/login?role=Patient')
+      router.push('/login')
     }
   } catch {
     /* Lỗi đã được lưu trong authStore */
@@ -75,11 +76,11 @@ async function handleRegister() {
       </div>
       <div>
         <span class="inline-block bg-blue-400/20 text-blue-100 border border-blue-300/30 text-xs px-3 py-1 rounded-full font-medium mb-4">
-          Dành cho Bệnh nhân
+          Hệ thống phòng khám
         </span>
-        <h2 class="text-3xl font-bold text-white leading-tight mb-4">Tạo tài khoản khám bệnh trực tuyến</h2>
+        <h2 class="text-3xl font-bold text-white leading-tight mb-4">Tạo tài khoản để truy cập hệ thống</h2>
         <p class="text-white/70 text-sm leading-relaxed mb-6">
-          Đăng ký tài khoản giúp bạn chủ động đặt lịch khám, lấy số thứ tự từ xa và nhận thông báo nhắc lịch tự động.
+          Đăng ký tài khoản để tiếp tục sử dụng hệ thống quản lý khám bệnh, lịch hẹn và quy trình nội bộ theo vai trò được phân quyền.
         </p>
       </div>
       <p class="text-white/40 text-xs">© 2026 ClinicQueue</p>
@@ -203,6 +204,13 @@ async function handleRegister() {
             </div>
           </div>
 
+          <div class="flex items-center justify-between mt-2">
+            <label class="flex items-center gap-2 text-sm text-slate-600 cursor-pointer select-none">
+              <input v-model="formData.rememberMe" type="checkbox" class="rounded text-[#0E4D92]" />
+              Ghi nhớ đăng nhập sau khi đăng ký
+            </label>
+          </div>
+
           <button
             type="submit"
             :disabled="isSubmitting || authStore.status === 'loading'"
@@ -215,7 +223,7 @@ async function handleRegister() {
 
         <p class="text-center text-sm text-slate-500 mt-6">
           Đã có tài khoản?
-          <router-link to="/login?role=Patient" class="text-[#0E4D92] font-semibold hover:underline">
+          <router-link to="/login" class="text-[#0E4D92] font-semibold hover:underline">
             Đăng nhập
           </router-link>
         </p>

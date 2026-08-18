@@ -1,8 +1,12 @@
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
+import { computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import type { UserRole } from '@/features/auth/auth.types'
 
+const route = useRoute()
 const router = useRouter()
+const auth = useAuthStore()
 
 interface RoleOption {
   role: UserRole
@@ -14,9 +18,8 @@ interface RoleOption {
   features: string[]
 }
 
-const roles: RoleOption[] = [
-  {
-    role: 'Patient',
+const ROLE_META: Record<UserRole, Omit<RoleOption, 'role'>> = {
+  Patient: {
     title: 'Bệnh nhân',
     desc: 'Đặt lịch và theo dõi hàng đợi trực tuyến',
     emoji: '🧑‍⚕️',
@@ -24,8 +27,7 @@ const roles: RoleOption[] = [
     tagColor: 'blue',
     features: ['Đặt lịch khám 24/7', 'Nhận thông báo SMS', 'Xem lịch sử khám'],
   },
-  {
-    role: 'Receptionist',
+  Receptionist: {
     title: 'Lễ tân',
     desc: 'Quản lý check-in và điều phối hàng đợi',
     emoji: '🗂️',
@@ -33,8 +35,7 @@ const roles: RoleOption[] = [
     tagColor: 'violet',
     features: ['Gọi số thứ tự', 'Check-in bệnh nhân', 'Ưu tiên khẩn cấp'],
   },
-  {
-    role: 'Doctor',
+  Doctor: {
     title: 'Bác sĩ',
     desc: 'Xem lịch và ghi kết quả khám bệnh',
     emoji: '👨‍⚕️',
@@ -42,8 +43,7 @@ const roles: RoleOption[] = [
     tagColor: 'green',
     features: ['Danh sách bệnh nhân', 'Ghi chẩn đoán', 'Quản lý lịch'],
   },
-  {
-    role: 'Admin',
+  Admin: {
     title: 'Quản trị viên',
     desc: 'Quản lý toàn hệ thống và thống kê',
     emoji: '📊',
@@ -51,10 +51,30 @@ const roles: RoleOption[] = [
     tagColor: 'amber',
     features: ['Báo cáo thống kê', 'Quản lý bác sĩ', 'Cấu hình hệ thống'],
   },
-]
+}
+
+const availableRoles = computed<UserRole[]>(() => auth.user?.roles?.length ? auth.user.roles : [auth.currentUserRole ?? 'Patient'])
+const roles = computed<RoleOption[]>(() => availableRoles.value.map((role) => ({ role, ...ROLE_META[role] })))
 
 function selectRole(role: UserRole) {
-  router.push({ path: '/login', query: { role } })
+  auth.setActiveRole(role)
+
+  const redirect = route?.query?.redirect as string | undefined
+  const routeMap: Record<UserRole, string> = {
+    Patient: '/patient',
+    Receptionist: '/reception/queue',
+    Doctor: '/doctor/examination',
+    Admin: '/admin/doctors',
+  }
+
+  if (router.replace) {
+    router.replace(redirect || routeMap[role])
+    return
+  }
+
+  if (router.push) {
+    router.push(redirect || routeMap[role])
+  }
 }
 
 function getTagClass(color: RoleOption['tagColor']) {

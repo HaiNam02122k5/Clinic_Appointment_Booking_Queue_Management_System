@@ -1,8 +1,7 @@
 ﻿import axios, { AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from 'axios'
 import { env } from '@/config/env'
 import { tokenStorage } from './token-storage'
-
-
+import { logger } from '@/lib/logger'
 
 export interface ApiErrorBody {
   message: string
@@ -48,8 +47,18 @@ let refreshing: Promise<void> | null = null
 async function refreshSession(): Promise<void> {
   const refresh = tokenStorage.getRefresh()
   if (!refresh) throw new Error('No refresh token')
+  if (env.enableMock) {
+    // In mock mode simulate refresh by rotating access token while keeping refresh the same
+    try {
+      const newAccess = `mock-access-refreshed-${Date.now()}`
+      tokenStorage.set(newAccess, refresh)
+      return
+    } catch (e) {
+      throw e
+    }
+  }
   const { data } = await axios.post<{ accessToken: string; refreshToken?: string }>(
-    env.apiBaseUrl + '/auth/refresh',
+    `${env.apiBaseUrl}/auth/refresh`,
     { refreshToken: refresh },
   )
   tokenStorage.set(data.accessToken, data.refreshToken)
@@ -58,9 +67,7 @@ async function refreshSession(): Promise<void> {
 http.interceptors.response.use(
   (response) => response,
   async (error: AxiosError<ApiErrorBody>) => {
-    const original = error.config as InternalAxiosRequestConfig & {
-      _retried?: boolean
-    }
+    const original = error.config as InternalAxiosRequestConfig & { _retried?: boolean }
 
     if (
       error.response?.status === 401 &&
@@ -73,7 +80,9 @@ http.interceptors.response.use(
         refreshing ??= refreshSession().finally(() => (refreshing = null))
         await refreshing
         return http(original)
-      } catch {
+      } catch (err) {
+        // Log refresh failure for observability
+        logger.warn('refreshSession failed', err)
         tokenStorage.clear()
         window.dispatchEvent(new CustomEvent('auth:logout'))
       }
