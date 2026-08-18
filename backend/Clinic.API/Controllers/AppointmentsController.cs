@@ -53,7 +53,7 @@ namespace Clinic.API.Controllers
         [Authorize(Policy = "Permission:appointment.reschedule")]
         public async Task<IActionResult> Reschedule([FromRoute] Guid appointmentId, [FromBody] RescheduleAppointmentRequest request)
         {
-            await _sender.Send(new RescheduleAppointmentCommand(appointmentId, request.NewTimeSlot));
+            await _sender.Send(new RescheduleAppointmentCommand(appointmentId, request.NewWorkScheduleId, request.NewTimeSlot));
             return NoContent();
         }
 
@@ -66,7 +66,7 @@ namespace Clinic.API.Controllers
         }
     }
 
-    public record RescheduleAppointmentRequest(DateTime NewTimeSlot);
+    public record RescheduleAppointmentRequest(Guid NewWorkScheduleId, DateTime NewTimeSlot);
 
     public record CreateAppointmentRequest(Guid WorkScheduleId, DateTime TimeSlot, string? Reason);
 

@@ -13,6 +13,17 @@ namespace Clinic.Application.Interfaces
         Task<WorkSchedule?> GetByIdAsync(Guid id);
 
         /// <summary>
+        /// Khóa ghi (UPDLOCK, HOLDLOCK) đúng 1 dòng WorkSchedule, giữ tới khi transaction hiện
+        /// tại COMMIT/ROLLBACK. Dùng NGAY TRƯỚC khi đếm số lịch hẹn đang có + ghi lịch hẹn mới
+        /// cho slot này (xem CreateAppointmentHandler), để 2 request đặt lịch đồng thời cho
+        /// cùng 1 slot bắt buộc phải chạy tuần tự thay vì cùng đọc thấy "còn chỗ" rồi cùng
+        /// insert thành công (vi phạm PatientLimitPerSlot).
+        /// Bắt buộc gọi bên trong 1 transaction đã mở qua IUnitOfWork.BeginTransactionAsync,
+        /// nếu không lock sẽ được nhả ngay sau câu lệnh và không có tác dụng.
+        /// </summary>
+        Task LockAsync(Guid workScheduleId, CancellationToken cancellationToken = default);
+
+        /// <summary>
         /// Lấy các WorkSchedule (khung giờ) còn chỗ trống, chưa kết thúc, có thể lọc theo bác sĩ,
         /// chuyên khoa hiện tại của bác sĩ, và khoảng ngày. Dùng cho màn "chọn khung giờ trống để đặt lịch".
         /// </summary>

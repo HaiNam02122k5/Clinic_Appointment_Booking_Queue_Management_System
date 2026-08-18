@@ -20,6 +20,21 @@ namespace Clinic.Application.UnitTests.Common
             return Task.FromResult(result);
         }
 
+        /// <summary>
+        /// Fake trong bộ nhớ, không có DB thật nên không thể lock thật - no-op để interface
+        /// biên dịch được và test có thể gọi CreateAppointmentHandler bình thường.
+        /// </summary>
+        public Task LockAsync(Guid workScheduleId, CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
+        }
+
+        /// <summary>Helper cho test: seed sẵn 1 WorkSchedule để GetByIdAsync tìm thấy.</summary>
+        public void Add(WorkSchedule workSchedule)
+        {
+            _workSchedules.Add(workSchedule);
+        }
+
         public Task<List<WorkSchedule>> GetAvailableSlotsAsync(Guid? doctorId, Guid? specialtyId, DateTime? fromDate, DateTime? toDate)
         {
             var query = _workSchedules

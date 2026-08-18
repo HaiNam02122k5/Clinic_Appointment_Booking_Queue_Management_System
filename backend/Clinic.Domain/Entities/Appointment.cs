@@ -1,4 +1,5 @@
 using Clinic.Domain.Common;
+using Clinic.Domain.Common.Exceptions;
 using Clinic.Domain.Enums;
 using System;
 
@@ -106,20 +107,50 @@ namespace Clinic.Domain.Entities
         }
 
         /// <summary>
-        /// Đổi lịch hẹn sang thời điểm mới. Không cho phép đổi lịch đã ở trạng thái kết thúc
-        /// (Completed, Cancelled, NoShow) hoặc đã CheckedIn (bệnh nhân đã có mặt, không còn ý nghĩa đổi lịch).
-        /// Lưu ý: rule "phải đổi trước hạn X giờ" phụ thuộc vào actor
+        /// Đổi lịch hẹn sang 1 ca (WorkSchedule) và thời điểm mới. Không cho phép đổi lịch đã
+        /// ở trạng thái kết thúc (Completed, Cancelled, NoShow) hoặc đã CheckedIn (bệnh nhân đã
+        /// có mặt, không còn ý nghĩa đổi lịch).
+        
         /// </summary>
-        /// <exception cref="ArgumentException"></exception>
-        public void Reschedule(DateTime newTimeSlot)
+        /// <exception cref="ArgumentNullException">newWorkSchedule là null.</exception>
+        /// <exception cref="ArgumentException">
+        /// Appointment đang ở trạng thái không cho đổi lịch, hoặc newTimeSlot nằm ngoài ca mới.
+        /// </exception>
+        /// <exception cref="ConflictException">
+        /// Ca mới không còn Active, hoặc ca mới đã đủ số bệnh nhân tối đa (PatientLimitPerSlot).
+        /// </exception>
+        public void Reschedule(WorkSchedule newWorkSchedule, DateTime newTimeSlot)
         {
             if (Status is AppointmentStatus.Completed or AppointmentStatus.Cancelled or AppointmentStatus.NoShow or AppointmentStatus.CheckedIn)
             {
                 throw new ArgumentException($"Cannot reschedule an appointment with status '{Status}'.");
             }
 
+            if (newWorkSchedule == null) throw new ArgumentNullException(nameof(newWorkSchedule));
+
+            if (newWorkSchedule.Status != WorkScheduleStatus.Active)
+            {
+                throw new ConflictException("The selected work schedule is no longer accepting appointments.");
+            }
+
+            if (newTimeSlot < newWorkSchedule.ShiftStart || newTimeSlot > newWorkSchedule.ShiftEnd)
+            {
+                throw new ArgumentException("The selected time slot is outside the doctor's shift.");
+            }
+
+            // Đếm số lịch hẹn còn "sống" (chưa hủy) đang gắn với ca MỚI, loại trừ chính
+            // appointment này (trường hợp đổi sang giờ khác nhưng vẫn cùng 1 ca thì bản thân nó
+            // đã nằm trong danh sách Appointments của ca đó, không được tự đếm nó như 1 chỗ mới).
+            var bookedCount = newWorkSchedule.Appointments.Count(a => a.Id != Id && a.Status != AppointmentStatus.Cancelled);
+            if (bookedCount >= newWorkSchedule.PatientLimitPerSlot)
+            {
+                throw new ConflictException("This shift is already fully booked.");
+            }
+
+            WorkScheduleId = newWorkSchedule.Id;
+            WorkSchedule = newWorkSchedule;
             TimeSlot = newTimeSlot;
-            // Lịch đổi giờ cần bác sĩ/lễ tân xác nhận lại, không giữ nguyên trạng thái Confirmed cũ.
+            // Lịch đổi giờ/ca cần bác sĩ/lễ tân xác nhận lại, không giữ nguyên trạng thái Confirmed cũ.
             Status = AppointmentStatus.Pending;
             MarkUpdated();
         }

@@ -30,6 +30,19 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                 .FirstOrDefaultAsync(w => w.Id == id);
         }
 
+        public async Task LockAsync(Guid workScheduleId, CancellationToken cancellationToken = default)
+        {
+            // Khóa ghi (UPDLOCK, HOLDLOCK) đúng 1 dòng WorkSchedule, giữ tới khi transaction
+            // hiện tại COMMIT/ROLLBACK. Request thứ 2 cũng gọi LockAsync cho cùng
+            // workScheduleId sẽ bị chặn ngay tại câu SELECT này cho tới khi request thứ 1
+            // xong, nên GetByIdAsync gọi ngay sau đó luôn thấy đúng số Appointments mới nhất -
+            // không còn cửa sổ "đếm rồi mới insert" để 2 request cùng lọt qua như trước.
+            // Cột output phải đặt tên "Value" vì SqlQuery<int> map theo quy ước này.
+            await _context.Database
+                .SqlQuery<int>($"SELECT 1 AS Value FROM WorkSchedules WITH (UPDLOCK, HOLDLOCK) WHERE Id = {workScheduleId}")
+                .ToListAsync(cancellationToken);
+        }
+
         public async Task<List<WorkSchedule>> GetAvailableSlotsAsync(Guid? doctorId, Guid? specialtyId, DateTime? fromDate, DateTime? toDate)
         {
             var query = _context.WorkSchedules
