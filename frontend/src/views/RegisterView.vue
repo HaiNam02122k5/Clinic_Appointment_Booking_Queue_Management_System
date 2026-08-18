@@ -19,30 +19,35 @@ const {
   validateAll
 } = useFormValidation(
   {
+    username: '',
     fullName: '',
     phoneNumber: '',
     email: '',
     password: '',
     confirmPassword: '',
     gender: 'Male' as 'Male' | 'Female' | 'Other',
-  dateOfBirth: '',
-  rememberMe: true
+    dateOfBirth: '',
+    address: '',
+    rememberMe: true,
   },
   {
+    username: [(val) => validators.required(val, 'Tên đăng nhập')],
     fullName: [(val) => validators.required(val, 'Họ và tên')],
     phoneNumber: [
       (val) => validators.required(val, 'Số điện thoại'),
-      (val) => validators.phone(val)
+      (val) => validators.phone(val),
     ],
     email: [
       (val) => validators.required(val, 'Email'),
-      (val) => validators.email(val)
+      (val) => validators.email(val),
     ],
+    address: [(val) => validators.required(val, 'Địa chỉ')],
     password: [
       (val) => validators.required(val, 'Mật khẩu'),
-      (val) => validators.password(val)
+      (val) => validators.password(val),
     ],
-    confirmPassword: [(val, formData) => validators.confirmPassword(formData.password, val)]},
+    confirmPassword: [(val, formData) => validators.confirmPassword(formData.password, val)],
+  },
   { externalError: backendError }
 )
 
@@ -51,7 +56,11 @@ async function handleRegister() {
 
   isSubmitting.value = true
   try {
-    await authStore.register({ ...formData })
+    await authStore.register({
+      ...formData,
+      username: (formData.username || formData.email).trim(),
+      address: formData.address?.trim() || 'Chưa cập nhật',
+    })
 
     if (authStore.isAuthenticated) {
       router.push('/select-role')
@@ -99,6 +108,21 @@ async function handleRegister() {
         </div>       
 
         <form @submit.prevent="handleRegister" class="space-y-4" novalidate>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Tên đăng nhập <span class="text-red-500">*</span></label>
+            <input
+              v-model="formData.username"
+              @blur="handleBlur('username')"
+              type="text"
+              placeholder="patient01"
+              :class="[
+                'w-full border rounded-xl px-3.5 py-2.5 text-sm focus:outline-none transition-all',
+                touched.username && errors.username ? 'border-red-500 bg-red-50/30' : 'border-slate-200 focus:ring-2 focus:ring-[#0E4D92]'
+              ]"
+            />
+            <p v-if="touched.username && errors.username" class="text-xs text-red-500 mt-1">⚠️ {{ errors.username }}</p>
+          </div>
+
           <!-- Họ tên -->
           <div>
             <label class="block text-sm font-medium text-slate-700 mb-1">Họ và tên <span class="text-red-500">*</span></label>
@@ -169,6 +193,21 @@ async function handleRegister() {
               />
               <p v-if="touched.email && errors.email" class="text-xs text-red-500 mt-1">⚠️ {{ errors.email }}</p>
             </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Địa chỉ <span class="text-red-500">*</span></label>
+            <textarea
+              v-model="formData.address"
+              @blur="handleBlur('address')"
+              rows="2"
+              placeholder="Số nhà, đường, phường, quận..."
+              :class="[
+                'w-full border rounded-xl px-3.5 py-2.5 text-sm focus:outline-none transition-all resize-none',
+                touched.address && errors.address ? 'border-red-500 bg-red-50/30' : 'border-slate-200 focus:ring-2 focus:ring-[#0E4D92]'
+              ]"
+            />
+            <p v-if="touched.address && errors.address" class="text-xs text-red-500 mt-1">⚠️ {{ errors.address }}</p>
           </div>
 
           <!-- Mật khẩu & Xác nhận -->

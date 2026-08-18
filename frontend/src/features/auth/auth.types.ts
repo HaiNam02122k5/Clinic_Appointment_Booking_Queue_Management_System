@@ -12,7 +12,8 @@ export interface AuthUser {
 }
 
 export interface LoginPayload {
-  email: string
+  username?: string
+  email?: string
   password: string
   role?: UserRole
   // If true, persist tokens in localStorage; otherwise use sessionStorage for current session only
@@ -26,12 +27,14 @@ export interface LoginResponse {
 }
 
 export interface RegisterPayload {
+  username?: string
   fullName: string
   phoneNumber: string
   email: string
   password: string
   gender: 'Male' | 'Female' | 'Other'
   dateOfBirth: string
+  address?: string
   // Whether to persist tokens after registration (true = localStorage, false = sessionStorage)
   rememberMe?: boolean
 }

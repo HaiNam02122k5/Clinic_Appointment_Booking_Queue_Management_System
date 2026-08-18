@@ -39,17 +39,12 @@ function validateLogin(): boolean {
   errors.value.email = ''
   errors.value.password = ''
 
-  const emailRequired = validators.required(email.value, 'Email')
-  if (!emailRequired.isValid) {
-    errors.value.email = emailRequired.message
-  } else {
-    const emailValidation = validators.email(email.value)
-    if (!emailValidation.isValid) {
-      errors.value.email = emailValidation.message
-    }
+  const usernameRequired = validators.required(email.value, 'Tên đăng nhập')
+  if (!usernameRequired.isValid) {
+    errors.value.email = usernameRequired.message
   }
 
-  const passwordRequired = validators.required(password.value, 'Máº­t kháº©u')
+  const passwordRequired = validators.required(password.value, 'Mật khẩu')
   if (!passwordRequired.isValid) {
     errors.value.password = passwordRequired.message
   } else {
@@ -67,7 +62,8 @@ async function handleLogin() {
 
   try {
     const loggedInUser = await authStore.login({
-      email: email.value,
+      username: email.value.trim(),
+      email: email.value.trim(),
       password: password.value,
       rememberMe: rememberMe.value,
     })
@@ -90,16 +86,26 @@ async function handleLogin() {
     router.replace(redirectQuery || getRoleRoute(activeRole))
   } catch (e: any) {
     // Map API field errors into form fields when available
+    let mapped = false
     try {
       const fe = getFieldErrors(e)
       if (fe) {
         errors.value.email = fe.email ? fe.email.join(' ') : errors.value.email
         errors.value.password = fe.password ? fe.password.join(' ') : errors.value.password
+        mapped = true
       }
     } catch (mapErr) {
       // ignore mapping errors
     }
-    // Log for debugging; authStore.error will contain user-facing message
+
+    // If backend only returned a global error, show it in the top banner and near the username field
+    if (!mapped) {
+      const global = authStore.error || (e?.response?.data?.errorMessages && e.response.data.errorMessages.join(' ')) || (e?.message)
+      if (global) {
+        errors.value.email = errors.value.email || global
+      }
+    }
+
     logger.error('Login failed', e)
   }
 }
@@ -111,7 +117,7 @@ function goBackToRoleSelect() {
 
 <template>
   <div class="min-h-screen bg-slate-50 flex font-sans">
-    <!-- Left Panel (Hiá»ƒn thá»‹ trÃªn mÃ n hÃ¬nh Laptop/Desktop) -->
+    <!-- Left Panel (Hiển thị trên màn hình Laptop/Desktop) -->
     <div
       :class="[
         'hidden lg:flex lg:w-2/5 bg-gradient-to-br flex-col justify-between p-10 transition-colors duration-300',
@@ -127,27 +133,27 @@ function goBackToRoleSelect() {
 
       <div>
         <p class="text-white/70 text-sm font-medium uppercase tracking-widest mb-3">
-          ChÃ o má»«ng
+          Chào mừng
         </p>
         <h2 class="text-4xl font-bold text-white leading-tight mb-4">
-          ÄÄƒng nháº­p<br />Ä‘á»ƒ tiáº¿p tá»¥c ðŸ‘‹
+          Đăng nhập<br />để tiếp tục 👋
         </h2>
         <p class="text-white/70 text-base leading-relaxed">
-          Sau khi xÃ¡c thá»±c thÃ nh cÃ´ng, há»‡ thá»‘ng sáº½ giÃºp báº¡n chá»n quyá»n truy cáº­p phÃ¹ há»£p vá»›i cÃ´ng viá»‡c báº¡n Ä‘ang thá»±c hiá»‡n.
+          Sau khi xác thực thành công, hệ thống sẽ giúp bạn chọn quyền truy cập phù hợp với công việc bạn đang thực hiện.
         </p>
 
         <div class="mt-8 space-y-3">
-          <div v-for="feature in ['Báº£o máº­t dá»¯ liá»‡u', 'PhÃ¢n quyá»n theo chá»©c nÄƒng', 'Há»— trá»£ nhiá»u quy trÃ¬nh']" :key="feature" class="flex items-center gap-3 text-sm text-white/80">
-            <span class="text-white">âœ“</span>
+          <div v-for="feature in ['Bảo mật dữ liệu', 'Phân quyền theo chức năng', 'Hỗ trợ nhiều quy trình']" :key="feature" class="flex items-center gap-3 text-sm text-white/80">
+            <span class="text-white">✓</span>
             {{ feature }}
           </div>
         </div>
       </div>
 
-      <p class="text-white/40 text-xs">Â© 2026 ClinicQueue</p>
+      <p class="text-white/40 text-xs">© 2026 ClinicQueue</p>
     </div>
 
-    <!-- Right Panel (Form ÄÄƒng nháº­p) -->
+    <!-- Right Panel (Form Đăng nhập) -->
     <div class="flex-1 flex flex-col items-center justify-center px-5 py-10">
       <div class="w-full max-w-md">
         <!-- Logo Mobile -->
@@ -159,23 +165,23 @@ function goBackToRoleSelect() {
         </div>
 
         <div class="mb-8">
-          <h1 class="text-2xl font-bold text-slate-800 mb-1">ÄÄƒng nháº­p</h1>
-          <p class="text-sm text-slate-500">ÄÄƒng nháº­p Ä‘á»ƒ sá»­ dá»¥ng cÃ¡c chá»©c nÄƒng cá»§a há»‡ thá»‘ng.</p>
+          <h1 class="text-2xl font-bold text-slate-800 mb-1">Đăng nhập</h1>
+          <p class="text-sm text-slate-500">Đăng nhập để sử dụng các chức năng của hệ thống.</p>
         </div>
 
-        <!-- ThÃ´ng bÃ¡o Lá»—i -->
+        <!-- Thông báo Lỗi -->
         <div v-if="authStore.error" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600">
-          âš ï¸ {{ authStore.error }}
+          ⚠️ {{ authStore.error }}
         </div>
 
         <form @submit.prevent="handleLogin" class="space-y-4 mb-6">
           <div>
             <label class="block text-sm font-medium text-slate-700 mb-1.5">
-              Email / TÃªn Ä‘Äƒng nháº­p <span class="text-red-500">*</span>
+              Tên đăng nhập / Email <span class="text-red-500">*</span>
             </label>
             <input
               v-model="email"
-              type="email"
+              type="text"
               required
               :placeholder="LOGIN_THEME.hintEmail"
               class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0E4D92] bg-white transition-all"
@@ -184,36 +190,36 @@ function goBackToRoleSelect() {
               v-if="errors.email"
               class="mt-1 text-xs text-red-500"
             >
-              âš ï¸ {{ errors.email }}
+              ⚠️ {{ errors.email }}
             </p>
           </div>
 
           <div>
             <label class="block text-sm font-medium text-slate-700 mb-1.5">
-              Máº­t kháº©u <span class="text-red-500">*</span>
+              Mật khẩu <span class="text-red-500">*</span>
             </label>
             <input
               v-model="password"
               type="password"
               required
-              placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+              placeholder="••••••••"
               class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0E4D92] bg-white transition-all"
             />
             <p
               v-if="errors.password"
               class="mt-1 text-xs text-red-500"
             >
-              âš ï¸ {{ errors.password }}
+              ⚠️ {{ errors.password }}
             </p>
           </div>
 
           <div class="flex items-center justify-between">
             <label class="flex items-center gap-2 text-sm text-slate-600 cursor-pointer select-none">
               <input v-model="rememberMe" type="checkbox" class="rounded text-[#0E4D92]" />
-              Ghi nhá»› Ä‘Äƒng nháº­p
+              Ghi nhớ đăng nhập
             </label>
             <button type="button" class="text-sm text-[#0E4D92] font-medium hover:underline">
-              QuÃªn máº­t kháº©u?
+              Quên mật khẩu?
             </button>
           </div>
 
@@ -224,23 +230,22 @@ function goBackToRoleSelect() {
           >
             <span v-if="authStore.status === 'loading'" class="flex items-center justify-center gap-2">
               <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              Äang xá»­ lÃ½â€¦
+              Đang xử lý…
             </span>
-            <span v-else>ÄÄƒng nháº­p</span>
+            <span v-else>Đăng nhập</span>
           </button>
 
           <p class="text-center text-sm text-slate-500 mt-4">
-            ChÆ°a cÃ³ tÃ i khoáº£n?
+            Chưa có tài khoản?
             <router-link to="/register" class="text-[#0E4D92] font-semibold hover:underline">
-              ÄÄƒng kÃ½ ngay
+              Đăng ký ngay
             </router-link>
           </p>
         </form>
 
         <p class="text-xs text-slate-400 text-center mt-5">
-          Gáº·p váº¥n Ä‘á»? LiÃªn há»‡ <span class="text-[#0E4D92]">hotro@phongkham.vn</span>
+          Gặp vấn đề? Liên hệ <span class="text-[#0E4D92]">hotro@phongkham.vn</span>
         </p>
-   
       </div>
     </div>
   </div>

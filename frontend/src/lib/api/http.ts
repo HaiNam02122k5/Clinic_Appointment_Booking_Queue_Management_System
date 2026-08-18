@@ -4,9 +4,12 @@ import { tokenStorage } from './token-storage'
 import { logger } from '@/lib/logger'
 
 export interface ApiErrorBody {
-  message: string
+  message?: string
   code?: string
   errors?: Record<string, string[]>
+  // Support backend ApiResponse envelope
+  errorMessages?: string[]
+  result?: any
 }
 
 /** Normalized error the UI/stores can rely on — never a raw AxiosError. */
@@ -16,17 +19,32 @@ export class ApiError extends Error {
   readonly fieldErrors?: Record<string, string[]>
 
   constructor(status: number, body?: ApiErrorBody) {
-    super(body?.message ?? `Request failed with status ${status}`)
+    // Prefer ApiResponse.errorMessages (array) -> join, then body.message, then fallback
+    const msgFromEnvelope = body?.errorMessages && body.errorMessages.length > 0 ? body.errorMessages.join(' | ') : undefined
+    const message = msgFromEnvelope ?? body?.message ?? `Request failed with status ${status}`
+
+    super(message)
     this.name = 'ApiError'
     this.status = status
     this.code = body?.code
-    this.fieldErrors = body?.errors
+
+    // If the backend returned structured errors under result (e.g., ModelState), try to extract field map
+    if (body?.errors && typeof body.errors === 'object') {
+      this.fieldErrors = body.errors
+    } else if (body?.result && typeof body.result === 'object') {
+      // attempt to look for ValidationProblemDetails-like shape
+      const res = body.result
+      if (res?.errors && typeof res.errors === 'object') {
+        this.fieldErrors = res.errors as Record<string, string[]>
+      }
+    }
   }
 }
 
 export const http: AxiosInstance = axios.create({
   baseURL: env.apiBaseUrl,
   timeout: 15_000,
+  withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
 })
 
@@ -35,33 +53,32 @@ http.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = tokenStorage.getAccess()
   if (token) {
     config.headers = config.headers ?? {}
-    // Axios may represent headers as a plain object; set Authorization safely
     ;(config.headers as Record<string, any>)['Authorization'] = 'Bearer ' + token
   }
   return config
 })
 
-// Response: transparent refresh on 401 (deduped), then normalize errors.
+// Response: refresh on 401 when the backend uses an HttpOnly refresh cookie.
 let refreshing: Promise<void> | null = null
 
 async function refreshSession(): Promise<void> {
-  const refresh = tokenStorage.getRefresh()
-  if (!refresh) throw new Error('No refresh token')
   if (env.enableMock) {
-    // In mock mode simulate refresh by rotating access token while keeping refresh the same
-    try {
-      const newAccess = `mock-access-refreshed-${Date.now()}`
-      tokenStorage.set(newAccess, refresh)
-      return
-    } catch (e) {
-      throw e
-    }
+    const newAccess = `mock-access-refreshed-${Date.now()}`
+    tokenStorage.set(newAccess, undefined, true)
+    return
   }
-  const { data } = await axios.post<{ accessToken: string; refreshToken?: string }>(
+
+  const { data } = await axios.post<{ accessToken?: string }>(
     `${env.apiBaseUrl}/auth/refresh`,
-    { refreshToken: refresh },
+    {},
+    { withCredentials: true },
   )
-  tokenStorage.set(data.accessToken, data.refreshToken)
+
+  if (!data?.accessToken) {
+    throw new Error('Refresh endpoint did not return a new access token')
+  }
+
+  tokenStorage.set(data.accessToken, undefined, true)
 }
 
 http.interceptors.response.use(
@@ -69,19 +86,13 @@ http.interceptors.response.use(
   async (error: AxiosError<ApiErrorBody>) => {
     const original = error.config as InternalAxiosRequestConfig & { _retried?: boolean }
 
-    if (
-      error.response?.status === 401 &&
-      original &&
-      !original._retried &&
-      tokenStorage.getRefresh()
-    ) {
+    if (error.response?.status === 401 && original && !original._retried && tokenStorage.getAccess()) {
       original._retried = true
       try {
         refreshing ??= refreshSession().finally(() => (refreshing = null))
         await refreshing
         return http(original)
       } catch (err) {
-        // Log refresh failure for observability
         logger.warn('refreshSession failed', err)
         tokenStorage.clear()
         window.dispatchEvent(new CustomEvent('auth:logout'))

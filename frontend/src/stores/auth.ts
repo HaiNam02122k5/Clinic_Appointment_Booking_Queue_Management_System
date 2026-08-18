@@ -16,6 +16,47 @@ function normalizeRoles(roles?: (UserRole | undefined)[] | UserRole | null): Use
   return [...new Set(list.filter((role): role is UserRole => role !== undefined && VALID_ROLES.includes(role as UserRole)))]
 }
 
+function decodeJwtPayload(token: string): Record<string, any> {
+  try {
+    const base64 = token.split('.')[1]
+    if (!base64) return {}
+    const normalized = base64.replace(/-/g, '+').replace(/_/g, '/')
+    const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4)
+    return JSON.parse(atob(padded))
+  } catch {
+    return {}
+  }
+}
+
+function buildUserFromToken(token?: string | null): AuthUser {
+  const fallback: AuthUser = {
+    id: 'user',
+    name: 'User',
+    email: '',
+    role: 'Patient',
+    roles: ['Patient'],
+    activeRole: 'Patient',
+  }
+
+  if (!token) return fallback
+
+  const payload = decodeJwtPayload(token)
+  const rawRoles = payload.role ?? payload.roles ?? payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']
+  const roles = normalizeRoles(
+    Array.isArray(rawRoles) ? rawRoles : rawRoles ? [rawRoles] : ['Patient'],
+  )
+  const activeRole = (roles[0] ?? 'Patient') as UserRole
+
+  return {
+    id: payload.sub ?? 'user',
+    name: payload.name ?? 'User',
+    email: payload.email ?? '',
+    role: activeRole,
+    roles,
+    activeRole,
+  }
+}
+
 function normalizeUser(raw: Partial<AuthUser> | null | undefined): AuthUser | null {
   if (!raw) return null
 
@@ -36,7 +77,6 @@ function normalizeUser(raw: Partial<AuthUser> | null | undefined): AuthUser | nu
   if (typeof rawId === 'number') id = rawId
   else if (typeof rawId === 'string' && rawId.trim() !== '') id = rawId
   else if (rawId != null && String(rawId).trim() !== '') {
-    // Try to coerce numeric-like strings to number, otherwise keep string
     const coerced = Number(String(rawId))
     id = Number.isFinite(coerced) ? coerced : String(rawId)
   }
@@ -122,13 +162,22 @@ export const useAuthStore = defineStore('auth', () => {
       setUser(me)
       return me
     } catch (e: any) {
-      // Only clear tokens on explicit auth failures (401/403). For transient errors keep tokens.
       const statusCode = e instanceof Error && (e as any).status ? (e as any).status : e?.response?.status
+      const accessToken = tokenStorage.getAccess()
+      const fallbackUser = buildUserFromToken(accessToken)
+
       if (statusCode === 401 || statusCode === 403) {
+        if (fallbackUser) {
+          setUser(fallbackUser)
+          return fallbackUser
+        }
         tokenStorage.clear()
         safeSetStoredUser(null)
+      } else if (fallbackUser) {
+        setUser(fallbackUser)
+        return fallbackUser
       }
-      // bubble up for callers if needed
+
       throw e
     }
   }
@@ -156,22 +205,19 @@ export const useAuthStore = defineStore('auth', () => {
 
     try {
       const res = await authApi.login(payload)
-      const normalizedUser = normalizeUser(res.user)
+      const fallbackUser = buildUserFromToken(res.accessToken)
+      const normalizedUser = normalizeUser(res.user) ?? fallbackUser
 
-      if (normalizedUser) {
-        const activeRole = payload.role ?? normalizedUser.activeRole ?? normalizedUser.roles?.[0]
-        if (activeRole) {
-          normalizedUser.activeRole = activeRole
-          normalizedUser.role = activeRole
-          normalizedUser.roles = normalizeRoles(normalizedUser.roles ?? [activeRole])
-        }
-      }
+      const activeRole = payload.role ?? normalizedUser.activeRole ?? normalizedUser.roles?.[0] ?? 'Patient'
+      normalizedUser.activeRole = activeRole
+      normalizedUser.role = activeRole
+      normalizedUser.roles = normalizeRoles(normalizedUser.roles ?? [activeRole])
 
       const persistent = payload.rememberMe !== false
       setToken(res.accessToken, res.refreshToken, persistent)
       setUser(normalizedUser)
       status.value = 'idle'
-      return normalizedUser ?? res.user
+      return normalizedUser
     } catch (e: any) {
       status.value = 'error'
       if (e instanceof ApiError) {
@@ -179,7 +225,6 @@ export const useAuthStore = defineStore('auth', () => {
       } else {
         error.value = e?.response?.data?.message || (e instanceof Error ? e.message : 'Đăng nhập thất bại')
       }
-      // rethrow so UI can inspect fieldErrors if present
       throw e
     }
   }
@@ -193,15 +238,12 @@ export const useAuthStore = defineStore('auth', () => {
       const token = res.accessToken || (res as any).token
 
       if (res && token) {
-        const normalizedUser = normalizeUser(res.user)
-        if (normalizedUser) {
-          const activeRole = normalizedUser.activeRole ?? normalizedUser.role ?? normalizedUser.roles?.[0]
-          if (activeRole) {
-            normalizedUser.activeRole = activeRole
-            normalizedUser.role = activeRole
-            normalizedUser.roles = normalizeRoles(normalizedUser.roles ?? [activeRole])
-          }
-        }
+        const fallbackUser = buildUserFromToken(token)
+        const normalizedUser = normalizeUser(res.user) ?? fallbackUser
+        const activeRole = normalizedUser.activeRole ?? normalizedUser.role ?? normalizedUser.roles?.[0] ?? 'Patient'
+        normalizedUser.activeRole = activeRole
+        normalizedUser.role = activeRole
+        normalizedUser.roles = normalizeRoles(normalizedUser.roles ?? [activeRole])
 
         const persistent = (payload as any)?.rememberMe !== false
         setToken(token, res.refreshToken, persistent)

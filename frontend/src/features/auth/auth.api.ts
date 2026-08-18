@@ -3,25 +3,57 @@ import { http } from '@/lib/api/http'
 import { mockGetMe, mockLogin, mockRegister } from '@/mock/clinic-data'
 import type { LoginPayload, RegisterPayload, LoginResponse, AuthUser } from './auth.types'
 
+function buildLoginBody(payload: LoginPayload) {
+  const username = (payload.username ?? payload.email ?? '').trim()
+  return {
+    username,
+    password: payload.password,
+  }
+}
+
+function buildRegisterBody(payload: RegisterPayload) {
+  return {
+    username: payload.username ?? payload.email,
+    fullName: payload.fullName,
+    phoneNumber: payload.phoneNumber,
+    email: payload.email,
+    password: payload.password,
+    gender: payload.gender,
+    dateOfBirth: payload.dateOfBirth,
+    address: payload.address ?? 'Chưa cập nhật',
+  }
+}
+
 export const authApi = {
   login(payload: LoginPayload): Promise<LoginResponse> {
     if (env.enableMock) {
       try {
-        const r = mockLogin(payload.email, payload.password, payload.role)
+        const r = mockLogin(payload.email ?? payload.username ?? '', payload.password, payload.role)
         return Promise.resolve(r)
       } catch (e) {
         return Promise.reject(e)
       }
     }
 
-    return http.post<LoginResponse>('/auth/login', payload).then((r) => {
+    return http.post<any>('/auth/login', buildLoginBody(payload)).then((r) => {
       const d = r.data as any
       if (d && d.token && !d.accessToken) d.accessToken = d.token
-      return d as LoginResponse
+      const accessToken = d?.accessToken ?? ''
+      const fallbackUser = {
+        id: 'user',
+        name: 'User',
+        email: payload.username ?? payload.email ?? '',
+        role: 'Patient',
+        roles: ['Patient'],
+        activeRole: 'Patient',
+      } as AuthUser
+      return {
+        accessToken,
+        refreshToken: d?.refreshToken,
+        user: d?.user ?? fallbackUser,
+      } as LoginResponse
     })
   },
-
-
 
   register(payload: RegisterPayload): Promise<LoginResponse> {
     if (env.enableMock) {
@@ -33,26 +65,62 @@ export const authApi = {
       }
     }
 
-    return http.post<LoginResponse>('/auth/register', payload).then((r) => {
+    return http.post<any>('/auth/register', buildRegisterBody(payload)).then((r) => {
       const d = r.data as any
       if (d && d.token && !d.accessToken) d.accessToken = d.token
-      return d as LoginResponse
+      const accessToken = d?.accessToken ?? ''
+      const fallbackUser = {
+        id: 'user',
+        name: payload.fullName,
+        email: payload.email,
+        role: 'Patient',
+        roles: ['Patient'],
+        activeRole: 'Patient',
+      } as AuthUser
+      return {
+        accessToken,
+        refreshToken: d?.refreshToken,
+        user: d?.user ?? fallbackUser,
+      } as LoginResponse
     })
   },
 
-
-
-  getMe(): Promise<AuthUser> {
+  async getMe(): Promise<AuthUser> {
     if (env.enableMock) {
       try {
         const r = mockGetMe()
-        return Promise.resolve(r)
+        return r
       } catch (e) {
-        return Promise.reject(e)
+        throw e
       }
     }
 
-    return http.get<AuthUser>('/auth/me').then((r) => r.data)
+    try {
+      const response = await http.get<AuthUser>('/auth/me')
+      return response.data
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        const token = localStorage.getItem('auth.accessToken') ?? sessionStorage.getItem('auth.accessToken')
+        if (!token) throw error
+
+        const payload = JSON.parse(atob(token.split('.')[1] ?? ''))
+        const roles = Array.isArray(payload.role)
+          ? payload.role
+          : payload.role
+            ? [payload.role]
+            : ['Patient']
+
+        return {
+          id: payload.sub ?? 'user',
+          name: payload.name ?? 'User',
+          email: payload.email ?? '',
+          role: roles[0] as any,
+          roles: roles as any,
+          activeRole: roles[0] as any,
+        }
+      }
+      throw error
+    }
   },
 
 
