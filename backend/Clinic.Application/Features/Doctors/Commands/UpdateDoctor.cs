@@ -1,5 +1,6 @@
 ﻿using Clinic.Application.Common.Exceptions;
 using Clinic.Application.Interfaces;
+using Clinic.Domain.Entities;
 using Clinic.Domain.Enums;
 using MediatR;
 
@@ -22,12 +23,14 @@ namespace Clinic.Application.Features.Doctors.Commands
     public class UpdateDoctorCommandHandler : IRequestHandler<UpdateDoctorCommand, Guid>
     {
         private readonly IDoctorRepository _doctorRepository;
+        private readonly IPersonRepository _personRepository;
         private readonly IUserRepository _userRepository;
         private readonly IUnitOfWork _unitOfWork;
 
-        public UpdateDoctorCommandHandler(IDoctorRepository doctorRepository, IUserRepository userRepository, IUnitOfWork unitOfWork)
+        public UpdateDoctorCommandHandler(IDoctorRepository doctorRepository, IPersonRepository personRepository, IUserRepository userRepository, IUnitOfWork unitOfWork)
         {
             _doctorRepository = doctorRepository;
+            _personRepository = personRepository;
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
         }
@@ -46,6 +49,14 @@ namespace Clinic.Application.Features.Doctors.Commands
             if (doctor == null)
             {
                 throw new NotFoundException("Doctor not found.");
+            }
+            if (request.PhoneNumber != doctor.Employee.Person.PhoneNumber && await _personRepository.GetByPhoneNumberAsync(request.PhoneNumber) != null)
+            {
+                throw new ArgumentException("Phone number already exists.");
+            }
+            if (request.Email != doctor.Employee.Person.Email && await _personRepository.GetByEmailAsync(request.Email) != null)
+            {
+                throw new ArgumentException("Email already exists.");
             }
             // Update the doctor's properties
             doctor.UpdateInfo(request.LicenseNumber, request.Qualification, request.ExperienceYears, request.Biography);

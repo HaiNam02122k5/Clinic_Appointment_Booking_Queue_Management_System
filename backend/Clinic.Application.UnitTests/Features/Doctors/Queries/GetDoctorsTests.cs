@@ -117,7 +117,7 @@ namespace Clinic.Application.UnitTests.Features.Doctors.Queries
                 var doctor = TestDataFactory.CreateDoctor(employee: TestDataFactory.CreateEmployee(person: person));
                 await doctorRepository.AddAsync(doctor);
             }
-            var query = new GetDoctorsQuery(pageNumber: 2, pageSize: 10);
+            var query = new GetDoctorsQuery(PageNumber: 2, PageSize: 10);
             var result = await handler.Handle(query, CancellationToken.None);
             Assert.Equal(5, result.Items.Count);
             Assert.Equal(15, result.TotalCount);

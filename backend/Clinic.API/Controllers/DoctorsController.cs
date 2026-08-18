@@ -30,7 +30,7 @@ namespace Clinic.API.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = "Permission:doctor.view")]
+        [Authorize(Policy = "Permission:doctor.view.any")]
         [ProducesResponseType(typeof(PaginationResponse<DoctorSummaryDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetAll([FromQuery] DoctorsQueryRequest request)
@@ -41,16 +41,32 @@ namespace Clinic.API.Controllers
         }
 
         [HttpGet("{doctorId}")]
-        [Authorize(Policy = "Permission:doctor.view")]
+        [Authorize(Policy = "Permission:doctor.view.any")]
         [ProducesResponseType(typeof(DoctorDetailDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetById([FromRoute] Guid doctorId)
         {
-            var query = _mapper.Map<GetDoctorQuery>(new { Id = doctorId });
+            var query = _mapper.Map<GetDoctorQuery>(new { DoctorId = doctorId });
             var result = await _sender.Send(query);
             if (result == null)
             {
                 return NotFound();
+            }
+            return Ok(result);
+        }
+
+        [HttpGet("me")]
+        [Authorize(Policy = "Permission:doctor.view.own")]
+        [ProducesResponseType(typeof(DoctorDetailDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> GetOwnProfile()
+        {
+            var doctorId = _currentUser.DoctorId;
+            var query = _mapper.Map<GetDoctorQuery>(new { DoctorId = doctorId });
+            var result = await _sender.Send(query);
+            if (result == null)
+            {
+                return Unauthorized();
             }
             return Ok(result);
         }
@@ -61,6 +77,16 @@ namespace Clinic.API.Controllers
         public async Task<IActionResult> Create([FromBody] CreateDoctorRequest request)
         {
             var command = _mapper.Map<CreateDoctorCommand>(request);
+            var result = await _sender.Send(command);
+            return CreatedAtAction(nameof(GetById), new { doctorId = result.Id }, result);
+        }
+
+        [HttpPost("from-user")]
+        [Authorize(Policy = "Permission:doctor.create")]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        public async Task<IActionResult> CreateFromUser([FromBody] CreateDoctorFromUserRequest request)
+        {
+            var command = _mapper.Map<CreateDoctorFromUserCommand>(request);
             var result = await _sender.Send(command);
             return CreatedAtAction(nameof(GetById), new { doctorId = result.Id }, result);
         }
