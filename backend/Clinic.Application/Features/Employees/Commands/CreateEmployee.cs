@@ -45,12 +45,20 @@ namespace Clinic.Application.Features.Employees.Commands
             var person = await _personService.CreateOrGetPersonAsync(request.FullName, request.PhoneNumber, request.Email, request.DateOfBirth, request.Gender, request.Address);
 
             var user = await _userService.CreateUserAsync(request.Username, request.Password, person);
+            if (request.Roles == null || !request.Roles.Any())
+            {
+                throw new ArgumentException("At least one role must be specified.");
+            }
             foreach (var roleName in request.Roles)
             {
                 Role role = await _roleRepository.GetByNameAsync(roleName.Trim());
                 if (role == null)
                 {
                     throw new ArgumentException($"Role '{roleName}' does not exist.");
+                }
+                if (role.Name == "Doctor" || role.Name == "Patient")
+                {
+                    throw new ArgumentException($"Role '{roleName}' is not allowed in this endpoint. For creating doctor, use POST /doctors instead. For registering an account for patient, use POST /register instead.");
                 }
                 user.AssignRole(role);
             }

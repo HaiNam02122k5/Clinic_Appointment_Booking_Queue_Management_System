@@ -17,7 +17,8 @@ namespace Clinic.Application.UnitTests.Features.Doctors.Commands
             var doctorRepository = new FakeDoctorRepository();
             var unitOfWork = new FakeUnitOfWork();
             var userRepo = new FakeUserRepository();
-            var handler = new UpdateDoctorCommandHandler(doctorRepository, userRepo, unitOfWork);
+            var personRepo = new FakePersonRepository();
+            var handler = new UpdateDoctorCommandHandler(doctorRepository, personRepo, userRepo, unitOfWork);
             var doctorPerson = TestDataFactory.CreatePerson(fullName: "Dr. John Doe");
             var user = TestDataFactory.CreateUser(person: doctorPerson);
             user.AssignRole(TestDataFactory.RoleSet.First(r => r.Name == "Doctor"));
@@ -70,7 +71,8 @@ namespace Clinic.Application.UnitTests.Features.Doctors.Commands
             var doctorRepository = new FakeDoctorRepository();
             var unitOfWork = new FakeUnitOfWork();
             var userRepo = new FakeUserRepository();
-            var handler = new UpdateDoctorCommandHandler(doctorRepository, userRepo, unitOfWork);
+            var personRepo = new FakePersonRepository();
+            var handler = new UpdateDoctorCommandHandler(doctorRepository, personRepo, userRepo, unitOfWork);
             var doctorPerson = TestDataFactory.CreatePerson(fullName: "Dr. John Doe");
             var user = TestDataFactory.CreateUser(person: doctorPerson);
             user.AssignRole(TestDataFactory.RoleSet.First(r => r.Name == "Doctor"));
@@ -120,7 +122,8 @@ namespace Clinic.Application.UnitTests.Features.Doctors.Commands
             var doctorRepository = new FakeDoctorRepository();
             var unitOfWork = new FakeUnitOfWork();
             var userRepo = new FakeUserRepository();
-            var handler = new UpdateDoctorCommandHandler(doctorRepository, userRepo, unitOfWork);
+            var personRepo = new FakePersonRepository();
+            var handler = new UpdateDoctorCommandHandler(doctorRepository, personRepo, userRepo, unitOfWork);
             var doctorPerson = TestDataFactory.CreatePerson(fullName: "Dr. John Doe");
             var user = TestDataFactory.CreateUser(person: doctorPerson);
             user.AssignRole(TestDataFactory.RoleSet.First(r => r.Name == "Doctor"));

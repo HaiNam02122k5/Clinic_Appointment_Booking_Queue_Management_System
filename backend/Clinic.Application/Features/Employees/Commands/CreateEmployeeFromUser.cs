@@ -73,6 +73,17 @@ namespace Clinic.Application.Features.Employees.Commands
                 {
                     throw new ArgumentException($"Role '{roleName}' does not exist.");
                 }
+                // If an user already has the role "Doctor, then they must have been an employee
+                if (role.Name == "Doctor")
+                {
+                    throw new ArgumentException($"Role '{roleName}' is not allowed in this endpoint. For creating doctor, use POST /doctors/from-user instead");
+                }
+                // Skip assigning the "Patient" role to an employee. They may already have it and the form just send the data it gets filled when querying the user.
+                // We don't want to throw an error just because that role is assigned, and we also don't want to assign it here.
+                if (role.Name == "Patient")
+                {
+                    continue; 
+                }
                 user.AssignRole(role);
             }
             await _employeeRepository.AddAsync(employee);
