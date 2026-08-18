@@ -108,5 +108,47 @@ namespace Clinic.Domain.UnitTests
 
             Assert.Throws<InvalidOperationException>(() => appointment.Cancel());
         }
+
+        /// <summary>
+        /// Bug gốc: CompleteExamHandler chỉ gọi QueueTicket.Complete() mà không đổi luôn
+        /// Appointment.Status, khiến Appointment kẹt ở CheckedIn dù đã khám xong.
+        /// </summary>
+        [Fact]
+        public void Complete_CheckedInAppointment_ShouldComplete()
+        {
+            var appointment = TestDataFactory.CreateAppointment(checkedIn: true);
+
+            appointment.Complete();
+
+            Assert.Equal(AppointmentStatus.Completed, appointment.Status);
+        }
+
+        [Theory]
+        [InlineData(false, false)] // Pending
+        [InlineData(true, false)]  // Confirmed
+        public void Complete_NotCheckedInAppointment_ShouldThrowArgumentException(bool confirmed, bool checkedIn)
+        {
+            var appointment = TestDataFactory.CreateAppointment(confirmed: confirmed, checkedIn: checkedIn);
+
+            Assert.Throws<ArgumentException>(() => appointment.Complete());
+        }
+
+        [Fact]
+        public void Complete_AlreadyCompletedAppointment_ShouldThrowArgumentException()
+        {
+            var appointment = TestDataFactory.CreateAppointment(checkedIn: true);
+            appointment.Complete();
+
+            Assert.Throws<ArgumentException>(() => appointment.Complete());
+        }
+
+        [Fact]
+        public void Complete_CancelledAppointment_ShouldThrowArgumentException()
+        {
+            var appointment = TestDataFactory.CreateAppointment(confirmed: true);
+            appointment.Cancel();
+
+            Assert.Throws<ArgumentException>(() => appointment.Complete());
+        }
     }
 }

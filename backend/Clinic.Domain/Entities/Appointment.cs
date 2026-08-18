@@ -56,6 +56,23 @@ namespace Clinic.Domain.Entities
         }
 
         /// <summary>
+        /// Hoàn tất lịch hẹn khi QueueTicket tương ứng đã khám xong (Completed).
+        /// Chỉ hợp lệ khi Appointment đang ở trạng thái CheckedIn - đây là bước cuối trong
+        /// luồng Pending -> Confirmed -> CheckedIn -> Completed.
+        /// </summary>
+        /// <exception cref="ArgumentException">Appointment không ở trạng thái CheckedIn.</exception>
+        public void Complete()
+        {
+            if (Status != AppointmentStatus.CheckedIn)
+            {
+                throw new ArgumentException($"Cannot complete an appointment with status '{Status}'.");
+            }
+
+            Status = AppointmentStatus.Completed;
+            MarkUpdated();
+        }
+
+        /// <summary>
         /// Hủy lịch hẹn. Không cho phép hủy lịch đã ở trạng thái kết thúc
         /// (Completed, Cancelled, NoShow).
         ///
@@ -110,7 +127,7 @@ namespace Clinic.Domain.Entities
         /// Đổi lịch hẹn sang 1 ca (WorkSchedule) và thời điểm mới. Không cho phép đổi lịch đã
         /// ở trạng thái kết thúc (Completed, Cancelled, NoShow) hoặc đã CheckedIn (bệnh nhân đã
         /// có mặt, không còn ý nghĩa đổi lịch).
-        
+
         /// </summary>
         /// <exception cref="ArgumentNullException">newWorkSchedule là null.</exception>
         /// <exception cref="ArgumentException">

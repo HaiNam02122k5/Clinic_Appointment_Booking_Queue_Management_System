@@ -42,6 +42,10 @@ namespace Clinic.Application.Features.Queue.Commands
             }
 
             queueTicket.Complete();
+            // Đồng bộ trạng thái Appointment: khi QueueTicket khám xong thì Appointment
+            // cũng phải chuyển CheckedIn -> Completed, nếu không lịch hẹn sẽ kẹt ở CheckedIn
+            // mãi mãi dù đã khám xong (sai lịch sử khám bệnh + sai số liệu dashboard).
+            queueTicket.Appointment.Complete();
 
             await _queueTicketRepository.UpdateAsync(queueTicket);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
