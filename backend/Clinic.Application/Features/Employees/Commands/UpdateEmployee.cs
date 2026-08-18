@@ -73,11 +73,7 @@ namespace Clinic.Application.Features.Employees.Commands
             employee.Person.UpdateAdvancedDetails(request.FullName, request.PhoneNumber, request.Email, request.Gender, request.DateOfBirth, request.Address);
 
             // Only update roles that are not "Doctor" or "Patient"
-<<<<<<< HEAD
             if (request.Roles != null && request.Roles.Count > 0)
-=======
-            if (request.Roles != null)
->>>>>>> 73f3e835adeaa568c6ef68caaad488339fd6771d
             {
                 foreach (var roleName in request.Roles)
                 {
