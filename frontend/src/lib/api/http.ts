@@ -1,4 +1,4 @@
-import axios, { AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from 'axios'
+﻿import axios, { AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from 'axios'
 import { env } from '@/config/env'
 import { tokenStorage } from './token-storage'
 
@@ -34,7 +34,11 @@ export const http: AxiosInstance = axios.create({
 // Request: attach bearer token.
 http.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = tokenStorage.getAccess()
-  if (token) config.headers.set('Authorization', `Bearer ${token}`)
+  if (token) {
+    config.headers = config.headers ?? {}
+    // Axios may represent headers as a plain object; set Authorization safely
+    ;(config.headers as Record<string, any>)['Authorization'] = 'Bearer ' + token
+  }
   return config
 })
 
@@ -45,7 +49,7 @@ async function refreshSession(): Promise<void> {
   const refresh = tokenStorage.getRefresh()
   if (!refresh) throw new Error('No refresh token')
   const { data } = await axios.post<{ accessToken: string; refreshToken?: string }>(
-    `${env.apiBaseUrl}/auth/refresh`,
+    env.apiBaseUrl + '/auth/refresh',
     { refreshToken: refresh },
   )
   tokenStorage.set(data.accessToken, data.refreshToken)
