@@ -43,12 +43,14 @@ namespace Clinic.Application.Interfaces
 
         /// <summary>
         /// Checks if a doctor has overlapping work schedules within the specified time range asynchronously.
+        /// If currentWSId is provided, it will be excluded from the check (useful for updates).
         /// </summary>
-        Task<bool> HasOverlappingWorkSchedule(Guid doctorId, DateTime startTime, DateTime endTime);
+        Task<bool> HasOverlappingWorkSchedule(Guid doctorId, DateTime startTime, DateTime endTime, Guid? currentWSId = null);
 
         /// <summary>
         /// Checks if a doctor has already requested a shift that has exact same time range asynchronously.
+        /// If currentSRId is provided, it will be excluded from the check (useful for updates).
         /// </summary>
-        Task<bool> HasDuplicateShiftRequest(Guid doctorId, DateTime startTime, DateTime endTime);
+        Task<bool> HasDuplicateShiftRequest(Guid doctorId, DateTime startTime, DateTime endTime, Guid? currentSRId = null);
     }
 }

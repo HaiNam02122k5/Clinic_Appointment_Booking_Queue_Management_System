@@ -4,8 +4,6 @@ namespace Clinic.API.Models
 {
     public class CreateShiftRequest
     {
-        [Required(ErrorMessage = "DoctorId is required.")]
-        public Guid DoctorId { get; set; }
         [Required(ErrorMessage = "StartTime is required.")]
         public DateTime StartTime { get; set; }
         [Required(ErrorMessage = "EndTime is required.")]

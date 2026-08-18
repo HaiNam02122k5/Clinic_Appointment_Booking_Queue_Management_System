@@ -33,6 +33,11 @@ namespace Clinic.Application.Features.WorkSchedules.Commands
             {
                 throw new NotFoundException("Work schedule not found");
             }
+            var hasOverlappingSchedules = await _workScheduleRepository.HasOverlappingWorkSchedule(workSchedule.DoctorId, request.StartTime, request.EndTime, workSchedule.Id);
+            if (hasOverlappingSchedules)
+            {
+                throw new InvalidOperationException("The updated schedule overlaps with another existing schedule.");
+            }
             workSchedule.UpdateShift(request.StartTime, request.EndTime, request.PatientLimitPerSlot);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return workSchedule.Id;
