@@ -1,6 +1,7 @@
 ﻿using Clinic.Application.Common.Exceptions;
 using Clinic.Application.Features.Queue.Commands;
 using Clinic.Application.UnitTests.Common;
+using Clinic.Domain.Common.Exceptions;
 using Clinic.Domain.Enums;
 
 namespace Clinic.Application.UnitTests.Features.Queue.Commands

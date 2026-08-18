@@ -32,13 +32,28 @@ namespace Clinic.Domain.UnitTests.Common
         /// </summary>
         public static Appointment CreateAppointment(Guid? patientId = null, Guid? doctorId = null, bool confirmed = false, bool checkedIn = false)
         {
-            var workSchedule = new WorkSchedule
-            {
-                DoctorId = doctorId ?? Guid.NewGuid(),
-                ShiftStart = DateTime.UtcNow.AddHours(1),
-                ShiftEnd = DateTime.UtcNow.AddHours(2),
-                PatientLimitPerSlot = 5,
-            };
+            // WorkSchedule giờ bắt buộc gắn với 1 Doctor object (không chỉ DoctorId), nên
+            // dựng 1 Doctor "giả" qua constructor reconstruct để giữ đúng Id đã truyền vào,
+            // tránh phải dựng cả Employee/Specialty chỉ để phục vụ test Appointment.
+            var doctor = new Doctor(
+                id: doctorId ?? Guid.NewGuid(),
+                employeeId: Guid.NewGuid(),
+                licenseNumber: "TEST-LICENSE",
+                qualification: "MD",
+                experienceYears: 0,
+                biography: null,
+                status: DoctorStatus.Active,
+                createdAt: DateTime.UtcNow,
+                updatedAt: DateTime.UtcNow,
+                isDeleted: false
+            );
+
+            var workSchedule = new WorkSchedule(
+                doctor,
+                DateTime.UtcNow.AddHours(1),
+                DateTime.UtcNow.AddHours(2),
+                5
+            );
 
             var appointment = new Appointment
             {

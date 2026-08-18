@@ -2,6 +2,7 @@
 using Clinic.Application.Interfaces;
 using Clinic.Domain.Entities;
 using Clinic.Domain.Enums;
+using Clinic.Domain.Common.Exceptions;
 using MediatR;
 
 namespace Clinic.Application.Features.Appointments.Commands

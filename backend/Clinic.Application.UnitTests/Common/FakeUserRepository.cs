@@ -1,5 +1,7 @@
-﻿using Clinic.Application.Interfaces;
+﻿using Clinic.Application.Common.Models;
+using Clinic.Application.Interfaces;
 using Clinic.Domain.Entities;
+using Clinic.Domain.Enums;
 
 namespace Clinic.Application.UnitTests.Common
 {
@@ -21,7 +23,7 @@ namespace Clinic.Application.UnitTests.Common
             throw new NotImplementedException();
         }
 
-        public async Task<User?> GetByIdAsync(Guid id)
+        public async Task<User?> GetByIdAsync(Guid? id)
         {
             return _users.FirstOrDefault(u => u.Id == id);
         }
@@ -34,6 +36,35 @@ namespace Clinic.Application.UnitTests.Common
         public async Task<User?> GetByUsernameAsync(string username)
         {
             return _users.FirstOrDefault(u => u.Username == username);
+        }
+
+        public async Task<PagedResult<User>> GetPagedAsync(string? search, string sortBy, Gender? gender, bool descending, int pageNumber, int pageSize)
+        {
+            var query = _users
+                .Where(u => u.IsDeleted == false);
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(u => u.Username.Contains(search) || u.Person.FullName.Contains(search));
+            }
+
+            if (gender.HasValue)
+            {
+                query = query.Where(u => u.Person.Gender == gender.Value);
+            }
+
+            query = sortBy.ToLower() switch
+            {
+                "username" => descending ? query.OrderByDescending(u => u.Username) : query.OrderBy(u => u.Username),
+                "fullName" => descending ? query.OrderByDescending(u => u.Person.FullName) : query.OrderBy(u => u.Person.FullName),
+                _ => descending ? query.OrderByDescending(u => u.Person.FullName) : query.OrderBy(u => u.Person.FullName),
+            };
+
+
+            var totalItems = query.Count();
+            var items = query.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
+
+            return new PagedResult<User>(items, totalItems);
         }
 
         public async Task UpdateAsync(User user)

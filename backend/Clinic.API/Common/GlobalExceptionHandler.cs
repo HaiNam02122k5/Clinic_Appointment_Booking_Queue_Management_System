@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Clinic.API.Models;
 using Clinic.Application.Common.Exceptions;
+using Clinic.Domain.Common.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -33,6 +34,7 @@ namespace Clinic.API.Common
                 ConflictException => (HttpStatusCode.Conflict, new[] { exception.Message }),
                 // Domain ném ArgumentException khi dữ liệu đầu vào không hợp lệ.
                 ArgumentException => (HttpStatusCode.BadRequest, new[] { exception.Message }),
+                InvalidOperationException => (HttpStatusCode.BadRequest, new[] { exception.Message }),
                 UnauthorizedAccessException => (HttpStatusCode.Unauthorized, new[] { exception.Message }),
                 _ => (HttpStatusCode.InternalServerError, new[] { "An unexpected error occurred." })
             };

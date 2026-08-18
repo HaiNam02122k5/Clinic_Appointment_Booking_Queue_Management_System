@@ -1,20 +1,24 @@
 ﻿using Clinic.Application.Common.Models;
 using Clinic.Domain.Entities;
+using Clinic.Domain.Enums;
 
 namespace Clinic.Application.Interfaces
 {
     public interface IDoctorRepository
     {
         /// <summary>
-        /// Lấy 1 Doctor theo Id, kèm Employee -> Person (tên) và WorkHistories -> Specialty
-        /// (để xác định chuyên khoa hiện tại).
+        /// Adds a new doctor to the repository asynchronously.
         /// </summary>
-        Task<Doctor?> GetByIdAsync(Guid id);
+        Task AddAsync(Doctor doctor);
 
         /// <summary>
-        /// Lấy danh sách bác sĩ (chỉ Status = Active) có phân trang, lọc theo tên và/hoặc chuyên khoa hiện tại.
-        /// Dùng cho màn "tìm bác sĩ/chuyên khoa" của bệnh nhân.
+        /// Retrieves personal information for a doctor by their unique identifier asynchronously. Includes related entities Employee, Person, User, and WorkHistories.
         /// </summary>
-        Task<PagedResult<Doctor>> GetPagedAsync(string? search, Guid? specialtyId, int page, int pageSize);
+        Task<Doctor?> GetInfoByIdAsync(Guid? doctorId);
+
+        /// <summary>
+        /// Retrieves a paginated list of doctors based on the provided search term, sorting options, status filter, specialty filter, and pagination parameters asynchronously.
+        /// </summary>
+        Task<PagedResult<Doctor>> GetPagedAsync(string? searchTerm, string? sortBy, string? qualification, DoctorStatus? status, Guid? specialtyId, bool descending, int pageNumber, int pageSize);
     }
 }

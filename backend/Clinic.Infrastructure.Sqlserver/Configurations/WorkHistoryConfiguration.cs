@@ -21,10 +21,6 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
                 .WithMany(s => s.WorkHistories)
                 .HasForeignKey(w => w.SpecialtyId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            builder.Property(w => w.Status)
-                .HasConversion<string>()
-                .HasMaxLength(20);
         }
     }
 }

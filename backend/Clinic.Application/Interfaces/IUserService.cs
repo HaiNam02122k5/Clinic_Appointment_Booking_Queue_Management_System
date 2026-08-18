@@ -5,7 +5,7 @@ namespace Clinic.Application.Interfaces
     public interface IUserService
     {
         /// <summary>
-        /// Creates a new user with the specified username, password, and associated person ID.
+        /// Creates a new user with the specified username, password, and associated person ID. Throws an exception if the username is already taken, the person already has an account, or if the person does not exist.
         /// </summary>
         /// <returns></returns>
         Task<User> CreateUserAsync(string username, string password, Person person);

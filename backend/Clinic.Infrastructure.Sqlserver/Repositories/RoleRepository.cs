@@ -14,7 +14,16 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
         }
         public async Task<Role?> GetByNameAsync(string roleName)
         {
-            return await _context.Roles.FirstOrDefaultAsync(r => r.Name == roleName);
+            if (string.IsNullOrWhiteSpace(roleName))
+            {
+                throw new ArgumentException("Role name cannot be null or whitespace.", nameof(roleName));
+            }
+            return await _context.Roles.FirstOrDefaultAsync(r => r.Name == roleName.Trim());
+        }
+
+        public async Task AddAsync(Role role)
+        {
+            await _context.Roles.AddAsync(role);
         }
     }
 }

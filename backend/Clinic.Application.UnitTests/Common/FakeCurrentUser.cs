@@ -14,6 +14,8 @@ namespace Clinic.Application.UnitTests.Common
 
         public Guid? UserId { get; set; }
 
+        public Guid? EmployeeId { get; set; }
+
         public bool HasPermission(string permission) => _permissions.Contains(permission);
 
         public void GrantPermission(string permission) => _permissions.Add(permission);

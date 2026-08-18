@@ -27,11 +27,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             }
             var person = await _personService.CreateOrGetPersonAsync("Admin Name", "0379143825", "admin@thiscorp.com", new DateOnly(1990, 1, 1), Domain.Enums.Gender.Male, "123 Abc St.");
             var user = await _userService.CreateUserAsync(username, password, person);
-            var employee = new Employee
-            {
-                PersonId = person.Id,
-                HireDate = new DateOnly(2025, 1, 1),
-            };
+            var employee = new Employee(person, new DateOnly(2025, 1, 1));
 
             var adminRole = await _roleRepository.GetByNameAsync("Admin");
             if (adminRole == null)

@@ -13,14 +13,24 @@ namespace Clinic.Application.UnitTests.Common
             new Role(Guid.NewGuid(), "Patient", "Patient role", DateTime.UtcNow, DateTime.UtcNow, false),
         };
 
-        public static Person CreatePerson(string fullName = "John Doe", string? phoneNumber = "1234567890", string? email = "", string? address = "")
+        public static Person CreatePerson(string fullName = "John Doe", string? phoneNumber = "1234567890", string? email = "", string? address = "", DateOnly? dateOfBirth = null, string? userRole = null)
         {
-            return new Person(fullName, phoneNumber, email, DateOnly.FromDateTime(DateTime.UtcNow), Gender.Male, address);
+            var person = new Person(fullName, phoneNumber, email, dateOfBirth ?? DateOnly.FromDateTime(DateTime.UtcNow), Gender.Male, address);
+            if (!string.IsNullOrEmpty(userRole))
+            {
+                var user = CreateUser(userRole, $"{fullName.Replace(" ", "").ToLower()}user", "hashedpassword", person);
+                user.AssignRole(RoleSet.FirstOrDefault(r => r.Name == userRole) ?? RoleSet.First());
+                person.User = user;
+            }
+            return person;
         }
 
-        public static User CreateUser(string username = "testuser", string passwordHash = "hashedpassword", Person? person = null)
+        public static User CreateUser(string role = "Admin", string username = "testuser", string passwordHash = "hashedpassword", Person? person = null)
         {
-            var newUser = new User(username, passwordHash, person ?? CreatePerson());
+            person ??= CreatePerson();
+            var newUser = new User(username, passwordHash, person);
+            person.User = newUser;
+            newUser.AssignRole(RoleSet.FirstOrDefault(r => r.Name == role) ?? RoleSet.First());
             return newUser;
         }
 
@@ -45,6 +55,7 @@ namespace Clinic.Application.UnitTests.Common
 
             return queueTicket;
         }
+
         public static RefreshToken CreateRefreshToken(string hashedToken, User user)
         {
             var refreshToken = new RefreshToken(hashedToken, DateTime.UtcNow.AddDays(7), user);
@@ -60,13 +71,28 @@ namespace Clinic.Application.UnitTests.Common
         /// </summary>
         public static Appointment CreateAppointment(Guid? patientId = null, Guid? doctorId = null, bool confirmed = false, bool checkedIn = false)
         {
-            var workSchedule = new WorkSchedule
-            {
-                DoctorId = doctorId ?? Guid.NewGuid(),
-                ShiftStart = DateTime.UtcNow.AddHours(1),
-                ShiftEnd = DateTime.UtcNow.AddHours(2),
-                PatientLimitPerSlot = 5,
-            };
+            // WorkSchedule giờ bắt buộc gắn với 1 Doctor object (không chỉ DoctorId), nên
+            // dựng 1 Doctor "giả" qua constructor reconstruct để giữ đúng Id đã truyền vào,
+            // tránh phải dựng cả Employee/Specialty chỉ để phục vụ test Appointment/Queue.
+            var doctor = new Doctor(
+                id: doctorId ?? Guid.NewGuid(),
+                employeeId: Guid.NewGuid(),
+                licenseNumber: "TEST-LICENSE",
+                qualification: "MD",
+                experienceYears: 0,
+                biography: null,
+                status: DoctorStatus.Active,
+                createdAt: DateTime.UtcNow,
+                updatedAt: DateTime.UtcNow,
+                isDeleted: false
+            );
+
+            var workSchedule = new WorkSchedule(
+                doctor,
+                DateTime.UtcNow.AddHours(1),
+                DateTime.UtcNow.AddHours(2),
+                5
+            );
 
             var appointment = new Appointment
             {
@@ -87,6 +113,27 @@ namespace Clinic.Application.UnitTests.Common
             }
 
             return appointment;
+        }
+
+        public static Specialty CreateSpecialty(string? name = "Cardiology", string? description = "Heart specialist")
+        {
+            var specialty = new Specialty(name, description, DateOnly.FromDateTime(DateTime.UtcNow));
+            return specialty;
+        }
+
+        public static Employee CreateEmployee(Person? person = null, string role = "Admin")
+        {
+            person ??= CreatePerson(userRole: role);
+            var newEmployee = new Employee(person, DateOnly.FromDateTime(DateTime.UtcNow));
+            person.Employee = newEmployee;
+            return newEmployee;
+        }
+
+        internal static Doctor CreateDoctor(Employee? employee = null, Specialty? specialty = null, string? licenseNumber = "ABC123", string? qualification = "MD", string? bio = "", int yoe = 0)
+        {
+            var doctor = new Doctor(employee ?? CreateEmployee(role: "Doctor"), licenseNumber, qualification, specialty ?? CreateSpecialty(), yoe, bio);
+            doctor.Employee?.AssignDoctor(doctor);
+            return doctor;
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿using Clinic.Domain.Entities;
+﻿using Clinic.Application.Common.Models;
+using Clinic.Domain.Entities;
+using Clinic.Domain.Enums;
 
 namespace Clinic.Application.Interfaces
 {
@@ -12,7 +14,7 @@ namespace Clinic.Application.Interfaces
         /// <summary>
         /// Gets a user by their unique identifier (ID).
         /// </summary>
-        Task<User?> GetByIdAsync(Guid id);
+        Task<User?> GetByIdAsync(Guid? id);
 
         /// <summary>
         /// Gets all users in the system.
@@ -38,5 +40,10 @@ namespace Clinic.Application.Interfaces
         /// Gets a user by their associated person's unique identifier (PersonId).
         /// </summary>
         Task<User?> GetByPersonIdAsync(Guid id);
+
+        /// <summary>
+        /// Gets a paginated list of users based on search criteria, sorting, and filtering options.
+        /// </summary>
+        Task<PagedResult<User>> GetPagedAsync(string? search, string sortBy, Gender? gender, bool descending, int pageNumber, int pageSize);
     }
 }
