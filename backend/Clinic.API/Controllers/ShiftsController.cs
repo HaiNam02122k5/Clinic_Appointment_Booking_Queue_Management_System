@@ -61,7 +61,8 @@ namespace Clinic.API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Cancel([FromRoute] Guid shiftId, [FromBody] CancelShiftRequest request)
         {
-            var command = new CancelWorkScheduleCommand(shiftId, request.Reason);
+            var userId = _currentUser.UserId ?? throw new UnauthorizedAccessException();
+            var command = new CancelWorkScheduleCommand(userId, shiftId, request.Reason);
             await _sender.Send(command);
             return NoContent();
         }
