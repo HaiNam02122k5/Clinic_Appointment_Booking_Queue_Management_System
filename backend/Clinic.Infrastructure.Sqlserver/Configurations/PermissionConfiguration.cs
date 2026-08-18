@@ -59,7 +59,12 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
                 new Permission(Guid.Parse("2000000A-0000-0000-0000-000000000003"), "specialty.manage", "Manage medical specialties", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("2000000A-0000-0000-0000-000000000004"), "slot.view", "View appointment slots", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("2000000A-0000-0000-0000-000000000005"), "slot.manage", "Manage appointment slots", new DateTime(2026, 1, 1), null, false),
-                new Permission(Guid.Parse("2000000A-0000-0000-0000-000000000006"), "shift.suggestion.manage", "Approve/reject doctor shift-change suggestions (Receptionist)", new DateTime(2026, 1, 1), null, false)
+                new Permission(Guid.Parse("2000000A-0000-0000-0000-000000000006"), "shift.suggestion.manage", "Approve/reject doctor shift-change suggestions (Receptionist)", new DateTime(2026, 1, 1), null, false),
+                new Permission(Guid.Parse("2000000A-0000-0000-0000-000000000007"), "patient.create.any", "Create any patient record (Receptionist)", new DateTime(2026, 1, 1), null, false),
+                new Permission(Guid.Parse("2000000A-0000-0000-0000-000000000008"), "patient.edit.own", "Edit own patient record (Patient)", new DateTime(2026, 1, 1), null, false),
+                new Permission(Guid.Parse("2000000A-0000-0000-0000-000000000009"), "patient.edit.any", "Edit any patient record (Receptionist)", new DateTime(2026, 1, 1), null, false),
+                new Permission(Guid.Parse("2000000A-0000-0000-0000-000000000010"), "patient.view.own", "View own patient record (Patient)", new DateTime(2026, 1, 1), null, false),
+                new Permission(Guid.Parse("2000000A-0000-0000-0000-000000000011"), "patient.view.any", "View any patient record (Receptionist)", new DateTime(2026, 1, 1), null, false)
             );
         }
     }
