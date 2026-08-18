@@ -156,7 +156,6 @@ namespace Clinic.API.Controllers
             return Created((string?)null, result);
         }
 
-        // Pls add a policy to allow admin only for this endpoint
         [HttpGet("{doctorId}/suggestions")]
         [Authorize(Policy = "Permission:shift.suggestion.manage")]
         public async Task<IActionResult> GetAllSuggestions([FromRoute] Guid doctorId, [FromQuery] GetShiftsQuery query)
