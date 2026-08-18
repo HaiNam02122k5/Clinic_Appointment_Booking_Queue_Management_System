@@ -58,16 +58,16 @@ namespace Clinic.Domain.Entities
             CreatedByUserId = createdByUserId;
         }
 
-        public void AdminCancelWithReason(Guid adminId, string reason)
+        public void AdminCancel(Guid adminId)
         {
             if (Status is AppointmentStatus.Completed or AppointmentStatus.Cancelled)
             {
-                return; // No throw, just ignore the request if the appointment is already completed or cancelled.
+                return; // No throw, if it passed, let it pass.
             }
+            // Force cancellation by admin, no time limit check.
             Snapshots.Add(new AppointmentSnapshot(this));
             Status = AppointmentStatus.Cancelled;
             CancelledByUserId = adminId;
-            Reason = reason;
             MarkUpdated();
         }
 

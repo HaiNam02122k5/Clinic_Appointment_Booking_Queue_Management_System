@@ -31,7 +31,7 @@ namespace Clinic.Application.Features.WorkSchedules.Commands
             workSchedule.Cancel(request.Reason);
             foreach (var appointment in workSchedule.Appointments)
             {
-                appointment.AdminCancelWithReason(request.UserId, request.Reason);
+                appointment.AdminCancel(request.UserId);
                 // TODO: notify patients and doctor
             }
             await _unitOfWork.SaveChangesAsync(cancellationToken);
