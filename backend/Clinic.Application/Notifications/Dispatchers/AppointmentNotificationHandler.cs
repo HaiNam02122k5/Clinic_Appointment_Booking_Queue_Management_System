@@ -33,6 +33,7 @@ namespace Clinic.Application.Notifications.Dispatchers
                 {
                     NotificationType.AppointmentConfirmation => new AppointmentConfirmationTemplate().RenderInApp(appointmentJob.Data),
                     NotificationType.AppointmentReminder => new AppointmentReminderTemplate().RenderInApp(appointmentJob.Data),
+                    NotificationType.AppointmentCancellation => new AppointmentCancelledTemplate().RenderInApp(appointmentJob.Data),
                     _ => throw new ArgumentOutOfRangeException()
                 };
                 var notification = new Notification(
@@ -59,6 +60,7 @@ namespace Clinic.Application.Notifications.Dispatchers
                 {
                     NotificationType.AppointmentConfirmation => new AppointmentConfirmationTemplate().RenderEmail(appointmentJob.Data),
                     NotificationType.AppointmentReminder => new AppointmentReminderTemplate().RenderEmail(appointmentJob.Data),
+                    NotificationType.AppointmentCancellation => new AppointmentCancelledTemplate().RenderEmail(appointmentJob.Data),
                     _ => throw new ArgumentOutOfRangeException()
                 };
                 var notification = new Notification(
@@ -91,6 +93,7 @@ namespace Clinic.Application.Notifications.Dispatchers
                 {
                     NotificationType.AppointmentConfirmation => new AppointmentConfirmationTemplate().RenderSms(appointmentJob.Data),
                     NotificationType.AppointmentReminder => new AppointmentReminderTemplate().RenderSms(appointmentJob.Data),
+                    NotificationType.AppointmentCancellation => new AppointmentCancelledTemplate().RenderSms(appointmentJob.Data),
                     _ => throw new ArgumentOutOfRangeException()
                 };
                 var notification = new Notification(

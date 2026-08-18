@@ -47,6 +47,7 @@ namespace Clinic.Domain.Enums
     {
         AppointmentReminder,
         AppointmentConfirmation,
+        AppointmentCancellation,
         QueueUpdate,
         System
     }

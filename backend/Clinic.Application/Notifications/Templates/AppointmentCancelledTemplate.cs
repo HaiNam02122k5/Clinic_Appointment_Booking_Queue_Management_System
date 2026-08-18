@@ -14,7 +14,7 @@ namespace Clinic.Application.Notifications.Templates
 
                     <p>Xin chào {appointment.Patient.Person.FullName},</p>
 
-                    <p>Lịch khám dưới đây của bạn đã được hủy.</p>
+                    <p>Lịch khám dưới đây của bạn đã bị hủy với lí do: {appointment.WorkSchedule.CancellationReason}.</p>
 
                     <p>
                         <strong>Bác sĩ:</strong> {appointment.WorkSchedule.Doctor.Employee.Person.FullName}<br>
@@ -33,8 +33,14 @@ namespace Clinic.Application.Notifications.Templates
 
         public InAppContent RenderInApp(Appointment appointment)
         {
-            var message = $"Lịch khám của khách hàng {appointment.Patient.Person.FullName} với bác sĩ {appointment.WorkSchedule.Doctor.Employee.Person.FullName} vào ngày {appointment.WorkSchedule.Date} lúc {appointment.TimeSlot} đã được hủy.";
+            var message = $"Lịch khám của khách hàng {appointment.Patient.Person.FullName} với bác sĩ {appointment.WorkSchedule.Doctor.Employee.Person.FullName} vào ngày {appointment.WorkSchedule.Date} lúc {appointment.TimeSlot} đã bị hủy với lí do: {appointment.WorkSchedule.CancellationReason}.";
             return new InAppContent("Hủy lịch khám", message);
+        }
+
+        public SmsContent RenderSms(Appointment data)
+        {
+            var message = $"Lịch khám của bạn với bác sĩ {data.WorkSchedule.Doctor.Employee.Person.FullName} vào ngày {data.WorkSchedule.Date} lúc {data.TimeSlot} đã bị hủy với lí do: {data.WorkSchedule.CancellationReason}.";
+            return new SmsContent(message);
         }
     }
 }

@@ -88,14 +88,14 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
         public async Task<WorkSchedule?> GetWorkScheduleByIdAsync(Guid scheduleId)
         {
             return await _context.WorkSchedules.Include(ws => ws.Doctor).ThenInclude(d => d.Employee).ThenInclude(e => e.Person)
-                .Include(ws => ws.Appointments.Where(a => a.IsDeleted == false && a.Status != AppointmentStatus.Cancelled))
+                .Include(ws => ws.Appointments.Where(a => a.IsDeleted == false && a.Status != AppointmentStatus.Cancelled)).ThenInclude(a => a.Patient).ThenInclude(p => p.Person)
                 .FirstOrDefaultAsync(ws => ws.Id == scheduleId && ws.IsDeleted == false);
         }
 
         public async Task<bool> HasDuplicateShiftRequest(Guid doctorId, DateOnly date, TimeOnly startTime, TimeOnly endTime)
         {
             var hasDuplicate = await _context.ShiftRequests
-                .AnyAsync(sr => sr.DoctorId == doctorId && sr.IsDeleted == false && sr.Status != Domain.Enums.ShiftRequestStatus.Cancelled &&
+                .AnyAsync(sr => sr.DoctorId == doctorId && sr.IsDeleted == false && sr.Status != ShiftRequestStatus.Cancelled &&
                     sr.Date == date && sr.ShiftStart == startTime && sr.ShiftEnd == endTime);
             return hasDuplicate;
         }
@@ -103,7 +103,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
         public async Task<bool> HasOverlappingWorkSchedule(Guid doctorId, DateOnly date, TimeOnly startTime, TimeOnly endTime)
         {
             var hasOverlapping = await _context.WorkSchedules
-                .AnyAsync(ws => ws.DoctorId == doctorId && ws.IsDeleted == false && ws.Status != Domain.Enums.WorkScheduleStatus.Cancelled &&
+                .AnyAsync(ws => ws.DoctorId == doctorId && ws.IsDeleted == false && ws.Status != WorkScheduleStatus.Cancelled &&
                     ws.Date == date && ws.ShiftStart < endTime && ws.ShiftEnd > startTime);
             return hasOverlapping;
         }
