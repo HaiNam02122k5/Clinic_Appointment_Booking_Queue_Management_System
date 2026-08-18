@@ -35,7 +35,7 @@ namespace Clinic.API.Controllers
             var doctorId = _currentUser.DoctorId;
             if (doctorId == null)
             {
-                return Forbid("You are not a doctor. To view doctor schedules, use the doctor-specific endpoint.");
+                return Forbid();
             }
             var command = new GetDoctorSchedulesQuery(doctorId, query.StartDate, query.EndDate);
             var result = await _sender.Send(command);
