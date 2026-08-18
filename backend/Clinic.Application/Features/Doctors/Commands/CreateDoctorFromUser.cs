@@ -78,9 +78,9 @@ namespace Clinic.Application.Features.Doctors.Commands
             }
             user.AssignRole(role);
             user.Person.UpdateDetails(
-                email: request.Email ?? user.Person.Email,
+                email: string.IsNullOrWhiteSpace(request.Email) ? user.Person.Email : request.Email,
                 gender: user.Person.Gender,
-                address: request.Address ?? user.Person.Address
+                address: string.IsNullOrWhiteSpace(request.Address) ? user.Person.Address : request.Address
             );
             var employee = user.Person.Employee;
             if (employee == null)
