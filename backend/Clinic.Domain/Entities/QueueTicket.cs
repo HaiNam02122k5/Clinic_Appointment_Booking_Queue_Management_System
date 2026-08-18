@@ -53,12 +53,14 @@ namespace Clinic.Domain.Entities
 
         /// <summary>
         /// Bỏ qua lượt khám (bệnh nhân không có mặt khi được gọi, hoặc lễ tân chủ động bỏ qua
-        /// trong khi vẫn đang chờ). Không cho phép bỏ qua khi đã khám xong hoặc đã bị bỏ qua trước đó.
+        /// trong khi vẫn đang chờ). Chỉ cho phép khi vé đang ở Waiting hoặc Called.
+        /// Không cho phép bỏ qua khi đang khám (InProgress) - trường hợp này phải dùng Complete();
+        /// cũng không cho phép khi đã khám xong (Completed) hoặc đã bị bỏ qua trước đó (Skipped).
         /// </summary>
         /// <exception cref="ArgumentException"></exception>
         public void Skip()
         {
-            if (Status is QueueStatus.Completed or QueueStatus.Skipped)
+            if (Status is not (QueueStatus.Waiting or QueueStatus.Called))
             {
                 throw new ArgumentException($"Cannot skip a queue ticket with status '{Status}'.");
             }

@@ -44,8 +44,10 @@ namespace Clinic.API.Controllers
         [Authorize(Policy = "Permission:queue.skip")]
         public async Task<IActionResult> Skip([FromRoute] Guid queueTicketId)
         {
-            await _sender.Send(new SkipQueueCommand(queueTicketId));
-            return NoContent();
+            // Trả về 200 kèm SkipQueueResult (thay vì 204) vì FE cần biết bệnh nhân tiếp theo
+            // có được tự động gọi thay cho lễ tân hay không, để cập nhật màn hình "đang gọi số".
+            var result = await _sender.Send(new SkipQueueCommand(queueTicketId));
+            return Ok(result);
         }
 
         [HttpPatch("{queueTicketId}/priority")]
