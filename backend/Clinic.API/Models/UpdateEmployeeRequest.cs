@@ -17,7 +17,5 @@ namespace Clinic.API.Models
         public Gender Gender { get; set; }
         [Required(ErrorMessage = "Address is required.")]
         public string Address { get; set; }
-        [Required(ErrorMessage = "At least one role is required.")]
-        public List<string> Roles { get; set; }
     }
 }
