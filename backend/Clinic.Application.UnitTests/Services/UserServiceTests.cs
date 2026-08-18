@@ -13,7 +13,7 @@ namespace Clinic.Application.UnitTests.Services
             var userService = new UserService(userRepository, passwordHasher);
 
             var person = TestDataFactory.CreatePerson();
-            var user = TestDataFactory.CreateUser("username", "hashedpassword", person);
+            var user = TestDataFactory.CreateUser("Patient", "username", "hashedpassword", person);
 
             await userRepository.AddAsync(user);
             var retrievedUser = await userService.GetByIdAsync(user.Id);
@@ -44,7 +44,7 @@ namespace Clinic.Application.UnitTests.Services
             var userService = new UserService(userRepository, passwordHasher);
 
             var person1 = TestDataFactory.CreatePerson();
-            var user1 = TestDataFactory.CreateUser("testuser", "hashedpassword", person1);
+            var user1 = TestDataFactory.CreateUser("Patient", "testuser", "hashedpassword", person1);
             await userRepository.AddAsync(user1);
 
             var person2 = TestDataFactory.CreatePerson();
@@ -60,7 +60,7 @@ namespace Clinic.Application.UnitTests.Services
             var userService = new UserService(userRepository, passwordHasher);
 
             var person = TestDataFactory.CreatePerson();
-            var user = TestDataFactory.CreateUser("testuser", passwordHasher.HashPassword("password"), person);
+            var user = TestDataFactory.CreateUser("Patient", "testuser", passwordHasher.HashPassword("password"), person);
             await userRepository.AddAsync(user);
 
             Assert.NotNull(await userService.VerifyUser("testuser", "password"));

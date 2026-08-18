@@ -27,7 +27,7 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
                 new Permission(Guid.Parse("10000000-0000-0000-0000-00000000000E"), "appointment.cancel.own", "Cancel own appointment (Patient)", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("10000000-0000-0000-0000-00000000000F"), "appointment.cancel.any", "Cancel any appointment (Admin/Receptionist)", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("10000000-0000-0000-0000-000000000004"), "queue.call-next", "Call next in queue", new DateTime(2026, 1, 1), null, false),
-                new Permission(Guid.Parse("10000000-0000-0000-0000-000000000005"), "doctor.view", "View doctor profile", new DateTime(2026, 1, 1), null, false),
+                new Permission(Guid.Parse("10000000-0000-0000-0000-000000000005"), "doctor.view.own", "View own doctor profile (Doctor)", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("10000000-0000-0000-0000-000000000006"), "doctor.edit", "Edit doctor profile (deprecated - dùng doctor.edit.own/.any)", new DateTime(2026, 1, 1), null, true),
                 new Permission(Guid.Parse("10000000-0000-0000-0000-000000000007"), "user.manage", "Manage users", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("10000000-0000-0000-0000-000000000008"), "role.manage", "Manage roles and permissions", new DateTime(2026, 1, 1), null, false),
@@ -38,6 +38,14 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
                 new Permission(Guid.Parse("10000000-0000-0000-0000-00000000000D"), "doctor.create", "Create doctor profile", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("10000000-0000-0000-0000-000000000013"), "doctor.edit.own", "Edit own doctor profile (Doctor)", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("10000000-0000-0000-0000-000000000014"), "doctor.edit.any", "Edit any doctor profile (Admin)", new DateTime(2026, 1, 1), null, false),
+                new Permission(Guid.Parse("10000000-0000-0000-0000-000000000020"), "doctor.view.any", "View any doctor profile (Admin)", new DateTime(2026, 1, 1), null, false),
+
+                new Permission(Guid.Parse("10000000-0000-0000-0000-000000000015"), "employee.view.own", "View own employee profile (Employee)", new DateTime(2026, 1, 1), null, false),
+                new Permission(Guid.Parse("10000000-0000-0000-0000-000000000016"), "employee.create", "Create employee profile", new DateTime(2026, 1, 1), null, false),
+                new Permission(Guid.Parse("10000000-0000-0000-0000-000000000017"), "employee.edit.any", "Edit any employee profile (Admin)", new DateTime(2026, 1, 1), null, false),
+                new Permission(Guid.Parse("10000000-0000-0000-0000-000000000018"), "employee.edit.own", "Edit own employee profile (Employee)", new DateTime(2026, 1, 1), null, false),
+                new Permission(Guid.Parse("10000000-0000-0000-0000-000000000019"), "employee.view.any", "View any employee profile (Admin)", new DateTime(2026, 1, 1), null, false),
+
 
                 new Permission(Guid.Parse("20000000-0000-0000-0000-000000000001"), "medical-report.view", "View medical reports", new DateTime(2026, 1, 1), null, true),
                 new Permission(Guid.Parse("20000000-0000-0000-0000-000000000002"), "medical-report.create", "Create medical reports", new DateTime(2026, 1, 1), null, false),

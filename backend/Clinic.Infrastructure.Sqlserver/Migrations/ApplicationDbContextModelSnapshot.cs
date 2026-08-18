@@ -83,7 +83,7 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                     b.Property<Guid>("EmployeeId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int?>("ExperienceYears")
+                    b.Property<int>("ExperienceYears")
                         .HasColumnType("int");
 
                     b.Property<bool>("IsDeleted")
@@ -95,6 +95,7 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Qualification")
+                        .IsRequired()
                         .HasMaxLength(300)
                         .HasColumnType("nvarchar(300)");
 
@@ -372,9 +373,9 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         {
                             Id = new Guid("10000000-0000-0000-0000-000000000005"),
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "View doctor profile",
+                            Description = "View own doctor profile (Doctor)",
                             IsDeleted = false,
-                            Name = "doctor.view"
+                            Name = "doctor.view.own"
                         },
                         new
                         {
@@ -455,6 +456,54 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                             Description = "Edit any doctor profile (Admin)",
                             IsDeleted = false,
                             Name = "doctor.edit.any"
+                        },
+                        new
+                        {
+                            Id = new Guid("10000000-0000-0000-0000-000000000020"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "View any doctor profile (Admin)",
+                            IsDeleted = false,
+                            Name = "doctor.view.any"
+                        },
+                        new
+                        {
+                            Id = new Guid("10000000-0000-0000-0000-000000000015"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "View own employee profile (Employee)",
+                            IsDeleted = false,
+                            Name = "employee.view.own"
+                        },
+                        new
+                        {
+                            Id = new Guid("10000000-0000-0000-0000-000000000016"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Create employee profile",
+                            IsDeleted = false,
+                            Name = "employee.create"
+                        },
+                        new
+                        {
+                            Id = new Guid("10000000-0000-0000-0000-000000000017"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Edit any employee profile (Admin)",
+                            IsDeleted = false,
+                            Name = "employee.edit.any"
+                        },
+                        new
+                        {
+                            Id = new Guid("10000000-0000-0000-0000-000000000018"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Edit own employee profile (Employee)",
+                            IsDeleted = false,
+                            Name = "employee.edit.own"
+                        },
+                        new
+                        {
+                            Id = new Guid("10000000-0000-0000-0000-000000000019"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "View any employee profile (Admin)",
+                            IsDeleted = false,
+                            Name = "employee.view.any"
                         },
                         new
                         {
@@ -957,6 +1006,36 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         },
                         new
                         {
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000001"),
+                            PermissionId = new Guid("10000000-0000-0000-0000-000000000016")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000001"),
+                            PermissionId = new Guid("10000000-0000-0000-0000-000000000017")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000001"),
+                            PermissionId = new Guid("10000000-0000-0000-0000-000000000015")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000001"),
+                            PermissionId = new Guid("10000000-0000-0000-0000-000000000018")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000001"),
+                            PermissionId = new Guid("10000000-0000-0000-0000-000000000019")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000001"),
+                            PermissionId = new Guid("10000000-0000-0000-0000-000000000020")
+                        },
+                        new
+                        {
                             RoleId = new Guid("00000000-0000-0000-0000-000000000003"),
                             PermissionId = new Guid("10000000-0000-0000-0000-000000000001")
                         },
@@ -1037,6 +1116,16 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         },
                         new
                         {
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000003"),
+                            PermissionId = new Guid("10000000-0000-0000-0000-000000000015")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000003"),
+                            PermissionId = new Guid("10000000-0000-0000-0000-000000000018")
+                        },
+                        new
+                        {
                             RoleId = new Guid("00000000-0000-0000-0000-000000000004"),
                             PermissionId = new Guid("10000000-0000-0000-0000-000000000005")
                         },
@@ -1089,6 +1178,16 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         {
                             RoleId = new Guid("00000000-0000-0000-0000-000000000004"),
                             PermissionId = new Guid("2000000a-0000-0000-0000-000000000004")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000004"),
+                            PermissionId = new Guid("10000000-0000-0000-0000-000000000015")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000004"),
+                            PermissionId = new Guid("10000000-0000-0000-0000-000000000018")
                         },
                         new
                         {
@@ -1146,6 +1245,9 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
+
+                    b.Property<int>("PatientLimitPerSlot")
+                        .HasColumnType("int");
 
                     b.Property<string>("Reason")
                         .HasMaxLength(500)
@@ -1287,11 +1389,6 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
 
                     b.Property<DateOnly>("StartDate")
                         .HasColumnType("date");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");

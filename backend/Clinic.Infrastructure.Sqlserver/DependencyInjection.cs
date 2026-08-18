@@ -29,6 +29,9 @@ namespace Clinic.Infrastructure.Sqlserver
             services.AddScoped<IRoleRepository, RoleRepository>();
             services.AddScoped<IPasswordHasher, PasswordHasher>();
             services.AddScoped<ISpecialtyRepository, SpecialtyRepository>();
+            services.AddScoped<IDoctorRepository, DoctorRepository>();
+            services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+            services.AddScoped<IWorkScheduleRepository, WorkScheduleRepository>();
             services.AddScoped<DatabaseInitializer>();
             services.AddScoped<IAppointmentRepository, AppointmentRepository>();
             services.AddScoped<IMedicalReportRepository, MedicalReportRepository>();

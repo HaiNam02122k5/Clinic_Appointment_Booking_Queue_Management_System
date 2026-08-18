@@ -70,11 +70,40 @@ namespace Clinic.Domain.Entities
         }
 
         /// <summary>
-        /// Updates the details of the person. Limited to email, gender, and address.
+        /// Updates the details of the person. Limited to email, gender, and address. Apply for patient only.
+        /// For employee, use UpdateAdvancedDetails to update full name and phone number as well.
         /// </summary>
-        public void UpdateDetails(string? email, Gender gender, string address)
+        public void UpdateDetails(string? email, Gender gender, string? address)
         {
             Email = email;
+            Gender = gender;
+            Address = address;
+            MarkUpdated();
+        }
+
+        /// <summary>
+        /// Fully updates the details of the person, including full name, phone number, and address. Apply for employee only.
+        /// Requires correct format for phone number and email. Date of birth cannot be in the future.
+        /// For patient, use UpdateDetails to update nullable email, gender, and address only.
+        /// </summary>
+        /// <exception cref="ArgumentException"></exception>
+        public void UpdateAdvancedDetails(string fullName, string? phoneNumber, string? email, Gender gender, DateOnly dateOfBirth, string address)
+        {
+            if (string.IsNullOrWhiteSpace(fullName))
+                throw new ArgumentException("Full name cannot be null or empty.", nameof(fullName));
+            if (string.IsNullOrWhiteSpace(phoneNumber) ||
+                !Regex.IsMatch(phoneNumber, @"^\+?[0-9]+$"))
+                throw new ArgumentException("Invalid phone number");
+            if (dateOfBirth > DateOnly.FromDateTime(DateTime.UtcNow))
+                throw new ArgumentException("Date of birth cannot be in the future.", nameof(dateOfBirth));
+            if (string.IsNullOrWhiteSpace(email)) // RegEx for email validation too complex lol
+                throw new ArgumentException("Email cannot be null or empty.", nameof(email));
+            if (string.IsNullOrWhiteSpace(address))
+                throw new ArgumentException("Address cannot be null or empty.", nameof(address));
+            Email = email;
+            FullName = fullName;
+            PhoneNumber = phoneNumber;
+            DateOfBirth = dateOfBirth;
             Gender = gender;
             Address = address;
             MarkUpdated();
