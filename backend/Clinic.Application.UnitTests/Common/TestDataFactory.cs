@@ -27,7 +27,7 @@ namespace Clinic.Application.UnitTests.Common
         /// <summary>
         /// Tạo 1 QueueTicket hợp lệ, liên kết 2 chiều với appointment (giống CheckInHandler thật).
         /// </summary>
-        public static QueueTicket CreateQueueTicket(Appointment appointment, int queueNumber, bool priority = false)
+        public static QueueTicket CreateQueueTicket(Appointment appointment, int queueNumber = 1, bool priority = false)
         {
             var queueTicket = new QueueTicket
             {
@@ -53,10 +53,12 @@ namespace Clinic.Application.UnitTests.Common
 
         /// <summary>
         /// Tạo 1 Appointment hợp lệ (kèm WorkSchedule gắn với doctorId) để dùng cho test
-        /// Confirm/CheckIn. status mặc định là Pending (trạng thái khởi tạo của Appointment);
-        /// truyền confirmed = true để có sẵn Appointment ở trạng thái Confirmed (phục vụ test CheckIn).
+        /// Confirm/CheckIn/Cancel. Status mặc định là Pending (trạng thái khởi tạo của Appointment);
+        /// truyền confirmed = true để có sẵn Appointment ở trạng thái Confirmed (phục vụ test CheckIn),
+        /// hoặc checkedIn = true để có sẵn Appointment ở trạng thái CheckedIn (phục vụ test Cancel
+        /// sau khi đã có QueueTicket).
         /// </summary>
-        public static Appointment CreateAppointment(Guid? patientId = null, Guid? doctorId = null, bool confirmed = false)
+        public static Appointment CreateAppointment(Guid? patientId = null, Guid? doctorId = null, bool confirmed = false, bool checkedIn = false)
         {
             var workSchedule = new WorkSchedule
             {
@@ -74,9 +76,14 @@ namespace Clinic.Application.UnitTests.Common
                 TimeSlot = DateTime.UtcNow.AddHours(1),
             };
 
-            if (confirmed)
+            if (confirmed || checkedIn)
             {
                 appointment.Confirm();
+            }
+
+            if (checkedIn)
+            {
+                appointment.CheckIn();
             }
 
             return appointment;

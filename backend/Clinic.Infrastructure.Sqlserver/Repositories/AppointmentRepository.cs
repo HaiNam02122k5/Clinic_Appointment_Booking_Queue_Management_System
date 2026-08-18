@@ -19,6 +19,11 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             return await _context.Appointments
                 .Include(a => a.Patient)
                 .Include(a => a.WorkSchedule)
+                // Bắt buộc load QueueTicket: Appointment.Cancel() cần biết trạng thái vé hàng đợi
+                // hiện tại (Waiting/Called/InProgress/...) để quyết định có được hủy hay không,
+                // và để cascade hủy vé khi hợp lệ. Thiếu Include này là nguyên nhân gốc khiến
+                // Appointment chuyển Cancelled trong khi QueueTicket vẫn "sống" (bug hàng đợi ảo).
+                .Include(a => a.QueueTicket)
                 .FirstOrDefaultAsync(a => a.Id == id);
         }
 

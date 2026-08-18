@@ -24,5 +24,63 @@ namespace Clinic.Domain.UnitTests.Common
             var newUser = new User(username, passwordHash, person ?? CreatePerson());
             return newUser;
         }
+
+        /// <summary>
+        /// Tạo 1 Appointment hợp lệ (kèm WorkSchedule) để dùng cho test Confirm/CheckIn/Cancel.
+        /// Status mặc định là Pending; truyền confirmed = true / checkedIn = true để có sẵn
+        /// Appointment ở trạng thái tương ứng.
+        /// </summary>
+        public static Appointment CreateAppointment(Guid? patientId = null, Guid? doctorId = null, bool confirmed = false, bool checkedIn = false)
+        {
+            var workSchedule = new WorkSchedule
+            {
+                DoctorId = doctorId ?? Guid.NewGuid(),
+                ShiftStart = DateTime.UtcNow.AddHours(1),
+                ShiftEnd = DateTime.UtcNow.AddHours(2),
+                PatientLimitPerSlot = 5,
+            };
+
+            var appointment = new Appointment
+            {
+                PatientId = patientId ?? Guid.NewGuid(),
+                WorkScheduleId = workSchedule.Id,
+                WorkSchedule = workSchedule,
+                TimeSlot = DateTime.UtcNow.AddHours(1),
+            };
+
+            if (confirmed || checkedIn)
+            {
+                appointment.Confirm();
+            }
+
+            if (checkedIn)
+            {
+                appointment.CheckIn();
+            }
+
+            return appointment;
+        }
+
+        /// <summary>
+        /// Tạo 1 QueueTicket hợp lệ, liên kết 2 chiều với appointment (giống CheckInHandler thật).
+        /// </summary>
+        public static QueueTicket CreateQueueTicket(Appointment appointment, int queueNumber = 1, bool priority = false)
+        {
+            var queueTicket = new QueueTicket
+            {
+                AppointmentId = appointment.Id,
+                Appointment = appointment,
+                QueueNumber = queueNumber,
+                CheckInTime = DateTime.UtcNow
+            };
+            appointment.QueueTicket = queueTicket;
+
+            if (priority)
+            {
+                queueTicket.SetPriority(true);
+            }
+
+            return queueTicket;
+        }
     }
 }

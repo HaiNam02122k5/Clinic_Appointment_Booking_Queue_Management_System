@@ -57,13 +57,48 @@ namespace Clinic.Domain.Entities
         /// <summary>
         /// Hủy lịch hẹn. Không cho phép hủy lịch đã ở trạng thái kết thúc
         /// (Completed, Cancelled, NoShow).
+        ///
+        /// Trường hợp Status = CheckedIn: bệnh nhân đã check-in nên chắc chắn có 1 QueueTicket
+        /// đi kèm. Để tránh việc Appointment chuyển sang Cancelled trong khi QueueTicket vẫn
+        /// còn Waiting/Called/InProgress (khiến lễ tân/bác sĩ vẫn gọi một bệnh nhân "ảo" đã hủy),
+        /// việc hủy được xử lý như sau:
+        /// - Vé đang Waiting hoặc Called (bệnh nhân chưa vào phòng khám): hủy luôn vé kèm theo,
+        ///   để hàng đợi phản ánh đúng thực tế.
+        /// - Vé đang InProgress (bác sĩ đang khám dở) hoặc Completed (đã khám xong): hủy lúc này
+        ///   không còn ý nghĩa và sẽ để lại dữ liệu không nhất quán -> chặn hẳn, ném ArgumentException.
         /// </summary>
-        /// <exception cref="ArgumentException"></exception>
+        /// <exception cref="ArgumentException">
+        /// Trạng thái hiện tại không cho phép hủy (đã kết thúc, hoặc đang/đã khám xong).
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// Status = CheckedIn nhưng QueueTicket chưa được load/gán - vi phạm bất biến của
+        /// entity (mọi Appointment CheckedIn phải có đúng 1 QueueTicket). Đây là lỗi lập trình/
+        /// truy vấn dữ liệu (thiếu Include), không phải lỗi nghiệp vụ của người dùng.
+        /// </exception>
         public void Cancel()
         {
             if (Status is AppointmentStatus.Completed or AppointmentStatus.Cancelled or AppointmentStatus.NoShow)
             {
                 throw new ArgumentException($"Cannot cancel an appointment with status '{Status}'.");
+            }
+
+            if (Status == AppointmentStatus.CheckedIn)
+            {
+                if (QueueTicket is null)
+                {
+                    throw new InvalidOperationException(
+                        "Appointment is CheckedIn but its QueueTicket is not loaded. " +
+                        "Make sure the repository includes QueueTicket before calling Cancel().");
+                }
+
+                if (QueueTicket.Status is QueueStatus.InProgress or QueueStatus.Completed)
+                {
+                    throw new ArgumentException(
+                        $"Cannot cancel an appointment whose queue ticket is '{QueueTicket.Status}'.");
+                }
+
+                // Vé còn Waiting/Called -> hủy đồng thời để hàng đợi không còn giữ vé "ảo".
+                QueueTicket.Cancel();
             }
 
             Status = AppointmentStatus.Cancelled;

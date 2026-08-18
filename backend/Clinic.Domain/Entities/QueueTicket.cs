@@ -102,6 +102,27 @@ namespace Clinic.Domain.Entities
         }
 
         /// <summary>
+        /// Hủy vé hàng đợi vì Appointment tương ứng bị hủy sau khi bệnh nhân đã check-in.
+        /// Chỉ cho phép khi vé còn Waiting (chưa từng được gọi) hoặc Called (đã gọi nhưng
+        /// bệnh nhân chưa vào phòng khám) - đây là 2 trạng thái mà việc hủy còn ý nghĩa và
+        /// không làm gián đoạn 1 lượt khám đang diễn ra.
+        /// Không cho phép hủy khi InProgress (bác sĩ đang khám dở dang - hủy lúc này vô nghĩa
+        /// và có thể làm mất dữ liệu khám đang thực hiện) hoặc khi vé đã ở trạng thái kết thúc
+        /// (Completed/Skipped/Cancelled).
+        /// </summary>
+        /// <exception cref="ArgumentException"></exception>
+        public void Cancel()
+        {
+            if (Status is not (QueueStatus.Waiting or QueueStatus.Called))
+            {
+                throw new ArgumentException($"Cannot cancel a queue ticket with status '{Status}'.");
+            }
+
+            Status = QueueStatus.Cancelled;
+            MarkUpdated();
+        }
+
+        /// <summary>
         /// Đánh dấu (hoặc gỡ đánh dấu) ưu tiên khẩn cấp. Chỉ áp dụng khi vé còn đang chờ (Waiting) -
         /// ưu tiên chỉ có ý nghĩa thay đổi thứ tự của lượt gọi tiếp theo, không còn tác dụng
         /// khi đã được gọi/đang khám/khám xong/bị bỏ qua.
