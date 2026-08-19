@@ -43,9 +43,15 @@ namespace Clinic.API.Controllers
             return Ok(result);
         }
 
+        // Endpoint này cho phép anonymous truy cập (bệnh nhân chưa đăng nhập cần xem thông tin
+        // bác sĩ trước khi đặt lịch), nên KHÔNG được trả các trường nhạy cảm/nội bộ của bác sĩ
+        // như DateOfBirth, Address, HireDate (những trường này chỉ có trong DoctorDetailDto).
+        // Vì vậy phải map sang DoctorPublicDetailDto (loại bỏ các trường trên) trước khi trả về.
+        // Thông tin đầy đủ (DoctorDetailDto) chỉ được trả qua GET /doctors/me, endpoint yêu cầu
+        // đăng nhập và chỉ trả về hồ sơ của chính bác sĩ đó.
         [HttpGet("{doctorId}")]
         [AllowAnonymous]
-        [ProducesResponseType(typeof(DoctorDetailDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(DoctorPublicDetailDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetById([FromRoute] Guid doctorId)
         {
@@ -55,7 +61,23 @@ namespace Clinic.API.Controllers
             {
                 return NotFound();
             }
-            return Ok(result);
+
+            var publicResult = new DoctorPublicDetailDto
+            {
+                Id = result.Id,
+                FullName = result.FullName,
+                PhoneNumber = result.PhoneNumber,
+                Email = result.Email,
+                Gender = result.Gender,
+                LicenseNumber = result.LicenseNumber,
+                Qualification = result.Qualification,
+                CurrentSpecialty = result.CurrentSpecialty,
+                ExperienceYears = result.ExperienceYears,
+                Status = result.Status,
+                Biography = result.Biography,
+            };
+
+            return Ok(publicResult);
         }
 
         [HttpGet("me")]

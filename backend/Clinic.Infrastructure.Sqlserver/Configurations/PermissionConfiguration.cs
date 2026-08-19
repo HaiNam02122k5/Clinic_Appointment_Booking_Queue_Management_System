@@ -69,7 +69,7 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
                 new Permission(Guid.Parse("2000000A-0000-0000-0000-000000000005"), "slot.manage", "Manage appointment slots", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("2000000A-0000-0000-0000-000000000006"), "shift.suggestion.manage", "Approve/reject doctor shift-change suggestions (Receptionist)", new DateTime(2026, 1, 1), null, false),
 
-                new Permission(Guid.Parse("2000000B-0000-0000-0000-000000000001"), "queue.start-exam.own", "Start exam for own queue ticket (Doctor)", new DateTime(2026, 1, 1), null, false),
+                new Permission(Guid.Parse("2000000B-0000-0000-0000-000000000005"), "queue.start-exam.own", "Start exam for own queue ticket (Doctor)", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("2000000B-0000-0000-0000-000000000002"), "queue.start-exam.any", "Start exam for any doctor's queue ticket (Admin/Receptionist)", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("2000000B-0000-0000-0000-000000000003"), "queue.complete-exam.own", "Complete exam for own queue ticket (Doctor)", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("2000000B-0000-0000-0000-000000000004"), "queue.complete-exam.any", "Complete exam for any doctor's queue ticket (Admin/Receptionist)", new DateTime(2026, 1, 1), null, false),
