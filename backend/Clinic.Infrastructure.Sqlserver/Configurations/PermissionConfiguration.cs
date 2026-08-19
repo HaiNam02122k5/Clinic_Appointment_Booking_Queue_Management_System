@@ -24,8 +24,8 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
                 new Permission(Guid.Parse("10000000-0000-0000-0000-000000000001"), "appointment.create", "Create appointments", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("10000000-0000-0000-0000-000000000002"), "appointment.view", "View appointments", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("10000000-0000-0000-0000-000000000003"), "appointment.cancel", "Cancel appointments (deprecated - dùng appointment.cancel.own/.any)", new DateTime(2026, 1, 1), null, true),
-                new Permission(Guid.Parse("10000000-0000-0000-0000-00000000000E"), "appointment.cancel.own", "Cancel own appointment (Patient)", new DateTime(2026, 1, 1), null, false),
-                new Permission(Guid.Parse("10000000-0000-0000-0000-00000000000F"), "appointment.cancel.any", "Cancel any appointment (Admin/Receptionist)", new DateTime(2026, 1, 1), null, false),
+                new Permission(Guid.Parse("10000000-0000-0000-0000-00000000000E"), "appointment.edit.own", "Cancel own appointment (Patient)", new DateTime(2026, 1, 1), null, false),
+                new Permission(Guid.Parse("10000000-0000-0000-0000-00000000000F"), "appointment.edit.any", "Cancel any appointment (Admin/Receptionist)", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("10000000-0000-0000-0000-000000000004"), "queue.call-next", "Call next in queue", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("10000000-0000-0000-0000-000000000005"), "doctor.view.own", "View own doctor profile (Doctor)", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("10000000-0000-0000-0000-000000000006"), "doctor.edit", "Edit doctor profile (deprecated - dùng doctor.edit.own/.any)", new DateTime(2026, 1, 1), null, true),
@@ -68,12 +68,19 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
                 new Permission(Guid.Parse("2000000A-0000-0000-0000-000000000004"), "slot.view", "View appointment slots", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("2000000A-0000-0000-0000-000000000005"), "slot.manage", "Manage appointment slots", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("2000000A-0000-0000-0000-000000000006"), "shift.suggestion.manage", "Approve/reject doctor shift-change suggestions (Receptionist)", new DateTime(2026, 1, 1), null, false),
+
+                new Permission(Guid.Parse("2000000B-0000-0000-0000-000000000005"), "queue.start-exam.own", "Start exam for own queue ticket (Doctor)", new DateTime(2026, 1, 1), null, false),
+                new Permission(Guid.Parse("2000000B-0000-0000-0000-000000000002"), "queue.start-exam.any", "Start exam for any doctor's queue ticket (Admin/Receptionist)", new DateTime(2026, 1, 1), null, false),
+                new Permission(Guid.Parse("2000000B-0000-0000-0000-000000000003"), "queue.complete-exam.own", "Complete exam for own queue ticket (Doctor)", new DateTime(2026, 1, 1), null, false),
+                new Permission(Guid.Parse("2000000B-0000-0000-0000-000000000004"), "queue.complete-exam.any", "Complete exam for any doctor's queue ticket (Admin/Receptionist)", new DateTime(2026, 1, 1), null, false),
+
                 new Permission(Guid.Parse("2000000B-0000-0000-0000-000000000001"), "shift.suggestion.self-manage", "Manage doctor own shift suggestions (Doctor)", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("2000000A-0000-0000-0000-000000000007"), "patient.create.any", "Create any patient record (Receptionist)", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("2000000A-0000-0000-0000-000000000008"), "patient.edit.own", "Edit own patient record (Patient)", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("2000000A-0000-0000-0000-000000000009"), "patient.edit.any", "Edit any patient record (Receptionist)", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("2000000A-0000-0000-0000-000000000010"), "patient.view.own", "View own patient record (Patient)", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("2000000A-0000-0000-0000-000000000011"), "patient.view.any", "View any patient record (Receptionist)", new DateTime(2026, 1, 1), null, false)
+
             );
         }
     }

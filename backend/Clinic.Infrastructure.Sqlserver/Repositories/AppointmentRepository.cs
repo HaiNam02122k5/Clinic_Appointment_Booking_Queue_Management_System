@@ -53,9 +53,9 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                 .FirstOrDefaultAsync(a => a.Id == appointmentId && a.IsDeleted == false);
         }
 
-        public Task<bool> IsTimeSlotTakenAsync(Guid doctorId, DateTime timeSlot)
+        public async Task UpdateAsync(Appointment appointment)
         {
-            throw new NotImplementedException();
+            _context.Appointments.Update(appointment);
         }
 
         public async Task<bool> ExistsForDoctorAndPatientAsync(Guid doctorId, Guid patientId)

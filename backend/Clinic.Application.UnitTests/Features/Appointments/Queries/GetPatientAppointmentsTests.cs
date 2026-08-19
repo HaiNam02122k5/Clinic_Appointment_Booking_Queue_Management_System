@@ -15,10 +15,10 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Queries
             var userRepository = new FakeUserRepository();
             var handler = new GetPatientAppointmentsQueryHandler(appointmentRepository, patientRepository, userRepository);
             var patient = TestDataFactory.CreatePatient();
-            var workSchedule = TestDataFactory.CreateWorkSchedule();
-            var appointment1 = TestDataFactory.CreateAppointment(patient: patient, workSchedule: workSchedule);
-            var appointment2 = TestDataFactory.CreateAppointment(patient: patient, workSchedule: workSchedule, timeSlot: new TimeOnly(11, 0));
-            appointment2.Complete(patient.Person.User.Id);
+            var workSchedule = TestDataFactory.CreateWorkSchedule(date: DateOnly.FromDateTime(DateTime.UtcNow));
+            var appointment1 = TestDataFactory.CreateAppointment(patient: patient, workSchedule: workSchedule, checkedIn: true);
+            var appointment2 = TestDataFactory.CreateAppointment(patient: patient, workSchedule: workSchedule, timeSlot: workSchedule.ShiftStart.AddMinutes(30));
+            appointment1.Complete(patient.Person.User.Id);
             await appointmentRepository.AddAsync(appointment1);
             await appointmentRepository.AddAsync(appointment2);
             await patientRepository.AddAsync(patient);

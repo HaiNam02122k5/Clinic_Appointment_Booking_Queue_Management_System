@@ -30,7 +30,6 @@ namespace Clinic.Domain.Entities
         public WorkSchedule(Doctor doctor, DateOnly date, TimeOnly shiftStart, TimeOnly shiftEnd, int patientLimit)
         {
             var utcStart = new TimeConverter().ConvertToUtc(new DateTime(date, shiftStart));
-
             if (doctor == null) throw new ArgumentNullException(nameof(doctor));
             if (utcStart < DateTime.UtcNow) throw new ArgumentException("Shift start time must be in the future.");
             if (shiftStart >= shiftEnd) throw new ArgumentException("Shift start time must be before shift end time.");

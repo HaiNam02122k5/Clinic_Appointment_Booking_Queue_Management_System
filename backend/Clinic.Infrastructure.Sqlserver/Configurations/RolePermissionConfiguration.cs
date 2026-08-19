@@ -51,6 +51,8 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
                 new { RoleId = Guid.Parse("00000000-0000-0000-0000-000000000001"), PermissionId = Guid.Parse("2000000A-0000-0000-0000-000000000003") },
                 new { RoleId = Guid.Parse("00000000-0000-0000-0000-000000000001"), PermissionId = Guid.Parse("2000000A-0000-0000-0000-000000000004") },
                 new { RoleId = Guid.Parse("00000000-0000-0000-0000-000000000001"), PermissionId = Guid.Parse("2000000A-0000-0000-0000-000000000005") },
+                new { RoleId = Guid.Parse("00000000-0000-0000-0000-000000000001"), PermissionId = Guid.Parse("2000000B-0000-0000-0000-000000000002") }, // queue.start-exam.any
+                new { RoleId = Guid.Parse("00000000-0000-0000-0000-000000000001"), PermissionId = Guid.Parse("2000000B-0000-0000-0000-000000000004") }, // queue.complete-exam.any
 
                 new { RoleId = Guid.Parse("00000000-0000-0000-0000-000000000001"), PermissionId = Guid.Parse("10000000-0000-0000-0000-000000000016") },
                 new { RoleId = Guid.Parse("00000000-0000-0000-0000-000000000001"), PermissionId = Guid.Parse("10000000-0000-0000-0000-000000000017") },
@@ -77,11 +79,16 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
                 new { RoleId = Guid.Parse("00000000-0000-0000-0000-000000000003"), PermissionId = Guid.Parse("2000000A-0000-0000-0000-000000000001") },
                 new { RoleId = Guid.Parse("00000000-0000-0000-0000-000000000003"), PermissionId = Guid.Parse("2000000A-0000-0000-0000-000000000004") },
                 new { RoleId = Guid.Parse("00000000-0000-0000-0000-000000000003"), PermissionId = Guid.Parse("2000000A-0000-0000-0000-000000000005") },
+
+                new { RoleId = Guid.Parse("00000000-0000-0000-0000-000000000003"), PermissionId = Guid.Parse("2000000B-0000-0000-0000-000000000002") }, // queue.start-exam.any
+                new { RoleId = Guid.Parse("00000000-0000-0000-0000-000000000003"), PermissionId = Guid.Parse("2000000B-0000-0000-0000-000000000004") }, // queue.complete-exam.any
+
                 new { RoleId = Guid.Parse("00000000-0000-0000-0000-000000000003"), PermissionId = Guid.Parse("10000000-0000-0000-0000-000000000015") },
                 new { RoleId = Guid.Parse("00000000-0000-0000-0000-000000000003"), PermissionId = Guid.Parse("10000000-0000-0000-0000-000000000018") },
                 new { RoleId = Guid.Parse("00000000-0000-0000-0000-000000000003"), PermissionId = Guid.Parse("2000000A-0000-0000-0000-000000000007") },
                 new { RoleId = Guid.Parse("00000000-0000-0000-0000-000000000003"), PermissionId = Guid.Parse("2000000A-0000-0000-0000-000000000009") },
                 new { RoleId = Guid.Parse("00000000-0000-0000-0000-000000000003"), PermissionId = Guid.Parse("2000000A-0000-0000-0000-000000000011") },
+
 
 
                 // Doctor -> doctor profile and view appointments
@@ -96,9 +103,14 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
                 new { RoleId = Guid.Parse("00000000-0000-0000-0000-000000000004"), PermissionId = Guid.Parse("20000000-0000-0000-0000-000000000005") },
                 new { RoleId = Guid.Parse("00000000-0000-0000-0000-000000000004"), PermissionId = Guid.Parse("20000000-0000-0000-0000-000000000006") },
                 new { RoleId = Guid.Parse("00000000-0000-0000-0000-000000000004"), PermissionId = Guid.Parse("2000000A-0000-0000-0000-000000000004") },
+
+                new { RoleId = Guid.Parse("00000000-0000-0000-0000-000000000004"), PermissionId = Guid.Parse("2000000B-0000-0000-0000-000000000005") }, // queue.start-exam.own
+                new { RoleId = Guid.Parse("00000000-0000-0000-0000-000000000004"), PermissionId = Guid.Parse("2000000B-0000-0000-0000-000000000003") }, // queue.complete-exam.own
+
                 new { RoleId = Guid.Parse("00000000-0000-0000-0000-000000000004"), PermissionId = Guid.Parse("10000000-0000-0000-0000-000000000015") },
                 new { RoleId = Guid.Parse("00000000-0000-0000-0000-000000000004"), PermissionId = Guid.Parse("10000000-0000-0000-0000-000000000018") },
-                new { RoleId = Guid.Parse("00000000-0000-0000-0000-000000000004"), PermissionId = Guid.Parse("2000000B-0000-0000-0000-000000000001") },
+                new { RoleId = Guid.Parse("00000000-0000-0000-0000-000000000004"), PermissionId = Guid.Parse("2000000B-0000-0000-0000-000000000001") }, // shift.suggestion.self-manage
+
                 new { RoleId = Guid.Parse("00000000-0000-0000-0000-000000000004"), PermissionId = Guid.Parse("2000000A-0000-0000-0000-000000000011") },
 
                 // Patient -> create/view/cancel own appointment

@@ -1,4 +1,4 @@
-﻿using Clinic.Application.Common.Models;
+using Clinic.Application.Common.Models;
 using Clinic.Application.Contracts;
 using Clinic.Application.Interfaces;
 using Clinic.Domain.Entities;
@@ -77,7 +77,7 @@ namespace Clinic.Application.UnitTests.Common
             throw new NotImplementedException();
         }
 
-        internal async Task AddAsync(Appointment appointment)
+        public async Task AddAsync(Appointment appointment)
         {
             _appointments.Add(appointment);
         }

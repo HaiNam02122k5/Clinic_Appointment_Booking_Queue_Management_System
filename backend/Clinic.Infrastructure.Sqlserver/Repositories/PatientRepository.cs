@@ -1,4 +1,4 @@
-﻿using Clinic.Application.Common.Models;
+using Clinic.Application.Common.Models;
 using Clinic.Application.Contracts;
 using Clinic.Application.Interfaces;
 using Clinic.Domain.Entities;
@@ -13,11 +13,6 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
         public PatientRepository(ApplicationDbContext context)
         {
             _context = context;
-        }
-
-        public Task AddAsync(Patient patient)
-        {
-            throw new NotImplementedException();
         }
 
         public async Task<Patient?> GetByIdAsync(Guid? patientId)
@@ -50,6 +45,16 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
         public async Task<Patient?> GetPatientByUserIdAsync(Guid userId)
         {
             return await _context.Patients.Include(p => p.Person).ThenInclude(p => p.User).FirstOrDefaultAsync(p => p.Person.User.Id == userId);
+        }
+
+        public async Task<Patient?> GetByPersonIdAsync(Guid personId)
+        {
+            return await _context.Patients.FirstOrDefaultAsync(p => p.PersonId == personId);
+        }
+
+        public async Task AddAsync(Patient patient)
+        {
+            await _context.Patients.AddAsync(patient);
         }
     }
 }

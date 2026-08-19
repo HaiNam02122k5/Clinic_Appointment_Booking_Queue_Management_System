@@ -1,4 +1,5 @@
 using Clinic.Domain.Common;
+using Clinic.Domain.Common.Exceptions;
 using Clinic.Domain.Enums;
 using System;
 
@@ -71,6 +72,42 @@ namespace Clinic.Domain.Entities
             MarkUpdated();
         }
 
+        /// <summary>
+        /// Check-in bệnh nhân tại quầy/vào hàng đợi.
+        /// </summary>
+        /// <param name="checkInTime">Thời điểm check-in thực tế (giờ hệ thống).</param>
+        /// <exception cref="ArgumentException">Appointment chưa ở trạng thái Confirmed.</exception>
+        /// <exception cref="ConflictException">
+        /// TimeSlot của appointment không cùng ngày với checkInTime - ví dụ lịch hẹn của
+        /// ngày mai không được phép vào hàng đợi của ngày hôm nay (và ngược lại).
+        /// </exception>
+        public QueueTicket CheckIn(DateTime checkInTime, int queueNumber)
+        {
+            if (Status != AppointmentStatus.Confirmed)
+            {
+                throw new ArgumentException($"Cannot check in an appointment with status '{Status}'. Appointment must be confirmed first.");
+            }
+
+            if (WorkSchedule.Date != DateOnly.FromDateTime(checkInTime))
+            {
+                throw new ConflictException(
+                    $"Cannot check in: appointment is scheduled for {new DateTime(WorkSchedule.Date, TimeSlot):yyyy-MM-dd}, not today ({checkInTime:yyyy-MM-dd}).");
+            }
+
+            var queueTicket = new QueueTicket
+            {
+                AppointmentId = Id,
+                QueueNumber = queueNumber,
+                CheckInTime = checkInTime,
+                Appointment = this
+            };
+
+            QueueTicket = queueTicket;
+            Status = AppointmentStatus.CheckedIn;
+            MarkUpdated();
+            return queueTicket;
+        }
+
         public void Update(WorkSchedule workSchedule, TimeOnly timeSlot, string reason, Guid updatedByUserId)
         {
             if (Status is AppointmentStatus.Completed or AppointmentStatus.Cancelled)
@@ -115,6 +152,8 @@ namespace Clinic.Domain.Entities
             {
                 throw new InvalidOperationException($"Appointments can only be cancelled at least {CancelLimitHours} hours before the scheduled time.");
             }
+            // Cascade cancel QueueTicket if it exists and is still Waiting or Called.
+            QueueTicket?.Cancel();
             Snapshots.Add(new AppointmentSnapshot(this));
             Status = AppointmentStatus.Cancelled;
             CancelledByUserId = cancelledByUserId;
@@ -134,13 +173,20 @@ namespace Clinic.Domain.Entities
 
         public void Complete(Guid completedByUserId)
         {
-            if (Status is AppointmentStatus.Completed or AppointmentStatus.Cancelled or AppointmentStatus.NoShow)
+            if (Status != AppointmentStatus.CheckedIn)
             {
                 throw new InvalidOperationException();
             }
             Snapshots.Add(new AppointmentSnapshot(this));
             Status = AppointmentStatus.Completed;
             CreatedByUserId = completedByUserId;
+            MarkUpdated();
+        }
+
+        public void CheckIn(QueueTicket queueTicket)
+        {
+            QueueTicket = queueTicket;
+            Status = AppointmentStatus.CheckedIn;
             MarkUpdated();
         }
     }

@@ -401,7 +401,7 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Cancel own appointment (Patient)",
                             IsDeleted = false,
-                            Name = "appointment.cancel.own"
+                            Name = "appointment.edit.own"
                         },
                         new
                         {
@@ -409,7 +409,7 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Cancel any appointment (Admin/Receptionist)",
                             IsDeleted = false,
-                            Name = "appointment.cancel.any"
+                            Name = "appointment.edit.any"
                         },
                         new
                         {
@@ -725,6 +725,46 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         },
                         new
                         {
+                            Id = new Guid("2000000b-0000-0000-0000-000000000005"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Start exam for own queue ticket (Doctor)",
+                            IsDeleted = false,
+                            Name = "queue.start-exam.own"
+                        },
+                        new
+                        {
+                            Id = new Guid("2000000b-0000-0000-0000-000000000002"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Start exam for any doctor's queue ticket (Admin/Receptionist)",
+                            IsDeleted = false,
+                            Name = "queue.start-exam.any"
+                        },
+                        new
+                        {
+                            Id = new Guid("2000000b-0000-0000-0000-000000000003"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Complete exam for own queue ticket (Doctor)",
+                            IsDeleted = false,
+                            Name = "queue.complete-exam.own"
+                        },
+                        new
+                        {
+                            Id = new Guid("2000000b-0000-0000-0000-000000000004"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Complete exam for any doctor's queue ticket (Admin/Receptionist)",
+                            IsDeleted = false,
+                            Name = "queue.complete-exam.any"
+                        },
+                        new
+                        {
+                            Id = new Guid("2000000b-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Manage doctor own shift suggestions (Doctor)",
+                            IsDeleted = false,
+                            Name = "shift.suggestion.self-manage"
+                        },
+                        new
+                        {
                             Id = new Guid("2000000a-0000-0000-0000-000000000007"),
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Create any patient record (Receptionist)",
@@ -762,14 +802,6 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                             Description = "View any patient record (Receptionist)",
                             IsDeleted = false,
                             Name = "patient.view.any"
-                        },
-                        new
-                        {
-                            Id = new Guid("2000000b-0000-0000-0000-000000000001"),
-                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Description = "Manage doctor own shift suggestions (Doctor)",
-                            IsDeleted = false,
-                            Name = "shift.suggestion.self-manage"
                         });
                 });
 
@@ -820,6 +852,22 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                     b.ToTable("Persons", (string)null);
                 });
 
+            modelBuilder.Entity("Clinic.Domain.Entities.QueueCounter", b =>
+                {
+                    b.Property<Guid>("DoctorId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<int>("CurrentNumber")
+                        .HasColumnType("int");
+
+                    b.HasKey("DoctorId", "Date");
+
+                    b.ToTable("QueueCounters", (string)null);
+                });
+
             modelBuilder.Entity("Clinic.Domain.Entities.QueueTicket", b =>
                 {
                     b.Property<Guid>("Id")
@@ -846,6 +894,12 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
 
                     b.Property<int>("QueueNumber")
                         .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -1105,6 +1159,16 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         new
                         {
                             RoleId = new Guid("00000000-0000-0000-0000-000000000001"),
+                            PermissionId = new Guid("2000000b-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000001"),
+                            PermissionId = new Guid("2000000b-0000-0000-0000-000000000004")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000001"),
                             PermissionId = new Guid("10000000-0000-0000-0000-000000000016")
                         },
                         new
@@ -1215,6 +1279,16 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         new
                         {
                             RoleId = new Guid("00000000-0000-0000-0000-000000000003"),
+                            PermissionId = new Guid("2000000b-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000003"),
+                            PermissionId = new Guid("2000000b-0000-0000-0000-000000000004")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000003"),
                             PermissionId = new Guid("10000000-0000-0000-0000-000000000015")
                         },
                         new
@@ -1291,6 +1365,16 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         {
                             RoleId = new Guid("00000000-0000-0000-0000-000000000004"),
                             PermissionId = new Guid("2000000a-0000-0000-0000-000000000004")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000004"),
+                            PermissionId = new Guid("2000000b-0000-0000-0000-000000000005")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000004"),
+                            PermissionId = new Guid("2000000b-0000-0000-0000-000000000003")
                         },
                         new
                         {

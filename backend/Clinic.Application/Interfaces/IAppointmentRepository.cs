@@ -20,11 +20,6 @@ namespace Clinic.Application.Interfaces
         Task<Appointment?> GetByIdAsync(Guid appointmentId);
 
         /// <summary>
-        /// Not used
-        /// </summary>
-        Task<bool> IsTimeSlotTakenAsync(Guid doctorId, DateTime timeSlot);
-
-        /// <summary>
         /// Kiểm tra bác sĩ có từng/đang phụ trách ca khám nào của bệnh nhân này không
         /// (tồn tại Appointment mà WorkSchedule.DoctorId = doctorId và PatientId = patientId).
         /// Dùng để scope "related" cho medical-report.view/patient-history.view của Doctor.

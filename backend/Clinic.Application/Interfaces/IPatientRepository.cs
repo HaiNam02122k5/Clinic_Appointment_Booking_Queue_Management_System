@@ -1,4 +1,4 @@
-﻿using Clinic.Application.Common.Models;
+using Clinic.Application.Common.Models;
 using Clinic.Application.Contracts;
 using Clinic.Domain.Entities;
 using System;
@@ -28,5 +28,11 @@ namespace Clinic.Application.Interfaces
         /// Gets a patient by their associated user ID. Used for retrieving patient information based on the their user account.
         /// </summary>
         Task<Patient?> GetPatientByUserIdAsync(Guid userId);
+
+        /// <summary>
+        /// Lấy Patient theo PersonId. Dùng để kiểm tra 1 Person đã có hồ sơ Patient hay chưa
+        /// trước khi tạo mới (tránh vi phạm UNIQUE index PersonId).
+        /// </summary>
+        Task<Patient?> GetByPersonIdAsync(Guid personId);
     }
 }

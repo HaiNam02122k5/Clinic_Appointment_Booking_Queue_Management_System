@@ -27,7 +27,7 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Commands
 
             var receptionist = TestDataFactory.CreateUser();
             receptionist.AssignRole(TestDataFactory.RoleSet.First(r => r.Name == "Receptionist"));
-            var command2 = new CreateAppointmentCommand(receptionist.Id, workSchedule.Id, new TimeOnly(11, 0), "Reason", patient.Id);
+            var command2 = new CreateAppointmentCommand(receptionist.Id, workSchedule.Id, new TimeOnly(10, 30), "Reason", patient.Id);
             var result2 = await handler.Handle(command2, CancellationToken.None);
             Assert.Equal(receptionist.Id, workSchedule.Appointments.FirstOrDefault(a => a.Id == result2.Id)?.CreatedByUserId);
         }
