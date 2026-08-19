@@ -12,9 +12,21 @@ namespace Clinic.Application.UnitTests.Common
             _reports.Add(report);
         }
 
+        public Task AddAsync(MedicalReport report)
+        {
+            _reports.Add(report);
+            return Task.CompletedTask;
+        }
+
         public Task<MedicalReport?> GetByIdWithOwnershipAsync(Guid id)
         {
             var report = _reports.FirstOrDefault(r => r.Id == id && !r.IsDeleted);
+            return Task.FromResult(report);
+        }
+
+        public Task<MedicalReport?> GetByQueueTicketIdAsync(Guid queueTicketId)
+        {
+            var report = _reports.FirstOrDefault(r => r.QueueTicketId == queueTicketId && !r.IsDeleted);
             return Task.FromResult(report);
         }
 
