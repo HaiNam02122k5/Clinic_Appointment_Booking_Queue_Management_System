@@ -10,20 +10,49 @@ import { logger } from '@/lib/logger'
 
 const app = createApp(App) as any
 
+;(window as any).__clinicAuthDebug = () => {
+  const token = sessionStorage.getItem('auth.accessToken') ?? localStorage.getItem('auth.accessToken')
+  if (!token) {
+    return { accessToken: null, payload: null, roles: [] }
+  }
+
+  const base64 = token.split('.')[1]
+  if (!base64) {
+    return { accessToken: token, payload: null, roles: [] }
+  }
+
+  const normalized = base64.replace(/-/g, '+').replace(/_/g, '/')
+  const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4)
+  const payload = JSON.parse(atob(padded))
+  const roleKeys = [
+    'role',
+    'roles',
+    'http://schemas.microsoft.com/ws/2008/06/identity/claims/role',
+    'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/role',
+  ]
+  const roles = roleKeys.flatMap((key) => {
+    const value = payload[key]
+    if (value == null) return []
+    if (Array.isArray(value)) return value.map(String)
+    if (typeof value === 'string') return value.split(',').map((part) => part.trim()).filter(Boolean)
+    return [String(value)]
+  })
+
+  return {
+    accessToken: token,
+    payload,
+    roles: [...new Set(roles)],
+  }
+}
+
 // Install Pinia first so stores can be used for hydration
 (app as any).use(createPinia())
 
 // Before registering router, hydrate auth if we have a token to avoid router redirect races.
 ;(async () => {
   try {
-    // Check both localStorage and sessionStorage for stored access token to avoid importing tokenStorage here and creating circular types
-    const hasAccessToken = (() => {
-      try {
-        return !!(localStorage.getItem('auth.accessToken') || sessionStorage.getItem('auth.accessToken'))
-      } catch {
-        return false
-      }
-    })()
+    const tokenMod = await import('@/lib/api/token-storage')
+    const hasAccessToken = !!tokenMod.tokenStorage.getAccess()
 
     if (hasAccessToken) {
       const mod = await import('@/stores/auth')

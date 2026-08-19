@@ -28,6 +28,29 @@ function decodeJwtPayload(token: string): Record<string, any> {
   }
 }
 
+function extractRolesFromJwtPayload(payload: Record<string, any>): UserRole[] {
+  const candidateValues: unknown[] = []
+  const keys = [
+    'role',
+    'roles',
+    'http://schemas.microsoft.com/ws/2008/06/identity/claims/role',
+    'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/role',
+    'http://schemas.microsoft.com/ws/2008/06/identity/claims/role',
+  ]
+
+  for (const key of keys) {
+    if (payload[key] !== undefined) candidateValues.push(payload[key])
+  }
+
+  const flattened = candidateValues.flatMap((value) => {
+    if (Array.isArray(value)) return value
+    if (typeof value === 'string') return value.split(',').map((part) => part.trim()).filter(Boolean)
+    return value == null ? [] : [String(value)]
+  })
+
+  return normalizeRoles(flattened.length > 0 ? flattened : ['Patient'])
+}
+
 function buildUserFromToken(token?: string | null): AuthUser {
   const fallback: AuthUser = {
     id: 'user',
@@ -41,16 +64,13 @@ function buildUserFromToken(token?: string | null): AuthUser {
   if (!token) return fallback
 
   const payload = decodeJwtPayload(token)
-  const rawRoles = payload.role ?? payload.roles ?? payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']
-  const roles = normalizeRoles(
-    Array.isArray(rawRoles) ? rawRoles : rawRoles ? [rawRoles] : ['Patient'],
-  )
+  const roles = extractRolesFromJwtPayload(payload)
   const activeRole = (roles[0] ?? 'Patient') as UserRole
 
   return {
     id: payload.sub ?? 'user',
-    name: payload.name ?? 'User',
-    email: payload.email ?? '',
+    name: payload.name ?? payload.unique_name ?? payload.username ?? 'User',
+    email: payload.email ?? payload['email'] ?? '',
     role: activeRole,
     roles,
     activeRole,
@@ -95,21 +115,28 @@ function normalizeUser(raw: Partial<AuthUser> | null | undefined): AuthUser | nu
 // Safe localStorage helpers for the user payload to avoid exceptions in strict/private modes
 function safeGetStoredUser(): Partial<AuthUser> | null {
   try {
-    const raw = localStorage.getItem(USER_KEY)
+    const raw = sessionStorage.getItem(USER_KEY) ?? localStorage.getItem(USER_KEY)
     return raw ? JSON.parse(raw) : null
   } catch {
     return null
   }
 }
 
-function safeSetStoredUser(u: AuthUser | null) {
+function safeSetStoredUser(u: AuthUser | null, persistent = false) {
   try {
-    if (u) localStorage.setItem(USER_KEY, JSON.stringify(u))
-    else localStorage.removeItem(USER_KEY)
-  } catch (e) {
-    // swallow - not fatal for app execution; surface to logger for diagnostics
-    logger.warn('safeSetStoredUser failed', e)
+    const storage = persistent ? localStorage : sessionStorage
+  const opposite = persistent ? sessionStorage : localStorage
+
+  if (u) {
+    storage.setItem(USER_KEY, JSON.stringify(u))
+    opposite.removeItem(USER_KEY)
+  } else {
+    localStorage.removeItem(USER_KEY)
+    sessionStorage.removeItem(USER_KEY)
   }
+} catch (e) {
+  logger.warn('safeSetStoredUser failed', e)
+}
 }
 
 export const useAuthStore = defineStore('auth', () => {
@@ -131,29 +158,30 @@ export const useAuthStore = defineStore('auth', () => {
     return allowedRoles.some((role) => grantedRoles.includes(role))
   }
 
-  function setToken(accessToken: string, refreshToken?: string, persistent = true) {
+  function setToken(accessToken: string, refreshToken?: string, persistent = false) {
       tokenStorage.set(accessToken, refreshToken, persistent)
   }
 
-  function setUser(userData: AuthUser | null) {
+  function setUser(userData: AuthUser | null, persistent = tokenStorage.isPersistent()) {
     user.value = normalizeUser(userData)
-    safeSetStoredUser(user.value)
+    safeSetStoredUser(user.value, persistent)
   }
 
   function setActiveRole(role: UserRole) {
     if (!user.value) return
 
-      const existing = user.value.roles ?? [user.value.role ?? role]
-      const merged = normalizeRoles([...existing, role])
+    const existing = user.value.roles ?? [user.value.role ?? role]
+    const merged = normalizeRoles([...existing, role])
 
-      user.value = {
-        ...user.value,
-        role,
-        roles: merged,
-        activeRole: role,
-      }
+    user.value = {
+      ...user.value,
+      role,
+      roles: merged,
+      activeRole: role,
+    }
 
-      safeSetStoredUser(user.value)
+    const persistent = tokenStorage.isPersistent()
+    safeSetStoredUser(user.value, persistent)
   }
 
   async function fetchMe() {
@@ -168,13 +196,13 @@ export const useAuthStore = defineStore('auth', () => {
 
       if (statusCode === 401 || statusCode === 403) {
         if (fallbackUser) {
-          setUser(fallbackUser)
+          setUser(fallbackUser, tokenStorage.isPersistent())
           return fallbackUser
         }
         tokenStorage.clear()
-        safeSetStoredUser(null)
+        safeSetStoredUser(null, false)
       } else if (fallbackUser) {
-        setUser(fallbackUser)
+        setUser(fallbackUser, tokenStorage.isPersistent())
         return fallbackUser
       }
 
@@ -206,16 +234,21 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const res = await authApi.login(payload)
       const fallbackUser = buildUserFromToken(res.accessToken)
-      const normalizedUser = normalizeUser(res.user) ?? fallbackUser
+      const normalizedUser = normalizeUser({
+        ...res.user,
+        role: res.role ?? res.user?.role ?? fallbackUser.role,
+        roles: res.roles ?? res.user?.roles ?? fallbackUser.roles,
+        activeRole: res.role ?? res.user?.activeRole ?? fallbackUser.activeRole,
+      }) ?? fallbackUser
 
       const activeRole = payload.role ?? normalizedUser.activeRole ?? normalizedUser.roles?.[0] ?? 'Patient'
       normalizedUser.activeRole = activeRole
       normalizedUser.role = activeRole
       normalizedUser.roles = normalizeRoles(normalizedUser.roles ?? [activeRole])
 
-      const persistent = payload.rememberMe !== false
+      const persistent = payload.rememberMe === true
       setToken(res.accessToken, res.refreshToken, persistent)
-      setUser(normalizedUser)
+      setUser(normalizedUser, persistent)
       status.value = 'idle'
       return normalizedUser
     } catch (e: any) {
@@ -239,15 +272,20 @@ export const useAuthStore = defineStore('auth', () => {
 
       if (res && token) {
         const fallbackUser = buildUserFromToken(token)
-        const normalizedUser = normalizeUser(res.user) ?? fallbackUser
+        const normalizedUser = normalizeUser({
+          ...res.user,
+          role: res.role ?? res.user?.role ?? fallbackUser.role,
+          roles: res.roles ?? res.user?.roles ?? fallbackUser.roles,
+          activeRole: res.role ?? res.user?.activeRole ?? fallbackUser.activeRole,
+        }) ?? fallbackUser
         const activeRole = normalizedUser.activeRole ?? normalizedUser.role ?? normalizedUser.roles?.[0] ?? 'Patient'
         normalizedUser.activeRole = activeRole
         normalizedUser.role = activeRole
         normalizedUser.roles = normalizeRoles(normalizedUser.roles ?? [activeRole])
 
-        const persistent = (payload as any)?.rememberMe !== false
+        const persistent = (payload as any)?.rememberMe === true
         setToken(token, res.refreshToken, persistent)
-        setUser(normalizedUser)
+        setUser(normalizedUser, persistent)
       }
 
       status.value = 'idle'

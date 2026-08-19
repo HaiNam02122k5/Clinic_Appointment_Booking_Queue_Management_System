@@ -17,6 +17,7 @@ vi.mock('vue-router', async () => {
 
 import { useAuthStore } from '@/stores/auth'
 import { authApi } from '@/features/auth/auth.api'
+import { http } from '@/lib/api/http'
 import { tokenStorage } from '@/lib/api/token-storage'
 import SelectRoleView from '@/views/SelectRoleView.vue'
 import type { UserRole } from '@/features/auth/auth.types'
@@ -25,8 +26,38 @@ describe('auth complete flow', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     localStorage.clear()
+    sessionStorage.clear()
     tokenStorage.clear()
     routerPush.mockClear()
+  })
+
+  it('prefers backend user metadata and role claims returned by the login response', async () => {
+    vi.spyOn(http, 'post').mockResolvedValue({
+      data: {
+        accessToken: 'abc',
+        refreshToken: 'refresh-token-456',
+        role: 'Admin',
+        roles: ['Admin'],
+        user: {
+          id: 42,
+          name: 'Nguyễn Văn A',
+          email: 'a@example.com',
+          role: 'Admin',
+          roles: ['Admin'],
+          activeRole: 'Admin',
+        },
+      },
+    } as any)
+
+    const result = await authApi.login({
+      email: 'a@example.com',
+      password: 'Password123!',
+    })
+
+    expect(result.role).toBe('Admin')
+    expect(result.roles).toEqual(['Admin'])
+    expect(result.user.role).toBe('Admin')
+    expect(result.user.roles).toEqual(['Admin'])
   })
 
   it('login success stores user and tokens', async () => {
@@ -56,7 +87,8 @@ describe('auth complete flow', () => {
     expect(auth.isAuthenticated).toBe(true)
     expect(tokenStorage.getAccess()).toBe('access-token-123')
     expect(tokenStorage.getRefresh()).toBe('refresh-token-456')
-    expect(localStorage.getItem('auth.user')).toContain('Nguyễn Văn A')
+    expect(sessionStorage.getItem('auth.user')).toContain('Nguyễn Văn A')
+    expect(localStorage.getItem('auth.user')).toBeNull()
   })
 
   it('login failure keeps auth clean and stores error', async () => {
@@ -148,7 +180,7 @@ describe('auth complete flow', () => {
       roles: ['Patient'] as UserRole[],
       activeRole: 'Patient' as const,
     }
-    tokenStorage.set('valid-access-token', 'valid-refresh-token')
+    tokenStorage.set('valid-access-token', 'valid-refresh-token', true)
     localStorage.setItem('auth.user', JSON.stringify(savedUser))
 
     const auth = useAuthStore()
@@ -157,6 +189,32 @@ describe('auth complete flow', () => {
     expect(auth.isAuthenticated).toBe(true)
     expect(auth.currentUserRole).toBe('Patient')
     expect(auth.user?.roles).toEqual(['Patient'])
+  })
+
+  it('clears stale persisted data when switching from remember-me to session-only mode', async () => {
+    vi.spyOn(authApi, 'login').mockResolvedValue({
+      accessToken: 'session-switch-token',
+      refreshToken: 'session-switch-refresh',
+      user: {
+        id: 7,
+        name: 'Admin session',
+        email: 'admin@clinic.com',
+        role: 'Admin',
+        roles: ['Admin'],
+        activeRole: 'Admin',
+      },
+    })
+
+    const auth = useAuthStore()
+    await auth.login({ email: 'admin@clinic.com', password: 'Password123!', rememberMe: true })
+
+    expect(localStorage.getItem('auth.user')).not.toBeNull()
+
+    await auth.login({ email: 'admin@clinic.com', password: 'Password123!', rememberMe: false })
+
+    expect(localStorage.getItem('auth.user')).toBeNull()
+    expect(sessionStorage.getItem('auth.user')).toContain('Admin session')
+    expect(tokenStorage.getAccess()).toBe('session-switch-token')
   })
 
   it('supports login with multiple roles and prompts the user to choose an active role', async () => {

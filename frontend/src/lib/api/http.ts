@@ -68,6 +68,7 @@ async function refreshSession(): Promise<void> {
     return
   }
 
+  const persistent = tokenStorage.isPersistent()
   const { data } = await axios.post<{ accessToken?: string }>(
     `${env.apiBaseUrl}/auth/refresh`,
     {},
@@ -78,7 +79,7 @@ async function refreshSession(): Promise<void> {
     throw new Error('Refresh endpoint did not return a new access token')
   }
 
-  tokenStorage.set(data.accessToken, undefined, true)
+  tokenStorage.set(data.accessToken, undefined, persistent)
 }
 
 http.interceptors.response.use(

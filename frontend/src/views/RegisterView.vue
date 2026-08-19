@@ -28,7 +28,7 @@ const {
     gender: 'Male' as 'Male' | 'Female' | 'Other',
     dateOfBirth: '',
     address: '',
-    rememberMe: true,
+    rememberMe: false,
   },
   {
     username: [(val) => validators.required(val, 'Tên đăng nhập')],
@@ -244,9 +244,12 @@ async function handleRegister() {
           </div>
 
           <div class="flex items-center justify-between mt-2">
-            <label class="flex items-center gap-2 text-sm text-slate-600 cursor-pointer select-none">
-              <input v-model="formData.rememberMe" type="checkbox" class="rounded text-[#0E4D92]" />
-              Ghi nhớ đăng nhập sau khi đăng ký
+            <label class="flex items-start gap-2 text-sm text-slate-600 cursor-pointer select-none">
+              <input v-model="formData.rememberMe" type="checkbox" class="mt-1 rounded text-[#0E4D92]" />
+              <span>
+                <span class="block font-medium text-slate-700">Ghi nhớ đăng nhập sau khi đăng ký</span>
+                <span class="block text-xs text-slate-500">Nếu bỏ tích, hệ thống chỉ giữ phiên đăng nhập trong trình duyệt hiện tại.</span>
+              </span>
             </label>
           </div>
 

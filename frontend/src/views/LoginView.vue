@@ -214,9 +214,12 @@ function goBackToRoleSelect() {
           </div>
 
           <div class="flex items-center justify-between">
-            <label class="flex items-center gap-2 text-sm text-slate-600 cursor-pointer select-none">
-              <input v-model="rememberMe" type="checkbox" class="rounded text-[#0E4D92]" />
-              Ghi nhớ đăng nhập
+            <label class="flex items-start gap-2 text-sm text-slate-600 cursor-pointer select-none">
+              <input v-model="rememberMe" type="checkbox" class="mt-1 rounded text-[#0E4D92]" />
+              <span>
+                <span class="block font-medium text-slate-700">Ghi nhớ đăng nhập</span>
+                <span class="block text-xs text-slate-500">Lưu phiên đăng nhập trên thiết bị này nếu bạn muốn truy cập lại nhanh.</span>
+              </span>
             </label>
             <button type="button" class="text-sm text-[#0E4D92] font-medium hover:underline">
               Quên mật khẩu?
