@@ -16,7 +16,7 @@ namespace Clinic.Application.UnitTests.Common
 
         public Task<WorkSchedule?> GetByIdAsync(Guid id)
         {
-            var result = _workSchedules.FirstOrDefault(w => w.Id == id);
+            var result = _workSchedules.FirstOrDefault(w => w.Id == id && w.IsDeleted == false);
             return Task.FromResult(result);
         }
 
@@ -38,7 +38,7 @@ namespace Clinic.Application.UnitTests.Common
         public Task<List<WorkSchedule>> GetAvailableSlotsAsync(Guid? doctorId, Guid? specialtyId, DateTime? fromDate, DateTime? toDate)
         {
             var query = _workSchedules
-                .Where(w => w.Status == WorkScheduleStatus.Active && w.ShiftEnd > DateTime.UtcNow);
+                .Where(w => w.IsDeleted == false && w.Status == WorkScheduleStatus.Active && w.ShiftEnd > DateTime.UtcNow);
 
             if (doctorId.HasValue)
             {
@@ -68,7 +68,6 @@ namespace Clinic.Application.UnitTests.Common
         }
 
         // ===== Nhóm chức năng: quản lý ca trực bác sĩ (shift request) =====
-
 
         public async Task AddShiftRequestAsync(ShiftRequest shiftRequest)
         {

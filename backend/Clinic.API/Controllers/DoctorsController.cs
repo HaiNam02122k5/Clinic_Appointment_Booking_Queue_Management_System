@@ -33,7 +33,7 @@ namespace Clinic.API.Controllers
         // Public: bệnh nhân (kể cả chưa đăng nhập) cần xem được danh sách bác sĩ/chuyên khoa
         // để chọn bác sĩ trước khi đặt lịch - cùng cách SpecialtiesController đang làm.
         [HttpGet]
-        [Authorize(Policy = "Permission:doctor.view.any")]
+        [AllowAnonymous]
         [ProducesResponseType(typeof(PaginationResponse<DoctorSummaryDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetAll([FromQuery] DoctorsQueryRequest request)
@@ -44,7 +44,7 @@ namespace Clinic.API.Controllers
         }
 
         [HttpGet("{doctorId}")]
-        [Authorize(Policy = "Permission:doctor.view.any")]
+        [AllowAnonymous]
         [ProducesResponseType(typeof(DoctorDetailDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetById([FromRoute] Guid doctorId)

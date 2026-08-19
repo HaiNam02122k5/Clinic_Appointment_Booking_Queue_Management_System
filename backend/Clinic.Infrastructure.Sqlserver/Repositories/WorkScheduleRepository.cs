@@ -27,7 +27,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                 .Include(w => w.Doctor)
                     .ThenInclude(d => d.Employee)
                         .ThenInclude(e => e.Person)
-                .FirstOrDefaultAsync(w => w.Id == id);
+                .FirstOrDefaultAsync(w => w.Id == id && w.IsDeleted == false);
         }
 
         public async Task LockAsync(Guid workScheduleId, CancellationToken cancellationToken = default)
@@ -50,7 +50,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                 .Include(w => w.Doctor)
                     .ThenInclude(d => d.Employee)
                         .ThenInclude(e => e.Person)
-                .Where(w => w.Status == WorkScheduleStatus.Active && w.ShiftEnd > DateTime.UtcNow);
+                .Where(w => w.IsDeleted == false && w.Status == WorkScheduleStatus.Active && w.ShiftEnd > DateTime.UtcNow);
 
             if (doctorId.HasValue)
             {
