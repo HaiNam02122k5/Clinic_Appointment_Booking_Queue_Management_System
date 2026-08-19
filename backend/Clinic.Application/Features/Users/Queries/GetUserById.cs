@@ -26,7 +26,8 @@ namespace Clinic.Application.Features.Users.Queries
             }
             return new UserDetailDto
             {
-                Id = user.Id,
+                UserId = user.Id,
+                PersonId = user.PersonId,
                 Username = user.Username,
                 FullName = user.Person.FullName,
                 PhoneNumber = user.Person.PhoneNumber,

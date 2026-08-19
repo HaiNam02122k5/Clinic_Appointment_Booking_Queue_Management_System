@@ -59,5 +59,12 @@ namespace Clinic.Application.Services
 
             return user;
         }
+
+        public async Task UpdatePassword(User user, string password)
+        {
+            var hashedPassword = _passwordHasher.HashPassword(password);
+            user.ResetPassword(hashedPassword);
+            await _userRepository.UpdateAsync(user);
+        }
     }
 }

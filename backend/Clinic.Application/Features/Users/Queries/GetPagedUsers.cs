@@ -34,7 +34,7 @@ namespace Clinic.Application.Features.Users.Queries
             {
                 Items = users.Items.Select(user => new UserSummaryDto
                 {
-                    Id = user.Id,
+                    UserId = user.Id,
                     Username = user.Username,
                     FullName = user.Person.FullName,
                     PhoneNumber = user.Person.PhoneNumber,
