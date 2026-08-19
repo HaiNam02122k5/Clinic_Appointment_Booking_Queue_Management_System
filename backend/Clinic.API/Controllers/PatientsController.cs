@@ -40,7 +40,7 @@ namespace Clinic.API.Controllers
         }
 
         [HttpGet("{patientId}")]
-        [Authorize(Policy = "Permission:patient.view.own")]
+        [Authorize(Policy = "Permission:patient.view.any")]
         [ProducesResponseType(typeof(PatientDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]

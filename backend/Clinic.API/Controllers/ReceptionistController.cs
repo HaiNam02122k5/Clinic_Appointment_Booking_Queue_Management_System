@@ -35,7 +35,7 @@ namespace Clinic.API.Controllers
         public async Task<IActionResult> CreateAppointmentForPatient([FromBody] ReceptionistCreateAppointmentRequest request)
         {
             var userId = _currentUser.UserId;
-            var command = new CreateAppointmentCommand(userId, request.WorkScheduleId, request.TimeSlot, request.Reason, request.PatientId);
+            var command = new CreateAppointmentCommand(userId, request.WorkScheduleId, request.TimeSlot, request.Reason, request.IsWalkIn, request.PatientId);
             await _sender.Send(command);
             return StatusCode(StatusCodes.Status201Created);
         }

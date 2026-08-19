@@ -104,15 +104,19 @@ namespace Clinic.Domain.Entities
         /// <exception cref="InvalidOperationException"></exception>
         public void AddAppointment(Appointment appointment)
         {
-            if (Appointments.Any(a => a.TimeSlot == appointment.TimeSlot && a.Status != AppointmentStatus.Cancelled && !a.IsDeleted && a.Id != appointment.Id))
-                throw new ConflictException("An appointment already exists for this time slot.");
+            // Only check for conflicts if the appointment is not a walk-in.
+            if (!appointment.IsWalkIn)
+            {
+                if (Appointments.Any(a => a.TimeSlot == appointment.TimeSlot && a.Status != AppointmentStatus.Cancelled && !a.IsDeleted && a.Id != appointment.Id))
+                    throw new ConflictException("An appointment already exists for this time slot.");
+                if (Appointments.Any(a => a.Id == appointment.Id))
+                {
+                    return; // Appointment already belongs to this work schedule
+                }
+            }
             if (Status == WorkScheduleStatus.Cancelled)
             {
                 throw new InvalidOperationException("Cannot add an appointment to a cancelled work schedule.");
-            }
-            if (Appointments.Any(a => a.Id == appointment.Id))
-            {
-                return; // Appointment already belongs to this work schedule
             }
             if (Status == WorkScheduleStatus.Full)
             {

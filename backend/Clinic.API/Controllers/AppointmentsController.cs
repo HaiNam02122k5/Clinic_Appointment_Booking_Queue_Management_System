@@ -52,7 +52,7 @@ namespace Clinic.API.Controllers
         public async Task<IActionResult> Create([FromBody] CreateAppointmentRequest request)
         {
             var userId = _currentUser.UserId;
-            var command = new CreateAppointmentCommand(userId, request.WorkScheduleId, request.TimeSlot, request.Reason);
+            var command = new CreateAppointmentCommand(userId, request.WorkScheduleId, request.TimeSlot, request.Reason, false);
             var result = await _sender.Send(command);
             return CreatedAtAction(nameof(GetAppointment), new { appointmentId = result }, result);
         }
@@ -137,7 +137,7 @@ namespace Clinic.API.Controllers
         [HttpGet]
         [Authorize(Policy = "Permission:appointment.view")]
         [ProducesResponseType(typeof(IEnumerable<AppointmentDto>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetMine([FromQuery] string category)
+        public async Task<IActionResult> GetMine([FromQuery] string? category)
         {
             var userId = _currentUser.UserId;
             if (userId == null)
