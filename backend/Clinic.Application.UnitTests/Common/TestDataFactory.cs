@@ -19,7 +19,6 @@ namespace Clinic.Application.UnitTests.Common
             if (!string.IsNullOrEmpty(userRole))
             {
                 var user = CreateUser(userRole, $"{fullName.Replace(" ", "").ToLower()}user", "hashedpassword", person);
-                user.AssignRole(RoleSet.FirstOrDefault(r => r.Name == userRole) ?? RoleSet.First());
                 person.User = user;
             }
             return person;

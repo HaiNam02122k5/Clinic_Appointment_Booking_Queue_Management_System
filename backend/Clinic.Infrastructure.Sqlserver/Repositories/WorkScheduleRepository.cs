@@ -91,7 +91,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             await _context.WorkSchedules.AddAsync(workSchedule);
         }
 
-        public async Task<IEnumerable<WorkSchedule>> GetPlannedSchedulesByDoctorIdAsync(Guid doctorId, DateOnly startDate, DateOnly endDate)
+        public async Task<IEnumerable<WorkSchedule>> GetPlannedSchedulesByDoctorIdAsync(Guid? doctorId, DateOnly startDate, DateOnly endDate)
         {
             // Check if the time range exceeds 1 month
             if (startDate.AddMonths(1) < endDate)
@@ -100,22 +100,26 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             }
 
             return await _context.WorkSchedules
-                .Where(ws => ws.DoctorId == doctorId && ws.IsDeleted == false &&
+                .Where(ws => ws.DoctorId == doctorId && ws.IsDeleted == false && ws.Status != Domain.Enums.WorkScheduleStatus.Cancelled &&
                     ((DateOnly.FromDateTime(ws.ShiftStart) >= startDate && DateOnly.FromDateTime(ws.ShiftStart) <= endDate) ||
                     (DateOnly.FromDateTime(ws.ShiftEnd) >= startDate && DateOnly.FromDateTime(ws.ShiftEnd) <= endDate))
                 ).AsNoTracking().ToListAsync();
         }
 
-        public async Task<IEnumerable<ShiftRequest>> GetRequestedSchedulesByDoctorIdAsync(Guid doctorId, DateOnly startDate, DateOnly endDate)
+        public async Task<IEnumerable<ShiftRequest>> GetRequestedSchedulesByDoctorIdAsync(Guid? doctorId, DateOnly startDate, DateOnly endDate)
         {
             // Check if the time range exceeds 1 month
             if (startDate.AddMonths(1) < endDate)
             {
                 throw new ArgumentException("The time range cannot exceed 1 month.");
             }
+            if (doctorId == null)
+            {
+                throw new ArgumentException("DoctorId cannot be null.");
+            }
 
             return await _context.ShiftRequests
-                .Where(sr => sr.DoctorId == doctorId && sr.IsDeleted == false &&
+                .Where(sr => sr.DoctorId == doctorId && sr.IsDeleted == false && sr.Status != Domain.Enums.ShiftRequestStatus.Cancelled &&
                     ((DateOnly.FromDateTime(sr.ShiftStart) >= startDate && DateOnly.FromDateTime(sr.ShiftStart) <= endDate) ||
                     (DateOnly.FromDateTime(sr.ShiftEnd) >= startDate && DateOnly.FromDateTime(sr.ShiftEnd) <= endDate))
                 ).AsNoTracking().ToListAsync();
@@ -123,31 +127,29 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
 
         public async Task<ShiftRequest?> GetShiftRequestByIdAsync(Guid scheduleId)
         {
-            return await _context.ShiftRequests
+            return await _context.ShiftRequests.Include(sr => sr.Doctor)
                 .FirstOrDefaultAsync(sr => sr.Id == scheduleId && sr.IsDeleted == false);
         }
 
         public async Task<WorkSchedule?> GetWorkScheduleByIdAsync(Guid scheduleId)
         {
-            return await _context.WorkSchedules
+            return await _context.WorkSchedules.Include(ws => ws.Doctor).Include(ws => ws.Appointments)
                 .FirstOrDefaultAsync(ws => ws.Id == scheduleId && ws.IsDeleted == false);
         }
 
-        public async Task<bool> HasDuplicateShiftRequest(Guid doctorId, DateTime startTime, DateTime endTime)
+        public async Task<bool> HasDuplicateShiftRequest(Guid doctorId, DateTime startTime, DateTime endTime, Guid? currentSRId = null)
         {
             var hasDuplicate = await _context.ShiftRequests
-                .AnyAsync(sr => sr.DoctorId == doctorId && sr.IsDeleted == false &&
-                    sr.Status != ShiftRequestStatus.Rejected && sr.Status != ShiftRequestStatus.Cancelled &&
-                    sr.ShiftStart == startTime && sr.ShiftEnd == endTime);
+                .AnyAsync(sr => sr.DoctorId == doctorId && sr.IsDeleted == false && sr.Status != Domain.Enums.ShiftRequestStatus.Cancelled &&
+                    sr.ShiftStart == startTime && sr.ShiftEnd == endTime && (currentSRId == null || sr.Id != currentSRId));
             return hasDuplicate;
         }
 
-        public async Task<bool> HasOverlappingWorkSchedule(Guid doctorId, DateTime startTime, DateTime endTime)
+        public async Task<bool> HasOverlappingWorkSchedule(Guid doctorId, DateTime startTime, DateTime endTime, Guid? currentWSId = null)
         {
             var hasOverlapping = await _context.WorkSchedules
-                .AnyAsync(ws => ws.DoctorId == doctorId && ws.IsDeleted == false &&
-                    ws.Status != WorkScheduleStatus.Cancelled &&
-                    ws.ShiftStart < endTime && ws.ShiftEnd > startTime);
+                .AnyAsync(ws => ws.DoctorId == doctorId && ws.IsDeleted == false && ws.Status != Domain.Enums.WorkScheduleStatus.Cancelled &&
+                    ws.ShiftStart < endTime && ws.ShiftEnd > startTime && (currentWSId == null || ws.Id != currentWSId));
             return hasOverlapping;
         }
     }

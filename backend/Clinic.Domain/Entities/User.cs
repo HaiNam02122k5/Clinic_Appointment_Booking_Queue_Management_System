@@ -90,7 +90,7 @@ namespace Clinic.Domain.Entities
         {
             if (role == null)
                 throw new ArgumentNullException(nameof(role), "Role cannot be null.");
-            if (UserRoles.Where(ur => ur.RoleId == role.Id).Any())
+            if (UserRoles.Any(ur => ur.Role.Name == role.Name))
             {
                 throw new ArgumentException($"User already has the role '{role.Name}' assigned.");
             }
@@ -102,10 +102,11 @@ namespace Clinic.Domain.Entities
         {
             if (role == null)
                 throw new ArgumentNullException(nameof(role), "Role cannot be null.");
-            var userRole = UserRoles.FirstOrDefault(ur => ur.RoleId == role.Id);
+            var userRole = UserRoles.FirstOrDefault(ur => ur.Role.Name == role.Name);
             if (userRole == null)
                 throw new ArgumentException($"User does not have the role '{role.Name}' assigned.");
             UserRoles.Remove(userRole);
+
             MarkUpdated();
         }
     }

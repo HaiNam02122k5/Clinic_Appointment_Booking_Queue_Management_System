@@ -69,16 +69,13 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
                 new Permission(Guid.Parse("2000000A-0000-0000-0000-000000000005"), "slot.manage", "Manage appointment slots", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("2000000A-0000-0000-0000-000000000006"), "shift.suggestion.manage", "Approve/reject doctor shift-change suggestions (Receptionist)", new DateTime(2026, 1, 1), null, false),
 
-                // queue.start-exam / queue.complete-exam (own/any split - trước đó bị leader phát hiện là
-                // permission cấp theo Role "Doctor" chung, không phân biệt DoctorId, khiến 1 bác sĩ có thể
-                // thao tác lên hàng đợi của bác sĩ khác. Dùng GUID mới (2000000B-...) thay vì tái sử dụng
-                // "queue.start-exam"/"queue.complete-exam" cũ, vì 2 permission cũ đó chỉ được insert bằng
-                // raw migration (SeedQueueStateMachinePermissions) và CHƯA từng có trong file cấu hình này -
-                // tái dùng GUID cũ sẽ khiến EF cố INSERT trùng khóa chính khi migrate trên DB đã tồn tại.
                 new Permission(Guid.Parse("2000000B-0000-0000-0000-000000000001"), "queue.start-exam.own", "Start exam for own queue ticket (Doctor)", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("2000000B-0000-0000-0000-000000000002"), "queue.start-exam.any", "Start exam for any doctor's queue ticket (Admin/Receptionist)", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("2000000B-0000-0000-0000-000000000003"), "queue.complete-exam.own", "Complete exam for own queue ticket (Doctor)", new DateTime(2026, 1, 1), null, false),
-                new Permission(Guid.Parse("2000000B-0000-0000-0000-000000000004"), "queue.complete-exam.any", "Complete exam for any doctor's queue ticket (Admin/Receptionist)", new DateTime(2026, 1, 1), null, false)
+                new Permission(Guid.Parse("2000000B-0000-0000-0000-000000000004"), "queue.complete-exam.any", "Complete exam for any doctor's queue ticket (Admin/Receptionist)", new DateTime(2026, 1, 1), null, false),
+
+                new Permission(Guid.Parse("2000000B-0000-0000-0000-000000000001"), "shift.suggestion.self-manage", "Manage doctor own shift suggestions (Doctor)", new DateTime(2026, 1, 1), null, false)
+
             );
         }
     }

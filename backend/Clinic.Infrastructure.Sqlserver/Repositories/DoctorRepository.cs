@@ -72,7 +72,6 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                 query = query.Where(d => d.WorkHistories.Any(wh => wh.EndDate == null && wh.SpecialtyId == specialtyId));
             }
 
-            // sortBy?.ToLower(): tránh NullReferenceException nếu client không truyền sortBy.
             query = sortBy?.ToLower() switch
             {
                 "fullname" => !descending ? query.OrderBy(d => d.Employee.Person.FullName) : query.OrderByDescending(d => d.Employee.Person.FullName),
