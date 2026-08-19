@@ -24,13 +24,14 @@ namespace Clinic.API.Controllers
 
         /// <summary>
         /// Trạng thái hàng đợi hiện tại của bệnh nhân (vị trí, thời gian chờ ước tính).
-        /// Trả về 204 nếu bệnh nhân chưa check-in trong ngày hôm nay.
+        /// Trả về mảng - có thể có nhiều phần tử nếu bệnh nhân đã check-in nhiều hơn 1 lịch hẹn
+        /// trong cùng ngày. Trả về 204 nếu bệnh nhân chưa check-in lịch hẹn nào trong ngày hôm nay.
         /// </summary>
         [HttpGet("queue-status")]
         public async Task<IActionResult> GetMyQueueStatus()
         {
             var result = await _sender.Send(new GetMyQueueStatusQuery());
-            return result is null ? NoContent() : Ok(result);
+            return result.Count == 0 ? NoContent() : Ok(result);
         }
 
         /// <summary>Lịch sử khám bệnh (các hồ sơ đã chốt) của bệnh nhân đang đăng nhập.</summary>

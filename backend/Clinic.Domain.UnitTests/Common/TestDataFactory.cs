@@ -70,7 +70,7 @@ namespace Clinic.Domain.UnitTests.Common
 
             if (checkedIn)
             {
-                appointment.CheckIn();
+                appointment.CheckIn(DateTime.UtcNow);
             }
 
             return appointment;

@@ -43,12 +43,23 @@ namespace Clinic.Domain.Entities
         /// <summary>
         /// Check-in bệnh nhân tại quầy/vào hàng đợi.
         /// </summary>
-        /// <exception cref="ArgumentException"></exception>
-        public void CheckIn()
+        /// <param name="checkInTime">Thời điểm check-in thực tế (giờ hệ thống).</param>
+        /// <exception cref="ArgumentException">Appointment chưa ở trạng thái Confirmed.</exception>
+        /// <exception cref="ConflictException">
+        /// TimeSlot của appointment không cùng ngày với checkInTime - ví dụ lịch hẹn của
+        /// ngày mai không được phép vào hàng đợi của ngày hôm nay (và ngược lại).
+        /// </exception>
+        public void CheckIn(DateTime checkInTime)
         {
             if (Status != AppointmentStatus.Confirmed)
             {
                 throw new ArgumentException($"Cannot check in an appointment with status '{Status}'. Appointment must be confirmed first.");
+            }
+
+            if (TimeSlot.Date != checkInTime.Date)
+            {
+                throw new ConflictException(
+                    $"Cannot check in: appointment is scheduled for {TimeSlot:yyyy-MM-dd}, not today ({checkInTime:yyyy-MM-dd}).");
             }
 
             Status = AppointmentStatus.CheckedIn;

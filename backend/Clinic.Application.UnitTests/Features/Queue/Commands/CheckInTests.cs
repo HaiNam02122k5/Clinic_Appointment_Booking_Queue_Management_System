@@ -1,6 +1,7 @@
 ﻿using Clinic.Application.Common.Exceptions;
 using Clinic.Application.Features.Queue.Commands;
 using Clinic.Application.UnitTests.Common;
+using Clinic.Domain.Common.Exceptions;
 using Clinic.Domain.Enums;
 
 namespace Clinic.Application.UnitTests.Features.Queue.Commands
@@ -105,6 +106,27 @@ namespace Clinic.Application.UnitTests.Features.Queue.Commands
             // Act & Assert
             await Assert.ThrowsAsync<ArgumentException>(() =>
                 handler.Handle(new CheckInCommand(appointment.Id), CancellationToken.None));
+        }
+
+        [Fact]
+        public async Task Handle_AppointmentScheduledForAnotherDay_ShouldThrowConflictException()
+        {
+            // Arrange: lịch hẹn đã Confirmed nhưng TimeSlot là NGÀY MAI -> không được phép
+            // check-in vào hàng đợi của ngày hôm nay.
+            var appointmentRepository = new FakeAppointmentRepository();
+            var queueTicketRepository = new FakeQueueTicketRepository();
+            var unitOfWork = new FakeUnitOfWork();
+            var handler = new CheckInHandler(appointmentRepository, queueTicketRepository, unitOfWork);
+
+            var appointment = TestDataFactory.CreateAppointment(confirmed: true, timeSlot: DateTime.UtcNow.AddDays(1));
+            await appointmentRepository.AddAsync(appointment);
+
+            // Act & Assert
+            await Assert.ThrowsAsync<ConflictException>(() =>
+                handler.Handle(new CheckInCommand(appointment.Id), CancellationToken.None));
+
+            // Không được sinh QueueTicket khi check-in bị chặn.
+            Assert.Empty(queueTicketRepository.All);
         }
 
         [Fact]

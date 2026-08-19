@@ -69,7 +69,7 @@ namespace Clinic.Application.UnitTests.Common
         /// hoặc checkedIn = true để có sẵn Appointment ở trạng thái CheckedIn (phục vụ test Cancel
         /// sau khi đã có QueueTicket).
         /// </summary>
-        public static Appointment CreateAppointment(Guid? patientId = null, Guid? doctorId = null, bool confirmed = false, bool checkedIn = false)
+        public static Appointment CreateAppointment(Guid? patientId = null, Guid? doctorId = null, bool confirmed = false, bool checkedIn = false, DateTime? timeSlot = null)
         {
             // WorkSchedule giờ bắt buộc gắn với 1 Doctor object (không chỉ DoctorId), nên
             // dựng 1 Doctor "giả" qua constructor reconstruct để giữ đúng Id đã truyền vào,
@@ -99,7 +99,7 @@ namespace Clinic.Application.UnitTests.Common
                 PatientId = patientId ?? Guid.NewGuid(),
                 WorkScheduleId = workSchedule.Id,
                 WorkSchedule = workSchedule,
-                TimeSlot = DateTime.UtcNow.AddHours(1),
+                TimeSlot = timeSlot ?? DateTime.UtcNow.AddHours(1),
             };
 
             if (confirmed || checkedIn)
@@ -109,7 +109,11 @@ namespace Clinic.Application.UnitTests.Common
 
             if (checkedIn)
             {
-                appointment.CheckIn();
+                // Lưu ý: nếu truyền timeSlot khác ngày hôm nay kèm checkedIn: true, dòng này sẽ tự
+                // ném ConflictException ngay trong lúc dựng dữ liệu test (đúng theo domain rule mới) -
+                // muốn test case "check-in lịch ngày khác" thì dùng confirmed: true + timeSlot khác
+                // ngày, rồi tự gọi handler.Handle(...) để assert exception, không dùng checkedIn: true.
+                appointment.CheckIn(DateTime.UtcNow);
             }
 
             return appointment;

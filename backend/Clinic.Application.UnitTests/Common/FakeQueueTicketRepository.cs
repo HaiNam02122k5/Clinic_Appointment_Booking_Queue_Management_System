@@ -64,14 +64,14 @@ namespace Clinic.Application.UnitTests.Common
                 .FirstOrDefault();
         }
 
-        public async Task<QueueTicket?> GetActiveByPatientAsync(Guid patientId, DateTime date)
+        public async Task<List<QueueTicket>> GetActiveTicketsByPatientAsync(Guid patientId, DateTime date)
         {
             return _queueTickets
                 .Where(q => q.Appointment.PatientId == patientId
                     && q.CheckInTime.Date == date.Date
                     && (q.Status == QueueStatus.Waiting || q.Status == QueueStatus.Called || q.Status == QueueStatus.InProgress))
-                .OrderByDescending(q => q.CheckInTime)
-                .FirstOrDefault();
+                .OrderBy(q => q.CheckInTime)
+                .ToList();
         }
     }
 }
