@@ -126,7 +126,7 @@ function getTagClass(color: RoleOption['tagColor']) {
     <div class="flex-1 flex flex-col items-center justify-center px-4 py-4 lg:py-5">
           <!-- Hero -->
       <div class="text-center mb-5 max-w-xl">
-        <h1 class="text-2xl md:text-3xl font-bold text-slate-800 mb-2 leading-tight">          
+        <h1 class="text-2xl md:text-3xl font-bold text-slate-800 mb-2 leading-tight">
             Bạn đang sử dụng hệ thống<br />với vai trò nào?
         </h1>
         <p class="text-slate-500 text-base">
@@ -170,7 +170,7 @@ function getTagClass(color: RoleOption['tagColor']) {
       </div>
 
       <!-- Trust Badges -->
-    <div class="flex flex-wrap items-center justify-center gap-4 mt-5 text-xs text-slate-400">        
+    <div class="flex flex-wrap items-center justify-center gap-4 mt-5 text-xs text-slate-400">
         <span class="flex items-center gap-1.5">🔒 Bảo mật SSL</span>
         <span class="flex items-center gap-1.5">📱 Hỗ trợ mobile</span>
         <span class="flex items-center gap-1.5">⚡ Cập nhật thời gian thực</span>
