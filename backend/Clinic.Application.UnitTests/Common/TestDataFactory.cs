@@ -1,4 +1,4 @@
-﻿using Clinic.Domain.Entities;
+using Clinic.Domain.Entities;
 using Clinic.Domain.Enums;
 
 namespace Clinic.Application.UnitTests.Common
@@ -137,6 +137,46 @@ namespace Clinic.Application.UnitTests.Common
             var doctor = new Doctor(employee ?? CreateEmployee(role: "Doctor"), licenseNumber, qualification, specialty ?? CreateSpecialty(), yoe, bio);
             doctor.Employee?.AssignDoctor(doctor);
             return doctor;
+        }
+
+        public static Patient CreatePatient(Person? person = null, string? insuranceNumber = null, string? emergencyContact = null)
+        {
+            person ??= CreatePerson(userRole: "Patient");
+            var patient = new Patient
+            {
+                PersonId = person.Id,
+                Person = person,
+                InsuranceNumber = insuranceNumber,
+                EmergencyContact = emergencyContact
+            };
+            person.Patient = patient;
+            return patient;
+        }
+
+        public static WorkSchedule CreateWorkSchedule(Doctor? doctor = null, DateTime? shiftStart = null, DateTime? shiftEnd = null, int limit = 5)
+        {
+            doctor ??= CreateDoctor();
+            var start = shiftStart ?? DateTime.UtcNow.AddDays(1).Date.AddHours(8);
+            var end = shiftEnd ?? start.AddHours(4);
+            return new WorkSchedule(doctor, start, end, limit);
+        }
+
+        public static MedicalReport CreateMedicalReport(QueueTicket? queueTicket = null, MedicalReportStatus status = MedicalReportStatus.Draft, string? symptoms = "Headache", string? diagnosis = "Mild migraine", string? prescription = "Paracetamol 500mg")
+        {
+            var appointment = CreateAppointment(checkedIn: true);
+            queueTicket ??= CreateQueueTicket(appointment);
+            var report = new MedicalReport
+            {
+                QueueTicketId = queueTicket.Id,
+                QueueTicket = queueTicket,
+                Symptoms = symptoms,
+                Diagnosis = diagnosis,
+                Prescription = prescription,
+                Status = status,
+                ExamStartTime = DateTime.UtcNow.AddMinutes(-30),
+                ExamEndTime = status == MedicalReportStatus.Finalized ? DateTime.UtcNow : null
+            };
+            return report;
         }
     }
 }
