@@ -48,3 +48,9 @@ cypress/videos/
 cypress/screenshots/
 
 *.ps1
+
+AgriTrace-Backend-feature-CleanArchitechture/
+
+vue-base-starter-main/
+
+graphify-out/
