@@ -1,5 +1,6 @@
 using Clinic.API.Models;
 using Clinic.Application.Contracts;
+using Clinic.Application.Features.Appointments.Queries;
 using Clinic.Application.Features.Users.Queries;
 using MapsterMapper;
 using MediatR;
@@ -62,6 +63,17 @@ namespace Clinic.API.Controllers
         public async Task<IActionResult> GetUserById(Guid userId)
         {
             var command = new GetUserQuery(userId);
+            var result = await _sender.Send(command);
+            return Ok(result);
+        }
+
+        [HttpGet("appointments/summary")]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(typeof(TotalAppointmentSummaryDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> GetAppointmentSummary([FromQuery] GetAppointmentSummaryQueryRequest request)
+        {
+            var command = _mapper.Map<GetAppointmentSummaryQueryRequest, GetTotalAppointmentSummaryQuery>(request);
             var result = await _sender.Send(command);
             return Ok(result);
         }

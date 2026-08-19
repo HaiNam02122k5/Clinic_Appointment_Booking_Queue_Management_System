@@ -1,4 +1,5 @@
 using Clinic.Application.Common.Models;
+using Clinic.Application.Contracts;
 using Clinic.Domain.Entities;
 using System;
 using System.Collections.Generic;
@@ -29,5 +30,10 @@ namespace Clinic.Application.Interfaces
         /// Dùng để scope "related" cho medical-report.view/patient-history.view của Doctor.
         /// </summary>
         Task<bool> ExistsForDoctorAndPatientAsync(Guid doctorId, Guid patientId);
+
+        /// <summary>
+        /// Gets a summary of total appointments within a specified date range, including counts of completed, waiting, canceled, and no-show appointments, as well as average waiting time and cancellation rate.
+        /// </summary>
+        Task<TotalAppointmentSummaryDto> GetTotalAppointmentSummaryAsync(DateOnly startDate, DateOnly endDate, Guid doctorId, Guid specialtyId);
     }
 }
