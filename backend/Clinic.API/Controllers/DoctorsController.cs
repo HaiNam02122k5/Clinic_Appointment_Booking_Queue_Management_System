@@ -2,6 +2,8 @@ using Clinic.API.Models;
 using Clinic.Application.Contracts;
 using Clinic.Application.Features.Doctors.Commands;
 using Clinic.Application.Features.Doctors.Queries;
+using Clinic.Application.Features.WorkSchedules.Commands;
+using Clinic.Application.Features.WorkSchedules.Queries;
 using Clinic.Application.Interfaces;
 using Clinic.Domain.Enums;
 using MapsterMapper;
@@ -123,6 +125,7 @@ namespace Clinic.API.Controllers
 
         [HttpPatch("{doctorId}/specialty")]
         [Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
         public async Task<IActionResult> ChangeSpecialty([FromRoute] Guid doctorId, [FromBody] Guid newSpecialtyId)
         {
             var command = new ChangeSpecialtyCommand(doctorId, newSpecialtyId);
@@ -130,12 +133,37 @@ namespace Clinic.API.Controllers
             return NoContent();
         }
 
+        [HttpGet("{doctorId}/shifts")]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(DoctorScheduleDto<WorkScheduleDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetAllShifts([FromRoute] Guid doctorId, [FromQuery] GetShiftsQuery query)
+        {
+            var command = new GetDoctorSchedulesQuery(doctorId, query.StartDate, query.EndDate);
+            var result = await _sender.Send(command);
+            return Ok(result);
+        }
+
         [HttpPost("{doctorId}/shifts")]
         [Authorize(Roles = "Admin")]
-        public IActionResult CreateShift([FromRoute] string doctorId)
+        [ProducesResponseType(typeof(WorkScheduleDto), StatusCodes.Status201Created)]
+        public async Task<IActionResult> CreateShift([FromRoute] Guid doctorId, [FromBody] CreateShiftRequest request)
         {
             // In another branch
-            return StatusCode(StatusCodes.Status201Created);
+            var command = new AddDoctorScheduleCommand(doctorId, request.StartTime, request.EndTime, request.PatientLimitPerSlot);
+            var result = await _sender.Send(command);
+            return Created((string?)null, result);
+        }
+
+        [HttpGet("{doctorId}/suggestions")]
+        [Authorize(Policy = "Permission:shift.suggestion.manage")]
+        public async Task<IActionResult> GetAllSuggestions([FromRoute] Guid doctorId, [FromQuery] GetShiftsQuery query)
+        {
+            var userId = _currentUser.UserId;
+            var command = new GetDoctorRequestedShiftsQuery(userId, query.StartDate, query.EndDate, doctorId);
+            var schedules = await _sender.Send(command);
+            return Ok(schedules);
         }
 
         [HttpGet("{doctorId}/queue")]

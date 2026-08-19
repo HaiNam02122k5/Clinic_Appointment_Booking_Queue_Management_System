@@ -12,14 +12,14 @@ namespace Clinic.Application.Interfaces
         /// The range should be less than 1 month.
         /// </summary>
         /// <exception cref="ArgumentException">Thrown when the time range exceeds 1 month.</exception>
-        Task<IEnumerable<WorkSchedule>> GetPlannedSchedulesByDoctorIdAsync(Guid doctorId, DateOnly startDate, DateOnly endDate);
+        Task<IEnumerable<WorkSchedule>> GetPlannedSchedulesByDoctorIdAsync(Guid? doctorId, DateOnly startDate, DateOnly endDate);
 
         /// <summary>
         /// Retrieves requested shifts for a doctor in the specified time range.
         /// The range should be less than 1 month.
         /// </summary>
         /// <exception cref="ArgumentException">Thrown when the time range exceeds 1 month.</exception>
-        Task<IEnumerable<ShiftRequest>> GetRequestedSchedulesByDoctorIdAsync(Guid doctorId, DateOnly startDate, DateOnly endDate);
+        Task<IEnumerable<ShiftRequest>> GetRequestedSchedulesByDoctorIdAsync(Guid? doctorId, DateOnly startDate, DateOnly endDate);
 
         /// <summary>
         /// Retrieves a work schedule by its unique identifier asynchronously.
@@ -43,12 +43,14 @@ namespace Clinic.Application.Interfaces
 
         /// <summary>
         /// Checks if a doctor has overlapping work schedules within the specified time range asynchronously.
+        /// If currentWSId is provided, it will be excluded from the check (useful for updates).
         /// </summary>
-        Task<bool> HasOverlappingWorkSchedule(Guid doctorId, DateTime startTime, DateTime endTime);
+        Task<bool> HasOverlappingWorkSchedule(Guid doctorId, DateTime startTime, DateTime endTime, Guid? currentWSId = null);
 
         /// <summary>
         /// Checks if a doctor has already requested a shift that has exact same time range asynchronously.
+        /// If currentSRId is provided, it will be excluded from the check (useful for updates).
         /// </summary>
-        Task<bool> HasDuplicateShiftRequest(Guid doctorId, DateTime startTime, DateTime endTime);
+        Task<bool> HasDuplicateShiftRequest(Guid doctorId, DateTime startTime, DateTime endTime, Guid? currentSRId = null);
     }
 }

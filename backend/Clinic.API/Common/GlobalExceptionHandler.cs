@@ -1,13 +1,10 @@
 using System;
 using System.Net;
-using System.Threading;
-using System.Threading.Tasks;
 using Clinic.API.Models;
 using Clinic.Application.Common.Exceptions;
 using Clinic.Domain.Common.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
+
 
 namespace Clinic.API.Common
 {

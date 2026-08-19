@@ -70,7 +70,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                 query = query.Where(d => d.WorkHistories.Any(wh => wh.EndDate == null && wh.SpecialtyId == specialtyId));
             }
 
-            query = sortBy.ToLower() switch
+            query = sortBy?.ToLower() switch
             {
                 "fullname" => !descending ? query.OrderBy(d => d.Employee.Person.FullName) : query.OrderByDescending(d => d.Employee.Person.FullName),
                 "experienceyears" => !descending ? query.OrderBy(d => d.ExperienceYears) : query.OrderByDescending(d => d.ExperienceYears),

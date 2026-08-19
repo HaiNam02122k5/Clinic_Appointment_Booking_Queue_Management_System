@@ -67,7 +67,8 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
                 new Permission(Guid.Parse("2000000A-0000-0000-0000-000000000003"), "specialty.manage", "Manage medical specialties", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("2000000A-0000-0000-0000-000000000004"), "slot.view", "View appointment slots", new DateTime(2026, 1, 1), null, false),
                 new Permission(Guid.Parse("2000000A-0000-0000-0000-000000000005"), "slot.manage", "Manage appointment slots", new DateTime(2026, 1, 1), null, false),
-                new Permission(Guid.Parse("2000000A-0000-0000-0000-000000000006"), "shift.suggestion.manage", "Approve/reject doctor shift-change suggestions (Receptionist)", new DateTime(2026, 1, 1), null, false)
+                new Permission(Guid.Parse("2000000A-0000-0000-0000-000000000006"), "shift.suggestion.manage", "Approve/reject doctor shift-change suggestions (Receptionist)", new DateTime(2026, 1, 1), null, false),
+                new Permission(Guid.Parse("2000000B-0000-0000-0000-000000000001"), "shift.suggestion.self-manage", "Manage doctor own shift suggestions (Doctor)", new DateTime(2026, 1, 1), null, false)
             );
         }
     }

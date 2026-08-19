@@ -93,7 +93,7 @@ namespace Clinic.Application.Features.Doctors.Commands
             await _unitOfWork.SaveChangesAsync();
             return new DoctorSummaryDto
             {
-                Id = employee.Doctor.Id,
+                Id = doctor.Id,
                 FullName = user.Person.FullName,
                 PhoneNumber = user.Person.PhoneNumber,
                 Email = user.Person.Email,
