@@ -17,6 +17,9 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
                 .HasForeignKey(w => w.DoctorId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.Property(w => w.CancellationReason)
+                .HasMaxLength(500);
+
             builder.Property(w => w.PatientLimitPerSlot).IsRequired();
 
             builder.Property(w => w.Status)
