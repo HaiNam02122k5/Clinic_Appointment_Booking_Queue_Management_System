@@ -2,6 +2,8 @@ using Clinic.API.Models;
 using Clinic.Application.Contracts;
 using Clinic.Application.Features.Doctors.Commands;
 using Clinic.Application.Features.Doctors.Queries;
+using Clinic.Application.Features.Queue.Commands;
+using Clinic.Application.Features.Queue.Queries;
 using Clinic.Application.Features.WorkSchedules.Commands;
 using Clinic.Application.Features.WorkSchedules.Queries;
 using Clinic.Application.Interfaces;
@@ -10,7 +12,6 @@ using MapsterMapper;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Identity.Client;
 
 namespace Clinic.API.Controllers
 {
@@ -29,8 +30,10 @@ namespace Clinic.API.Controllers
             _currentUser = currentUser;
         }
 
+        // Public: bệnh nhân (kể cả chưa đăng nhập) cần xem được danh sách bác sĩ/chuyên khoa
+        // để chọn bác sĩ trước khi đặt lịch - cùng cách SpecialtiesController đang làm.
         [HttpGet]
-        [Authorize(Policy = "Permission:doctor.view.any")]
+        [AllowAnonymous]
         [ProducesResponseType(typeof(PaginationResponse<DoctorSummaryDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetAll([FromQuery] DoctorsQueryRequest request)
@@ -40,9 +43,15 @@ namespace Clinic.API.Controllers
             return Ok(result);
         }
 
+        // Endpoint này cho phép anonymous truy cập (bệnh nhân chưa đăng nhập cần xem thông tin
+        // bác sĩ trước khi đặt lịch), nên KHÔNG được trả các trường nhạy cảm/nội bộ của bác sĩ
+        // như DateOfBirth, Address, HireDate (những trường này chỉ có trong DoctorDetailDto).
+        // Vì vậy phải map sang DoctorPublicDetailDto (loại bỏ các trường trên) trước khi trả về.
+        // Thông tin đầy đủ (DoctorDetailDto) chỉ được trả qua GET /doctors/me, endpoint yêu cầu
+        // đăng nhập và chỉ trả về hồ sơ của chính bác sĩ đó.
         [HttpGet("{doctorId}")]
-        [Authorize(Policy = "Permission:doctor.view.any")]
-        [ProducesResponseType(typeof(DoctorDetailDto), StatusCodes.Status200OK)]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(DoctorPublicDetailDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetById([FromRoute] Guid doctorId)
         {
@@ -52,7 +61,23 @@ namespace Clinic.API.Controllers
             {
                 return NotFound();
             }
-            return Ok(result);
+
+            var publicResult = new DoctorPublicDetailDto
+            {
+                Id = result.Id,
+                FullName = result.FullName,
+                PhoneNumber = result.PhoneNumber,
+                Email = result.Email,
+                Gender = result.Gender,
+                LicenseNumber = result.LicenseNumber,
+                Qualification = result.Qualification,
+                CurrentSpecialty = result.CurrentSpecialty,
+                ExperienceYears = result.ExperienceYears,
+                Status = result.Status,
+                Biography = result.Biography,
+            };
+
+            return Ok(publicResult);
         }
 
         [HttpGet("me")]
@@ -98,7 +123,7 @@ namespace Clinic.API.Controllers
         {
             var userId = _currentUser.UserId;
             var command = new UpdateDoctorCommand(userId, request.FullName, request.PhoneNumber, request.Email, request.DateOfBirth, request.Gender, request.Address, request.LicenseNumber, request.Qualification, request.ExperienceYears, request.Biography, doctorId);
-            await _sender.Send(command);    
+            await _sender.Send(command);
             return NoContent();
         }
 
@@ -167,19 +192,19 @@ namespace Clinic.API.Controllers
         }
 
         [HttpGet("{doctorId}/queue")]
-        [Authorize(Policy = "Permission:doctor.queue.view")]
-        public IActionResult GetQueue([FromRoute] string doctorId)
+        [Authorize(Policy = "Permission:doctor.queue.view,queue.view")]
+        public async Task<IActionResult> GetQueue([FromRoute] Guid doctorId)
         {
-            // Not my job
-            return Ok(new { doctorId });
+            var result = await _sender.Send(new GetQueueByDoctorQuery(doctorId));
+            return Ok(result);
         }
 
         [HttpPost("{doctorId}/queue/next")]
         [Authorize(Policy = "Permission:queue.call-next")]
-        public IActionResult CallNext([FromRoute] string doctorId)
+        public async Task<IActionResult> CallNext([FromRoute] Guid doctorId)
         {
-            // Not my job
-            return Ok(new { doctorId });
+            var result = await _sender.Send(new CallNextQueueCommand(doctorId));
+            return Ok(result);
         }
     }
 }

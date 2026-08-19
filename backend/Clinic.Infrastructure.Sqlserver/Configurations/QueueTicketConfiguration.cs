@@ -29,6 +29,9 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
             builder.Property(q => q.Status)
                 .HasConversion<string>()
                 .HasMaxLength(20);
+
+            builder.Property(q => q.RowVersion)
+                .IsRowVersion();
         }
     }
 }

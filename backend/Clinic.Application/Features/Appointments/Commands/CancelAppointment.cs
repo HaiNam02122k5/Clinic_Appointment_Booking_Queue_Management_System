@@ -9,15 +9,18 @@ namespace Clinic.Application.Features.Appointments.Commands
     public class CancelAppointmentHandler : IRequestHandler<CancelAppointmentCommand>
     {
         private readonly IAppointmentRepository _appointmentRepository;
+        private readonly IQueueTicketRepository _queueTicketRepository;
         private readonly ICurrentUser _currentUser;
         private readonly IUnitOfWork _unitOfWork;
 
         public CancelAppointmentHandler(
             IAppointmentRepository appointmentRepository,
+            IQueueTicketRepository queueTicketRepository,
             ICurrentUser currentUser,
             IUnitOfWork unitOfWork)
         {
             _appointmentRepository = appointmentRepository;
+            _queueTicketRepository = queueTicketRepository;
             _currentUser = currentUser;
             _unitOfWork = unitOfWork;
         }
@@ -35,9 +38,19 @@ namespace Clinic.Application.Features.Appointments.Commands
                 throw new ForbiddenException("You are not allowed to cancel this appointment.");
             }
 
+            // appointment.Cancel() tự kiểm tra trạng thái QueueTicket (nếu CheckedIn) và cascade
+            // hủy vé khi hợp lệ (Waiting/Called), hoặc ném lỗi khi vé đang InProgress/Completed.
             appointment.Cancel();
 
             await _appointmentRepository.UpdateAsync(appointment);
+
+            // Nếu Cancel() vừa cascade-hủy QueueTicket, lưu rõ ràng thay đổi đó qua repository
+            // riêng của nó, tránh phụ thuộc ngầm vào việc EF change-tracker tự phát hiện.
+            if (appointment.QueueTicket is not null)
+            {
+                await _queueTicketRepository.UpdateAsync(appointment.QueueTicket);
+            }
+
             await _unitOfWork.SaveChangesAsync(cancellationToken);
         }
     }
