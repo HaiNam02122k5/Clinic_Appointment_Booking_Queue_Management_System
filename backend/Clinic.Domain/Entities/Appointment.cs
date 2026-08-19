@@ -23,14 +23,14 @@ namespace Clinic.Domain.Entities
 
         public bool IsWalkIn { get; protected set; } = false;
 
-        public Guid CreatedByUserId { get; protected set; }
-
-        public Guid? CancelledByUserId {  get; protected set; } = null;
+        public Guid UpdatedByUserId { get; protected set; }
 
         /// <summary>0..1 - chỉ có sau khi bệnh nhân check-in.</summary>
         public QueueTicket? QueueTicket { get; protected set; }
 
         public ICollection<AppointmentSnapshot> Snapshots { get; protected set; } = [];
+
+        public User Updator { get; protected set; } = null!;
 
         private Appointment() { } // For EF Core
 
@@ -56,7 +56,7 @@ namespace Clinic.Domain.Entities
             WorkScheduleId = workSchedule.Id;
             TimeSlot = timeSlot;
             IsWalkIn = isWalkIn;
-            CreatedByUserId = createdByUserId;
+            UpdatedByUserId = createdByUserId;
         }
 
         public void AdminCancel(Guid adminId)
@@ -72,7 +72,7 @@ namespace Clinic.Domain.Entities
             }
             Snapshots.Add(new AppointmentSnapshot(this));
             Status = AppointmentStatus.Cancelled;
-            CancelledByUserId = adminId;
+            UpdatedByUserId = adminId;
             MarkUpdated();
         }
 
@@ -141,7 +141,7 @@ namespace Clinic.Domain.Entities
             WorkSchedule = workSchedule;
             WorkScheduleId = workSchedule.Id;
             TimeSlot = timeSlot;
-            CreatedByUserId = updatedByUserId;
+            UpdatedByUserId = updatedByUserId;
             MarkUpdated();
         }
 
@@ -160,7 +160,7 @@ namespace Clinic.Domain.Entities
             QueueTicket?.Cancel();
             Snapshots.Add(new AppointmentSnapshot(this));
             Status = AppointmentStatus.Cancelled;
-            CancelledByUserId = cancelledByUserId;
+            UpdatedByUserId = cancelledByUserId;
         }
 
         public void Confirm(Guid confirmedByUserId)
@@ -171,7 +171,7 @@ namespace Clinic.Domain.Entities
             }
             Snapshots.Add(new AppointmentSnapshot(this));
             Status = AppointmentStatus.Confirmed;
-            CreatedByUserId = confirmedByUserId;
+            UpdatedByUserId = confirmedByUserId;
             MarkUpdated();
         }
 
@@ -183,7 +183,7 @@ namespace Clinic.Domain.Entities
             }
             Snapshots.Add(new AppointmentSnapshot(this));
             Status = AppointmentStatus.Completed;
-            CreatedByUserId = completedByUserId;
+            UpdatedByUserId = completedByUserId;
             MarkUpdated();
         }
 

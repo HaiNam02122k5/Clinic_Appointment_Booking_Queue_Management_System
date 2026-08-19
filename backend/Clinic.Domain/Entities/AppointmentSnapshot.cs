@@ -12,15 +12,15 @@ namespace Clinic.Domain.Entities
         public Guid AppointmentId { get; protected set; }
         public Guid OldWorkScheduleId { get; protected set; }
         public TimeOnly TimeSlot { get; protected set; }
-        public DateTime CreatedAt { get; protected set; }
-        public Guid CreatedByUserId { get; protected set; }
+        public DateTime UpdatedAt { get; protected set; }
+        public Guid UpdatedByUserId { get; protected set; }
         public string Reason { get; protected set; }
         public AppointmentStatus Status { get; protected set; }
 
         // Navigation properties
         public Appointment Appointment { get; protected set; }
         public WorkSchedule OldWorkSchedule { get; protected set; }
-        public User Creator { get; protected set; }
+        public User Updator { get; protected set; }
 
         private AppointmentSnapshot() { } // For EF Core
 
@@ -31,10 +31,10 @@ namespace Clinic.Domain.Entities
             AppointmentId = appointment.Id;
             OldWorkScheduleId = appointment.WorkScheduleId;
             TimeSlot = appointment.TimeSlot;
-            CreatedAt = appointment.CreatedAt;
+            UpdatedAt = (DateTime)appointment.UpdatedAt;
             Status = appointment.Status;
             Reason = appointment.Reason;
-            CreatedByUserId = appointment.CreatedByUserId;
+            UpdatedByUserId = appointment.UpdatedByUserId;
         }
     }
 }

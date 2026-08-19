@@ -30,7 +30,7 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Commands
             receptionist.AssignRole(TestDataFactory.RoleSet.First(r => r.Name == "Receptionist"));
             var command2 = new CreateAppointmentCommand(receptionist.Id, workSchedule.Id, new TimeOnly(10, 0), "Reason", true, patient.Id);
             var result2 = await handler.Handle(command2, CancellationToken.None);
-            Assert.Equal(receptionist.Id, workSchedule.Appointments.FirstOrDefault(a => a.Id == result2.Id)?.CreatedByUserId);
+            Assert.Equal(receptionist.Id, workSchedule.Appointments.FirstOrDefault(a => a.Id == result2.Id)?.UpdatedByUserId);
         }
 
         [Fact]

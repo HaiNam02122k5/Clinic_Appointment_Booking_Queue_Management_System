@@ -77,5 +77,15 @@ namespace Clinic.API.Controllers
             var result = await _sender.Send(command);
             return Ok(result);
         }
+
+        [HttpGet("appointments/{appointmentId}/history")]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(typeof(AppointmentChangelogDto), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetAppointmentChangelog(Guid appointmentId)
+        {
+            var command = new GetAppointmentChangelogQuery(appointmentId);
+            var result = await _sender.Send(command);
+            return Ok(result);
+        }
     }
 }

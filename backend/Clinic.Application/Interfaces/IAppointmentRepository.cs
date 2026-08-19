@@ -30,5 +30,10 @@ namespace Clinic.Application.Interfaces
         /// Gets a summary of total appointments within a specified date range, including counts of completed, waiting, canceled, and no-show appointments, as well as average waiting time and cancellation rate.
         /// </summary>
         Task<TotalAppointmentSummaryDto> GetTotalAppointmentSummaryAsync(DateOnly startDate, DateOnly endDate, Guid doctorId, Guid specialtyId);
+
+        /// <summary>
+        /// Gets the changelog of an appointment, including all snapshots of the appointment's state over time, doctor, patient, and updator information.
+        /// </summary>
+        Task<Appointment?> GetAppointmentChangelogAsync(Guid appointmentId);
     }
 }

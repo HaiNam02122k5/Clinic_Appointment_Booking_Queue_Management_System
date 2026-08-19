@@ -34,7 +34,7 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Commands
             receptionist.AssignRole(TestDataFactory.RoleSet.First(r => r.Name == "Receptionist"));
             var command2 = new UpdateAppointmentCommand(receptionist.Id, appointment.Id, workSchedule.Id, new TimeOnly(10, 30), "Reason"); // 2nd update by receptionist
             var result2 = await handler.Handle(command2, CancellationToken.None);
-            Assert.Equal(receptionist.Id, appointment.CreatedByUserId);
+            Assert.Equal(receptionist.Id, appointment.UpdatedByUserId);
             Assert.Equal(2, appointment.Snapshots.Count); // => 2 snapshots created
         }
 
