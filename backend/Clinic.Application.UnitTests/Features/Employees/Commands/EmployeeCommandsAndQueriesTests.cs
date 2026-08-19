@@ -20,6 +20,7 @@ namespace Clinic.Application.UnitTests.Features.Employees.Commands
                 userRepository, employeeRepository, roleRepository, unitOfWork);
 
             var person = TestDataFactory.CreatePerson(email: "receptionist@example.com", address: "456 Clinic Ave");
+            var patient = TestDataFactory.CreatePatient(person);
             var user = TestDataFactory.CreateUser("Patient", "receptionist_user", "hash", person);
             await userRepository.AddAsync(user);
 

@@ -31,8 +31,6 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Commands
             // Assert
             Assert.Equal(shiftRequest.Id, result);
             Assert.Equal(10, shiftRequest.PatientLimit);
-            Console.WriteLine($"Shift Request Date: {shiftRequest.Date}");
-            Console.WriteLine($"Expected Date: {DateOnly.FromDateTime(now.AddDays(1))}");
             Assert.True(shiftRequest.Date > DateOnly.FromDateTime(now.AddDays(1)));
         }
 

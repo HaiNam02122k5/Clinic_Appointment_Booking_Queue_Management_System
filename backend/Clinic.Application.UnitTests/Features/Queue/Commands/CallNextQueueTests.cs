@@ -17,7 +17,7 @@ namespace Clinic.Application.UnitTests.Features.Queue.Commands
             var handler = new CallNextQueueHandler(queueTicketRepository, unitOfWork);
 
             var doctor = TestDataFactory.CreateDoctor();
-            var ws = TestDataFactory.CreateWorkSchedule(doctor);
+            var ws = TestDataFactory.CreateWorkSchedule(doctor, date: DateOnly.FromDateTime(DateTime.Today));
             var appointment = TestDataFactory.CreateAppointment(confirmed: true, workSchedule: ws);
             var queueTicket = TestDataFactory.CreateQueueTicket(appointment, queueNumber: 1);
             await queueTicketRepository.AddAsync(queueTicket);
@@ -40,7 +40,7 @@ namespace Clinic.Application.UnitTests.Features.Queue.Commands
             var handler = new CallNextQueueHandler(queueTicketRepository, unitOfWork);
 
             var doctor = TestDataFactory.CreateDoctor();
-            var ws = TestDataFactory.CreateWorkSchedule(doctor);
+            var ws = TestDataFactory.CreateWorkSchedule(doctor, date: DateOnly.FromDateTime(DateTime.Today));
 
             var normalAppointment = TestDataFactory.CreateAppointment(confirmed: true, workSchedule: ws);
             var normalTicket = TestDataFactory.CreateQueueTicket(normalAppointment, queueNumber: 1);
@@ -81,7 +81,7 @@ namespace Clinic.Application.UnitTests.Features.Queue.Commands
             var handler = new CallNextQueueHandler(queueTicketRepository, unitOfWork);
 
             var doctorId = Guid.NewGuid();
-            var appointment = TestDataFactory.CreateAppointment(confirmed: true);
+            var appointment = TestDataFactory.CreateAppointment(confirmed: true, today: true);
             var queueTicket = TestDataFactory.CreateQueueTicket(appointment, queueNumber: 1);
             queueTicket.Call();
             await queueTicketRepository.AddAsync(queueTicket);
@@ -99,20 +99,21 @@ namespace Clinic.Application.UnitTests.Features.Queue.Commands
             var unitOfWork = new FakeUnitOfWork();
             var handler = new CallNextQueueHandler(queueTicketRepository, unitOfWork);
 
-            var doctorId = Guid.NewGuid();
+            var doctor = TestDataFactory.CreateDoctor();
+            var ws = TestDataFactory.CreateWorkSchedule(doctor, date: DateOnly.FromDateTime(DateTime.Today));
 
-            var calledAppointment = TestDataFactory.CreateAppointment(confirmed: true);
+            var calledAppointment = TestDataFactory.CreateAppointment(confirmed: true, workSchedule: ws);
             var calledTicket = TestDataFactory.CreateQueueTicket(calledAppointment, queueNumber: 1);
             calledTicket.Call();
             await queueTicketRepository.AddAsync(calledTicket);
 
-            var waitingAppointment = TestDataFactory.CreateAppointment(confirmed: true);
+            var waitingAppointment = TestDataFactory.CreateAppointment(confirmed: true, workSchedule: ws);
             var waitingTicket = TestDataFactory.CreateQueueTicket(waitingAppointment, queueNumber: 2);
             await queueTicketRepository.AddAsync(waitingTicket);
 
             // Act & Assert: dù còn vé Waiting (số 2), vẫn phải bị chặn vì vé số 1 chưa xong.
             await Assert.ThrowsAsync<ConflictException>(() =>
-                handler.Handle(new CallNextQueueCommand(doctorId), CancellationToken.None));
+                handler.Handle(new CallNextQueueCommand(doctor.Id), CancellationToken.None));
 
             Assert.Equal(QueueStatus.Waiting, waitingTicket.Status); // chưa bị gọi
         }

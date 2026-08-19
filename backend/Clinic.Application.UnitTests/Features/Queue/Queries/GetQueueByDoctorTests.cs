@@ -17,7 +17,7 @@ namespace Clinic.Application.UnitTests.Features.Queue.Queries
             var handler = new GetQueueByDoctorHandler(queueTicketRepository, currentUser);
 
             var doctor = TestDataFactory.CreateDoctor();
-            var ws = TestDataFactory.CreateWorkSchedule(doctor);
+            var ws = TestDataFactory.CreateWorkSchedule(doctor, date: DateOnly.FromDateTime(DateTime.Today));
             var appointment = TestDataFactory.CreateAppointment(confirmed: true, workSchedule: ws);
             var queueTicket = TestDataFactory.CreateQueueTicket(appointment, queueNumber: 1);
             await queueTicketRepository.AddAsync(queueTicket);
@@ -37,7 +37,7 @@ namespace Clinic.Application.UnitTests.Features.Queue.Queries
             // Arrange: Doctor không có "queue.view" nhưng DoctorId khớp với bác sĩ được truy vấn.
             var queueTicketRepository = new FakeQueueTicketRepository();
             var doctor = TestDataFactory.CreateDoctor();
-            var ws = TestDataFactory.CreateWorkSchedule(doctor);
+            var ws = TestDataFactory.CreateWorkSchedule(doctor, date: DateOnly.FromDateTime(DateTime.Today));
             var currentUser = new FakeCurrentUser { DoctorId = doctor.Id };
             var handler = new GetQueueByDoctorHandler(queueTicketRepository, currentUser);
 
@@ -77,7 +77,7 @@ namespace Clinic.Application.UnitTests.Features.Queue.Queries
             var handler = new GetQueueByDoctorHandler(queueTicketRepository, currentUser);
 
             var doctor = TestDataFactory.CreateDoctor();
-            var ws = TestDataFactory.CreateWorkSchedule(doctor);
+            var ws = TestDataFactory.CreateWorkSchedule(doctor, date: DateOnly.FromDateTime(DateTime.Today));
 
             var ticket1 = TestDataFactory.CreateQueueTicket(
                 TestDataFactory.CreateAppointment(confirmed: true, workSchedule: ws), queueNumber: 1);

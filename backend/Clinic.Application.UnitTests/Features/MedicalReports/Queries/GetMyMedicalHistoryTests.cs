@@ -16,16 +16,16 @@ namespace Clinic.Application.UnitTests.Features.MedicalReports.Queries
             var currentUser = new FakeCurrentUser();
             var handler = new GetMyMedicalHistoryHandler(medicalReportRepository, currentUser);
 
-            var patientId = Guid.NewGuid();
-            currentUser.PatientId = patientId;
+            var patient = TestDataFactory.CreatePatient();
+            currentUser.PatientId = patient.Id;
 
             // Finalized report for this patient
-            var app1 = TestDataFactory.CreateAppointment(patientId: patientId, checkedIn: true);
+            var app1 = TestDataFactory.CreateAppointment(patient: patient, checkedIn: true);
             var ticket1 = TestDataFactory.CreateQueueTicket(app1);
             var report1 = TestDataFactory.CreateMedicalReport(queueTicket: ticket1, status: MedicalReportStatus.Finalized, symptoms: "Cough", diagnosis: "Common cold");
 
             // Another patient's report
-            var app2 = TestDataFactory.CreateAppointment(patientId: Guid.NewGuid(), checkedIn: true);
+            var app2 = TestDataFactory.CreateAppointment(patient: TestDataFactory.CreatePatient(), checkedIn: true);
             var ticket2 = TestDataFactory.CreateQueueTicket(app2);
             var report2 = TestDataFactory.CreateMedicalReport(queueTicket: ticket2, status: MedicalReportStatus.Finalized);
 
@@ -51,11 +51,11 @@ namespace Clinic.Application.UnitTests.Features.MedicalReports.Queries
             var currentUser = new FakeCurrentUser();
             var handler = new GetMyMedicalHistoryHandler(medicalReportRepository, currentUser);
 
-            var patientId = Guid.NewGuid();
-            currentUser.PatientId = patientId;
+            var patient = TestDataFactory.CreatePatient();
+            currentUser.PatientId = patient.Id;
 
             // Draft report for this patient (still being written)
-            var app = TestDataFactory.CreateAppointment(patientId: patientId, checkedIn: true);
+            var app = TestDataFactory.CreateAppointment(patient: patient, checkedIn: true);
             var ticket = TestDataFactory.CreateQueueTicket(app);
             var draftReport = TestDataFactory.CreateMedicalReport(queueTicket: ticket, status: MedicalReportStatus.Draft);
 

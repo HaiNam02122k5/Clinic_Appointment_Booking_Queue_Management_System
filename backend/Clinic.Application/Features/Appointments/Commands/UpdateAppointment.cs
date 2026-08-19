@@ -43,8 +43,6 @@ namespace Clinic.Application.Features.Appointments.Commands
             }
             if (!(user.UserRoles.Any(ur => ur.Role.Name == "Receptionist") || appointment.PatientId == user.Person.Patient?.Id))
             {
-                Console.WriteLine($"First: {string.Join(", ", user.UserRoles.Select(x => x.Role.Name))} {user.UserRoles.Any(ur => ur.Role.Name == "Receptionist")}");
-                Console.WriteLine($"Second: {appointment.PatientId} | {user.Person.Patient?.Id} {appointment.PatientId == user.Person.Patient?.Id}");
                 throw new ForbiddenException($"You are not authorized to update this appointment.");
             }
             // Begin transaction

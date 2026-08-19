@@ -90,10 +90,9 @@ namespace Clinic.Application.UnitTests.Common
             return patient;
         }
 
-        internal static WorkSchedule CreateWorkSchedule(Doctor? doctor = null, DateOnly? date = null, TimeOnly? startTime = null, TimeOnly? endTime = null, int slotDuration = 15)
+        internal static WorkSchedule CreateWorkSchedule(Doctor? doctor = null, DateOnly? date = null, TimeOnly? startTime = null, TimeOnly? endTime = null, int patientLimit = 15)
         {
-            Console.WriteLine(DateTime.UtcNow);
-            return new WorkSchedule(doctor ?? CreateDoctor(), date ?? DateOnly.FromDateTime(DateTime.UtcNow.AddDays(2)), startTime ?? (date != null ? TimeOnly.FromDateTime(DateTime.UtcNow.AddHours(7).AddMinutes(1)) : new TimeOnly(9, 0)), endTime ?? (date != null ? TimeOnly.FromDateTime(DateTime.UtcNow.AddHours(9)) : new TimeOnly(11, 0)), slotDuration);
+            return new WorkSchedule(doctor ?? CreateDoctor(), date ?? DateOnly.FromDateTime(DateTime.UtcNow.AddDays(2)), startTime ?? (date != null ? TimeOnly.FromDateTime(DateTime.UtcNow.AddHours(7).AddMinutes(1)) : new TimeOnly(9, 0)), endTime ?? (date != null ? TimeOnly.FromDateTime(DateTime.UtcNow.AddHours(9)) : new TimeOnly(11, 0)), patientLimit);
         }
 
         internal static Appointment CreateAppointment(Patient? patient = null, WorkSchedule? workSchedule = null, TimeOnly? timeSlot = null, string? reason = null, Guid? createdBy = null, bool confirmed = false, bool checkedIn = false, int queueNumber = 0, bool today = false)

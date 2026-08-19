@@ -107,12 +107,16 @@ namespace Clinic.Domain.Entities
             // Only check for conflicts if the appointment is not a walk-in.
             if (!appointment.IsWalkIn)
             {
-                if (Appointments.Any(a => a.TimeSlot == appointment.TimeSlot && a.Status != AppointmentStatus.Cancelled && !a.IsDeleted && a.Id != appointment.Id))
+                if (Appointments.Any(a => !a.IsWalkIn && a.TimeSlot == appointment.TimeSlot && a.Status != AppointmentStatus.Cancelled && !a.IsDeleted && a.Id != appointment.Id))
                     throw new ConflictException("An appointment already exists for this time slot.");
                 if (Appointments.Any(a => a.Id == appointment.Id))
                 {
                     return; // Appointment already belongs to this work schedule
                 }
+            }
+            if (appointment.TimeSlot < ShiftStart || appointment.TimeSlot >= ShiftEnd)
+            {
+                throw new ArgumentOutOfRangeException(nameof(appointment.TimeSlot), $"Appointment time slot must be within the work schedule ({ShiftStart} - {ShiftEnd}).");
             }
             if (Status == WorkScheduleStatus.Cancelled)
             {

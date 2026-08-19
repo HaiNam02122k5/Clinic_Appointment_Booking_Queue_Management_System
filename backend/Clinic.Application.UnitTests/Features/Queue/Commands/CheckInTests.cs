@@ -136,7 +136,6 @@ namespace Clinic.Application.UnitTests.Features.Queue.Commands
             var queueTicketRepository = new FakeQueueTicketRepository();
             var unitOfWork = new FakeUnitOfWork();
             var handler = new CheckInHandler(appointmentRepository, queueTicketRepository, unitOfWork);
-            Console.WriteLine("Start");
             var appointment = TestDataFactory.CreateAppointment(confirmed: true, checkedIn: true);
             await appointmentRepository.AddAsync(appointment);
 

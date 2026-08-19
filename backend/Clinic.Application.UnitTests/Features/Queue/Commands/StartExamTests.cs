@@ -14,7 +14,7 @@ namespace Clinic.Application.UnitTests.Features.Queue.Commands
             // bác sĩ sở hữu vé (đã được gọi số - Called) -> được phép bắt đầu khám.
             var queueTicketRepository = new FakeQueueTicketRepository();
             var doctor = TestDataFactory.CreateDoctor();
-            var ws = TestDataFactory.CreateWorkSchedule(doctor);
+            var ws = TestDataFactory.CreateWorkSchedule(doctor, date: DateOnly.FromDateTime(DateTime.Today));
             var currentUser = new FakeCurrentUser { DoctorId = doctor.Id };
             var unitOfWork = new FakeUnitOfWork();
             var handler = new StartExamHandler(queueTicketRepository, currentUser, unitOfWork);
@@ -42,7 +42,9 @@ namespace Clinic.Application.UnitTests.Features.Queue.Commands
             var unitOfWork = new FakeUnitOfWork();
             var handler = new StartExamHandler(queueTicketRepository, currentUser, unitOfWork);
 
-            var appointment = TestDataFactory.CreateAppointment(confirmed: true);
+            var doctor = TestDataFactory.CreateDoctor();
+            var ws = TestDataFactory.CreateWorkSchedule(doctor, date: DateOnly.FromDateTime(DateTime.Today));
+            var appointment = TestDataFactory.CreateAppointment(confirmed: true, workSchedule: ws);
             var queueTicket = TestDataFactory.CreateQueueTicket(appointment, queueNumber: 1);
             queueTicket.Call();
             await queueTicketRepository.AddAsync(queueTicket);
@@ -64,7 +66,9 @@ namespace Clinic.Application.UnitTests.Features.Queue.Commands
             var unitOfWork = new FakeUnitOfWork();
             var handler = new StartExamHandler(queueTicketRepository, currentUser, unitOfWork);
 
-            var appointment = TestDataFactory.CreateAppointment(confirmed: true);
+            var doctor = TestDataFactory.CreateDoctor();
+            var ws = TestDataFactory.CreateWorkSchedule(doctor, date: DateOnly.FromDateTime(DateTime.Today));
+            var appointment = TestDataFactory.CreateAppointment(confirmed: true, workSchedule: ws);
             var queueTicket = TestDataFactory.CreateQueueTicket(appointment, queueNumber: 1);
             queueTicket.Call();
             await queueTicketRepository.AddAsync(queueTicket);
