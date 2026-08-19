@@ -1,5 +1,5 @@
 ﻿<script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import type { UserRole } from '@/features/auth/auth.types'
@@ -11,10 +11,32 @@ import { logger } from '@/lib/logger'
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const REMEMBER_ME_KEY = 'clinic.auth.rememberMe'
 
 const email = ref('')
 const password = ref('')
 const rememberMe = ref(false)
+
+onMounted(() => {
+  try {
+    const saved = localStorage.getItem(REMEMBER_ME_KEY)
+    rememberMe.value = saved === 'true'
+  } catch {
+    rememberMe.value = false
+  }
+})
+
+watch(
+  rememberMe,
+  (value) => {
+    try {
+      localStorage.setItem(REMEMBER_ME_KEY, String(value))
+    } catch {
+      // ignore storage errors for this UI preference
+    }
+  },
+  { immediate: true },
+)
 
 const errors = ref({
   email: '',
@@ -112,6 +134,10 @@ async function handleLogin() {
 
 function goBackToRoleSelect() {
   router.push('/select-role')
+}
+
+function goToForgotPassword() {
+router.push('/forgot-password')
 }
 </script>
 
@@ -221,7 +247,7 @@ function goBackToRoleSelect() {
                 <span class="block text-xs text-slate-500">Lưu phiên đăng nhập trên thiết bị này nếu bạn muốn truy cập lại nhanh.</span>
               </span>
             </label>
-            <button type="button" class="text-sm text-[#0E4D92] font-medium hover:underline">
+            <button type="button" @click="goToForgotPassword" class="text-sm text-[#0E4D92] font-medium hover:underline">
               Quên mật khẩu?
             </button>
           </div>

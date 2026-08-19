@@ -13,7 +13,7 @@ const routes: RouteRecordRaw[] = [
   // Root
   {
     path: '/',
-    redirect: '/select-role',
+    redirect: '/login',
   },
 
   // Route public: Chọn vai trò
@@ -21,7 +21,6 @@ const routes: RouteRecordRaw[] = [
     path: '/select-role',
     name: 'select-role',
     component: () => import('@/views/SelectRoleView.vue'),
-    meta: { public: true },
   },
 
   // Route public: Đăng nhập
@@ -40,11 +39,11 @@ const routes: RouteRecordRaw[] = [
     meta: { public: true },
   },
 
-  // Route public: Màn hình hiển thị hàng đợi public (màn hình TV)
+  // Route public: Quên mật khẩu
   {
-    path: '/public/queue-display',
-    name: 'public-queue-display',
-    component: () => import('@/views/NotFoundView.vue'),
+    path: '/forgot-password',
+    name: 'forgot-password',
+    component: () => import('@/views/ForgotPasswordView.vue'),
     meta: { public: true },
   },
 
@@ -212,20 +211,15 @@ const router = createRouter({
 
 // Global Navigation Guard
 router.beforeEach(async (to) => {
-  // Import auth store trong guard để tránh circular import
   const mod = await import('@/stores/auth')
   const auth = mod.useAuthStore()
 
-  // Chờ auth store hydrate tối đa 3 giây
+  // Chờ Hydrate Auth Store
   if ((auth as any).hydrating) {
     await new Promise((resolve) => {
       const start = Date.now()
-
       const interval = setInterval(() => {
-        if (
-          !(auth as any).hydrating ||
-          Date.now() - start > 3000
-        ) {
+        if (!(auth as any).hydrating || Date.now() - start > 3000) {
           clearInterval(interval)
           resolve(true)
         }
@@ -233,124 +227,50 @@ router.beforeEach(async (to) => {
     })
   }
 
-  // Chuyển hướng trang root "/" khi chưa đăng nhập
-  if (to.path === '/' && !auth.isAuthenticated) {
-    return {
-      name: 'login',
-    }
-  }
-
-  // Xử lý route public
-  if (to.meta.public) {
-    // Chuyển hướng người dùng đã đăng nhập khỏi các trang public không cần thiết
-    if (
-      ['login', 'select-role', 'register'].includes(
-        to.name as string
-      ) &&
-      auth.isAuthenticated
-    ) {
-      const userRoles = auth.user?.roles ?? []
-
-      // Trả về màn hình chọn role nếu user chưa chọn role hiện tại
-      if (
-        userRoles.length > 1 &&
-        !auth.currentUserRole
-      ) {
-        return {
-          name: 'select-role',
-        }
-      }
-
-      // Điều hướng về trang theo role
-      if (auth.hasRole(['Admin'])) {
-        return {
-          name: 'admin-dashboard',
-        }
-      }
-
-      if (auth.hasRole(['Receptionist'])) {
-        return {
-          name: 'reception-dashboard',
-        }
-      }
-
-      if (auth.hasRole(['Doctor'])) {
-        return {
-          name: 'doctor-examination',
-        }
-      }
-
-      if (auth.hasRole(['Patient'])) {
-        return {
-          name: 'patient-home',
-        }
-      }
-    }
-
-    return true
-  }
-
-  // Yêu cầu đăng nhập nếu truy cập route protected
+  // BƯỚC 1: CHƯA ĐĂNG NHẬP
   if (!auth.isAuthenticated) {
+    // Chỉ cho phép vào các trang public (Login, Register, TV Queue)
+    if (to.meta.public) return true
+
+    // Truy cập bất kỳ trang nào khác -> Đẩy về /login
     return {
       name: 'login',
-      query: {
-        redirect: to.fullPath,
-      },
+      query: to.path !== '/' ? { redirect: to.fullPath } : undefined,
     }
   }
 
-  // Bắt buộc chọn role nếu tài khoản chưa xác định currentUserRole
-  if (!auth.currentUserRole) {
+  // BƯỚC 2: ĐÃ ĐĂNG NHẬP NHƯNG CỐ VÀO TRANG PUBLIC (Login/Register)
+  if (to.meta.public) {
+    if (!auth.currentUserRole) return { name: 'select-role' }
+    return getHomeRouteByRole(auth)
+  }
+
+  // BƯỚC 3: ĐÃ ĐĂNG NHẬP NHƯNG CHƯA CHỌN ROLE
+  if (!auth.currentUserRole && to.name !== 'select-role') {
     return {
       name: 'select-role',
-      query: {
-        redirect: to.fullPath,
-      },
+      query: { redirect: to.fullPath },
     }
   }
 
-  // Kiểm tra phân quyền RBAC
+  // BƯỚC 4: KIỂM TRA QUYỀN TRUY CẬP (RBAC)
   const requiredRoles = to.meta.roles
-
-  if (
-    requiredRoles &&
-    requiredRoles.length > 0
-  ) {
-    // Điều hướng về trang thuộc role hiện tại nếu không đủ quyền truy cập
+  if (requiredRoles && requiredRoles.length > 0) {
     if (!auth.hasRole(requiredRoles)) {
-      if (auth.hasRole(['Admin'])) {
-        return {
-          name: 'admin-dashboard',
-        }
-      }
-
-      if (auth.hasRole(['Receptionist'])) {
-        return {
-          name: 'reception-dashboard',
-        }
-      }
-
-      if (auth.hasRole(['Doctor'])) {
-        return {
-          name: 'doctor-examination',
-        }
-      }
-
-      if (auth.hasRole(['Patient'])) {
-        return {
-          name: 'patient-home',
-        }
-      }
-
-      return {
-        name: 'select-role',
-      }
+      return getHomeRouteByRole(auth)
     }
   }
 
-  // Cho phép chuyển trang khi tất cả điều kiện đều hợp lệ
   return true
 })
+
+// Hàm phụ trợ trả về Route phù hợp theo Role
+function getHomeRouteByRole(auth: any) {
+  if (auth.hasRole(['Admin'])) return { name: 'admin-dashboard' }
+  if (auth.hasRole(['Receptionist'])) return { name: 'reception-dashboard' }
+  if (auth.hasRole(['Doctor'])) return { name: 'doctor-examination' }
+  if (auth.hasRole(['Patient'])) return { name: 'patient-home' }
+  return { name: 'select-role' }
+}
 
 export default router
