@@ -55,6 +55,9 @@ namespace Clinic.Domain.Entities
             Status = status;
         }
 
+        /// <summary>
+        /// Updates the status of the doctor.
+        /// </summary>
         public void UpdateStatus(DoctorStatus newStatus)
         {
             if (Status != newStatus)
@@ -64,6 +67,9 @@ namespace Clinic.Domain.Entities
             }
         }
 
+        /// <summary>
+        /// Updates the doctor's information, including license number, qualification, experience years, and biography.
+        /// </summary>
         public void UpdateInfo(string licenseNumber, string qualification, int experienceYears = 0, string? biography = null)
         {
             if (experienceYears < 0) throw new ArgumentException(nameof(experienceYears), "Experience years cannot be negative.");

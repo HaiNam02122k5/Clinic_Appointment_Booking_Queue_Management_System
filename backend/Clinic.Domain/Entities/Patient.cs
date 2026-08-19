@@ -16,9 +16,10 @@ namespace Clinic.Domain.Entities
 
         public ICollection<Appointment> Appointments { get; protected set; } = new List<Appointment>();
 
-        public Patient(Guid personId, string? insuranceNumber, string? emergencyContact)
+        public Patient(Person person, string? insuranceNumber, string? emergencyContact)
         {
-            PersonId = personId;
+            PersonId = person.Id;
+            Person = person;
             InsuranceNumber = insuranceNumber;
             EmergencyContact = emergencyContact;
         }

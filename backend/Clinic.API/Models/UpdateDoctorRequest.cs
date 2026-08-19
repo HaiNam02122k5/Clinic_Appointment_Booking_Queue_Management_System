@@ -21,8 +21,6 @@ namespace Clinic.API.Models
         public string LicenseNumber { get; set; }
         [Required(ErrorMessage = "Qualification is required."), MaxLength(100, ErrorMessage = "Qualification cannot exceed 100 characters.")]
         public string Qualification { get; set; }
-        [Required(ErrorMessage = "Doctor status is required.")]
-        public DoctorStatus DoctorStatus { get; set; }
         [Required(ErrorMessage = "Experience years is required.")]
         public int ExperienceYears { get; set; }
         [MaxLength(500, ErrorMessage = "Biography cannot exceed 500 characters.")]

@@ -63,13 +63,7 @@ namespace Clinic.Application.UnitTests.Common
         internal static Patient CreatePatient(Person? person = null)
         {
             person ??= CreatePerson(userRole: "Patient");
-            var patient = new Patient
-            {
-                Person = person,
-                PersonId = person.Id,
-                InsuranceNumber = "INS123456",
-                EmergencyContact = "Jane Doe - 0987654321"
-            };
+            var patient = new Patient(person, "ABC123", "0111111111");
             person.Patient = patient;
             return patient;
         }

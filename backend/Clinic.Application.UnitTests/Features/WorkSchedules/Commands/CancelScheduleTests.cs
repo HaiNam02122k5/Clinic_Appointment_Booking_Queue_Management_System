@@ -24,7 +24,7 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Commands
             await workScheduleRepository.AddWorkScheduleAsync(workSchedule);
 
             // Act
-            var command = new CancelWorkScheduleCommand(workSchedule.Id, "Cancellation reason");
+            var command = new CancelWorkScheduleCommand(Guid.NewGuid(), workSchedule.Id, "Cancellation reason");
             var result = await handler.Handle(command, CancellationToken.None);
 
             // Assert
@@ -45,7 +45,7 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Commands
             await workScheduleRepository.AddWorkScheduleAsync(workSchedule);
 
             // Act
-            var command = new CancelWorkScheduleCommand(Guid.NewGuid(), "Cancellation reason");
+            var command = new CancelWorkScheduleCommand(Guid.NewGuid(), Guid.NewGuid(), "Cancellation reason");
             await Assert.ThrowsAsync<NotFoundException>(async () =>
             {
                 await handler.Handle(command, CancellationToken.None);
@@ -54,7 +54,7 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Commands
             workSchedule.Delete(); // Mark the work schedule as deleted
             await Assert.ThrowsAsync<NotFoundException>(async () =>
             {
-                await handler.Handle(new CancelWorkScheduleCommand(workSchedule.Id, "Cancellation reason"), CancellationToken.None);
+                await handler.Handle(new CancelWorkScheduleCommand(Guid.NewGuid(), workSchedule.Id, "Cancellation reason"), CancellationToken.None);
             });
         }
     }

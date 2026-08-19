@@ -36,7 +36,7 @@ namespace Clinic.Application.Features.Patients.Commands
             {
                 throw new ValidationException("Patient already exists.");
             }
-            var patient = new Patient(person.Id, request.InsuranceNumber, request.EmergencyContact);
+            var patient = new Patient(person, request.InsuranceNumber, request.EmergencyContact);
             await _patientRepository.AddAsync(patient);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 

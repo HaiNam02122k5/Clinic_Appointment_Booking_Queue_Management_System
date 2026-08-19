@@ -105,18 +105,18 @@ namespace Clinic.Application.UnitTests.Common
             return _workSchedules.FirstOrDefault(ws => ws.Id == scheduleId && ws.IsDeleted == false);
         }
 
-        public async Task<bool> HasDuplicateShiftRequest(Guid doctorId, DateOnly date, TimeOnly startTime, TimeOnly endTime)
+        public async Task<bool> HasDuplicateShiftRequest(Guid doctorId, DateOnly date, TimeOnly startTime, TimeOnly endTime, Guid? currentSRId = null)
         {
             return _shiftRequests.Any(sr => sr.DoctorId == doctorId &&
                 sr.Date == date &&
-                ((sr.ShiftStart == startTime && sr.ShiftEnd == endTime)));
+                ((sr.ShiftStart == startTime && sr.ShiftEnd == endTime) && (currentSRId == null || sr.Id != currentSRId)));
         }
 
-        public async Task<bool> HasOverlappingWorkSchedule(Guid doctorId, DateOnly date, TimeOnly startTime, TimeOnly endTime)
+        public async Task<bool> HasOverlappingWorkSchedule(Guid doctorId, DateOnly date, TimeOnly startTime, TimeOnly endTime, Guid? currentWSId = null)
         {
             return _workSchedules.Any(ws => ws.DoctorId == doctorId &&
                 ws.Date == date &&
-                ((ws.ShiftStart < endTime && ws.ShiftEnd > startTime)));
+                ((ws.ShiftStart < endTime && ws.ShiftEnd > startTime) && (currentWSId == null || ws.Id != currentWSId)));
         }
     }
 }

@@ -17,13 +17,8 @@ namespace Clinic.Domain.UnitTests
             var specialty = new Specialty("Cardiology", "Heart specialist", new DateOnly(2020, 1, 1));
             var doctor = new Doctor(employee, "123ABC", "MD", specialty);
             var workSchedule = new WorkSchedule(doctor, new DateOnly(2027, 1, 1), new TimeOnly(7, 0), new TimeOnly(11, 0), 20);
-            var patient = new Patient
-            {
-                Person = patientPerson,
-                PersonId = patientPerson.Id,
-                InsuranceNumber = "INS123456",
-                EmergencyContact = "John Doe - 0987654321"
-            };
+            var patient = new Patient(patientPerson, "INS123", "0111111111");
+
 
             var appointment = new Appointment(patient, workSchedule, new TimeOnly(7, 0), "Reason", Guid.NewGuid());
             var appointment2 = new Appointment(patient, workSchedule, new TimeOnly(7, 15), "Reason2", Guid.NewGuid(), true);
@@ -43,13 +38,7 @@ namespace Clinic.Domain.UnitTests
             var specialty = new Specialty("Cardiology", "Heart specialist", new DateOnly(2020, 1, 1));
             var doctor = new Doctor(employee, "123ABC", "MD", specialty);
             var workSchedule = new WorkSchedule(doctor, new DateOnly(2027, 1, 1), new TimeOnly(7, 0), new TimeOnly(11, 0), 20);
-            var patient = new Patient
-            {
-                Person = patientPerson,
-                PersonId = patientPerson.Id,
-                InsuranceNumber = "INS123456",
-                EmergencyContact = "John Doe - 0987654321"
-            };
+            var patient = new Patient(patientPerson, "INS123", "0111111111");
 
             var appointment = new Appointment(patient, workSchedule, new TimeOnly(7, 0), "Reason", Guid.NewGuid());
             appointment.Update(workSchedule, new TimeOnly(7, 15), "Reason", Guid.NewGuid());
@@ -76,13 +65,7 @@ namespace Clinic.Domain.UnitTests
                 now = now.AddHours(12);
             }
             var workSchedule = new WorkSchedule(doctor, DateOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddHours(1)), TimeOnly.FromDateTime(now.AddHours(3)), 20);
-            var patient = new Patient
-            {
-                Person = patientPerson,
-                PersonId = patientPerson.Id,
-                InsuranceNumber = "INS123456",
-                EmergencyContact = "John Doe - 0987654321"
-            };
+            var patient = new Patient(patientPerson, "INS123", "0111111111");
 
             var appointment = new Appointment(patient, workSchedule, TimeOnly.FromDateTime(now.AddHours(2).AddMinutes(30)), "Reason", Guid.NewGuid());
             appointment.Cancel(Guid.NewGuid());

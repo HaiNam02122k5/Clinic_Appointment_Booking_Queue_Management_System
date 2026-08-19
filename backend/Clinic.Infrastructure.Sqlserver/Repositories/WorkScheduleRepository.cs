@@ -92,19 +92,19 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                 .FirstOrDefaultAsync(ws => ws.Id == scheduleId && ws.IsDeleted == false);
         }
 
-        public async Task<bool> HasDuplicateShiftRequest(Guid doctorId, DateOnly date, TimeOnly startTime, TimeOnly endTime)
+        public async Task<bool> HasDuplicateShiftRequest(Guid doctorId, DateOnly date, TimeOnly startTime, TimeOnly endTime, Guid? currentSRId = null)
         {
             var hasDuplicate = await _context.ShiftRequests
                 .AnyAsync(sr => sr.DoctorId == doctorId && sr.IsDeleted == false && sr.Status != Domain.Enums.ShiftRequestStatus.Cancelled &&
-                    sr.Date == date && sr.ShiftStart == startTime && sr.ShiftEnd == endTime);
+                    sr.Date == date && sr.ShiftStart == startTime && sr.ShiftEnd == endTime && (currentSRId == null || sr.Id != currentSRId));
             return hasDuplicate;
         }
 
-        public async Task<bool> HasOverlappingWorkSchedule(Guid doctorId, DateOnly date, TimeOnly startTime, TimeOnly endTime)
+        public async Task<bool> HasOverlappingWorkSchedule(Guid doctorId, DateOnly date, TimeOnly startTime, TimeOnly endTime, Guid? currentWSId = null)
         {
             var hasOverlapping = await _context.WorkSchedules
                 .AnyAsync(ws => ws.DoctorId == doctorId && ws.IsDeleted == false && ws.Status != Domain.Enums.WorkScheduleStatus.Cancelled &&
-                    ws.Date == date && ws.ShiftStart < endTime && ws.ShiftEnd > startTime);
+                    ws.Date == date && ws.ShiftStart < endTime && ws.ShiftEnd > startTime && (currentWSId == null || ws.Id != currentWSId));
             return hasOverlapping;
         }
     }

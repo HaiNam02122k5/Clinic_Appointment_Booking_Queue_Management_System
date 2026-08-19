@@ -49,6 +49,12 @@ namespace Clinic.Infrastructure.Authentication
                 claims.Add(new Claim("doctorId", doctorId.Value.ToString()));
             }
 
+            var employeeId = user.Person?.Employee?.Id;
+            if (employeeId is not null)
+            {
+                claims.Add(new Claim("employeeId", employeeId.Value.ToString()));
+            }
+
             // Add permission claims from role -> rolepermissions if available
             var permissionClaimType = "permission";
             var addedPermissions = new HashSet<string>();
