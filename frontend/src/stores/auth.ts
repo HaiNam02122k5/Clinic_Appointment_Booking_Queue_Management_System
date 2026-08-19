@@ -9,11 +9,34 @@ import type { AuthUser, LoginPayload, UserRole, RegisterPayload } from '@/featur
 const USER_KEY = 'auth.user'
 const VALID_ROLES: UserRole[] = ['Patient', 'Receptionist', 'Doctor', 'Admin']
 
-function normalizeRoles(roles?: (UserRole | undefined)[] | UserRole | null): UserRole[] {
+function normalizeRoleArray(value: unknown): string[] {
+  if (value == null) return []
+
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => normalizeRoleArray(item))
+  }
+
+  if (typeof value === 'string') {
+    return value
+      .split(',')
+      .map((part) => part.trim())
+      .filter(Boolean)
+  }
+
+  if (typeof value === 'object') {
+    const obj = value as Record<string, unknown>
+    return [obj.name, obj.role, obj.value].flatMap((entry) => normalizeRoleArray(entry))
+  }
+
+  return [String(value)]
+}
+
+function normalizeRoles(roles?: (UserRole | undefined)[] | UserRole | null | unknown[]): UserRole[] {
   if (!roles) return []
 
-  const list = Array.isArray(roles) ? (roles as (UserRole | undefined)[]) : [roles]
-  return [...new Set(list.filter((role): role is UserRole => role !== undefined && VALID_ROLES.includes(role as UserRole)))]
+  const list = Array.isArray(roles) ? roles : [roles]
+  const flattened = list.flatMap((role) => normalizeRoleArray(role))
+  return [...new Set(flattened.filter((role): role is UserRole => VALID_ROLES.includes(role as UserRole)))]
 }
 
 function decodeJwtPayload(token: string): Record<string, any> {
@@ -35,19 +58,13 @@ function extractRolesFromJwtPayload(payload: Record<string, any>): UserRole[] {
     'roles',
     'http://schemas.microsoft.com/ws/2008/06/identity/claims/role',
     'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/role',
-    'http://schemas.microsoft.com/ws/2008/06/identity/claims/role',
   ]
 
   for (const key of keys) {
     if (payload[key] !== undefined) candidateValues.push(payload[key])
   }
 
-  const flattened = candidateValues.flatMap((value) => {
-    if (Array.isArray(value)) return value
-    if (typeof value === 'string') return value.split(',').map((part) => part.trim()).filter(Boolean)
-    return value == null ? [] : [String(value)]
-  })
-
+  const flattened = candidateValues.flatMap((value) => normalizeRoleArray(value))
   return normalizeRoles(flattened.length > 0 ? flattened : ['Patient'])
 }
 
@@ -245,6 +262,9 @@ export const useAuthStore = defineStore('auth', () => {
       normalizedUser.activeRole = activeRole
       normalizedUser.role = activeRole
       normalizedUser.roles = normalizeRoles(normalizedUser.roles ?? [activeRole])
+
+      console.log('[auth login] resolved role:', normalizedUser.role)
+      console.log('[auth login] resolved roles:', normalizedUser.roles)
 
       const persistent = payload.rememberMe === true
       setToken(res.accessToken, res.refreshToken, persistent)

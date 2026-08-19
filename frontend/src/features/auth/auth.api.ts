@@ -16,6 +16,41 @@ function decodeJwtPayload(token: string): Record<string, any> {
   }
 }
 
+function normalizeRoleValues(value: unknown): string[] {
+  if (value == null) return []
+
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => normalizeRoleValues(item))
+  }
+
+  if (typeof value === 'string') {
+    return value
+      .split(',')
+      .map((part) => part.trim())
+      .filter(Boolean)
+  }
+
+  if (typeof value === 'object') {
+    const obj = value as Record<string, unknown>
+    const candidates = [obj.name, obj.role, obj.value]
+    return candidates.flatMap((candidate) => normalizeRoleValues(candidate))
+  }
+
+  return [String(value)]
+}
+
+function extractJwtRoleValues(payload: Record<string, any>): string[] {
+  const keys = [
+    'role',
+    'roles',
+    'http://schemas.microsoft.com/ws/2008/06/identity/claims/role',
+    'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/role',
+  ]
+
+  const flattened = keys.flatMap((key) => normalizeRoleValues(payload?.[key]))
+  return [...new Set(flattened.filter(Boolean))]
+}
+
 function buildUserFromToken(token?: string | null): AuthUser {
   const fallback: AuthUser = {
     id: 'user',
@@ -29,27 +64,8 @@ function buildUserFromToken(token?: string | null): AuthUser {
   if (!token) return fallback
 
   const payload = decodeJwtPayload(token)
-  const candidateValues: unknown[] = []
-  const keys = [
-    'role',
-    'roles',
-    'http://schemas.microsoft.com/ws/2008/06/identity/claims/role',
-    'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/role',
-  ]
-
-  for (const key of keys) {
-    if (payload[key] !== undefined) candidateValues.push(payload[key])
-  }
-
-  const flattened = candidateValues.flatMap((value) => {
-    if (Array.isArray(value)) return value
-    if (typeof value === 'string') return value.split(',').map((part) => part.trim()).filter(Boolean)
-    return value == null ? [] : [String(value)]
-  })
-
-  const roles = flattened.length > 0 ? flattened : ['Patient']
-
-  const primaryRole = (Array.isArray(roles) ? roles[0] : 'Patient') as any
+  const roles = extractJwtRoleValues(payload)
+  const primaryRole = (roles[0] ?? 'Patient') as any
 
   return {
     id: payload.sub ?? 'user',
@@ -82,6 +98,12 @@ function buildRegisterBody(payload: RegisterPayload) {
   }
 }
 
+function unwrapApiResult<T>(payload: any): T {
+  if (!payload || typeof payload !== 'object') return payload as T
+  if (payload.result !== undefined) return payload.result as T
+  return payload as T
+}
+
 export const authApi = {
   login(payload: LoginPayload): Promise<LoginResponse> {
     if (env.enableMock) {
@@ -94,10 +116,8 @@ export const authApi = {
     }
 
     return http.post<any>('/auth/login', buildLoginBody(payload)).then((r) => {
-      const d = r.data as any
-      if (d && d.token && !d.accessToken) d.accessToken = d.token
-
-      const accessToken = d?.accessToken ?? ''
+      const d = unwrapApiResult<any>(r.data)
+      const accessToken = d?.accessToken ?? d?.token ?? ''
       const jwtUser = accessToken ? buildUserFromToken(accessToken) : {
         id: 'user',
         name: 'User',
@@ -108,15 +128,30 @@ export const authApi = {
       } as AuthUser
 
       const backendUser = (d?.user ?? {}) as Partial<AuthUser>
+      const explicitRoleCandidates = [
+        backendUser.role,
+        backendUser.roles,
+        d?.role,
+        d?.roles,
+        backendUser.activeRole,
+      ]
+
+      const roleFromBody = explicitRoleCandidates.flatMap((item) => normalizeRoleValues(item)).find(Boolean) ?? jwtUser.role
+      const rolesFromBody = explicitRoleCandidates
+        .flatMap((item) => normalizeRoleValues(item))
+        .filter(Boolean)
+      const resolvedRoles = rolesFromBody.length > 0 ? [...new Set(rolesFromBody)] : (jwtUser.roles ?? ['Patient'])
+      const resolvedRole = (roleFromBody ?? resolvedRoles[0] ?? jwtUser.role ?? 'Patient') as AuthUser['role']
+
       const mergedUser: AuthUser = {
         ...jwtUser,
         ...backendUser,
         id: backendUser.id ?? jwtUser.id,
         name: backendUser.name ?? jwtUser.name,
         email: backendUser.email ?? jwtUser.email ?? payload.username ?? payload.email ?? '',
-        role: (backendUser.role ?? d?.role ?? jwtUser.role ?? 'Patient') as AuthUser['role'],
-        roles: (backendUser.roles?.length ? backendUser.roles : (d?.roles?.length ? d.roles : jwtUser.roles)) as AuthUser['roles'],
-        activeRole: (backendUser.activeRole ?? d?.role ?? backendUser.role ?? jwtUser.activeRole ?? 'Patient') as AuthUser['activeRole'],
+        role: resolvedRole,
+        roles: resolvedRoles as AuthUser['roles'],
+        activeRole: (backendUser.activeRole ?? resolvedRole ?? jwtUser.activeRole ?? 'Patient') as AuthUser['activeRole'],
       }
 
       return {
@@ -140,9 +175,9 @@ export const authApi = {
     }
 
     return http.post<any>('/auth/register', buildRegisterBody(payload)).then((r) => {
-      const d = r.data as any
+      const d = unwrapApiResult<any>(r.data)
       if (d && d.token && !d.accessToken) d.accessToken = d.token
-      const accessToken = d?.accessToken ?? ''
+      const accessToken = d?.accessToken ?? d?.token ?? ''
       const fallbackUser = {
         id: 'user',
         name: payload.fullName,
