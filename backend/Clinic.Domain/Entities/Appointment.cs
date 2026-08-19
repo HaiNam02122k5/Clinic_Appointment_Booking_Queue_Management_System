@@ -66,6 +66,10 @@ namespace Clinic.Domain.Entities
                 return; // No throw, if it passed, let it pass.
             }
             // Force cancellation by admin, no time limit check.
+            if (QueueTicket != null && QueueTicket.Status is QueueStatus.Waiting or QueueStatus.Called)
+            {
+                QueueTicket.Cancel();
+            }
             Snapshots.Add(new AppointmentSnapshot(this));
             Status = AppointmentStatus.Cancelled;
             CancelledByUserId = adminId;
@@ -185,6 +189,11 @@ namespace Clinic.Domain.Entities
 
         public void CheckIn(QueueTicket queueTicket)
         {
+            if (DateOnly.FromDateTime(queueTicket.CheckInTime) != WorkSchedule.Date)
+            {
+                throw new ConflictException(
+                    $"Cannot check in: appointment is scheduled for {new DateTime(WorkSchedule.Date, TimeSlot):yyyy-MM-dd}, not today ({queueTicket.CheckInTime:yyyy-MM-dd}).");
+            }
             QueueTicket = queueTicket;
             Status = AppointmentStatus.CheckedIn;
             MarkUpdated();

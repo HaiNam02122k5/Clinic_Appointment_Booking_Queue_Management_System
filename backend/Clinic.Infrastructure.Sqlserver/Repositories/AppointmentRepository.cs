@@ -25,6 +25,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                             .ThenInclude(e => e.Person)
                 .Include(a => a.Patient)
                     .ThenInclude(p => p.Person)
+                .Include(a => a.QueueTicket)
                 .Where(a => a.IsDeleted == false && a.PatientId == patientId);
 
             // Apply category filter if provided
@@ -50,6 +51,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
         {
             return await _context.Appointments.Include(a => a.WorkSchedule).ThenInclude(ws => ws.Doctor).ThenInclude(d => d.Employee).ThenInclude(e => e.Person)
                 .Include(a => a.Patient).ThenInclude(p => p.Person)
+                .Include(a => a.QueueTicket)
                 .FirstOrDefaultAsync(a => a.Id == appointmentId && a.IsDeleted == false);
         }
 
