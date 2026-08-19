@@ -1,4 +1,4 @@
-﻿using Clinic.Domain.Entities;
+using Clinic.Domain.Entities;
 using Clinic.Domain.Enums;
 
 namespace Clinic.Application.UnitTests.Common
@@ -116,6 +116,24 @@ namespace Clinic.Application.UnitTests.Common
             }
 
             return app;
+        }
+
+        public static MedicalReport CreateMedicalReport(QueueTicket? queueTicket = null, MedicalReportStatus status = MedicalReportStatus.Draft, string? symptoms = "Headache", string? diagnosis = "Mild migraine", string? prescription = "Paracetamol 500mg")
+        {
+            var appointment = CreateAppointment(checkedIn: true);
+            queueTicket ??= CreateQueueTicket(appointment);
+            var report = new MedicalReport
+            {
+                QueueTicketId = queueTicket.Id,
+                QueueTicket = queueTicket,
+                Symptoms = symptoms,
+                Diagnosis = diagnosis,
+                Prescription = prescription,
+                Status = status,
+                ExamStartTime = DateTime.UtcNow.AddMinutes(-30),
+                ExamEndTime = status == MedicalReportStatus.Finalized ? DateTime.UtcNow : null
+            };
+            return report;
         }
     }
 }
