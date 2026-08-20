@@ -101,6 +101,61 @@ function normalizeId(value: unknown): number | string {
   return Number.isNaN(numeric) ? str : numeric
 }
 
+function normalizeDisplayDate(value: unknown): string {
+  if (value === null || value === undefined) return ''
+
+  const raw = String(value).trim()
+  if (!raw) return ''
+
+  const ddmmyyyy = /^([0-3]?\d)\/(0?[1-9]|1[0-2])\/(\d{4})$/.exec(raw)
+  if (ddmmyyyy) {
+    const day = Number(ddmmyyyy[1])
+    const month = Number(ddmmyyyy[2])
+    const year = Number(ddmmyyyy[3])
+    return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`
+  }
+
+  const ymd = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(raw)
+  if (ymd) {
+    const year = Number(ymd[1])
+    const month = Number(ymd[2])
+    const day = Number(ymd[3])
+    const date = new Date(year, month - 1, day)
+    if (!Number.isNaN(date.getTime())) {
+      return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`
+    }
+  }
+
+  const parsed = new Date(raw)
+  if (Number.isNaN(parsed.getTime())) {
+    return raw
+  }
+
+  const year = parsed.getFullYear()
+  const month = parsed.getMonth() + 1
+  const day = parsed.getDate()
+  return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`
+}
+
+function normalizeAppointmentStatus(value: unknown): Appointment['status'] | string {
+  const raw = String(value ?? 'Pending').trim()
+  if (!raw) return 'Pending'
+
+  const normalized = raw
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  if (normalized.includes('confirm') || normalized.includes('xac') || normalized === 'confirmed') return 'Confirmed'
+  if (normalized.includes('pend') || normalized.includes('wait') || normalized.includes('cho') || normalized === 'pending') return 'Pending'
+  if (normalized.includes('cancel') || normalized.includes('huy') || normalized === 'cancelled' || normalized === 'canceled') return 'Cancelled'
+  if (normalized.includes('check') || normalized.includes('den')) return 'CheckedIn'
+  if (normalized.includes('complete') || normalized.includes('hoan')) return 'Completed'
+  return raw as Appointment['status']
+}
+
 function mapDoctor(raw: any): Doctor {
   const id = normalizeId(raw?.id ?? raw?.doctorId ?? raw?.DoctorId ?? raw?.doctorID ?? raw?.Id ?? 0)
   const name = raw?.fullName ?? raw?.name ?? raw?.doctorName ?? raw?.FullName ?? 'BS. Chưa xác định'
@@ -124,13 +179,45 @@ function normalizeDoctorList(data: any): Doctor[] {
 }
 
 function normalizeSlotList(data: any): AvailableSlot[] {
-  const items = Array.isArray(data) ? data : data?.items ?? data?.result ?? data?.data ?? []
-  return (Array.isArray(items) ? items : []).map((item: any) => ({
-    id: item?.workScheduleId ?? item?.id ?? item?.workScheduleID ?? 0,
-    workScheduleId: item?.workScheduleId ?? item?.id ?? item?.workScheduleID ?? 0,
-    time: toTimeString(item?.shiftStart ?? item?.time ?? item?.startTime ?? item?.slotTime),
-    available: Number(item?.remainingCapacity ?? item?.available ?? 1) > 0,
-  }))
+  const collection = Array.isArray(data) ? data : data?.items ?? data?.result ?? data?.data ?? []
+  const items = Array.isArray(collection) ? collection : []
+
+  const slots: AvailableSlot[] = []
+
+  for (const item of items) {
+    const scheduleId = item?.id ?? item?.workScheduleId ?? item?.workScheduleID ?? item?.Id ?? 0
+    const rawTimeSlots = Array.isArray(item?.timeSlot)
+      ? item.timeSlot
+      : Array.isArray(item?.TimeSlot)
+        ? item.TimeSlot
+        : []
+
+    if (rawTimeSlots.length > 0) {
+      rawTimeSlots.forEach((slot: any, index: number) => {
+        const time = toTimeString(slot ?? item?.time ?? item?.startTime ?? item?.StartTime ?? item?.slotTime)
+        const slotId = `${String(scheduleId)}-${index}-${time || index}`
+        slots.push({
+          id: slotId,
+          workScheduleId: scheduleId,
+          time,
+          available: true,
+        })
+      })
+      continue
+    }
+
+    const time = toTimeString(item?.shiftStart ?? item?.time ?? item?.startTime ?? item?.StartTime ?? item?.slotTime ?? item?.TimeSlot)
+    if (!time) continue
+
+    slots.push({
+      id: scheduleId || time,
+      workScheduleId: scheduleId,
+      time,
+      available: Number(item?.remainingCapacity ?? item?.available ?? 1) > 0,
+    })
+  }
+
+  return slots
 }
 
 function normalizeGenderValue(value: unknown): number {
@@ -201,15 +288,12 @@ export const patientApi = {
   getAvailableSlots(doctorId: number | string, date: string): Promise<AvailableSlot[]> {
     return callWithFallback<AvailableSlot[]>(
       async () => {
-        const fromDate = new Date(`${date}T00:00:00`).toISOString()
-        const toDate = new Date(`${date}T23:59:59`).toISOString()
-        const res = await http.get<any>('/slots', {
+        const res = await http.get<any>(`/doctors/${doctorId}/available`, {
           params: {
-            doctorId,
-            fromDate,
-            toDate,
+            date,
           },
         })
+
         const list = normalizeSlotList(res.data)
         return list
       },
@@ -218,9 +302,13 @@ export const patientApi = {
   },
 
   createAppointment(payload: CreateAppointmentRequest): Promise<Appointment> {
-    const workScheduleId = payload.workScheduleId ?? payload.doctorId
+    const workScheduleId = payload.workScheduleId
     const reason = payload.reason ?? payload.symptoms ?? 'Đặt lịch khám'
     const timeSlot = payload.timeSlot ?? payload.appointmentTime ?? '08:00:00'
+
+    if (!workScheduleId) {
+      throw new Error('WorkScheduleId is required to create an appointment.')
+    }
 
     return callWithFallback<Appointment>(
       async () => {
@@ -236,22 +324,22 @@ export const patientApi = {
         const specialty = created?.specialty ?? 'Khác'
 
         return {
-          id: Number(created?.id ?? Date.now()),
+          id: normalizeId(created?.id ?? created?.appointmentId ?? Date.now()),
           doctorId: normalizeId(created?.doctorId ?? payload.doctorId ?? 0),
           doctorName,
           specialty,
-          appointmentDate: created?.date ?? payload.appointmentDate ?? '',
-          appointmentTime: created?.timeSlot ?? payload.appointmentTime ?? payload.timeSlot ?? timeSlot,
-          status: created?.status ?? 'Pending',
+          appointmentDate: normalizeDisplayDate(created?.date ?? created?.appointmentDate ?? payload.appointmentDate ?? ''),
+          appointmentTime: created?.timeSlot ?? created?.appointmentTime ?? payload.appointmentTime ?? payload.timeSlot ?? timeSlot,
+          status: normalizeAppointmentStatus(created?.status ?? 'Pending') as Appointment['status'],
           queueNumber: created?.queueNumber ?? `A-${Math.floor(10 + Math.random() * 90)}`,
         }
       },
       {
-        id: Date.now(),
+        id: normalizeId(Date.now()),
         doctorId: normalizeId(payload.doctorId ?? 0),
         doctorName: 'BS. Chưa xác định',
         specialty: 'Khác',
-        appointmentDate: payload.appointmentDate ?? '',
+        appointmentDate: normalizeDisplayDate(payload.appointmentDate ?? ''),
         appointmentTime: payload.appointmentTime ?? payload.timeSlot ?? '08:00:00',
         status: 'Pending',
         queueNumber: `A-${Math.floor(10 + Math.random() * 90)}`,
@@ -272,7 +360,7 @@ export const patientApi = {
           const items = Array.isArray(list) ? list : []
           return items.map((item: any) => {
             // Handle various field name formats from backend
-            const id = Number(item.id ?? item.Id ?? 0)
+            const id = normalizeId(item.id ?? item.Id ?? item.appointmentId ?? item.AppointmentId ?? 0)
             const doctorId = normalizeId(item.doctorId ?? item.DoctorId ?? 0)
             const doctorName = item.doctorName ?? item.DoctorName ?? 'BS. Chưa xác định'
 
@@ -280,13 +368,13 @@ export const patientApi = {
             const specialty = item.specialty ?? item.Specialty ?? 'Khác'
 
             // Handle date field - backend returns 'Date' as DateOnly string (YYYY-MM-DD)
-            const appointmentDate = item.appointmentDate ?? item.date ?? item.Date ?? ''
+            const appointmentDate = normalizeDisplayDate(item.appointmentDate ?? item.date ?? item.Date ?? item.appointmentDateDisplay ?? '')
 
             // Handle timeSlot - backend returns 'TimeSlot' as TimeOnly or time string
             const appointmentTime = toTimeString(item.appointmentTime ?? item.timeSlot ?? item.TimeSlot ?? '08:00')
 
             // Handle status - can be string or enum
-            const status = ((item.status ?? item.Status ?? 'Pending') as string).trim() as Appointment['status']
+            const status = normalizeAppointmentStatus(item.status ?? item.Status ?? 'Pending') as Appointment['status']
 
             // Backend doesn't include queueNumber, but it can be added if needed
             const queueNumber = item.queueNumber ?? item.QueueNumber ?? ''
@@ -314,7 +402,7 @@ export const patientApi = {
     )
   },
 
-  cancelAppointment(id: number): Promise<void> {
+  cancelAppointment(id: number | string): Promise<void> {
     return callWithFallback(
       async () => {
         await http.post(`/appointments/${id}/cancel`)
@@ -420,7 +508,7 @@ export const patientApi = {
             // Handle various field name formats from backend
             // Backend returns: Id, DoctorName, ExamDate, Symptoms, Diagnosis, Prescription, Notes
             const id = Number(item.id ?? item.Id ?? 0)
-            const examDate = item.examDate ?? item.ExamDate ?? item.examinationDate ?? item.date ?? ''
+          const examDate = normalizeDisplayDate(item.examDate ?? item.ExamDate ?? item.examinationDate ?? item.date ?? '')
             const doctorName = item.doctorName ?? item.DoctorName ?? 'BS. Chưa xác định'
 
             // Backend doesn't return specialty, so use fallback
@@ -469,13 +557,15 @@ export const patientApi = {
           try {
             const res = await http.get<any>(p)
             const data = res.data?.result ?? res.data ?? res.data?.data ?? res.data?.profile ?? {}
+            const dateOfBirthRaw = data.dateOfBirth ?? data.DateOfBirth ?? data.dob ?? data.Dob ?? data.birthDate ?? data.BirthDate
             return {
               id: data.id ?? data.Id ?? data.patientId ?? data.PatientId ?? data.userId ?? data.UserId,
               fullName: data.fullName ?? data.FullName ?? data.name ?? data.Name ?? data.full_name ?? data.username,
               email: data.email ?? data.Email ?? data.emailAddress ?? data.EmailAddress ?? data.email_address,
               phoneNumber: data.phoneNumber ?? data.PhoneNumber ?? data.phone ?? data.Phone ?? data.phone_number,
               address: data.address ?? data.Address ?? data.location ?? data.Location,
-              dateOfBirth: data.dateOfBirth ?? data.DateOfBirth ?? data.dob ?? data.Dob ?? data.birthDate ?? data.BirthDate,
+              dateOfBirth: dateOfBirthRaw,
+              dateOfBirthDisplay: normalizeDisplayDate(dateOfBirthRaw),
               gender: normalizeGenderValue(data.gender ?? data.Gender ?? data.sex ?? data.Sex),
               insuranceNumber: data.insuranceNumber ?? data.InsuranceNumber ?? data.insurance_number ?? data.Insurance_Number,
               emergencyContact: data.emergencyContact ?? data.EmergencyContact ?? data.emergency_contact ?? data.Emergency_Contact,

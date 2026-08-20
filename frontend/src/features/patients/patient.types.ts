@@ -13,7 +13,7 @@ export interface AvailableSlot {
 }
 
 export interface Appointment {
-  id: number
+  id: number | string
   doctorId: number | string
   doctorName: string
   specialty: string
@@ -72,6 +72,8 @@ export interface PatientProfile {
   phoneNumber?: string
   address?: string
   dateOfBirth?: string
+  // Human-friendly display (dd/mm/yyyy). If provided prefer this for rendering in UI.
+  dateOfBirthDisplay?: string
   gender?: number | string
   insuranceNumber?: string
   emergencyContact?: string

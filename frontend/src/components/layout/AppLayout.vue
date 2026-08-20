@@ -23,13 +23,13 @@ function logout() {
 </script>
 
 <template>
-  <div class="flex min-h-screen bg-slate-50">
+  <div class="flex h-screen overflow-hidden bg-slate-50">
 
     <!-- ================================================= -->
     <!-- SIDEBAR -->
     <!-- ================================================= -->
     <aside
-      class="flex h-screen w-64 shrink-0 flex-col
+      class="sticky top-0 flex h-screen w-64 shrink-0 flex-col
              border-r border-slate-200 bg-white"
     >
 
@@ -79,7 +79,7 @@ function logout() {
       <!-- ================================================= -->
       <!-- MENU -->
       <!-- ================================================= -->
-      <nav class="flex-1 overflow-y-auto p-4">
+      <nav class="flex-1 overflow-y-auto bg-white p-4">
 
         <!-- ================= RECEPTIONIST ================= -->
         <template v-if="auth.hasRole(['Receptionist'])">
@@ -335,7 +335,7 @@ function logout() {
 
           <div class="space-y-1">
             <RouterLink
-              to="/patient"
+              to="/patient/home"
               class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
               exact-active-class="bg-violet-50 text-violet-700"
             >
@@ -409,7 +409,7 @@ function logout() {
     <!-- ================================================= -->
     <!-- MAIN CONTENT -->
     <!-- ================================================= -->
-    <div class="flex min-w-0 flex-1 flex-col">
+    <div class="flex min-w-0 flex-1 flex-col overflow-hidden">
 
       <!-- ================= HEADER ================= -->
       <header
@@ -509,7 +509,7 @@ function logout() {
 
 
       <!-- ================= PAGE CONTENT ================= -->
-      <main class="min-h-0 flex-1 overflow-y-auto p-6">
+      <main class="min-h-0 flex-1 overflow-y-auto bg-slate-50 p-6">
         <RouterView />
       </main>
 

@@ -374,7 +374,13 @@ export const useAuthStore = defineStore('auth', () => {
       console.log('[auth login] resolved roles:', normalizedUser.roles)
 
       const persistent = payload.rememberMe === true
-      setToken(res.accessToken, res.refreshToken, persistent)
+      // Only persist tokens when an access token was actually returned by the backend.
+      // Avoid storing empty strings which would prevent the HTTP layer from attaching
+      // a Bearer Authorization header and lead to unexpected 401s after login.
+      if (res.accessToken) {
+        setToken(res.accessToken, res.refreshToken, persistent)
+      }
+
       setUser(normalizedUser, persistent)
 
       // Do not aggressively fetch /auth/me during login when this backend does not expose it.

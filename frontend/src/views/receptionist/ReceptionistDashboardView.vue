@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 
 import StatCard from '@/features/receptionist/components/StatCard.vue'
@@ -13,19 +13,22 @@ const {
   queue,
   waitingCount,
   completedCount,
+  queueError,
 } = storeToRefs(receptionistStore)
+
+onMounted(() => {
+  receptionistStore.fetchQueue()
+})
 
 const stats = computed(() => [
   {
     label: 'Tổng lịch hẹn',
-    value: receptionistStore.appointments.length,
+    value: queue.value.length,
     color: '#7C3AED',
   },
   {
     label: 'Đã check-in',
-    value: receptionistStore.appointments.filter(
-      appointment => appointment.checkedIn
-    ).length,
+    value: queue.value.length,
     color: '#0E4D92',
   },
   {
@@ -56,6 +59,10 @@ const stats = computed(() => [
     </div>
 
     <!-- ================= STATISTICS ================= -->
+    <div v-if="queueError" class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+      {{ queueError }}
+    </div>
+
     <div class="grid grid-cols-4 gap-4">
 
       <StatCard

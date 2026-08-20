@@ -56,6 +56,10 @@ const routes: RouteRecordRaw[] = [
       // Luồng bệnh nhân
       {
         path: 'patient',
+        redirect: { name: 'patient-home' },
+      },
+      {
+        path: 'patient/home',
         name: 'patient-home',
         component: () => import('@/views/patient/PatientHomeView.vue'),
         meta: {

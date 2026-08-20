@@ -1,12 +1,67 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 
+import { http } from '@/lib/api/http'
 import {
   mockAppointments,
   queueData,
   type AppointmentPatient,
   type QueuePatient,
 } from '@/features/receptionist/receptionist.mock'
+
+type QueueApiItem = {
+  id: string
+  appointmentId: string
+  queueNumber: number
+  priority: boolean
+  status: string
+  checkInTime: string
+  calledAt?: string | null
+  patientName?: string | null
+}
+
+function mapQueueStatus(status: string): QueuePatient['status'] {
+  switch (status?.toLowerCase()) {
+    case 'waiting':
+      return 'waiting'
+    case 'called':
+    case 'inprogress':
+      return 'examining'
+    case 'completed':
+      return 'completed'
+    default:
+      return 'waiting'
+  }
+}
+
+function formatQueueNumber(number: number): string {
+  return `A-${String(number).padStart(3, '0')}`
+}
+
+function formatApiTime(value?: string | null): string {
+  if (!value) return ''
+
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+
+  return date.toLocaleTimeString('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  })
+}
+
+function toQueuePatient(item: QueueApiItem): QueuePatient {
+  return {
+    id: item.id,
+    appointmentId: item.appointmentId,
+    no: formatQueueNumber(item.queueNumber),
+    name: item.patientName ?? 'Bệnh nhân',
+    doctor: 'Bác sĩ',
+    time: formatApiTime(item.checkInTime),
+    status: mapQueueStatus(item.status),
+  }
+}
 
 export const useReceptionistStore = defineStore(
   'receptionist',
@@ -26,6 +81,9 @@ export const useReceptionistStore = defineStore(
         ...patient,
       }))
     )
+
+    const queueError = ref<string | null>(null)
+    const queueLoading = ref(false)
 
     // ================================
     // GETTERS
@@ -52,6 +110,47 @@ export const useReceptionistStore = defineStore(
     // ================================
     // SEARCH APPOINTMENT
     // ================================
+
+    async function fetchQueue(doctorId?: string) {
+      queueLoading.value = true
+      queueError.value = null
+
+      try {
+        let targetDoctorId = doctorId
+
+        if (!targetDoctorId) {
+          const doctorsRes = await http.get<{ items?: Array<{ id?: string | number }> }>(`/doctors`, {
+            params: { pageNumber: 1, pageSize: 20 },
+          })
+
+          const doctorList = doctorsRes.data.items ?? []
+          const firstDoctor = doctorList.find((item) => item.id != null)
+          targetDoctorId = firstDoctor ? String(firstDoctor.id) : undefined
+        }
+
+        if (!targetDoctorId) {
+          queue.value = queueData.map((patient) => ({ ...patient }))
+          return
+        }
+
+        const { data } = await http.get<QueueApiItem[]>(`/doctors/${targetDoctorId}/queue`)
+        queue.value = data.map((item) => toQueuePatient(item))
+      } catch (error: unknown) {
+        const status = typeof error === 'object' && error !== null && 'response' in error
+          ? Number((error as { response?: { status?: number } }).response?.status)
+          : 0
+
+        if (status === 401 || status === 403) {
+          queueError.value = 'Bạn không có quyền xem hàng đợi.'
+        } else {
+          queueError.value = 'Không thể tải hàng đợi từ máy chủ.'
+        }
+
+        queue.value = queueData.map((patient) => ({ ...patient }))
+      } finally {
+        queueLoading.value = false
+      }
+    }
 
     function findAppointment(
       keyword: string
@@ -131,11 +230,21 @@ export const useReceptionistStore = defineStore(
       return newPatient
     }
 
+    async function callQueueTicket(queueTicketId: string) {
+      await http.post(`/queue/${queueTicketId}/start-exam`)
+      await fetchQueue()
+    }
+
+    async function completeQueueTicket(queueTicketId: string) {
+      await http.post(`/queue/${queueTicketId}/complete-exam`)
+      await fetchQueue()
+    }
+
     // ================================
     // CALL PATIENT
     // ================================
 
-    function callPatient(no: string) {
+    async function callPatient(no: string) {
       const patient = queue.value.find(
         (item) => item.no === no
       )
@@ -148,6 +257,11 @@ export const useReceptionistStore = defineStore(
         return
       }
 
+      if (patient.id) {
+        await callQueueTicket(patient.id)
+        return
+      }
+
       patient.status = 'examining'
     }
 
@@ -155,7 +269,7 @@ export const useReceptionistStore = defineStore(
     // COMPLETE PATIENT
     // ================================
 
-    function completePatient(no: string) {
+    async function completePatient(no: string) {
       const patient = queue.value.find(
         (item) => item.no === no
       )
@@ -165,6 +279,11 @@ export const useReceptionistStore = defineStore(
       }
 
       if (patient.status !== 'examining') {
+        return
+      }
+
+      if (patient.id) {
+        await completeQueueTicket(patient.id)
         return
       }
 
@@ -190,11 +309,14 @@ export const useReceptionistStore = defineStore(
     return {
       appointments,
       queue,
+      queueLoading,
+      queueError,
 
       waitingCount,
       examiningCount,
       completedCount,
 
+      fetchQueue,
       findAppointment,
       checkIn,
       callPatient,

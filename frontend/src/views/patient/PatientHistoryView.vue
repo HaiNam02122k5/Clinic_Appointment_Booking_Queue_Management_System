@@ -29,6 +29,10 @@ const formatDate = (dateString?: string) => {
   const normalized = String(dateString).trim()
   if (!normalized) return ''
 
+  // If already in dd/mm/yyyy, return as-is
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(normalized)) return normalized
+
+  // Handle ISO or other parseable formats
   const safeDate = normalized.includes('T')
     ? new Date(normalized)
     : new Date(`${normalized}T00:00:00`)
@@ -49,7 +53,7 @@ const formatDate = (dateString?: string) => {
       </h1>
 
       <p class="mt-1 text-sm text-slate-400">
-        {{ patient.history?.length || 0 }} lần khám đã lưu
+        {{ patient.sortedHistory?.length || 0 }} lần khám đã lưu
       </p>
     </div>
 
@@ -79,7 +83,7 @@ const formatDate = (dateString?: string) => {
 
     <!-- Trạng thái 3: Trống dữ liệu -->
     <div
-      v-else-if="!patient.history || patient.history.length === 0"
+      v-else-if="!patient.sortedHistory || patient.sortedHistory.length === 0"
       class="rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-400"
     >
       Chưa có lịch sử khám.
@@ -89,7 +93,7 @@ const formatDate = (dateString?: string) => {
     <!-- Trạng thái 4: Hiển thị danh sách -->
     <template v-else>
       <article
-        v-for="record in patient.history"
+        v-for="record in patient.sortedHistory"
         :key="record.id"
         class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
       >

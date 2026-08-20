@@ -2,75 +2,198 @@
 import { ref } from 'vue'
 
 import CheckInResult from '@/features/receptionist/components/CheckInResult.vue'
-import { useReceptionistStore } from '@/stores/receptionist'
+import { http } from '@/lib/api/http'
 
 import type { AppointmentPatient } from '@/features/receptionist/receptionist.mock'
 
-const receptionistStore = useReceptionistStore()
+type AppointmentDetailResponse = {
+  id: string
+  patientId: string
+  doctorId: string
+  patientName: string
+  doctorName: string
+  timeSlot?: string | { hours?: number; minutes?: number; seconds?: number }
+  date?: string
+  status?: string
+  reason?: string
+}
+
+type PatientDetailResponse = {
+  id?: string
+  fullName?: string
+  phoneNumber?: string
+  PhoneNumber?: string
+}
 
 const searchValue = ref('')
-
 const patient = ref<AppointmentPatient | null>(null)
-
 const errorMessage = ref('')
-
 const queueNumber = ref<string | null>(null)
+const isLoading = ref(false)
+const selectedDoctorId = ref<string | null>(null)
 
-function searchPatient() {
+function formatTime(value: unknown): string {
+  if (!value) {
+    return ''
+  }
+
+  if (typeof value === 'string') {
+    const text = value.trim()
+    if (!text) {
+      return ''
+    }
+
+    if (text.includes(':')) {
+      return text.slice(0, 5)
+    }
+
+    return text
+  }
+
+  if (typeof value === 'object' && value && 'hours' in value) {
+    const nextValue = value as { hours?: number; minutes?: number }
+    const hours = String(nextValue.hours ?? 0).padStart(2, '0')
+    const minutes = String(nextValue.minutes ?? 0).padStart(2, '0')
+
+    return `${hours}:${minutes}`
+  }
+
+  return String(value)
+}
+
+function formatQueueNumber(value: number | string | null | undefined): string {
+  const number = Number(value)
+
+  if (Number.isNaN(number)) {
+    return 'A-001'
+  }
+
+  return `A-${String(number).padStart(3, '0')}`
+}
+
+async function resolvePhoneNumber(patientId?: string): Promise<string> {
+  if (!patientId) {
+    return ''
+  }
+
+  try {
+    const { data } = await http.get<PatientDetailResponse>(`/patients/${patientId}`)
+
+    return data.phoneNumber ?? data.PhoneNumber ?? ''
+  } catch {
+    return ''
+  }
+}
+
+async function searchPatient() {
+  const keyword = searchValue.value.trim()
+
   errorMessage.value = ''
   patient.value = null
   queueNumber.value = null
-
-  const keyword = searchValue.value.trim()
+  selectedDoctorId.value = null
 
   if (!keyword) {
-    errorMessage.value =
-      'Vui lòng nhập mã lịch hẹn hoặc số điện thoại.'
-
+    errorMessage.value = 'Vui lòng nhập mã lịch hẹn.'
     return
   }
 
-  const result =
-    receptionistStore.findAppointment(keyword)
+  isLoading.value = true
 
-  if (!result) {
-    errorMessage.value =
-      'Không tìm thấy lịch hẹn phù hợp.'
+  try {
+    const appointmentId = keyword
+    const { data } = await http.get<AppointmentDetailResponse>(`/appointments/${appointmentId}`)
 
-    return
+    const status = data.status?.toLowerCase()
+
+    if (status === 'checkedin' || status === 'completed' || status === 'cancelled' || status === 'noshow') {
+      errorMessage.value = 'Bệnh nhân này đã check-in.'
+      return
+    }
+
+    const phone = await resolvePhoneNumber(data.patientId)
+
+    patient.value = {
+      appointmentId: data.id,
+      phone,
+      name: data.patientName,
+      doctor: data.doctorName,
+      appointmentTime: formatTime(data.timeSlot),
+      specialty: data.reason || 'Khám',
+      checkedIn: status === 'checkedin',
+      doctorId: data.doctorId,
+    } as AppointmentPatient & { doctorId?: string }
+
+    selectedDoctorId.value = data.doctorId
+  } catch (error: unknown) {
+    const status = typeof error === 'object' && error !== null && 'response' in error
+      ? Number((error as { response?: { status?: number } }).response?.status)
+      : undefined
+
+    if (status === 404) {
+      errorMessage.value = 'Không tìm thấy lịch hẹn phù hợp.'
+      return
+    }
+
+    if (status === 401 || status === 403) {
+      errorMessage.value = 'Bạn không có quyền truy cập lịch hẹn này.'
+      return
+    }
+
+    errorMessage.value = 'Không thể tra cứu lịch hẹn. Vui lòng thử lại.'
+  } finally {
+    isLoading.value = false
   }
-
-  if (result.checkedIn) {
-    errorMessage.value =
-      'Bệnh nhân này đã check-in.'
-
-    return
-  }
-
-  patient.value = result
 }
 
-function checkIn() {
-  if (!patient.value) {
+async function checkIn() {
+  if (!patient.value || !selectedDoctorId.value) {
+    errorMessage.value = 'Không thể check-in bệnh nhân này.'
     return
   }
 
-  const result = receptionistStore.checkIn(
-    patient.value.appointmentId
-  )
+  isLoading.value = true
 
-  if (!result) {
-    errorMessage.value =
-      'Không thể check-in bệnh nhân này.'
+  try {
+    await http.post(`/appointments/${patient.value.appointmentId}/check-in`)
 
-    return
-  }
+    const { data } = await http.get<Array<{ appointmentId: string; queueNumber: number }>>(
+      `/doctors/${selectedDoctorId.value}/queue`,
+    )
 
-  queueNumber.value = result.no
+    const matchedTicket = data.find((item) => item.appointmentId === patient.value!.appointmentId)
 
-  patient.value = {
-    ...patient.value,
-    checkedIn: true,
+    queueNumber.value = matchedTicket
+      ? formatQueueNumber(matchedTicket.queueNumber)
+      : 'A-001'
+
+    patient.value = {
+      ...patient.value,
+      checkedIn: true,
+    }
+  } catch (error: unknown) {
+    const status = typeof error === 'object' && error !== null && 'response' in error
+      ? Number((error as { response?: { status?: number } }).response?.status)
+      : undefined
+
+    if (status === 400) {
+      errorMessage.value = 'Lịch hẹn này không thể check-in ở thời điểm hiện tại.'
+      return
+    }
+
+    if (status === 404) {
+      errorMessage.value = 'Không tìm thấy lịch hẹn để check-in.'
+      return
+    }
+
+    if (status === 401 || status === 403) {
+      errorMessage.value = 'Bạn không có quyền check-in bệnh nhân.'
+      return
+    }
+
+    errorMessage.value = 'Không thể check-in bệnh nhân này.'
+  } finally {
+    isLoading.value = false
   }
 }
 </script>
@@ -108,13 +231,13 @@ function checkIn() {
           class="block text-xs font-medium
                  text-slate-600 mb-1.5"
         >
-          Mã lịch hẹn hoặc Số điện thoại
+          Mã lịch hẹn
         </label>
 
           <input
             v-model="searchValue"
             type="text"
-            placeholder="Ví dụ: APT-001 hoặc 0901234567"
+            placeholder="Ví dụ: 9d3a6c52-..."
             class="w-full px-3 py-2.5
                   text-sm text-slate-900
                   border border-slate-200
@@ -145,10 +268,13 @@ function checkIn() {
                text-sm font-semibold
                rounded-lg
                hover:bg-violet-700
-               transition-colors"
+               transition-colors
+               disabled:cursor-not-allowed
+               disabled:bg-violet-400"
+        :disabled="isLoading"
         @click="searchPatient"
       >
-        Tra cứu
+        {{ isLoading ? 'Đang tra cứu...' : 'Tra cứu' }}
       </button>
 
     </div>
@@ -256,10 +382,13 @@ function checkIn() {
                text-sm font-semibold
                rounded-lg
                hover:bg-violet-700
-               transition-colors"
+               transition-colors
+               disabled:cursor-not-allowed
+               disabled:bg-violet-400"
+        :disabled="isLoading"
         @click="checkIn"
       >
-        Xác nhận Check-in
+        {{ isLoading ? 'Đang xử lý...' : 'Xác nhận check-in' }}
       </button>
 
     </div>

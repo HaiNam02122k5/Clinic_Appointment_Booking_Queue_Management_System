@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import {computed, onMounted, ref, watch} from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { usePatientStore } from '@/stores/patient'
-import { areProtectedPatientEndpointsDisabled, enableProtectedPatientEndpoints } from '@/features/patients/patient.api'
-import type { Appointment } from '@/features/patients/patient.types'
+import {
+  areProtectedPatientEndpointsDisabled,
+  enableProtectedPatientEndpoints,
+  patientApi,
+} from '@/features/patients/patient.api'
+import type { Appointment, AvailableSlot } from '@/features/patients/patient.types'
 
 const router = useRouter()
 const patient = usePatientStore()
@@ -29,6 +33,58 @@ const tryingToConnect = ref(false)
 
 // Lấy ngày hiện tại theo định dạng yyyy-mm-dd để giới hạn ngày đặt lịch
 const todayDate = new Date().toLocaleDateString('sv-SE')
+
+const doctorSlotsByDate = ref<Record<string, AvailableSlot[]>>({})
+const doctorAvailableDates = ref<Record<string, string[]>>({})
+
+function getDoctorAvailabilityKey(doctorIdValue: number | string, date: string) {
+  return `${String(doctorIdValue)}|${date}`
+}
+
+function doctorHasSlotsOnDate(doctorIdValue: number | string, date: string) {
+  if (!date) return false
+  const key = getDoctorAvailabilityKey(doctorIdValue, date)
+  return (doctorSlotsByDate.value[key] ?? []).length > 0
+}
+
+async function loadDoctorAvailabilityDates(doctorIdValue: number | string) {
+  const dates: string[] = []
+  const slotMap: Record<string, AvailableSlot[]> = {}
+
+  const today = new Date()
+  for (let offset = 0; offset < 7; offset += 1) {
+    const date = new Date(today)
+    date.setDate(today.getDate() + offset)
+    const yyyyMmDd = date.toISOString().slice(0, 10)
+
+    const slots = await patientApi.getAvailableSlots(doctorIdValue, yyyyMmDd)
+    slotMap[getDoctorAvailabilityKey(doctorIdValue, yyyyMmDd)] = slots
+    if (slots.length > 0) {
+      dates.push(yyyyMmDd)
+    }
+  }
+
+  doctorAvailableDates.value[String(doctorIdValue)] = dates
+  Object.assign(doctorSlotsByDate.value, slotMap)
+}
+
+async function chooseDoctorDate(doctorIdValue: number | string, date: string) {
+  appointmentDate.value = date
+  selectedSlotId.value = null
+  appointmentTime.value = ''
+
+  const key = getDoctorAvailabilityKey(doctorIdValue, date)
+  const cachedSlots = doctorSlotsByDate.value[key]
+  if (cachedSlots?.length) {
+    patient.slots = [...cachedSlots]
+    return
+  }
+
+  await patient.loadSlots(doctorIdValue, date)
+  if (patient.slots.length) {
+    doctorSlotsByDate.value[key] = [...patient.slots]
+  }
+}
 
 // Hàm tìm và đồng bộ hóa khung giờ đã chọn dựa trên thời gian cuộc hẹn
 function syncSelectedSlotFromTime() {
@@ -75,10 +131,21 @@ const specialties = [
   'Tai mũi họng',
 ]
 
-// Tính toán danh sách bác sĩ dựa trên chuyên khoa đã chọn
 const filteredDoctors = computed(() => {
-  if (!specialty.value) return patient.doctors
-  return patient.doctors.filter((doctor) => doctor.specialty === specialty.value)
+  const baseDoctors = specialty.value
+    ? patient.doctors.filter((doctor) => doctor.specialty === specialty.value)
+    : [...patient.doctors]
+
+  if (!appointmentDate.value) {
+    return baseDoctors
+  }
+
+  return baseDoctors.filter((doctor) => doctorHasSlotsOnDate(doctor.id, appointmentDate.value))
+})
+
+const selectedDoctorDates = computed(() => {
+  if (!doctorId.value) return []
+  return doctorAvailableDates.value[String(doctorId.value)] ?? []
 })
 
 // Lấy thông tin bác sĩ đã chọn dựa trên doctorId
@@ -114,7 +181,20 @@ async function selectDoctor(id: number | string) {
   patient.clearSlots()
 
   if (appointmentDate.value) {
-    await patient.loadSlots(id, appointmentDate.value)
+    try {
+      await patient.loadSlots(id, appointmentDate.value)
+      const key = getDoctorAvailabilityKey(id, appointmentDate.value)
+      doctorSlotsByDate.value[key] = [...patient.slots]
+    } catch {
+      // ignore backend errors while the user is still choosing a doctor/date combination
+    }
+    return
+  }
+
+  try {
+    await loadDoctorAvailabilityDates(id)
+  } catch {
+    // ignore backend errors while the user is still choosing a doctor/date combination
   }
 }
 
@@ -124,8 +204,30 @@ async function changeDate() {
   appointmentTime.value = ''
   patient.clearSlots()
 
-  if (doctorId.value && appointmentDate.value) {
-    await patient.loadSlots(doctorId.value, appointmentDate.value)
+  if (!appointmentDate.value) {
+    return
+  }
+
+  try {
+    for (const doctor of patient.doctors) {
+      const key = getDoctorAvailabilityKey(doctor.id, appointmentDate.value)
+      if (!doctorSlotsByDate.value[key]) {
+        const slots = await patientApi.getAvailableSlots(doctor.id, appointmentDate.value)
+        doctorSlotsByDate.value[key] = slots
+      }
+    }
+  } catch {
+    // ignore backend errors while the user is selecting a date
+  }
+
+  if (doctorId.value) {
+    try {
+      await patient.loadSlots(doctorId.value, appointmentDate.value)
+      const key = getDoctorAvailabilityKey(doctorId.value, appointmentDate.value)
+      doctorSlotsByDate.value[key] = [...patient.slots]
+    } catch {
+      // keep the UI responsive even if a slot lookup fails
+    }
   }
 }
 
@@ -159,14 +261,16 @@ const resolvedSlotId = selectedSlotId.value ??
   patient.slots.find((slot) => slot.time === appointmentTime.value)?.id ??
   null
 
-if (!doctorId.value || !resolvedSlotId) return
+if (!doctorId.value || !appointmentDate.value || !appointmentTime.value || !resolvedSlotId) return
 
-// Gọi API để tạo cuộc hẹn mới
 try {
   createdAppointment.value = await patient.createAppointment({
     doctorId: doctorId.value,
+    workScheduleId: resolvedSlotId,
     appointmentDate: appointmentDate.value,
     appointmentTime: appointmentTime.value,
+    timeSlot: appointmentTime.value,
+    reason: symptoms.value.trim() || 'Đặt lịch khám',
     symptoms: symptoms.value,
   })
   success.value = true
@@ -405,6 +509,12 @@ function newBooking() {
 
         <!-- Doctors -->
         <div class="space-y-3">
+          <div
+            v-if="appointmentDate && filteredDoctors.length === 0"
+            class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+          >
+            Không có bác sĩ nào có lịch trống cho ngày đã chọn. Vui lòng chọn ngày khác hoặc đổi bộ lọc chuyên khoa.
+          </div>
 
           <div
             v-for="doctor in filteredDoctors"
@@ -452,39 +562,65 @@ function newBooking() {
 
             </div>
 
-            <!-- Slots -->
+            <!-- Slots / available days -->
             <div
               v-if="doctorId === doctor.id"
               class="mt-4"
             >
-              <p
-                class="mb-2 text-xs font-semibold
-                       text-slate-500"
-              >
-                Chọn khung giờ
-              </p>
+              <template v-if="!appointmentDate">
+                <p class="mb-2 text-xs font-semibold text-slate-500">
+                  Chọn ngày khám
+                </p>
 
-              <div class="flex flex-wrap gap-2">
+                <div v-if="(doctorAvailableDates[String(doctor.id)] ?? []).length" class="flex flex-wrap gap-2">
+                  <button
+                    v-for="date in doctorAvailableDates[String(doctor.id)]"
+                    :key="date"
+                    class="rounded-xl border px-3 py-1.5 text-xs font-medium"
+                    :class="
+                      appointmentDate === date
+                       ? 'border-[#0E4D92] bg-[#0E4D92] text-white'
+                       : 'border-slate-200 text-slate-700'
+                    "
+                    @click.stop="chooseDoctorDate(doctor.id, date)"
+                  >
+                    {{ new Date(`${date}T00:00:00`).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' }) }}
+                  </button>
+                </div>
 
-                <button
-                  v-for="slot in patient.slots"
-                  :key="slot.id"
-                  :disabled="!slot.available"
-                  class="rounded-xl border px-3.5 py-1.5
-                         text-xs font-medium"
-                  :class="
-                    !slot.available
-                      ? 'cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300'
-                      : appointmentTime === slot.time
-                        ? 'border-[#0E4D92] bg-[#0E4D92] text-white'
-                        : 'border-slate-200 text-slate-700'
-                  "
-                  @click.stop="chooseSlot(slot)"
-                >
-                  {{ slot.time }}
-                </button>
+                <div v-else class="text-xs text-slate-400">
+                  Bác sĩ này hiện chưa có lịch trống trong 7 ngày tới.
+                </div>
+              </template>
 
-              </div>
+              <template v-else>
+                <p class="mb-2 text-xs font-semibold text-slate-500">
+                  Chọn khung giờ
+                </p>
+
+                <div v-if="patient.slots.length" class="flex flex-wrap gap-2">
+                  <button
+                    v-for="slot in patient.slots"
+                    :key="slot.id"
+                    :disabled="!slot.available"
+                    class="rounded-xl border px-3.5 py-1.5 text-xs font-medium"
+                    :class="
+                      !slot.available
+                       ? 'cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300'
+                       : appointmentTime === slot.time
+                         ? 'border-[#0E4D92] bg-[#0E4D92] text-white'
+                         : 'border-slate-200 text-slate-700'
+                    "
+                    @click.stop="chooseSlot(slot)"
+                  >
+                    {{ slot.time }}
+                  </button>
+                </div>
+
+                <div v-else class="text-xs text-slate-400">
+                  Bác sĩ này không có khung giờ trống cho ngày đã chọn.
+                </div>
+              </template>
             </div>
 
           </div>
