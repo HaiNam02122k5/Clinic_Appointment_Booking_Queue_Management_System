@@ -18,12 +18,15 @@ namespace Clinic.Application.Contracts
 
     public interface IValueWithChange
     {
-        double Change { get; set; }
+        object Value { get; }
+        double Change { get; }
     }
 
     public class ValueWithChange<T> : IValueWithChange
     {
         public T Value { get; set; } = default!;
         public double Change { get; set; } = 0;
+
+        object IValueWithChange.Value => Value!;
     }
 }

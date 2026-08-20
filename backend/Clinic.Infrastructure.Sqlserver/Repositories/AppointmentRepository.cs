@@ -239,8 +239,10 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                 .Where(a => !a.IsDeleted && a.WorkSchedule.Date == date);
 
             var count = await query.CountAsync();
-            var items = await query.Skip((pageNumber - 1) * pageSize)
+            var items = await query.OrderByDescending(a => a.TimeSlot)
+                .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
+                .AsNoTracking()
                 .ToListAsync();
 
             return new PagedResult<Appointment>(items, count);
