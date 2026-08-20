@@ -9,7 +9,7 @@ namespace Clinic.Application.Features.Users.Queries
 {
     public record GetNotificationsQuery : IRequest<PaginationResponse<NotificationDto>>
     {
-        public DateTime OlderThan { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedBefore { get; set; } = DateTime.UtcNow;
         public int Limit { get; set; } = 10;
     }
     public class GetNotificationsQueryHandler : IRequestHandler<GetNotificationsQuery, PaginationResponse<NotificationDto>>
@@ -24,7 +24,7 @@ namespace Clinic.Application.Features.Users.Queries
 
         public async Task<PaginationResponse<NotificationDto>> Handle(GetNotificationsQuery request, CancellationToken cancellationToken)
         {
-            var notifications = await _notificationRepository.GetNotificationsForUser(_currentUser.UserId, request.OlderThan, request.Limit);
+            var notifications = await _notificationRepository.GetNotificationsForUser(_currentUser.UserId, request.CreatedBefore, request.Limit);
             return new PaginationResponse<NotificationDto>
             {
                 Items = notifications.Items.Select(n => new NotificationDto
