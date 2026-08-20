@@ -46,7 +46,7 @@ watch(rememberMe, (value) => {
 })
 
 function getRoleRoute(role: UserRole) {
-  if (role === 'Admin') return '/admin/doctors'
+  if (role === 'Admin') return '/admin'
   if (role === 'Receptionist') return '/reception/queue'
   if (role === 'Doctor') return '/doctor/examination'
   return '/patient'
@@ -97,8 +97,10 @@ async function handleLogin() {
       return
     }
 
-    const activeRole =
-      (loggedInUser?.activeRole ?? loggedInUser?.role ?? availableRoles[0] ?? 'Patient') as UserRole
+    const activeRole = (loggedInUser?.activeRole ??
+      loggedInUser?.role ??
+      availableRoles[0] ??
+      'Patient') as UserRole
     authStore.setActiveRole(activeRole)
 
     router.replace(redirectQuery || getRoleRoute(activeRole))
@@ -141,7 +143,11 @@ function goToForgotPassword() {
     hero-title="Đăng nhập&#10;để tiếp tục 👋"
     hero-subtitle="Sau khi xác thực thành công, hệ thống sẽ giúp bạn chọn quyền truy cập phù hợp với công việc bạn đang thực hiện."
     hero-badge="Clinic Queue"
-    :features="['Bảo mật dữ liệu', 'Phân quyền theo chức năng (RBAC)', 'Hỗ trợ nhiều quy trình khám bệnh']"
+    :features="[
+      'Bảo mật dữ liệu',
+      'Phân quyền theo chức năng (RBAC)',
+      'Hỗ trợ nhiều quy trình khám bệnh',
+    ]"
   >
     <!-- Slot Alert thông báo lỗi hoặc thông báo đăng ký thành công -->
     <template #alerts>
@@ -159,7 +165,7 @@ function goToForgotPassword() {
     </template>
 
     <!-- Form Đăng nhập -->
-    <form @submit.prevent="handleLogin" class="space-y-4 mb-6" novalidate>
+    <form @submit.prevent="handleLogin" class="mb-6 space-y-4" novalidate>
       <BaseInput
         v-model="username"
         label="Tên đăng nhập"
@@ -188,7 +194,7 @@ function goToForgotPassword() {
         <button
           type="button"
           @click="goToForgotPassword"
-          class="text-sm text-[#0E4D92] font-medium hover:underline focus:outline-none shrink-0 ml-2"
+          class="ml-2 shrink-0 text-sm font-medium text-[#0E4D92] hover:underline focus:outline-none"
         >
           Quên mật khẩu?
         </button>
@@ -213,7 +219,7 @@ function goToForgotPassword() {
     <template #footer>
       <p class="text-center text-sm text-slate-500">
         Chưa có tài khoản?
-        <router-link to="/register" class="text-[#0E4D92] font-semibold hover:underline">
+        <router-link to="/register" class="font-semibold text-[#0E4D92] hover:underline">
           Đăng ký ngay
         </router-link>
       </p>

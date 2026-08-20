@@ -53,8 +53,12 @@ const ROLE_META: Record<UserRole, Omit<RoleOption, 'role'>> = {
   },
 }
 
-const availableRoles = computed<UserRole[]>(() => auth.user?.roles?.length ? auth.user.roles : [auth.currentUserRole ?? 'Patient'])
-const roles = computed<RoleOption[]>(() => availableRoles.value.map((role) => ({ role, ...ROLE_META[role] })))
+const availableRoles = computed<UserRole[]>(() =>
+  auth.user?.roles?.length ? auth.user.roles : [auth.currentUserRole ?? 'Patient'],
+)
+const roles = computed<RoleOption[]>(() =>
+  availableRoles.value.map((role) => ({ role, ...ROLE_META[role] })),
+)
 
 function selectRole(role: UserRole) {
   auth.setActiveRole(role)
@@ -64,7 +68,7 @@ function selectRole(role: UserRole) {
     Patient: '/patient',
     Receptionist: '/reception/queue',
     Doctor: '/doctor/examination',
-    Admin: '/admin/doctors',
+    Admin: '/admin',
   }
 
   if (router.replace) {
@@ -89,16 +93,20 @@ function getTagClass(color: RoleOption['tagColor']) {
 </script>
 
 <template>
-  <div class="min-h-screen bg-slate-50 flex flex-col font-sans">
+  <div class="flex min-h-screen flex-col bg-slate-50 font-sans">
     <!-- Header -->
-    <header class="bg-white/80 backdrop-blur border-b border-slate-200 h-16 flex items-center px-6 justify-between sticky top-0 z-10">
+    <header
+      class="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-slate-200 bg-white/80 px-6 backdrop-blur"
+    >
       <div class="flex items-center gap-2.5">
-        <div class="w-8 h-8 bg-[#0E4D92] rounded-xl flex items-center justify-center text-white shadow-sm font-bold text-lg">
+        <div
+          class="flex h-8 w-8 items-center justify-center rounded-xl bg-[#0E4D92] text-lg font-bold text-white shadow-sm"
+        >
           +
         </div>
         <div class="leading-tight">
-          <p class="font-bold text-slate-800 text-[15px]">ClinicQueue</p>
-          <p class="text-[10px] text-slate-400 hidden sm:block">
+          <p class="text-[15px] font-bold text-slate-800">ClinicQueue</p>
+          <p class="hidden text-[10px] text-slate-400 sm:block">
             Đặt lịch & Quản lý hàng đợi khám bệnh
           </p>
         </div>
@@ -107,78 +115,91 @@ function getTagClass(color: RoleOption['tagColor']) {
         <button
           type="button"
           @click="router.push('/register')"
-          class="px-3.5 py-1.5 text-sm font-semibold rounded-xl text-slate-700 hover:bg-slate-100 transition-all"
+          class="rounded-xl px-3.5 py-1.5 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-100"
         >
           Đăng ký
         </button>
         <button
           type="button"
           @click="router.push('/login')"
-          class="px-3.5 py-1.5 text-sm font-semibold rounded-xl text-[#0E4D92] border-2 border-[#0E4D92] hover:bg-blue-50 transition-all active:scale-[0.98]"
+          class="rounded-xl border-2 border-[#0E4D92] px-3.5 py-1.5 text-sm font-semibold text-[#0E4D92] transition-all hover:bg-blue-50 active:scale-[0.98]"
         >
           Đăng nhập
         </button>
       </div>
-
     </header>
 
     <!-- Main Content -->
-    <div class="flex-1 flex flex-col items-center justify-center px-4 py-4 lg:py-5">
-          <!-- Hero -->
-      <div class="text-center mb-5 max-w-xl">
-        <h1 class="text-2xl md:text-3xl font-bold text-slate-800 mb-2 leading-tight">
-            Bạn đang sử dụng hệ thống<br />với vai trò nào?
+    <div class="flex flex-1 flex-col items-center justify-center px-4 py-4 lg:py-5">
+      <!-- Hero -->
+      <div class="mb-5 max-w-xl text-center">
+        <h1 class="mb-2 text-2xl leading-tight font-bold text-slate-800 md:text-3xl">
+          Bạn đang sử dụng hệ thống<br />với vai trò nào?
         </h1>
-        <p class="text-slate-500 text-base">
+        <p class="text-base text-slate-500">
           Chọn vai trò để truy cập các chức năng phù hợp với bạn.
         </p>
       </div>
 
       <!-- Role Cards Grid -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl">
+      <div class="grid w-full max-w-2xl grid-cols-1 gap-4 sm:grid-cols-2">
         <div
           v-for="item in roles"
           :key="item.role"
           @click="selectRole(item.role)"
-          class="group bg-white border-2 border-slate-200 hover:border-[#0E4D92] rounded-2xl p-4 cursor-pointer transition-all duration-200 hover:shadow-xl hover:shadow-blue-100/60 flex flex-col gap-3 select-none"        >
+          class="group flex cursor-pointer flex-col gap-3 rounded-2xl border-2 border-slate-200 bg-white p-4 transition-all duration-200 select-none hover:border-[#0E4D92] hover:shadow-xl hover:shadow-blue-100/60"
+        >
           <div class="flex items-start justify-between">
-            <div class="w-11 h-11 rounded-xl bg-slate-50 group-hover:bg-blue-50 flex items-center justify-center text-2xl transition-colors duration-200">
+            <div
+              class="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-50 text-2xl transition-colors duration-200 group-hover:bg-blue-50"
+            >
               {{ item.emoji }}
             </div>
-            <span :class="['inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border', getTagClass(item.tagColor)]">
+            <span
+              :class="[
+                'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium',
+                getTagClass(item.tagColor),
+              ]"
+            >
               {{ item.tag }}
             </span>
           </div>
           <div>
-            <h3 class="font-bold text-lg text-slate-800 mb-1">
+            <h3 class="mb-1 text-lg font-bold text-slate-800">
               {{ item.title }}
             </h3>
-            <p class="text-sm text-slate-500 leading-relaxed mb-3">
+            <p class="mb-3 text-sm leading-relaxed text-slate-500">
               {{ item.desc }}
             </p>
             <ul class="space-y-1">
-              <li v-for="f in item.features" :key="f" class="text-xs text-slate-500 flex items-center gap-2">
+              <li
+                v-for="f in item.features"
+                :key="f"
+                class="flex items-center gap-2 text-xs text-slate-500"
+              >
                 <span class="text-[#00A878]">✓</span>
                 {{ f }}
               </li>
             </ul>
           </div>
-          <div class="w-full border-2 border-slate-200 group-hover:border-[#0E4D92] group-hover:bg-[#0E4D92] text-slate-500 group-hover:text-white rounded-xl py-2.5 text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200">
+          <div
+            class="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-slate-200 py-2.5 text-sm font-semibold text-slate-500 transition-all duration-200 group-hover:border-[#0E4D92] group-hover:bg-[#0E4D92] group-hover:text-white"
+          >
             Truy cập ➔
           </div>
         </div>
       </div>
 
       <!-- Trust Badges -->
-    <div class="flex flex-wrap items-center justify-center gap-4 mt-5 text-xs text-slate-400">
+      <div class="mt-5 flex flex-wrap items-center justify-center gap-4 text-xs text-slate-400">
         <span class="flex items-center gap-1.5">🔒 Bảo mật SSL</span>
         <span class="flex items-center gap-1.5">📱 Hỗ trợ mobile</span>
         <span class="flex items-center gap-1.5">⚡ Cập nhật thời gian thực</span>
       </div>
     </div>
 
-    <footer class="text-center py-3 text-xs text-slate-400 border-t border-slate-200">
-        © 2026 ClinicQueue · Hệ thống quản lý phòng khám · v1.0
+    <footer class="border-t border-slate-200 py-3 text-center text-xs text-slate-400">
+      © 2026 ClinicQueue · Hệ thống quản lý phòng khám · v1.0
     </footer>
   </div>
 </template>
