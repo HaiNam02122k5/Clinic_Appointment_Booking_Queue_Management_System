@@ -22,8 +22,8 @@ namespace Clinic.Application.Interfaces
         Task<Notification?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
 
         /// <summary>
-        /// Retrieves a list of notifications for a specific user that are created older than the specified date and time, limited to the specified number of results.
+        /// Retrieves a list of notifications for a specific person that are created older than the specified date and time, limited to the specified number of results.
         /// </summary>
-        Task<PagedResult<Notification>> GetNotificationsForUser(Guid? userId, DateTime createdBefore, int limit);
+        Task<PagedResult<Notification>> GetNotificationsForPerson(Guid? personId, DateTime createdBefore, int limit);
     }
 }

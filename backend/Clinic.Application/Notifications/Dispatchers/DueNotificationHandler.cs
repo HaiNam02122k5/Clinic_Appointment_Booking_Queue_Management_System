@@ -31,7 +31,7 @@ namespace Clinic.Application.Notifications.Dispatchers
                     case NotificationChannel.Email:
                         if (string.IsNullOrWhiteSpace(notification.Person.Email))
                         {
-                            return;
+                            continue;
                         }
                         try
                         {
@@ -46,7 +46,7 @@ namespace Clinic.Application.Notifications.Dispatchers
                     case NotificationChannel.Sms:
                         if (string.IsNullOrWhiteSpace(notification.Person.PhoneNumber))
                         {
-                            return;
+                            continue;
                         }
                         try
                         {
@@ -61,7 +61,7 @@ namespace Clinic.Application.Notifications.Dispatchers
                     case NotificationChannel.InApp:
                         if (notification.Person.User == null)
                         {
-                            return;
+                            continue;
                         }
                         try
                         {

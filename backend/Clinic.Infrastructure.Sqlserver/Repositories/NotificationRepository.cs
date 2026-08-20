@@ -30,7 +30,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             return await _context.Notifications.Include(n => n.Person).ThenInclude(p => p.User).FirstOrDefaultAsync(n => n.Id == id, cancellationToken);
         }
 
-        public async Task<PagedResult<Notification>> GetNotificationsForUser(Guid? personId, DateTime createdBefore, int limit)
+        public async Task<PagedResult<Notification>> GetNotificationsForPerson(Guid? personId, DateTime createdBefore, int limit)
         {
             var query = _context.Notifications.Where(n => n.PersonId == personId && n.CreatedAt < createdBefore && n.IsDeleted == false);
             var item = await query.Take(limit).ToListAsync();

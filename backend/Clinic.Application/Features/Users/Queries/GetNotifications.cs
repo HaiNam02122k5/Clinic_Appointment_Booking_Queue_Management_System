@@ -24,7 +24,7 @@ namespace Clinic.Application.Features.Users.Queries
 
         public async Task<PaginationResponse<NotificationDto>> Handle(GetNotificationsQuery request, CancellationToken cancellationToken)
         {
-            var notifications = await _notificationRepository.GetNotificationsForUser(_currentUser.UserId, request.CreatedBefore, request.Limit);
+            var notifications = await _notificationRepository.GetNotificationsForPerson(_currentUser.PersonId, request.CreatedBefore, request.Limit);
             return new PaginationResponse<NotificationDto>
             {
                 Items = notifications.Items.Select(n => new NotificationDto
