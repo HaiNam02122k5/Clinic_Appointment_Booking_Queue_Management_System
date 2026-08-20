@@ -1,536 +1,431 @@
 <script setup lang="ts">
-import {
-  computed,
-  onMounted,
-  ref,
-  watch,
-} from 'vue'
-
-import AdminPagination from '@/features/admin/components/AdminPagination.vue'
-
+import { onMounted, ref, watch } from 'vue'
 import { doctorsApi } from '@/features/doctors/doctors.api'
-import type { Doctor } from '@/features/doctors/doctors.types'
+import { specialtiesApi } from '@/features/specialties/specialties.api'
+import type { CreateDoctorPayload, Doctor, UpdateDoctorPayload } from '@/features/doctors/doctors.types'
+import type { Specialty } from '@/features/specialties/specialties.types'
+import AdminFilterToolbar from '@/features/admin/components/AdminFilterToolbar.vue'
+import AdminPagination from '@/features/admin/components/AdminPagination.vue'
+import BaseStatusBadge from '@/components/ui/BaseStatusBadge.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
+import BaseAlert from '@/components/ui/BaseAlert.vue'
+import BaseModal from '@/components/ui/BaseModal.vue'
+import DoctorFormDialog from '@/features/doctors/DoctorFormDialog.vue'
 
-// ================================
-// STATE
-// ================================
-
+// State
 const doctors = ref<Doctor[]>([])
+const specialties = ref<Specialty[]>([])
 const loading = ref(false)
 const error = ref('')
+const successMessage = ref('')
 
 const search = ref('')
 const specialtyFilter = ref('all')
-const statusFilter = ref<'all' | 'active' | 'inactive'>('all')
+const statusFilter = ref<string>('all')
 const currentPage = ref(1)
+const pageSize = 8
+const totalPages = ref(1)
+const totalCount = ref(0)
 
-const pageSize = 5
+// Dialogs state
+const formDialogOpen = ref(false)
+const editingDoctor = ref<Doctor | null>(null)
+const submitting = ref(false)
 
-// ================================
-// LOAD API
-// ================================
+const viewModalOpen = ref(false)
+const viewingDoctor = ref<Doctor | null>(null)
+
+const deleteConfirmOpen = ref(false)
+const deletingDoctor = ref<Doctor | null>(null)
+const deleting = ref(false)
+
+async function loadSpecialties() {
+  try {
+    const res = await specialtiesApi.list({ pageSize: 100 })
+    specialties.value = Array.isArray(res?.items) ? res.items : []
+  } catch {
+    specialties.value = []
+  }
+}
 
 async function loadDoctors() {
   loading.value = true
   error.value = ''
 
   try {
-    const response = await doctorsApi.list()
+    const res = await doctorsApi.list({
+      search: search.value.trim() || undefined,
+      specialtyId: specialtyFilter.value !== 'all' ? specialtyFilter.value : undefined,
+      status: statusFilter.value !== 'all' ? statusFilter.value : undefined,
+      pageNumber: currentPage.value,
+      pageSize,
+    })
 
-    doctors.value = response.items
-
-    console.log('Doctors from API:', doctors.value)
-  } catch (err: unknown) {
-    console.error('Failed to load doctors:', err)
-
-    error.value = 'Không thể tải danh sách bác sĩ.'
+    doctors.value = Array.isArray(res?.items) ? res.items : (Array.isArray(res as any) ? (res as any) : [])
+    totalPages.value = res?.totalPages || 1
+    totalCount.value = res?.totalCount ?? doctors.value.length
+  } catch (err: any) {
+    doctors.value = []
+    error.value = err?.message || 'Không thể tải danh sách bác sĩ. Vui lòng kiểm tra kết nối Backend.'
   } finally {
     loading.value = false
   }
 }
 
 onMounted(() => {
+  loadSpecialties()
   loadDoctors()
 })
 
-// ================================
-// SPECIALTIES
-// ================================
-
-const specialties = computed(() => {
-  return [
-    ...new Set(
-      doctors.value
-        .map((doctor) => doctor.currentSpecialty)
-        .filter(Boolean),
-    ),
-  ]
+watch([search, specialtyFilter, statusFilter], () => {
+  currentPage.value = 1
+  loadDoctors()
 })
 
-// ================================
-// FILTER
-// ================================
-
-const filteredDoctors = computed(() => {
-  const keyword = search.value.trim().toLowerCase()
-
-  return doctors.value.filter((doctor) => {
-    const matchesSearch =
-      !keyword ||
-      doctor.fullName.toLowerCase().includes(keyword) ||
-      doctor.currentSpecialty.toLowerCase().includes(keyword) ||
-      (doctor.email ?? '').toLowerCase().includes(keyword)
-
-    const matchesSpecialty =
-      specialtyFilter.value === 'all' ||
-      doctor.currentSpecialty === specialtyFilter.value
-
-    const doctorStatus =
-      doctor.status === 0
-        ? 'active'
-        : 'inactive'
-
-    const matchesStatus =
-      statusFilter.value === 'all' ||
-      doctorStatus === statusFilter.value
-
-    return (
-      matchesSearch &&
-      matchesSpecialty &&
-      matchesStatus
-    )
-  })
+watch(currentPage, () => {
+  loadDoctors()
 })
-
-// ================================
-// PAGINATION
-// ================================
-
-const totalPages = computed(() => {
-  return Math.max(
-    1,
-    Math.ceil(filteredDoctors.value.length / pageSize),
-  )
-})
-
-const pagedDoctors = computed(() => {
-  const start =
-    (currentPage.value - 1) * pageSize
-
-  return filteredDoctors.value.slice(
-    start,
-    start + pageSize,
-  )
-})
-
-watch(
-  [search, specialtyFilter, statusFilter],
-  () => {
-    currentPage.value = 1
-  },
-)
-
-// ================================
-// HELPERS
-// ================================
-
-function getDoctorStatus(
-  doctor: Doctor,
-): 'active' | 'inactive' {
-  return doctor.status === 0
-    ? 'active'
-    : 'inactive'
-}
-
-function statusText(
-  status: 'active' | 'inactive',
-) {
-  return status === 'active'
-    ? 'Đang hoạt động'
-    : 'Ngừng hoạt động'
-}
-
-function statusClass(
-  status: 'active' | 'inactive',
-) {
-  return status === 'active'
-    ? 'bg-green-50 text-green-700'
-    : 'bg-slate-100 text-slate-500'
-}
 
 function resetFilters() {
   search.value = ''
   specialtyFilter.value = 'all'
   statusFilter.value = 'all'
   currentPage.value = 1
+  loadDoctors()
+}
+
+function openCreate() {
+  editingDoctor.value = null
+  formDialogOpen.value = true
+}
+
+function openEdit(doctor: Doctor) {
+  editingDoctor.value = doctor
+  formDialogOpen.value = true
+}
+
+function openView(doctor: Doctor) {
+  viewingDoctor.value = doctor
+  viewModalOpen.value = true
+}
+
+function confirmDelete(doctor: Doctor) {
+  deletingDoctor.value = doctor
+  deleteConfirmOpen.value = true
+}
+
+async function handleFormSubmit(payload: CreateDoctorPayload | UpdateDoctorPayload) {
+  submitting.value = true
+  error.value = ''
+
+  try {
+    if (editingDoctor.value) {
+      await doctorsApi.update(editingDoctor.value.id, payload as UpdateDoctorPayload)
+      successMessage.value = `Đã cập nhật thông tin bác sĩ ${payload.fullName} thành công!`
+    } else {
+      await doctorsApi.create(payload as CreateDoctorPayload)
+      successMessage.value = `Đã tạo mới bác sĩ ${payload.fullName} thành công!`
+    }
+
+    formDialogOpen.value = false
+    await loadDoctors()
+
+    setTimeout(() => {
+      successMessage.value = ''
+    }, 4000)
+  } catch (err: any) {
+    error.value = err?.response?.data?.message || err?.message || 'Thao tác không thành công.'
+  } finally {
+    submitting.value = false
+  }
+}
+
+async function handleDelete() {
+  if (!deletingDoctor.value) return
+
+  deleting.value = true
+  try {
+    await doctorsApi.delete(deletingDoctor.value.id)
+    successMessage.value = `Đã ngừng hoạt động bác sĩ ${deletingDoctor.value.fullName || deletingDoctor.value.name}!`
+    deleteConfirmOpen.value = false
+    await loadDoctors()
+
+    setTimeout(() => {
+      successMessage.value = ''
+    }, 4000)
+  } catch (err: any) {
+    error.value = err?.message || 'Không thể xóa bác sĩ.'
+  } finally {
+    deleting.value = false
+  }
 }
 </script>
 
 <template>
-  <div class="space-y-5">
+  <div class="space-y-5 font-sans">
+    <!-- Header Title -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Quản lý Bác sĩ</h1>
+        <p class="mt-1 text-sm text-slate-500">
+          Danh sách đội ngũ bác sĩ, chuyên khoa công tác và quản lý hồ sơ chuyên môn
+        </p>
+      </div>
 
-    <!-- =========================
-         TITLE
-    ========================== -->
-
-    <div>
-      <h1 class="text-xl font-semibold text-slate-800">
-        Quản lý bác sĩ
-      </h1>
-
-      <p class="mt-1 text-sm text-slate-500">
-        Quản lý thông tin và lịch làm việc của bác sĩ
-      </p>
+      <BaseButton
+        type="button"
+        variant="primary"
+        size="md"
+        @click="openCreate"
+      >
+        + Thêm Bác sĩ
+      </BaseButton>
     </div>
 
-    <!-- =========================
-         TOOLBAR
-    ========================== -->
+    <!-- Alert thông báo -->
+    <div v-if="successMessage">
+      <BaseAlert type="success" :message="successMessage" dismissible @dismiss="successMessage = ''" />
+    </div>
+    <div v-if="error">
+      <BaseAlert type="error" :message="error" dismissible @dismiss="error = ''" />
+    </div>
 
-    <div
-      class="rounded-xl border border-slate-200
-             bg-white p-5"
+    <!-- Filter Toolbar -->
+    <AdminFilterToolbar
+      v-model:search="search"
+      search-placeholder="Tìm kiếm theo tên bác sĩ, số CCHN..."
+      add-button-label="+ Thêm Bác sĩ"
+      :show-add-button="false"
+      @reset="resetFilters"
+      @add="openCreate"
     >
-      <div
-        class="flex flex-col gap-3
-               lg:flex-row lg:items-center"
-      >
-
-        <!-- SEARCH -->
-
-        <div class="relative flex-1">
-          <input
-            v-model="search"
-            type="text"
-            placeholder="Tìm kiếm bác sĩ..."
-            class="w-full rounded-lg
-                   border border-slate-200
-                   bg-white px-3 py-2.5 pl-10
-                   text-sm text-slate-800
-                   placeholder:text-slate-400
-                   focus:border-violet-500
-                   focus:outline-none"
-          />
-
-          <svg
-            class="absolute left-3 top-1/2
-                   h-4 w-4 -translate-y-1/2
-                   text-slate-400"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <circle cx="11" cy="11" r="7" />
-            <path d="m20 20-3.5-3.5" />
-          </svg>
-        </div>
-
-        <!-- SPECIALTY -->
-
+      <template #filters>
+        <!-- Specialty Filter -->
         <select
           v-model="specialtyFilter"
-          class="rounded-lg
-                 border border-slate-200
-                 bg-white px-3 py-2.5
-                 text-sm text-slate-600
-                 focus:border-violet-500
-                 focus:outline-none"
+          class="rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs font-medium text-slate-700 focus:border-[#0E4D92] focus:bg-white focus:outline-none transition-colors"
         >
-          <option value="all">
-            Tất cả chuyên khoa
-          </option>
-
+          <option value="all">Tất cả chuyên khoa</option>
           <option
-            v-for="specialty in specialties"
-            :key="specialty"
-            :value="specialty"
+            v-for="s in specialties"
+            :key="s.id"
+            :value="s.id"
           >
-            {{ specialty }}
+            {{ s.name }}
           </option>
         </select>
 
-        <!-- STATUS -->
-
+        <!-- Status Filter -->
         <select
           v-model="statusFilter"
-          class="rounded-lg
-                 border border-slate-200
-                 bg-white px-3 py-2.5
-                 text-sm text-slate-600
-                 focus:border-violet-500
-                 focus:outline-none"
+          class="rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs font-medium text-slate-700 focus:border-[#0E4D92] focus:bg-white focus:outline-none transition-colors"
         >
-          <option value="all">
-            Tất cả trạng thái
-          </option>
-
-          <option value="active">
-            Đang hoạt động
-          </option>
-
-          <option value="inactive">
-            Ngừng hoạt động
-          </option>
+          <option value="all">Tất cả trạng thái</option>
+          <option value="0">Đang hoạt động</option>
+          <option value="1">Nghỉ phép</option>
+          <option value="2">Đã thôi việc</option>
         </select>
+      </template>
+    </AdminFilterToolbar>
 
-        <!-- RESET -->
-
-        <button
-          class="rounded-lg
-                 border border-slate-200
-                 px-4 py-2.5
-                 text-sm font-medium
-                 text-slate-600
-                 hover:bg-slate-50"
-          @click="resetFilters"
-        >
-          Đặt lại
-        </button>
-
-        <!-- ADD -->
-
-        <button
-          class="rounded-lg
-                 bg-violet-600
-                 px-4 py-2.5
-                 text-sm font-semibold
-                 text-white
-                 hover:bg-violet-700"
-        >
-          + Thêm bác sĩ
-        </button>
-
-      </div>
-    </div>
-
-    <!-- =========================
-         TABLE
-    ========================== -->
-
-    <div
-      class="rounded-xl border border-slate-200
-            bg-white p-5"
-    >
-      <div
-        class="mb-4 flex items-center
-              justify-between"
-      >
+    <!-- Table Container -->
+    <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs">
+      <div class="mb-4 flex items-center justify-between">
         <div>
-          <h2
-            class="text-sm font-semibold
-                  text-slate-800"
-          >
-            Danh sách bác sĩ
-          </h2>
-
-          <p class="mt-1 text-xs text-slate-400">
-            {{ filteredDoctors.length }} bác sĩ
-          </p>
+          <h2 class="text-base font-bold text-slate-800">Danh sách Bác sĩ</h2>
+          <p class="text-xs text-slate-400 mt-0.5">Hiển thị thông tin chứng chỉ và chuyên khoa</p>
         </div>
       </div>
 
-      <div
-        class="overflow-hidden
-              rounded-lg border
-              border-slate-200"
-      >
-        <!-- LOADING -->
-
-        <div
-          v-if="loading"
-          class="py-12 text-center text-sm text-slate-400"
-        >
-          Đang tải danh sách bác sĩ...
+      <div class="overflow-x-auto rounded-xl border border-slate-100">
+        <!-- Loading State -->
+        <div v-if="loading" class="py-16 text-center text-slate-400 text-sm">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-3 border-[#0E4D92] border-t-transparent mb-2"></div>
+          <p>Đang tải danh sách bác sĩ…</p>
         </div>
 
-        <!-- ERROR -->
-
-        <div
-          v-else-if="error"
-          class="py-12 text-center text-sm text-red-500"
-        >
-          {{ error }}
-        </div>
-
-        <!-- TABLE -->
-
-        <table
-          v-else
-          class="w-full text-sm"
-        >
+        <!-- Table -->
+        <table v-else class="w-full text-left text-sm border-collapse">
           <thead>
-            <tr
-              class="border-b
-                    border-slate-200
-                    bg-slate-50"
-            >
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                #
-              </th>
-
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Bác sĩ
-              </th>
-
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Chuyên khoa
-              </th>
-
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Phòng
-              </th>
-
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Lịch làm việc
-              </th>
-
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Số bệnh nhân
-              </th>
-
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Trạng thái
-              </th>
-
-              <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Thao tác
-              </th>
+            <tr class="border-b border-slate-100 bg-slate-50/75 text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <th class="px-4 py-3.5">#</th>
+              <th class="px-4 py-3.5">Bác sĩ</th>
+              <th class="px-4 py-3.5">Chuyên khoa</th>
+              <th class="px-4 py-3.5">Số CCHN</th>
+              <th class="px-4 py-3.5">Trình độ</th>
+              <th class="px-4 py-3.5">Kinh nghiệm</th>
+              <th class="px-4 py-3.5">Trạng thái</th>
+              <th class="px-4 py-3.5 text-right">Thao tác</th>
             </tr>
           </thead>
 
           <tbody class="divide-y divide-slate-100">
-
             <tr
-              v-for="(doctor, index) in pagedDoctors"
+              v-for="(doctor, index) in doctors"
               :key="doctor.id"
-              class="hover:bg-slate-50"
+              class="hover:bg-slate-50/80 transition-colors"
             >
-              <!-- NUMBER -->
-
-              <td
-                class="px-4 py-3
-                      text-xs text-slate-400"
-              >
-                {{
-                  (currentPage - 1) * pageSize +
-                  index +
-                  1
-                }}
+              <td class="px-4 py-3.5 text-xs text-slate-400 font-mono">
+                {{ (currentPage - 1) * pageSize + index + 1 }}
               </td>
 
-              <!-- DOCTOR -->
-
-              <td class="px-4 py-3">
-                <div
-                  class="font-medium
-                        text-slate-800"
-                >
-                  {{ doctor.fullName }}
+              <!-- Bác sĩ -->
+              <td class="px-4 py-3.5">
+                <div class="font-bold text-slate-800">
+                  {{ doctor.fullName || doctor.name }}
+                </div>
+                <div class="text-xs text-slate-400 mt-0.5 flex items-center gap-1.5">
+                  <span>{{ doctor.phoneNumber || '—' }}</span>
+                  <span v-if="doctor.email">· {{ doctor.email }}</span>
                 </div>
               </td>
 
-              <!-- SPECIALTY -->
-
-              <td
-                class="px-4 py-3
-                      text-slate-600"
-              >
-                {{ doctor.currentSpecialty }}
-              </td>
-
-              <!-- ROOM -->
-
-              <td
-                class="px-4 py-3
-                      text-slate-600"
-              >
-                -
-              </td>
-
-              <!-- SCHEDULE -->
-
-              <td
-                class="px-4 py-3
-                      text-xs text-slate-500"
-              >
-                -
-              </td>
-
-              <!-- PATIENTS -->
-
-              <td
-                class="px-4 py-3
-                      font-medium
-                      text-slate-700"
-              >
-                -
-              </td>
-
-              <!-- STATUS -->
-
-              <td class="px-4 py-3">
-                <span
-                  class="rounded-md px-2.5 py-1
-                        text-xs font-medium"
-                  :class="statusClass(getDoctorStatus(doctor))"
-                >
-                  {{ statusText(getDoctorStatus(doctor)) }}
+              <!-- Chuyên khoa -->
+              <td class="px-4 py-3.5">
+                <span class="inline-flex items-center rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-semibold text-[#0E4D92]">
+                  {{ doctor.currentSpecialty || doctor.specialty || 'Đa khoa' }}
                 </span>
               </td>
 
-              <!-- ACTIONS -->
+              <!-- Số CCHN -->
+              <td class="px-4 py-3.5 text-xs font-mono text-slate-600">
+                {{ doctor.licenseNumber || 'Chưa cập nhật' }}
+              </td>
 
-              <td class="px-4 py-3">
-                <div
-                  class="flex justify-end
-                        gap-2"
-                >
+              <!-- Trình độ -->
+              <td class="px-4 py-3.5 text-xs text-slate-600">
+                {{ doctor.qualification || 'Bác sĩ' }}
+              </td>
+
+              <!-- Kinh nghiệm -->
+              <td class="px-4 py-3.5 text-xs font-medium text-slate-700">
+                {{ doctor.experienceYears ? `${doctor.experienceYears} năm` : '—' }}
+              </td>
+
+              <!-- Trạng thái -->
+              <td class="px-4 py-3.5">
+                <BaseStatusBadge
+                  :status="doctor.status === 0 || doctor.status === 'Active' || doctor.status === 'active' ? 'active' : 'inactive'"
+                />
+              </td>
+
+              <!-- Actions -->
+              <td class="px-4 py-3.5 text-right">
+                <div class="inline-flex items-center gap-1.5">
                   <button
-                    class="rounded-md px-2.5 py-1.5
-                          text-xs font-medium
-                          text-slate-600
-                          hover:bg-slate-100"
+                    type="button"
+                    class="rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                    @click="openView(doctor)"
                   >
                     Xem
                   </button>
 
                   <button
-                    class="rounded-md px-2.5 py-1.5
-                          text-xs font-medium
-                          text-violet-600
-                          hover:bg-violet-50"
+                    type="button"
+                    class="rounded-lg px-2.5 py-1 text-xs font-semibold text-[#0E4D92] hover:bg-blue-50 transition-colors cursor-pointer"
+                    @click="openEdit(doctor)"
                   >
                     Sửa
+                  </button>
+
+                  <button
+                    type="button"
+                    class="rounded-lg px-2.5 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                    @click="confirmDelete(doctor)"
+                  >
+                    Xóa
                   </button>
                 </div>
               </td>
             </tr>
 
-            <!-- EMPTY -->
-
-            <tr v-if="pagedDoctors.length === 0">
-              <td
-                colspan="8"
-                class="px-4 py-12
-                      text-center
-                      text-sm text-slate-400"
-              >
-                Không tìm thấy bác sĩ phù hợp.
+            <!-- Empty State -->
+            <tr v-if="!doctors || doctors.length === 0">
+              <td colspan="8" class="px-4 py-12 text-center text-slate-400 text-sm">
+                Không tìm thấy bác sĩ phù hợp với điều kiện tìm kiếm.
               </td>
             </tr>
-
           </tbody>
         </table>
       </div>
 
-      <!-- PAGINATION -->
-
+      <!-- Pagination -->
       <AdminPagination
         v-model:current-page="currentPage"
         :total-pages="totalPages"
+        :total-count="totalCount"
       />
     </div>
 
+    <!-- Doctor Form Dialog (Create / Edit) -->
+    <DoctorFormDialog
+      :open="formDialogOpen"
+      :doctor="editingDoctor"
+      :submitting="submitting"
+      @close="formDialogOpen = false"
+      @submit="handleFormSubmit"
+    />
+
+    <!-- Doctor Details Modal -->
+    <BaseModal
+      :open="viewModalOpen"
+      title="Thông tin Bác sĩ"
+      size="md"
+      icon="👨‍⚕️"
+      @close="viewModalOpen = false"
+    >
+      <div v-if="viewingDoctor" class="space-y-4 text-sm">
+        <div class="flex items-center gap-3.5 pb-4 border-b border-slate-100">
+          <div class="w-12 h-12 rounded-full bg-blue-100 text-[#0E4D92] flex items-center justify-center font-bold text-lg">
+            {{ (viewingDoctor.fullName || viewingDoctor.name || 'D').charAt(0).toUpperCase() }}
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-slate-800">{{ viewingDoctor.fullName || viewingDoctor.name }}</h3>
+            <p class="text-xs text-slate-500">{{ viewingDoctor.qualification || 'Bác sĩ chuyên khoa' }} · {{ viewingDoctor.currentSpecialty || viewingDoctor.specialty || 'Đa khoa' }}</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 text-xs">
+          <div>
+            <span class="text-slate-400 block">Số điện thoại:</span>
+            <span class="font-medium text-slate-700">{{ viewingDoctor.phoneNumber || '—' }}</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block">Email:</span>
+            <span class="font-medium text-slate-700">{{ viewingDoctor.email || '—' }}</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block">Số CCHN:</span>
+            <span class="font-medium text-slate-700 font-mono">{{ viewingDoctor.licenseNumber || '—' }}</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block">Kinh nghiệm:</span>
+            <span class="font-medium text-slate-700">{{ viewingDoctor.experienceYears }} năm</span>
+          </div>
+        </div>
+
+        <div v-if="viewingDoctor.biography" class="pt-3 border-t border-slate-100">
+          <span class="text-xs text-slate-400 block mb-1">Tiểu sử chuyên môn:</span>
+          <p class="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-xl">{{ viewingDoctor.biography }}</p>
+        </div>
+      </div>
+    </BaseModal>
+
+    <!-- Delete Confirmation Modal -->
+    <BaseModal
+      :open="deleteConfirmOpen"
+      title="Xác nhận thao tác"
+      size="sm"
+      icon="⚠️"
+      @close="deleteConfirmOpen = false"
+    >
+      <p class="text-sm text-slate-600">
+        Bạn có chắc chắn muốn ngừng hoạt động bác sĩ <strong class="text-slate-800">{{ deletingDoctor?.fullName || deletingDoctor?.name }}</strong> không?
+      </p>
+      <template #footer>
+        <BaseButton variant="outline" size="sm" @click="deleteConfirmOpen = false">Hủy</BaseButton>
+        <BaseButton variant="danger" size="sm" :loading="deleting" @click="handleDelete">Xác nhận</BaseButton>
+      </template>
+    </BaseModal>
   </div>
 </template>

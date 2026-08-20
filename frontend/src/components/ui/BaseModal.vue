@@ -7,7 +7,7 @@ const props = withDefaults(
     title?: string
     subtitle?: string
     icon?: string
-    size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl'
+    size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl'
     hideCloseButton?: boolean
   }>(),
   {
@@ -29,6 +29,8 @@ const sizeClasses: Record<string, string> = {
   lg: 'max-w-lg',
   xl: 'max-w-xl',
   '2xl': 'max-w-2xl',
+  '3xl': 'max-w-3xl',
+  '4xl': 'max-w-4xl',
 }
 
 function handleKeydown(e: KeyboardEvent) {
@@ -62,19 +64,19 @@ onUnmounted(() => {
   <Teleport to="body">
     <div
       v-if="open"
-      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs font-sans overflow-y-auto"
+      class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/50 backdrop-blur-xs font-sans overflow-y-auto"
       role="dialog"
       aria-modal="true"
       @click.self="emit('close')"
     >
       <div
-        class="w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden transform transition-all my-8 animate-in fade-in zoom-in-95 duration-200"
+        class="w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden transform transition-all my-auto animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]"
         :class="sizeClasses[size]"
       >
         <!-- Modal Header -->
         <div
           v-if="title || $slots.header"
-          class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50"
+          class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/70 shrink-0"
         >
           <slot name="header">
             <div class="flex items-center gap-3">
@@ -106,14 +108,14 @@ onUnmounted(() => {
         </div>
 
         <!-- Modal Body -->
-        <div class="p-6 max-h-[calc(100vh-16rem)] overflow-y-auto">
+        <div class="p-6 overflow-y-auto flex-1">
           <slot />
         </div>
 
         <!-- Modal Footer -->
         <div
           v-if="$slots.footer"
-          class="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/50"
+          class="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/70 shrink-0"
         >
           <slot name="footer" />
         </div>
