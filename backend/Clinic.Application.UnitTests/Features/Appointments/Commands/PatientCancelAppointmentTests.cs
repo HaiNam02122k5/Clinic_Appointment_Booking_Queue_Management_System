@@ -28,7 +28,7 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Commands
             var command = new CancelAppointmentCommand(AppointmentId: appointment.Id);
             await handler.Handle(command, CancellationToken.None);
             Assert.Equal(AppointmentStatus.Cancelled, appointment.Status);
-            Assert.Equal(patient.Person.User.Id, appointment.CancelledByUserId);
+            Assert.Equal(patient.Person.User.Id, appointment.UpdatedByUserId);
 
             // Receptionist cancels the appointment on behalf of the patient
             var receptionist = TestDataFactory.CreateEmployee(role: "Receptionist");
@@ -37,7 +37,7 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Commands
             var command2 = new CancelAppointmentCommand(AppointmentId: appointment2.Id);
             await handler.Handle(command2, CancellationToken.None);
             Assert.Equal(AppointmentStatus.Cancelled, appointment2.Status);
-            Assert.Equal(receptionist.Person.User.Id, appointment2.CancelledByUserId);
+            Assert.Equal(receptionist.Person.User.Id, appointment2.UpdatedByUserId);
         }
 
         [Fact]

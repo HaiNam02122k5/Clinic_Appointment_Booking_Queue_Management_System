@@ -81,5 +81,10 @@ namespace Clinic.Application.UnitTests.Common
         {
             _appointments.Add(appointment);
         }
+
+        public async Task<Appointment?> GetAppointmentChangelogAsync(Guid appointmentId)
+        {
+            return _appointments.FirstOrDefault(a => a.Id == appointmentId && !a.IsDeleted);
+        }
     }
 }

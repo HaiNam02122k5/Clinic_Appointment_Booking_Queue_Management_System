@@ -43,6 +43,17 @@ namespace Clinic.API.Controllers
             return Ok(result);
         }
 
+        [HttpGet("available")]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(List<BookingDoctorDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> GetAvailableDoctors([FromQuery] Guid? specialtyId)
+        {
+            var query = _mapper.Map<GetDoctorsForBookingQuery>(new { SpecialtyId = specialtyId });
+            var result = await _sender.Send(query);
+            return Ok(result);
+        }
+
         // Endpoint này cho phép anonymous truy cập (bệnh nhân chưa đăng nhập cần xem thông tin
         // bác sĩ trước khi đặt lịch), nên KHÔNG được trả các trường nhạy cảm/nội bộ của bác sĩ
         // như DateOfBirth, Address, HireDate (những trường này chỉ có trong DoctorDetailDto).
@@ -78,6 +89,21 @@ namespace Clinic.API.Controllers
             };
 
             return Ok(publicResult);
+        }
+
+        [HttpGet("{doctorId}/available")]
+        [AllowAnonymous]
+        [ProducesResponseType(typeof(BookingDoctorDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetAvailableSchedule([FromRoute] Guid doctorId, [FromQuery] DateOnly? date)
+        {
+            var query = _mapper.Map<GetDoctorSchedulesForBookingQuery>(new { DoctorId = doctorId, Date = date ?? DateOnly.FromDateTime(DateTime.Today) });
+            var result = await _sender.Send(query);
+            if (result == null)
+            {
+                return NotFound();
+            }
+            return Ok(result);
         }
 
         [HttpGet("me")]
