@@ -11,31 +11,43 @@ import BaseAlert from '@/components/ui/BaseAlert.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import UserFormDialog from '@/features/users/UserFormDialog.vue'
 
+// State
 const accounts = ref<User[]>([])
 const loading = ref(false)
 const error = ref('')
 const successMessage = ref('')
 
 const search = ref('')
-const roleFilter = ref('all')
+const roleFilter = ref<string>('all')
 const currentPage = ref(1)
 const pageSize = 8
 const totalPages = ref(1)
 const totalCount = ref(0)
 
-// Dialogs
+// Dialogs state
 const formDialogOpen = ref(false)
-const editingUser = ref<User | null>(null)
+const editingAccount = ref<User | null>(null)
 const submitting = ref(false)
 
 const viewModalOpen = ref(false)
-const viewingUser = ref<User | null>(null)
+const viewingAccount = ref<User | null>(null)
 
 const deleteConfirmOpen = ref(false)
-const deletingUser = ref<User | null>(null)
+const deletingAccount = ref<User | null>(null)
 const deleting = ref(false)
 
-async function loadUsers() {
+function getSortedRoles(roles?: string[]): string[] {
+  if (!roles || roles.length === 0) return ['Patient']
+  const priority: Record<string, number> = {
+    admin: 1,
+    doctor: 2,
+    receptionist: 3,
+    patient: 4,
+  }
+  return [...roles].sort((a, b) => (priority[a.toLowerCase()] || 99) - (priority[b.toLowerCase()] || 99))
+}
+
+async function loadAccounts() {
   loading.value = true
   error.value = ''
 
@@ -60,49 +72,49 @@ async function loadUsers() {
     totalCount.value = res?.totalCount ?? items.length
   } catch (err: any) {
     accounts.value = []
-    error.value = err?.response?.data?.message || err?.message || 'Không thể tải danh sách tài khoản từ máy chủ.'
+    error.value = err?.message || 'Không thể tải danh sách tài khoản. Vui lòng kiểm tra kết nối Backend.'
   } finally {
     loading.value = false
   }
 }
 
 onMounted(() => {
-  loadUsers()
+  loadAccounts()
 })
 
 watch([search, roleFilter], () => {
   currentPage.value = 1
-  loadUsers()
+  loadAccounts()
 })
 
 watch(currentPage, () => {
-  loadUsers()
+  loadAccounts()
 })
 
 function resetFilters() {
   search.value = ''
   roleFilter.value = 'all'
   currentPage.value = 1
-  loadUsers()
+  loadAccounts()
 }
 
 function openCreate() {
-  editingUser.value = null
+  editingAccount.value = null
   formDialogOpen.value = true
 }
 
-function openEdit(user: User) {
-  editingUser.value = user
+function openEdit(account: User) {
+  editingAccount.value = account
   formDialogOpen.value = true
 }
 
-function openView(user: User) {
-  viewingUser.value = user
+function openView(account: User) {
+  viewingAccount.value = account
   viewModalOpen.value = true
 }
 
-function confirmDelete(user: User) {
-  deletingUser.value = user
+function confirmDelete(account: User) {
+  deletingAccount.value = account
   deleteConfirmOpen.value = true
 }
 
@@ -111,16 +123,16 @@ async function handleFormSubmit(payload: CreateUserInput | UpdateUserInput) {
   error.value = ''
 
   try {
-    if (editingUser.value) {
-      await usersApi.update(editingUser.value.id, payload as UpdateUserInput)
-      successMessage.value = `Đã cập nhật thông tin tài khoản ${payload.fullName || payload.name} thành công!`
+    if (editingAccount.value) {
+      await usersApi.update(editingAccount.value.id, payload as UpdateUserInput)
+      successMessage.value = `Đã cập nhật thông tin tài khoản ${payload.fullName || editingAccount.value.username} thành công!`
     } else {
       await usersApi.create(payload as CreateUserInput)
-      successMessage.value = `Đã tạo tài khoản ${payload.username} thành công!`
+      successMessage.value = `Đã tạo mới tài khoản ${(payload as CreateUserInput).username} thành công!`
     }
 
     formDialogOpen.value = false
-    await loadUsers()
+    await loadAccounts()
 
     setTimeout(() => {
       successMessage.value = ''
@@ -133,20 +145,20 @@ async function handleFormSubmit(payload: CreateUserInput | UpdateUserInput) {
 }
 
 async function handleDelete() {
-  if (!deletingUser.value) return
+  if (!deletingAccount.value) return
 
   deleting.value = true
   try {
-    await usersApi.remove(deletingUser.value.id)
-    successMessage.value = `Đã vô hiệu hóa tài khoản @${deletingUser.value.username}!`
+    await usersApi.remove(deletingAccount.value.id)
+    successMessage.value = `Đã khóa/xóa tài khoản ${deletingAccount.value.username} thành công!`
     deleteConfirmOpen.value = false
-    await loadUsers()
+    await loadAccounts()
 
     setTimeout(() => {
       successMessage.value = ''
     }, 4000)
   } catch (err: any) {
-    error.value = err?.response?.data?.message || err?.message || 'Không thể khóa tài khoản.'
+    error.value = err?.message || 'Không thể khóa tài khoản.'
   } finally {
     deleting.value = false
   }
@@ -160,7 +172,7 @@ async function handleDelete() {
       <div>
         <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Quản lý Tài khoản</h1>
         <p class="mt-1 text-sm text-slate-500">
-          Quản lý phân quyền, tài khoản nhân viên và người dùng trong toàn hệ thống
+          Danh sách người dùng hệ thống, phân quyền vai trò và quản lý trạng thái tài khoản
         </p>
       </div>
 
@@ -170,7 +182,7 @@ async function handleDelete() {
         size="md"
         @click="openCreate"
       >
-        + Thêm Tài khoản
+        + Thêm tài khoản
       </BaseButton>
     </div>
 
@@ -185,8 +197,8 @@ async function handleDelete() {
     <!-- Filter Toolbar -->
     <AdminFilterToolbar
       v-model:search="search"
-      search-placeholder="Tìm theo họ tên, username, email, SĐT..."
-      add-button-label="+ Thêm Tài khoản"
+      search-placeholder="Tìm theo họ tên, username, email, số điện thoại..."
+      add-button-label="+ Thêm tài khoản"
       :show-add-button="false"
       @reset="resetFilters"
       @add="openCreate"
@@ -210,8 +222,8 @@ async function handleDelete() {
     <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs">
       <div class="mb-4 flex items-center justify-between">
         <div>
-          <h2 class="text-base font-bold text-slate-800">Danh sách Tài khoản</h2>
-          <p class="text-xs text-slate-400 mt-0.5">Tất cả tài khoản định danh trong hệ thống</p>
+          <h2 class="text-base font-bold text-slate-800">Danh sách Người dùng</h2>
+          <p class="text-xs text-slate-400 mt-0.5">Hiển thị thông tin tài khoản và vai trò phân quyền</p>
         </div>
       </div>
 
@@ -228,7 +240,7 @@ async function handleDelete() {
             <tr class="border-b border-slate-100 bg-slate-50/75 text-xs font-semibold uppercase tracking-wider text-slate-500">
               <th class="px-4 py-3.5">#</th>
               <th class="px-4 py-3.5">Người dùng</th>
-              <th class="px-4 py-3.5">Email / Số điện thoại</th>
+              <th class="px-4 py-3.5">Liên hệ</th>
               <th class="px-4 py-3.5">Vai trò</th>
               <th class="px-4 py-3.5">Trạng thái</th>
               <th class="px-4 py-3.5">Ngày tạo</th>
@@ -262,11 +274,15 @@ async function handleDelete() {
                 <div class="text-slate-400 mt-0.5">{{ account.phoneNumber || '—' }}</div>
               </td>
 
-              <!-- Role -->
+              <!-- Role (Hiển thị đầy đủ các vai trò với Lễ tân / Admin ưu tiên trước) -->
               <td class="px-4 py-3.5">
-                <AdminRoleBadge
-                  :role="account.roles?.[0] || 'Patient'"
-                />
+                <div class="flex flex-wrap gap-1">
+                  <AdminRoleBadge
+                    v-for="role in getSortedRoles(account.roles)"
+                    :key="role"
+                    :role="role"
+                  />
+                </div>
               </td>
 
               <!-- Status -->
@@ -314,7 +330,7 @@ async function handleDelete() {
             <!-- Empty State -->
             <tr v-if="!accounts || accounts.length === 0">
               <td colspan="7" class="px-4 py-12 text-center text-slate-400 text-sm">
-                Không tìm thấy tài khoản phù hợp.
+                Không tìm thấy tài khoản phù hợp với điều kiện lọc.
               </td>
             </tr>
           </tbody>
@@ -329,16 +345,16 @@ async function handleDelete() {
       />
     </div>
 
-    <!-- User Form Dialog -->
+    <!-- Account Form Dialog (Create / Edit) -->
     <UserFormDialog
       :open="formDialogOpen"
-      :initial="editingUser"
+      :initial="editingAccount"
       :submitting="submitting"
       @close="formDialogOpen = false"
       @submit="handleFormSubmit"
     />
 
-    <!-- User Detail Modal -->
+    <!-- Account Details Modal -->
     <BaseModal
       :open="viewModalOpen"
       title="Chi tiết Tài khoản"
@@ -346,52 +362,58 @@ async function handleDelete() {
       icon="👤"
       @close="viewModalOpen = false"
     >
-      <div v-if="viewingUser" class="space-y-4 text-sm">
+      <div v-if="viewingAccount" class="space-y-4 text-sm">
         <div class="flex items-center gap-3.5 pb-4 border-b border-slate-100">
-          <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-lg">
-            {{ (viewingUser.fullName || viewingUser.name || viewingUser.username || 'U').charAt(0).toUpperCase() }}
+          <div class="w-12 h-12 rounded-full bg-[#0E4D92]/10 text-[#0E4D92] flex items-center justify-center font-bold text-lg">
+            {{ (viewingAccount.fullName || viewingAccount.username || 'U').charAt(0).toUpperCase() }}
           </div>
           <div>
-            <h3 class="text-base font-bold text-slate-800">{{ viewingUser.fullName || viewingUser.name }}</h3>
-            <p class="text-xs text-slate-500 font-mono">@{{ viewingUser.username }}</p>
+            <h3 class="text-base font-bold text-slate-800">{{ viewingAccount.fullName || viewingAccount.name || viewingAccount.username }}</h3>
+            <p class="text-xs text-slate-500 font-mono">@{{ viewingAccount.username }}</p>
           </div>
         </div>
 
         <div class="grid grid-cols-2 gap-3 text-xs">
           <div>
-            <span class="text-slate-400 block">Email:</span>
-            <span class="font-medium text-slate-700">{{ viewingUser.email || '—' }}</span>
-          </div>
-          <div>
             <span class="text-slate-400 block">Số điện thoại:</span>
-            <span class="font-medium text-slate-700">{{ viewingUser.phoneNumber || '—' }}</span>
+            <span class="font-medium text-slate-700">{{ viewingAccount.phoneNumber || '—' }}</span>
           </div>
           <div>
-            <span class="text-slate-400 block">Vai trò:</span>
-            <AdminRoleBadge :role="viewingUser.roles?.[0] || 'Patient'" />
+            <span class="text-slate-400 block">Email:</span>
+            <span class="font-medium text-slate-700">{{ viewingAccount.email || '—' }}</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block mb-1">Vai trò:</span>
+            <div class="flex flex-wrap gap-1">
+              <AdminRoleBadge
+                v-for="role in getSortedRoles(viewingAccount.roles)"
+                :key="role"
+                :role="role"
+              />
+            </div>
           </div>
           <div>
             <span class="text-slate-400 block">Trạng thái:</span>
-            <BaseStatusBadge :status="viewingUser.isActive === false ? 'inactive' : 'active'" />
+            <BaseStatusBadge :status="viewingAccount.isActive === false ? 'inactive' : 'active'" />
           </div>
         </div>
       </div>
     </BaseModal>
 
-    <!-- Delete Confirmation Modal -->
+    <!-- Delete/Lock Confirmation Modal -->
     <BaseModal
       :open="deleteConfirmOpen"
-      title="Xác nhận vô hiệu hóa"
+      title="Xác nhận khóa tài khoản"
       size="sm"
       icon="🔒"
       @close="deleteConfirmOpen = false"
     >
       <p class="text-sm text-slate-600">
-        Bạn có chắc chắn muốn khóa tài khoản <strong class="text-slate-800">@{{ deletingUser?.username }}</strong> không?
+        Bạn có chắc chắn muốn vô hiệu hóa / khóa tài khoản <strong class="text-slate-800">@{{ deletingAccount?.username }}</strong> không?
       </p>
       <template #footer>
         <BaseButton variant="outline" size="sm" @click="deleteConfirmOpen = false">Hủy</BaseButton>
-        <BaseButton variant="danger" size="sm" :loading="deleting" @click="handleDelete">Xác nhận</BaseButton>
+        <BaseButton variant="danger" size="sm" :loading="deleting" @click="handleDelete">Khóa tài khoản</BaseButton>
       </template>
     </BaseModal>
   </div>

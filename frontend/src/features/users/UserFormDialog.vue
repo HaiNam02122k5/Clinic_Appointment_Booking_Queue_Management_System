@@ -116,8 +116,8 @@ function handleSubmit() {
 <template>
   <BaseModal
     :open="open"
-    :title="initial ? 'Chỉnh sửa tài khoản' : 'Thêm tài khoản mới'"
-    :subtitle="initial ? 'Cập nhật quyền hạn và thông tin người dùng' : 'Tạo tài khoản và phân quyền truy cập hệ thống'"
+    :title="initial ? 'Chỉnh sửa tài khoản' : 'Thêm tài khoản nhân viên'"
+    :subtitle="initial ? 'Cập nhật quyền hạn và thông tin người dùng' : 'Tạo tài khoản quản trị viên hoặc lễ tân phòng khám'"
     size="md"
     icon="👤"
     @close="emit('close')"
@@ -133,18 +133,21 @@ function handleSubmit() {
       />
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <!-- Vai trò (Role) -->
-        <BaseSelect
-          v-model="form.role"
-          label="Vai trò hệ thống"
-          required
-          :options="[
-            { value: 'Admin', label: 'Quản trị viên (Admin)' },
-            { value: 'Doctor', label: 'Bác sĩ (Doctor)' },
-            { value: 'Receptionist', label: 'Lễ tân (Receptionist)' },
-            { value: 'Patient', label: 'Bệnh nhân (Patient)' },
-          ]"
-        />
+        <!-- Vai trò (Role) - Chỉ cho phép Lễ tân & Admin -->
+        <div>
+          <BaseSelect
+            v-model="form.role"
+            label="Vai trò hệ thống"
+            required
+            :options="[
+              { value: 'Receptionist', label: 'Lễ tân (Receptionist)' },
+              { value: 'Admin', label: 'Quản trị viên (Admin)' },
+            ]"
+          />
+          <p class="text-[11px] text-slate-400 mt-1">
+            * Tài khoản Bác sĩ được tạo tại mục <strong class="text-[#0E4D92]">Quản lý Bác sĩ</strong>.
+          </p>
+        </div>
 
         <!-- Số điện thoại -->
         <BaseInput

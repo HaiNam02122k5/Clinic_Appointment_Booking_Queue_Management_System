@@ -82,7 +82,7 @@ export const usersApi = {
   // GET /admin/users/all-brief
   listAllBrief: async (): Promise<User[]> => {
     const res = await http.get<any>('/admin/users/all-brief').then((r) => r.data)
-    const data = res?.result !== undefined ? res.result : res
+    const data = (res as any)?.result !== undefined ? (res as any).result : res
     const rawList = Array.isArray(data) ? data : (data?.items || [])
 
     return rawList.map((u: any) => ({
@@ -113,24 +113,12 @@ export const usersApi = {
     }
   },
 
-  // POST /employees (or /auth/register for Patient)
+  // POST /employees (tạo nhân viên Lễ tân / Admin)
   create: (input: CreateUserInput) => {
-    if (input.role?.toLowerCase() === 'patient') {
-      return http
-        .post('/auth/register', {
-          username: input.username,
-          password: input.password,
-          fullName: input.fullName,
-          phoneNumber: input.phoneNumber || '0901234567',
-          email: input.email || undefined,
-        })
-        .then((r) => r.data?.result ?? r.data)
-    }
-
     const payload = {
       username: input.username,
       password: input.password,
-      fullName: input.fullName,
+      fullName: input.fullName || input.name || input.username,
       phoneNumber: input.phoneNumber || '0901234567',
       email: input.email || `${input.username.toLowerCase()}@clinic.vn`,
       dateOfBirth: '2000-01-01',
@@ -145,7 +133,7 @@ export const usersApi = {
   // PUT /employees/{id}
   update: (id: string, input: UpdateUserInput) => {
     const payload = {
-      fullName: input.fullName,
+      fullName: input.fullName || input.name || input.username,
       phoneNumber: input.phoneNumber || '0901234567',
       email: input.email || undefined,
       dateOfBirth: '2000-01-01',
