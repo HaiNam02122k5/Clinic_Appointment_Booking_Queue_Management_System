@@ -74,7 +74,7 @@ namespace Clinic.Application.Notifications.Dispatchers
                         }
                         break;
                 }
-            });
+            };
         }
     }
 }

@@ -20,7 +20,8 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
 
         public async Task<IEnumerable<Notification>> GetAllScheduledAndFailedByAsync(DateTimeOffset time, CancellationToken stoppingToken)
         {
-            return await _context.Notifications.Where(n => n.Status == NotificationStatus.Failed || (n.ScheduledAt != null && n.ScheduledAt <= time && n.Status == NotificationStatus.Pending)).ToListAsync(stoppingToken);
+            return await _context.Notifications.Include(n => n.Person).ThenInclude(p => p.User)
+                .Where(n => n.Status == NotificationStatus.Failed || (n.ScheduledAt != null && n.ScheduledAt <= time && n.Status == NotificationStatus.Pending)).ToListAsync(stoppingToken);
         }
 
         public async Task<Notification?> GetByIdAsync(Guid id, CancellationToken cancellationToken)

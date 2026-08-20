@@ -5,8 +5,18 @@ namespace Clinic.Application.Services
 {
     public class NotificationQueue : INotificationQueue
     {
-        private readonly Channel<INotificationJob> _queue =
-            Channel.CreateUnbounded<INotificationJob>();
+        private readonly Channel<INotificationJob> _queue;
+            
+        public NotificationQueue()
+        {
+            _queue = Channel.CreateBounded<INotificationJob>(
+            new BoundedChannelOptions(500)
+            {
+                FullMode = BoundedChannelFullMode.Wait,
+                SingleReader = true,
+                SingleWriter = false
+            });
+        }
 
         public ValueTask EnqueueAsync(
             INotificationJob job,
