@@ -2,6 +2,7 @@ using Clinic.API.Models;
 using Clinic.Application.Contracts;
 using Clinic.Application.Features.Admin.Queries;
 using Clinic.Application.Features.Appointments.Queries;
+using Clinic.Application.Features.Doctors.Queries;
 using Clinic.Application.Features.Users.Queries;
 using MapsterMapper;
 using MediatR;
@@ -64,6 +65,17 @@ namespace Clinic.API.Controllers
         public async Task<IActionResult> GetUserById(Guid userId)
         {
             var command = new GetUserQuery(userId);
+            var result = await _sender.Send(command);
+            return Ok(result);
+        }
+
+        [HttpGet("doctors/{doctorId}")]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(typeof(DoctorDetailDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetDoctorById(Guid doctorId)
+        {
+            var command = new GetDoctorQuery(doctorId);
             var result = await _sender.Send(command);
             return Ok(result);
         }
