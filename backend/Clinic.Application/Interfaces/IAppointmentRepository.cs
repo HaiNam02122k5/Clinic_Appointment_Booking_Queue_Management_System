@@ -35,6 +35,9 @@ namespace Clinic.Application.Interfaces
         /// Gets the changelog of an appointment, including all snapshots of the appointment's state over time, doctor, patient, and updator information.
         /// </summary>
         Task<Appointment?> GetAppointmentChangelogAsync(Guid appointmentId);
+        Task<Dictionary<string, IValueWithChange>> GetDashboardData();
+        Task<StatisticsDataDto> GetStatistics(bool isWeekPeriod);
+        Task<PagedResult<Appointment>> GetAppointmentsByDateAsync(DateOnly date, int pageNumber, int pageSize);
         Task AddAsync(Appointment appointment);
     }
 }

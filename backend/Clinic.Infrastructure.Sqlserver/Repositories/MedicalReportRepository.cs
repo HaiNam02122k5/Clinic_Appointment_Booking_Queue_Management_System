@@ -1,4 +1,4 @@
-﻿using Clinic.Application.Interfaces;
+using Clinic.Application.Interfaces;
 using Clinic.Domain.Entities;
 using Clinic.Infrastructure.Sqlserver.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +14,11 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             _context = context;
         }
 
+        public async Task AddAsync(MedicalReport report)
+        {
+            await _context.MedicalReports.AddAsync(report);
+        }
+
         /// <summary>
         /// Lấy 1 hồ sơ khám bệnh, kèm QueueTicket -> Appointment -> WorkSchedule (Doctor) và Appointment.Patient
         /// để phục vụ resource-based authorization (own/related/any).
@@ -25,10 +30,29 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                     .ThenInclude(qt => qt.Appointment)
                         .ThenInclude(a => a.WorkSchedule)
                             .ThenInclude(ws => ws.Doctor)
+                                .ThenInclude(d => d.Employee)
+                                    .ThenInclude(e => e.Person)
                 .Include(mr => mr.QueueTicket)
                     .ThenInclude(qt => qt.Appointment)
                         .ThenInclude(a => a.Patient)
-                .FirstOrDefaultAsync(mr => mr.Id == id);
+                            .ThenInclude(p => p.Person)
+                .FirstOrDefaultAsync(mr => mr.Id == id && !mr.IsDeleted);
+        }
+
+        public async Task<MedicalReport?> GetByQueueTicketIdAsync(Guid queueTicketId)
+        {
+            return await _context.MedicalReports
+                .Include(mr => mr.QueueTicket)
+                    .ThenInclude(qt => qt.Appointment)
+                        .ThenInclude(a => a.WorkSchedule)
+                            .ThenInclude(ws => ws.Doctor)
+                                .ThenInclude(d => d.Employee)
+                                    .ThenInclude(e => e.Person)
+                .Include(mr => mr.QueueTicket)
+                    .ThenInclude(qt => qt.Appointment)
+                        .ThenInclude(a => a.Patient)
+                            .ThenInclude(p => p.Person)
+                .FirstOrDefaultAsync(mr => mr.QueueTicketId == queueTicketId && !mr.IsDeleted);
         }
 
         /// <summary>
@@ -43,7 +67,11 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                             .ThenInclude(ws => ws.Doctor)
                                 .ThenInclude(d => d.Employee)
                                     .ThenInclude(e => e.Person)
-                .Where(mr => mr.QueueTicket.Appointment.PatientId == patientId)
+                .Include(mr => mr.QueueTicket)
+                    .ThenInclude(qt => qt.Appointment)
+                        .ThenInclude(a => a.Patient)
+                            .ThenInclude(p => p.Person)
+                .Where(mr => mr.QueueTicket.Appointment.PatientId == patientId && !mr.IsDeleted)
                 .OrderByDescending(mr => mr.CreatedAt)
                 .ToListAsync();
         }

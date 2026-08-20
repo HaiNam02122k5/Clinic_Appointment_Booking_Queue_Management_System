@@ -1,6 +1,7 @@
 using Clinic.Domain.Common;
 using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 
 namespace Clinic.Domain.Entities
 {
@@ -107,6 +108,14 @@ namespace Clinic.Domain.Entities
                 throw new ArgumentException($"User does not have the role '{role.Name}' assigned.");
             UserRoles.Remove(userRole);
 
+            MarkUpdated();
+        }
+
+        public void ResetPassword(string newPasswordHash)
+        {
+            if (string.IsNullOrWhiteSpace(newPasswordHash))
+                throw new ArgumentException("New password hash cannot be null or empty.", nameof(newPasswordHash));
+            PasswordHash = newPasswordHash;
             MarkUpdated();
         }
     }
