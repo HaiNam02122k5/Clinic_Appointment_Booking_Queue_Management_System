@@ -39,7 +39,7 @@ namespace Clinic.Application.Features.WorkSchedules.Commands
             {
                 throw new NotFoundException("Shift request not found");
             }
-            if (shiftRequest.DoctorId != user.Person.Employee.Doctor.Id)
+            if (user.Person.Employee?.Doctor == null || shiftRequest.DoctorId != user.Person.Employee.Doctor.Id)
             {
                 throw new ForbiddenException("You are not authorized to update this shift request");
             }

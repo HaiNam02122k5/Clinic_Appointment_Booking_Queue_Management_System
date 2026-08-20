@@ -26,7 +26,7 @@ namespace Clinic.API.Controllers
         }
 
         [HttpGet]
-        [AllowAnonymous]
+        [Authorize(Policy = "Permission:shift.self-manage")]
         [ProducesResponseType(typeof(DoctorScheduleDto<WorkScheduleDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -35,7 +35,7 @@ namespace Clinic.API.Controllers
             var doctorId = _currentUser.DoctorId;
             if (doctorId == null)
             {
-                return Forbid("You are not a doctor. To view doctor schedules, use the doctor-specific endpoint.");
+                return Forbid();
             }
             var command = new GetDoctorSchedulesQuery(doctorId, query.StartDate, query.EndDate);
             var result = await _sender.Send(command);
@@ -61,27 +61,27 @@ namespace Clinic.API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Cancel([FromRoute] Guid shiftId, [FromBody] CancelShiftRequest request)
         {
-            var command = new CancelWorkScheduleCommand(shiftId, request.Reason);
+            var userId = _currentUser.UserId ?? throw new UnauthorizedAccessException();
+            var command = new CancelWorkScheduleCommand(userId, shiftId, request.Reason);
             await _sender.Send(command);
             return NoContent();
         }
 
         // Pls add a policy to allow doctor only for this endpoint
         [HttpPost("suggestions")]
-        [Authorize(Policy = "Permission:shift.self-manage")]
+        [Authorize(Policy = "Permission:shift.suggestion.self-manage")]
         [ProducesResponseType(typeof(RequestedShiftDto), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateSuggestion([FromBody] CreateShiftSuggestionRequest request)
         {
             var userId = _currentUser.UserId;
-            var command = new AddDoctorShiftRequestCommand(userId, request.Date, request.StartTime, request.EndTime, request.PatientLimitPerSlot, request.Reason);
+            var command = new AddDoctorShiftRequestCommand(userId, request.Date, request.StartTime, request.EndTime, request.PatientLimit, request.Reason);
             var result = await _sender.Send(command);
             return Created((string?)null, result);
         }
 
-        // Pls add a policy to allow doctor only for this endpoint
         [HttpPatch("suggestions/{suggestionId}")]
-        [Authorize(Policy = "Permission:shift.suggestion.manage")]
+        [Authorize(Policy = "Permission:shift.suggestion.self-manage")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -93,9 +93,8 @@ namespace Clinic.API.Controllers
             return NoContent();
         }
 
-        // Pls add a policy to allow doctor only for this endpoint
         [HttpPost("suggestions/{suggestionId}/cancel")]
-        [Authorize(Policy = "Permission:shift.suggestion.manage")]
+        [Authorize(Policy = "Permission:shift.suggestion.self-manage")]
         public async Task<IActionResult> CancelSuggestion([FromRoute] Guid suggestionId)
         {
             var userId = _currentUser.UserId;
@@ -105,7 +104,6 @@ namespace Clinic.API.Controllers
         }
 
 
-        // Pls add a policy to allow admin only for this endpoint
         [HttpPost("suggestions/{suggestionId}/approve")]
         [Authorize(Policy = "Permission:shift.suggestion.manage")]
         public async Task<IActionResult> ApproveSuggestion([FromRoute] Guid suggestionId)
@@ -115,7 +113,6 @@ namespace Clinic.API.Controllers
             return NoContent();
         }
 
-        // Pls add a policy to allow admin only for this endpoint
         [HttpPost("suggestions/{suggestionId}/reject")]
         [Authorize(Policy = "Permission:shift.suggestion.manage")]
         public async Task<IActionResult> RejectSuggestion([FromRoute] Guid suggestionId)
@@ -127,15 +124,11 @@ namespace Clinic.API.Controllers
 
         // Pls add a policy to allow doctor only for this endpoint
         [HttpGet("suggestions")]
-        [Authorize(Policy = "Permission:shift.suggestion.manage")]
+        [Authorize(Policy = "Permission:shift.suggestion.self-manage")]
         public async Task<IActionResult> GetAllSuggestions([FromQuery] GetShiftsQuery query)
         {
-            var doctorId = _currentUser.DoctorId;
-            if (doctorId == null)
-            {
-                return Forbid("You are not a doctor. To view doctor schedule suggestions, use the doctor-specific endpoint.");
-            }
-            var command = new GetDoctorRequestedShiftsQuery(doctorId, query.StartDate, query.EndDate);
+            var userId = _currentUser.UserId ?? throw new UnauthorizedAccessException("User not authenticated.");
+            var command = new GetDoctorRequestedShiftsQuery(userId, query.StartDate, query.EndDate);
             var schedules = await _sender.Send(command);
             return Ok(schedules);
         }

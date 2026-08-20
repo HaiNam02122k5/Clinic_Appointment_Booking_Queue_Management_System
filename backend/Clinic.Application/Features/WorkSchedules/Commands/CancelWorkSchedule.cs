@@ -11,6 +11,7 @@ namespace Clinic.Application.Features.WorkSchedules.Commands
 {
     // Use-case: Admin cancels a work schedule for a doctor, with a reason for cancellation to notify the doctor and patients
     public record CancelWorkScheduleCommand(
+        Guid UserId,
         Guid Id,
         string Reason
     ) : IRequest<Guid>;
@@ -32,10 +33,9 @@ namespace Clinic.Application.Features.WorkSchedules.Commands
             if (workSchedule == null) throw new NotFoundException("Work schedule not found.");
 
             workSchedule.Cancel(request.Reason);
-
-            // Notify the doctor about the cancellation (Should I notify the doctor too? or they already know about it?)
             foreach (var appointment in workSchedule.Appointments)
             {
+                appointment.AdminCancel(request.UserId);
                 await _notificationQueue.EnqueueAsync(new NotificationJob<Appointment>(
                     appointment.Patient.Person,
                     appointment,

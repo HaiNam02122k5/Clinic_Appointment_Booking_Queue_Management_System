@@ -30,7 +30,6 @@ namespace Clinic.Domain.Entities
         public WorkSchedule(Doctor doctor, DateOnly date, TimeOnly shiftStart, TimeOnly shiftEnd, int patientLimit)
         {
             var utcStart = new TimeConverter().ConvertToUtc(new DateTime(date, shiftStart));
-
             if (doctor == null) throw new ArgumentNullException(nameof(doctor));
             if (utcStart < DateTime.UtcNow) throw new ArgumentException("Shift start time must be in the future.");
             if (shiftStart >= shiftEnd) throw new ArgumentException("Shift start time must be before shift end time.");
@@ -63,6 +62,7 @@ namespace Clinic.Domain.Entities
             if (utcNewStart != utcStart && utcNewStart < DateTime.UtcNow) throw new ArgumentException("New shift start time must be in the future.");
             if (newShiftStart >= newShiftEnd) throw new ArgumentException("New shift start time must be before new shift end time.");
             if (newPatientLimit <= 0) throw new ArgumentException("New patient limit per slot must be greater than zero.");
+            Date = newDate;
             ShiftStart = newShiftStart;
             ShiftEnd = newShiftEnd;
             PatientLimit = newPatientLimit;
@@ -105,19 +105,27 @@ namespace Clinic.Domain.Entities
         /// <exception cref="InvalidOperationException"></exception>
         public void AddAppointment(Appointment appointment)
         {
-            if (Appointments.Any(a => a.TimeSlot == appointment.TimeSlot && a.Status != AppointmentStatus.Cancelled && !a.IsDeleted && a.Id != appointment.Id))
-                throw new ConflictException("An appointment already exists for this time slot.");
-            if (Status == WorkScheduleStatus.Cancelled)
+            // Only check for conflicts if the appointment is not a walk-in.
+            if (!appointment.IsWalkIn)
             {
-                throw new InvalidOperationException("Cannot add an appointment to a cancelled work schedule.");
+                if (Appointments.Any(a => !a.IsWalkIn && a.TimeSlot == appointment.TimeSlot && a.Status != AppointmentStatus.Cancelled && !a.IsDeleted && a.Id != appointment.Id))
+                    throw new ConflictException("An appointment already exists for this time slot.");
+                if (Status == WorkScheduleStatus.Full)
+                {
+                    throw new ConflictException("Cannot add an appointment to a full work schedule.");
+                }
             }
             if (Appointments.Any(a => a.Id == appointment.Id))
             {
                 return; // Appointment already belongs to this work schedule
             }
-            if (Status == WorkScheduleStatus.Full)
+            if (appointment.TimeSlot < ShiftStart || appointment.TimeSlot >= ShiftEnd)
             {
-                throw new ConflictException("Cannot add an appointment to a full work schedule.");
+                throw new ArgumentOutOfRangeException(nameof(appointment.TimeSlot), $"Appointment time slot must be within the work schedule ({ShiftStart} - {ShiftEnd}).");
+            }
+            if (Status == WorkScheduleStatus.Cancelled)
+            {
+                throw new InvalidOperationException("Cannot add an appointment to a cancelled work schedule.");
             }
             Appointments.Add(appointment);
             if (Appointments.Count(a => a.Status != AppointmentStatus.Cancelled && a.IsDeleted == false) >= PatientLimit)

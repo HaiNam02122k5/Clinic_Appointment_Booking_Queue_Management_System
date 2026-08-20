@@ -15,6 +15,7 @@ namespace Clinic.Application.Contracts
         public TimeOnly TimeSlot { get; set; }
         public DateOnly Date { get; set; }
         public string Reason { get; set; }
+        public bool IsWalkIn { get; set; }
         public AppointmentStatus Status { get; set; }
         public DateTime CreatedAt { get; set; }
     }

@@ -1,7 +1,7 @@
-﻿using Clinic.Application.Interfaces;
+using Clinic.Application.Common.Exceptions;
+using Clinic.Application.Interfaces;
 using Clinic.Domain.Common.Exceptions;
 using Clinic.Infrastructure.Sqlserver.Persistence;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
@@ -10,13 +10,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
     public class UnitOfWork : IUnitOfWork
     {
         private readonly ApplicationDbContext _context;
-        private IDbContextTransaction? _transaction;
-
-        private static bool IsUniqueConstraintViolation(DbUpdateException ex)
-        {
-            return ex.InnerException is SqlException sqlException
-                && sqlException.Number is 2601 or 2627;
-        }
+        private IDbContextTransaction? _currentTransaction;
 
         public UnitOfWork(ApplicationDbContext context)
         {
@@ -29,33 +23,62 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             {
                 return await _context.SaveChangesAsync(cancellationToken);
             }
-            catch (DbUpdateException ex) when (IsUniqueConstraintViolation(ex))
+            catch (DbUpdateConcurrencyException)
             {
-                throw new ConflictException("Resource already exists.");
+                // RowVersion không khớp - bản ghi đã bị request khác cập nhật trước.
+                // Dịch sang exception riêng của Application để Infrastructure (EF Core)
+                // không rò rỉ lên Handler, giữ đúng ranh giới Clean Architecture.
+                throw new ConcurrencyConflictException(
+                    "Dữ liệu đã bị thay đổi bởi thao tác khác, vui lòng thử lại.");
             }
         }
 
         public async Task InitializeTransactionLockAsync(CancellationToken cancellationToken = default)
         {
-            _transaction = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken);
+            // Tránh mở đè 1 transaction khác lên transaction đang mở dở nếu handler lỡ gọi
+            // 2 lần - giữ nguyên transaction đầu tiên, không rò rỉ connection.
+            if (_currentTransaction != null)
+            {
+                return;
+            }
+
+            _currentTransaction = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken);
         }
 
         public async Task CommitTransactionAsync(CancellationToken cancellationToken = default)
         {
-            if (_transaction == null)
+            if (_currentTransaction == null)
             {
-                throw new InvalidOperationException("No transaction has been initialized.");
+                return;
             }
-            await _transaction.CommitAsync(cancellationToken);
+
+            try
+            {
+                await _currentTransaction.CommitAsync(cancellationToken);
+            }
+            finally
+            {
+                await _currentTransaction.DisposeAsync();
+                _currentTransaction = null;
+            }
         }
 
         public async Task RollbackTransactionAsync(CancellationToken cancellationToken = default)
         {
-            if (_transaction == null)
+            if (_currentTransaction == null)
             {
-                throw new InvalidOperationException("No transaction has been initialized.");
+                return;
             }
-            await _transaction.RollbackAsync(cancellationToken);
+
+            try
+            {
+                await _currentTransaction.RollbackAsync(cancellationToken);
+            }
+            finally
+            {
+                await _currentTransaction.DisposeAsync();
+                _currentTransaction = null;
+            }
         }
     }
 }

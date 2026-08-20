@@ -94,7 +94,6 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Queries
             await Assert.ThrowsAsync<ForbiddenException>(async () => await handler.Handle(query2, CancellationToken.None));
 
             // Not the same doctor
-            Console.WriteLine("Start");
             var query3 = new GetDoctorRequestedShiftsQuery(doctor2.Employee.Person.User.Id, DateOnly.FromDateTime(DateTime.UtcNow.AddMinutes(-1)), DateOnly.FromDateTime(DateTime.UtcNow.AddDays(15)), doctor.Id);
             await Assert.ThrowsAsync<ForbiddenException>(async () => await handler.Handle(query3, CancellationToken.None));
         }

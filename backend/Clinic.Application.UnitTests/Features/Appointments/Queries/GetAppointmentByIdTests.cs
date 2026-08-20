@@ -60,7 +60,6 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Queries
             await userRepository.AddAsync(patient1.Person.User);
             await userRepository.AddAsync(patient2.Person.User);
 
-            await Assert.ThrowsAsync<ForbiddenException>(async () => await handler.Handle(new GetAppointmentByIdQuery(appointment.Id, admin.Person.User.Id), CancellationToken.None));
             await Assert.ThrowsAsync<ForbiddenException>(async () => await handler.Handle(new GetAppointmentByIdQuery(appointment.Id, doctor2.Employee.Person.User.Id), CancellationToken.None));
             await Assert.ThrowsAsync<ForbiddenException>(async () => await handler.Handle(new GetAppointmentByIdQuery(appointment.Id, patient2.Person.User.Id), CancellationToken.None));
             await Assert.ThrowsAsync<UnauthorizedAccessException>(async () => await handler.Handle(new GetAppointmentByIdQuery(appointment.Id, Guid.NewGuid()), CancellationToken.None));

@@ -43,7 +43,12 @@ namespace Clinic.Application.Features.Employees.Commands
         public async Task<EmployeeSummaryDto> Handle(CreateEmployeeCommand request, CancellationToken cancellationToken)
         {
             var person = await _personService.CreateOrGetPersonAsync(request.FullName, request.PhoneNumber, request.Email, request.DateOfBirth, request.Gender, request.Address);
+
             var user = await _userService.CreateUserAsync(request.Username, request.Password, person);
+            if (request.Roles == null || !request.Roles.Any())
+            {
+                throw new ArgumentException("At least one role must be specified.");
+            }
             foreach (var roleName in request.Roles)
             {
                 Role role = await _roleRepository.GetByNameAsync(roleName.Trim());
@@ -51,9 +56,24 @@ namespace Clinic.Application.Features.Employees.Commands
                 {
                     throw new ArgumentException($"Role '{roleName}' does not exist.");
                 }
+                if (role.Name == "Doctor" || role.Name == "Patient")
+                {
+                    throw new ArgumentException($"Role '{roleName}' is not allowed in this endpoint. For creating doctor, use POST /doctors instead. For registering an account for patient, use POST /register instead.");
+                }
                 user.AssignRole(role);
             }
             var employee = new Employee(person, request.HireDate);
+            if (person.Patient == null)
+            {
+                var patient = new Patient(person, null, null);
+                var patientRole = await _roleRepository.GetByNameAsync("Patient");
+                if (patientRole == null)
+                {
+                    throw new ArgumentException("Role 'Patient' does not exist.");
+                }
+                user.AssignRole(patientRole);
+                person.Patient = patient;
+            }
             await _employeeRepository.AddAsync(employee);
             await _unitOfWork.SaveChangesAsync();
             return new EmployeeSummaryDto

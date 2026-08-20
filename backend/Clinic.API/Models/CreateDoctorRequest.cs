@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Clinic.API.Models
 {
-    public class CreateDoctorRequest
+    public class CreateDoctorRequest : CreateDoctorTemplate
     {
         [Required(ErrorMessage = "Username is required."), MaxLength(50, ErrorMessage = "Username cannot exceed 50 characters."), MinLength(6, ErrorMessage = "Username must be at least 6 characters long.")]
         public string Username { get; set; }
@@ -13,27 +13,11 @@ namespace Clinic.API.Models
         public string FullName { get; set; }
         [Required(ErrorMessage = "Phone number is required."), MaxLength(15, ErrorMessage = "Phone number cannot exceed 15 characters.")]
         public string PhoneNumber { get; set; }
-        [Required(ErrorMessage = "Email is required."), EmailAddress(ErrorMessage = "Invalid email address.")]
-        public string Email { get; set; }
         [Required(ErrorMessage = "Date of birth is required.")]
         public DateOnly DateOfBirth { get; set; }
         [Required(ErrorMessage = "Gender is required.")]
         public Gender Gender { get; set; }
-        [Required(ErrorMessage = "Address is required."), MaxLength(200, ErrorMessage = "Address cannot exceed 200 characters.")]
-        public string Address { get; set; }
-        [Required(ErrorMessage = "Hire date is required.")]
-        public DateOnly HireDate { get; set; }
-        [Required(ErrorMessage = "License number is required."), MaxLength(50, ErrorMessage = "License number cannot exceed 50 characters.")]
-        public string LicenseNumber { get; set; }
-        [Required(ErrorMessage = "Qualification is required."), MaxLength(100, ErrorMessage = "Qualification cannot exceed 100 characters.")]
-        public string Qualification { get; set; }
         [MaxLength(500, ErrorMessage = "Biography cannot exceed 500 characters.")]
         public string? Biography { get; set; }
-        [Required(ErrorMessage = "Experience years is required."), Range(0, 100, ErrorMessage = "Experience years must be between 0 and 100.")]
-        public int ExperienceYears { get; set; }
-        [Required(ErrorMessage = "Specialty ID is required.")]
-        public Guid SpecialtyId { get; set; }
-        [Required(ErrorMessage = "Status is required.")]
-        public DoctorStatus Status { get; set; }
     }
 }

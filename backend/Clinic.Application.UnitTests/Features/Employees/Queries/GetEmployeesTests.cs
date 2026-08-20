@@ -61,7 +61,7 @@ namespace Clinic.Application.UnitTests.Features.Employees.Queries
             var employee2 = TestDataFactory.CreateEmployee(person: person2);
             await employeeRepository.AddAsync(employee1);
             await employeeRepository.AddAsync(employee2);
-            var query = new GetEmployeesQuery(SortBy: "dateOfBirth", OrderBy: "asc");
+            var query = new GetEmployeesQuery(SortBy: "dateOfBirth", Descending: false);
             var result = await handler.Handle(query, CancellationToken.None);
             Assert.Equal(2, result.Items.Count);
             Assert.Equal(employee2.Id, result.Items[0].Id);
@@ -112,7 +112,7 @@ namespace Clinic.Application.UnitTests.Features.Employees.Queries
                 var employee = TestDataFactory.CreateEmployee(person: person);
                 await employeeRepository.AddAsync(employee);
             }
-            var query = new GetEmployeesQuery(Page: 2, PageSize: 10);
+            var query = new GetEmployeesQuery(PageNumber: 2, PageSize: 10);
             var result = await handler.Handle(query, CancellationToken.None);
             Assert.Equal(5, result.Items.Count);
             Assert.Equal(15, result.TotalCount);

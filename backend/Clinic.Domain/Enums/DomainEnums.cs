@@ -40,7 +40,9 @@ namespace Clinic.Domain.Enums
         Called,
         InProgress,
         Completed,
-        Skipped
+        Skipped,
+        /// <summary>Vé bị hủy vì Appointment gốc bị hủy sau khi đã check-in (còn Waiting/Called).</summary>
+        Cancelled
     }
 
     public enum NotificationType
@@ -83,14 +85,14 @@ namespace Clinic.Domain.Enums
         Rejected,
         Cancelled
     }
-    public enum DoctorStatus 
-    { 
-        Active, 
-        Inactive 
+    public enum DoctorStatus
+    {
+        Active,
+        Inactive
     }
-    public enum MedicalReportStatus 
-    { 
-        Draft, 
-        Finalized 
+    public enum MedicalReportStatus
+    {
+        Draft,
+        Finalized
     }
 }

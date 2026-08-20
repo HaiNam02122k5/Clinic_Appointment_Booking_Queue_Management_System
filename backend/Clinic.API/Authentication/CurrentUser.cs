@@ -39,6 +39,17 @@ namespace Clinic.API.Authentication
             }
         }
 
+        public Guid? EmployeeId
+        {
+            get
+            {
+                var value = _httpContextAccessor.HttpContext?.User?
+                    .FindFirst("employeeId")?.Value;
+
+                return Guid.TryParse(value, out var id) ? id : null;
+            }
+        }
+
         public Guid? DoctorId
         {
             get

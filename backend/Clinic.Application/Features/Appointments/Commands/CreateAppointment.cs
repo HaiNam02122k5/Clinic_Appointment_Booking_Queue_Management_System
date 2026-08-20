@@ -13,6 +13,7 @@ namespace Clinic.Application.Features.Appointments.Commands
         Guid WorkScheduleId,
         TimeOnly TimeSlot,
         string Reason,
+        bool IsWalkIn,
         Guid? PatientId = null
     ) : IRequest<AppointmentDto>;
     public class CreateAppointmentCommandHandler : IRequestHandler<CreateAppointmentCommand, AppointmentDto>
@@ -47,7 +48,7 @@ namespace Clinic.Application.Features.Appointments.Commands
                 {
                     throw new NotFoundException($"Work schedule not found.");
                 }
-                var appointment = new Appointment(patient, workSchedule, request.TimeSlot, request.Reason, (Guid)request.UserId);
+                var appointment = new Appointment(patient, workSchedule, request.TimeSlot, request.Reason, (Guid)request.UserId, request.IsWalkIn);
                 workSchedule.AddAppointment(appointment);
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
                 await _unitOfWork.CommitTransactionAsync(cancellationToken);

@@ -120,7 +120,7 @@ namespace Clinic.Domain.UnitTests
             var employee = new Employee(person, DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-30)));
             var doctor = new Doctor(employee, "123ABC", "Tien si", new Specialty("name", "", DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-30))), 0);
             var workSchedule = new WorkSchedule(doctor, DateOnly.FromDateTime(now), TimeOnly.FromDateTime(now.AddHours(1)), TimeOnly.FromDateTime(now.AddHours(2)), 2);
-            var patient = new Patient { Person = person, InsuranceNumber = "INS123", EmergencyContact = "00000000" };
+            var patient = new Patient(person, "INS123", "00000000");
             var appointment = new Appointment(patient, workSchedule, TimeOnly.FromDateTime(now.AddHours(1)), "Reason", Guid.NewGuid());
 
             workSchedule.AddAppointment(appointment);

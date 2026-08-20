@@ -13,7 +13,8 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Commands
             var workScheduleRepository = new FakeWorkScheduleRepository();
             var patientRepository = new FakePatientRepository();
             var unitOfWork = new FakeUnitOfWork();
-            var handler = new CreateAppointmentCommandHandler(workScheduleRepository, patientRepository, unitOfWork);
+            var notiQueue = new FakeNotificationQueue();
+            var handler = new CreateAppointmentCommandHandler(workScheduleRepository, patientRepository, unitOfWork, notiQueue);
             var person = TestDataFactory.CreatePerson();
             var user = TestDataFactory.CreateUser(person: person);
             var patient = TestDataFactory.CreatePatient(person: person);
@@ -21,15 +22,16 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Commands
             await workScheduleRepository.AddWorkScheduleAsync(workSchedule);
             await patientRepository.AddAsync(patient);
 
-            var command = new CreateAppointmentCommand(user.Id, workSchedule.Id, new TimeOnly(10, 0), "Reason");
+            var command = new CreateAppointmentCommand(user.Id, workSchedule.Id, new TimeOnly(10, 0), "Reason", false);
             var result = await handler.Handle(command, CancellationToken.None);
             Assert.NotNull(workSchedule.Appointments.FirstOrDefault(a => a.Id == result.Id));
 
+            // Same time slot, but walk-in appointment should be allowed
             var receptionist = TestDataFactory.CreateUser();
             receptionist.AssignRole(TestDataFactory.RoleSet.First(r => r.Name == "Receptionist"));
-            var command2 = new CreateAppointmentCommand(receptionist.Id, workSchedule.Id, new TimeOnly(11, 0), "Reason", patient.Id);
+            var command2 = new CreateAppointmentCommand(receptionist.Id, workSchedule.Id, new TimeOnly(10, 0), "Reason", true, patient.Id);
             var result2 = await handler.Handle(command2, CancellationToken.None);
-            Assert.Equal(receptionist.Id, workSchedule.Appointments.FirstOrDefault(a => a.Id == result2.Id)?.CreatedByUserId);
+            Assert.Equal(receptionist.Id, workSchedule.Appointments.FirstOrDefault(a => a.Id == result2.Id)?.UpdatedByUserId);
         }
 
         [Fact]
@@ -38,7 +40,8 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Commands
             var workScheduleRepository = new FakeWorkScheduleRepository();
             var patientRepository = new FakePatientRepository();
             var unitOfWork = new FakeUnitOfWork();
-            var handler = new CreateAppointmentCommandHandler(workScheduleRepository, patientRepository, unitOfWork);
+            var notiQueue = new FakeNotificationQueue();
+            var handler = new CreateAppointmentCommandHandler(workScheduleRepository, patientRepository, unitOfWork, notiQueue);
             var person = TestDataFactory.CreatePerson();
             var user = TestDataFactory.CreateUser(person: person);
             var patient = TestDataFactory.CreatePatient(person: person);
@@ -46,7 +49,7 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Commands
             await workScheduleRepository.AddWorkScheduleAsync(workSchedule);
             await patientRepository.AddAsync(patient);
 
-            var command = new CreateAppointmentCommand(user.Id, Guid.NewGuid(), new TimeOnly(10, 0), "Reason");
+            var command = new CreateAppointmentCommand(user.Id, Guid.NewGuid(), new TimeOnly(10, 0), "Reason", false);
             await Assert.ThrowsAsync<NotFoundException>(async () => await handler.Handle(command, CancellationToken.None));
         }
 
@@ -56,7 +59,8 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Commands
             var workScheduleRepository = new FakeWorkScheduleRepository();
             var patientRepository = new FakePatientRepository();
             var unitOfWork = new FakeUnitOfWork();
-            var handler = new CreateAppointmentCommandHandler(workScheduleRepository, patientRepository, unitOfWork);
+            var notiQueue = new FakeNotificationQueue();
+            var handler = new CreateAppointmentCommandHandler(workScheduleRepository, patientRepository, unitOfWork, notiQueue);
             var person = TestDataFactory.CreatePerson();
             var user = TestDataFactory.CreateUser(person: person);
             var patient = TestDataFactory.CreatePatient(person: person);
@@ -64,7 +68,7 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Commands
             await workScheduleRepository.AddWorkScheduleAsync(workSchedule);
             await patientRepository.AddAsync(patient);
 
-            var command = new CreateAppointmentCommand(Guid.NewGuid(), workSchedule.Id, new TimeOnly(10, 0), "Reason");
+            var command = new CreateAppointmentCommand(Guid.NewGuid(), workSchedule.Id, new TimeOnly(10, 0), "Reason", false);
             await Assert.ThrowsAsync<NotFoundException>(async () => await handler.Handle(command, CancellationToken.None));
         }
     }

@@ -66,12 +66,12 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             {
                 query = query.Where(e => e.Status == status);
             }
-            if (roles != null && roles.Any())
+            if (roles != null && roles.Count != 0)
             {
                 query = query.Where(e => e.Person.User.UserRoles.Any(ur => roles.Contains(ur.Role.Name)));
             }
 
-            query = sortBy.ToLower() switch
+            query = sortBy?.ToLower() switch
             {
                 "fullname" => descending ? query.OrderByDescending(s => s.Person.FullName) : query.OrderBy(s => s.Person.FullName),
                 "dateofbirth" => descending ? query.OrderByDescending(s => s.Person.DateOfBirth) : query.OrderBy(s => s.Person.DateOfBirth),

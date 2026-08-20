@@ -17,7 +17,8 @@ namespace Clinic.Application.UnitTests.Features.Doctors.Commands
             var doctorRepository = new FakeDoctorRepository();
             var unitOfWork = new FakeUnitOfWork();
             var userRepo = new FakeUserRepository();
-            var handler = new UpdateDoctorCommandHandler(doctorRepository, userRepo, unitOfWork);
+            var personRepo = new FakePersonRepository();
+            var handler = new UpdateDoctorCommandHandler(doctorRepository, personRepo, userRepo, unitOfWork);
             var doctor = TestDataFactory.CreateDoctor();
             var admin = TestDataFactory.CreateEmployee(role: "Admin");
             await userRepo.AddAsync(doctor.Employee.Person.User);
@@ -66,7 +67,8 @@ namespace Clinic.Application.UnitTests.Features.Doctors.Commands
             var doctorRepository = new FakeDoctorRepository();
             var unitOfWork = new FakeUnitOfWork();
             var userRepo = new FakeUserRepository();
-            var handler = new UpdateDoctorCommandHandler(doctorRepository, userRepo, unitOfWork);
+            var personRepo = new FakePersonRepository();
+            var handler = new UpdateDoctorCommandHandler(doctorRepository, personRepo, userRepo, unitOfWork);
             var doctor = TestDataFactory.CreateDoctor();
             var admin = TestDataFactory.CreateEmployee(role: "Admin");
             await userRepo.AddAsync(doctor.Employee.Person.User);
@@ -112,7 +114,8 @@ namespace Clinic.Application.UnitTests.Features.Doctors.Commands
             var doctorRepository = new FakeDoctorRepository();
             var unitOfWork = new FakeUnitOfWork();
             var userRepo = new FakeUserRepository();
-            var handler = new UpdateDoctorCommandHandler(doctorRepository, userRepo, unitOfWork);
+            var personRepo = new FakePersonRepository();
+            var handler = new UpdateDoctorCommandHandler(doctorRepository, personRepo, userRepo, unitOfWork);
             var doctor = TestDataFactory.CreateDoctor();
             var admin = TestDataFactory.CreateEmployee(role: "Admin");
             await userRepo.AddAsync(doctor.Employee.Person.User);

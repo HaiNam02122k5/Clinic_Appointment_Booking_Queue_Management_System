@@ -6,5 +6,7 @@ namespace Clinic.API.Models
     {
         [Required(ErrorMessage = "PatientId is required.")]
         public Guid PatientId { get; set; }
+        [Required(ErrorMessage = "IsWalkIn is required.")]
+        public bool IsWalkIn { get; set; }
     }
 }

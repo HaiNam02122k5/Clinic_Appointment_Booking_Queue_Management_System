@@ -2,6 +2,7 @@
 using Clinic.Application.Contracts;
 using Clinic.Application.Features.Appointments.Commands;
 using Clinic.Application.Features.Appointments.Queries;
+using Clinic.Application.Features.Patients.Commands;
 using Clinic.Application.Interfaces;
 using MapsterMapper;
 using MediatR;
@@ -34,7 +35,7 @@ namespace Clinic.API.Controllers
         public async Task<IActionResult> CreateAppointmentForPatient([FromBody] ReceptionistCreateAppointmentRequest request)
         {
             var userId = _currentUser.UserId;
-            var command = new CreateAppointmentCommand(userId, request.WorkScheduleId, request.TimeSlot, request.Reason, request.PatientId);
+            var command = new CreateAppointmentCommand(userId, request.WorkScheduleId, request.TimeSlot, request.Reason, request.IsWalkIn, request.PatientId);
             await _sender.Send(command);
             return StatusCode(StatusCodes.Status201Created);
         }
@@ -53,6 +54,34 @@ namespace Clinic.API.Controllers
             if (userId == null)
                 return Unauthorized();
             var command = new UpdateAppointmentCommand((Guid)userId, appointmentId, request.NewWorkScheduleId, request.TimeSlot, request.Reason);
+            await _sender.Send(command);
+            return NoContent();
+        }
+
+        [HttpPost("/patients/add")]
+        [Authorize(Policy = "Permission:patient.create.any")]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> CreatePatient([FromBody] ReceptionistCreatePatientRequest request)
+        {
+            var command = _mapper.Map<CreatePatientCommand>(request);
+            var result = await _sender.Send(command);
+            return CreatedAtAction(nameof(PatientsController.GetPatient), new { id = result.Id }, result);
+        }
+
+        [HttpPut("/patients/{patientId}")]
+        [Authorize(Policy = "Permission:patient.edit.any")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UpdatePatient([FromRoute] Guid patientId, [FromBody] ReceptionistUpdatePatientRequest request)
+        {
+            var userId = _currentUser.UserId ?? throw new UnauthorizedAccessException("User not found.");
+            var command = new UpdatePatientCommand((Guid)userId, request.Email, request.Gender, request.Address, request.InsuranceNumber, request.EmergencyContact, patientId);
             await _sender.Send(command);
             return NoContent();
         }
