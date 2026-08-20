@@ -4,6 +4,7 @@ using Clinic.Infrastructure.Sqlserver;
 using Clinic.Infrastructure.Sqlserver.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi;
+using System.Reflection;
 using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -76,6 +77,13 @@ builder.Services.AddSwaggerGen(options =>
                 new List<string>()
         });
 
+    // Đọc file XML comment sinh ra từ bước 1, để Swagger UI hiện summary/description
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+    {
+        options.IncludeXmlComments(xmlPath);
+    }
 });
 
 var app = builder.Build();
