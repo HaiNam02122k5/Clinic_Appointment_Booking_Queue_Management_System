@@ -1,4 +1,5 @@
 using Clinic.Application.Common.Models;
+using Clinic.Application.Contracts;
 using Clinic.Application.Interfaces;
 using Clinic.Domain.Entities;
 using System;
@@ -39,6 +40,11 @@ namespace Clinic.Application.UnitTests.Common
         public Task<Patient?> GetByPersonIdAsync(Guid personId)
         {
             return Task.FromResult(_patients.FirstOrDefault(p => p.PersonId == personId));
+        }
+
+        public Task<Dictionary<string, IValueWithChange>> GetDashboardData()
+        {
+            throw new NotImplementedException();
         }
     }
 }
