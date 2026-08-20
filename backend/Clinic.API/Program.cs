@@ -101,7 +101,7 @@ using (var scope = app.Services.CreateScope())
     var initializer = scope.ServiceProvider
         .GetRequiredService<DatabaseInitializer>();
 
-    await initializer.CreateInitialAdminAsync(builder.Configuration["Initial_Admin:Username"] ?? "admin", builder.Configuration["Initial_Admin:Password"] ?? "AdminPassowrd123!");
+    await initializer.CreateInitialAdminAsync();
 }
 
 // Bắt mọi exception chưa xử lý và trả về envelope ApiResponse (qua GlobalExceptionHandler).
