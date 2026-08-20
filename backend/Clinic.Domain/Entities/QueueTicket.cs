@@ -34,6 +34,29 @@ namespace Clinic.Domain.Entities
         /// <summary>0..1 - chỉ có sau khi bác sĩ khám xong.</summary>
         public MedicalReport? MedicalReport { get; set; }
 
+        public QueueTicket() { }
+
+        public QueueTicket(
+            Guid id,
+            Guid appointmentId,
+            int queueNumber,
+            bool priority,
+            QueueStatus status,
+            DateTime checkInTime,
+            DateTime? calledAt,
+            DateTime createdAt,
+            DateTime? updatedAt,
+            bool isDeleted)
+            : base(id, createdAt, updatedAt, isDeleted)
+        {
+            AppointmentId = appointmentId;
+            QueueNumber = queueNumber;
+            Priority = priority;
+            Status = status;
+            CheckInTime = checkInTime;
+            CalledAt = calledAt;
+        }
+
         /// <summary>
         /// Gọi bệnh nhân vào khám. Chỉ cho phép gọi khi đang ở trạng thái Waiting
         /// (chưa được gọi lần nào, hoặc đã reset lại từ 1 lượt gọi trước).
