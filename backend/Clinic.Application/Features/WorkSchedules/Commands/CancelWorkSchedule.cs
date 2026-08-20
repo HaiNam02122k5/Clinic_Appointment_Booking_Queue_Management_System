@@ -9,6 +9,7 @@ namespace Clinic.Application.Features.WorkSchedules.Commands
 {
     // Use-case: Admin cancels a work schedule for a doctor, with a reason for cancellation to notify the doctor and patients
     public record CancelWorkScheduleCommand(
+        Guid UserId,
         Guid Id,
         string Reason
     ) : IRequest<Guid>;
@@ -28,7 +29,11 @@ namespace Clinic.Application.Features.WorkSchedules.Commands
             if (workSchedule == null) throw new NotFoundException("Work schedule not found.");
 
             workSchedule.Cancel(request.Reason);
-            // TODO: Cancel all appointments associated with this work schedule and notify patients and doctor
+            foreach (var appointment in workSchedule.Appointments)
+            {
+                appointment.AdminCancel(request.UserId);
+                // TODO: notify patients and doctor
+            }
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return workSchedule.Id;
         }

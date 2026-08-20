@@ -4,6 +4,7 @@ using Clinic.Infrastructure.Sqlserver;
 using Clinic.Infrastructure.Sqlserver.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi;
+using System.Reflection;
 using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,6 +29,12 @@ builder.Services.AddCors(options =>
 builder.Services.AddPresentation();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructureSqlServer(builder.Configuration);
+
+// Configure JSON serialization options to handle enum values as strings
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+});
 
 // Add Authentication and Authorization services
 builder.Services
@@ -86,6 +93,13 @@ builder.Services.AddSwaggerGen(options =>
                 new List<string>()
         });
 
+    // Đọc file XML comment sinh ra từ bước 1, để Swagger UI hiện summary/description
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+    {
+        options.IncludeXmlComments(xmlPath);
+    }
 });
 
 var app = builder.Build();

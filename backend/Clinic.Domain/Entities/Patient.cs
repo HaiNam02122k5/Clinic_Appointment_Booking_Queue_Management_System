@@ -7,13 +7,30 @@ namespace Clinic.Domain.Entities
     public class Patient : BaseEntity
     {
         /// <summary>FK, UNIQUE. Cho phép Person chưa từng có User (khách vãng lai).</summary>
-        public Guid PersonId { get; set; }
-        public Person Person { get; set; } = null!;
+        public Guid PersonId { get; protected set; }
+        public Person Person { get; protected set; } = null!;
 
-        public string? InsuranceNumber { get; set; }
+        public string? InsuranceNumber { get; protected set; }
 
-        public string? EmergencyContact { get; set; }
+        public string? EmergencyContact { get; protected set; }
 
-        public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
+        public ICollection<Appointment> Appointments { get; protected set; } = new List<Appointment>();
+
+        public Patient(Person person, string? insuranceNumber, string? emergencyContact)
+        {
+            PersonId = person.Id;
+            Person = person;
+            InsuranceNumber = insuranceNumber;
+            EmergencyContact = emergencyContact;
+        }
+
+        private Patient() { } // EF Core
+
+        public void Update(string? insuranceNumber, string? emergencyContact)
+        {
+            InsuranceNumber = insuranceNumber;
+            EmergencyContact = emergencyContact;
+            MarkUpdated();
+        }
     }
 }

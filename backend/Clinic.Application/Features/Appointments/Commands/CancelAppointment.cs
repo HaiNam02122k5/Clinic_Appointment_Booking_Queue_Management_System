@@ -1,44 +1,46 @@
 ﻿using Clinic.Application.Common.Exceptions;
 using Clinic.Application.Interfaces;
 using MediatR;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace Clinic.Application.Features.Appointments.Commands
 {
-    public record CancelAppointmentCommand(Guid AppointmentId) : IRequest;
-
-    public class CancelAppointmentHandler : IRequestHandler<CancelAppointmentCommand>
+    // Use-case: Patient or Receptionist cancels an appointment
+    public record CancelAppointmentCommand(
+        Guid AppointmentId
+    ) : IRequest<Guid>;
+    public class CancelAppointmentCommandHandler : IRequestHandler<CancelAppointmentCommand, Guid>
     {
         private readonly IAppointmentRepository _appointmentRepository;
         private readonly ICurrentUser _currentUser;
         private readonly IUnitOfWork _unitOfWork;
 
-        public CancelAppointmentHandler(
-            IAppointmentRepository appointmentRepository,
-            ICurrentUser currentUser,
-            IUnitOfWork unitOfWork)
+        public CancelAppointmentCommandHandler(IAppointmentRepository appointmentRepository, ICurrentUser currentUser, IUnitOfWork unitOfWork)
         {
             _appointmentRepository = appointmentRepository;
             _currentUser = currentUser;
             _unitOfWork = unitOfWork;
         }
-
-        public async Task Handle(CancelAppointmentCommand command, CancellationToken cancellationToken)
+        public async Task<Guid> Handle(CancelAppointmentCommand request, CancellationToken cancellationToken)
         {
-            var appointment = await _appointmentRepository.GetByIdAsync(command.AppointmentId)
-                ?? throw new NotFoundException($"Appointment '{command.AppointmentId}' not found.");
-
-            // "any" scope (Admin/Receptionist): được hủy bất kỳ appointment nào.
-            // Nếu không có "any", user chỉ được hủy appointment của chính mình ("own" scope, Patient).
-            var hasAnyScope = _currentUser.HasPermission("appointment.cancel.any");
-            if (!hasAnyScope && appointment.PatientId != _currentUser.PatientId)
+            if (_currentUser.UserId == null)
             {
-                throw new ForbiddenException("You are not allowed to cancel this appointment.");
+                throw new UnauthorizedAccessException();
             }
-
-            appointment.Cancel();
-
-            await _appointmentRepository.UpdateAsync(appointment);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
+            var appointment = await _appointmentRepository.GetByIdAsync(request.AppointmentId);
+            if (appointment == null)
+            {
+                throw new NotFoundException("Appointment not found.");
+            }
+            if (!(_currentUser.HasPermission("appointment.edit.any") || _currentUser.PatientId == appointment.PatientId))
+            {
+                throw new ForbiddenException("You are not authorized to cancel this appointment.");
+            }
+            appointment.Cancel((Guid)_currentUser.UserId);
+            await _unitOfWork.SaveChangesAsync();
+            return request.AppointmentId;
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Clinic.Application.Common.Exceptions;
 using Clinic.Application.Interfaces;
 using Clinic.Application.Services;
+using Clinic.Domain.Entities;
 using Clinic.Domain.Enums;
 using MediatR;
 
@@ -21,13 +22,20 @@ namespace Clinic.Application.Features.Auth.Commands
         private readonly IUserService _userService;
         private readonly IPersonService _personService;
         private readonly IRoleRepository _roleRepository;
+        private readonly IPatientRepository _patientRepository;
         private readonly IUnitOfWork _unitOfWork;
 
-        public RegisterCommandHandler(IUserService userService, IPersonService personService, IRoleRepository roleRepository, IUnitOfWork unitOfWork)
+        public RegisterCommandHandler(
+            IUserService userService,
+            IPersonService personService,
+            IRoleRepository roleRepository,
+            IPatientRepository patientRepository,
+            IUnitOfWork unitOfWork)
         {
             _userService = userService;
             _personService = personService;
             _roleRepository = roleRepository;
+            _patientRepository = patientRepository;
             _unitOfWork = unitOfWork;
         }
 
@@ -53,11 +61,17 @@ namespace Clinic.Application.Features.Auth.Commands
             }
             existingUser.AssignRole(patientRole);
 
-            // TODO: Create a new patient entity and associate it with the person
+            // Tạo hồ sơ Patient gắn với Person vừa tạo/tìm được. CreateOrGetPersonAsync có thể trả về
+            // 1 Person đã tồn tại từ trước (khách vãng lai từng khám nhưng chưa có tài khoản) - trường hợp
+            // đó Person có thể đã có Patient, nên phải kiểm tra tồn tại trước để tránh vi phạm UNIQUE (PersonId).
+            if (newPerson.Patient is null)
+            {
+                var newPatient = new Patient(newPerson, null, null);
+                await _patientRepository.AddAsync(newPatient);
+            }
 
-            // Create a new user entity
             await _unitOfWork.SaveChangesAsync(cancellationToken);
-            
+
             return existingUser.Id;
         }
     }

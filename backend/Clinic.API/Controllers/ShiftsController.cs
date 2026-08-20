@@ -49,7 +49,7 @@ namespace Clinic.API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Update([FromRoute] Guid shiftId, [FromBody] UpdateShiftRequest request)
         {
-            var command = new UpdateWorkScheduleCommand(shiftId, request.StartTime, request.EndTime, request.PatientLimitPerSlot);
+            var command = new UpdateWorkScheduleCommand(shiftId, request.Date, request.StartTime, request.EndTime, request.PatientLimitPerSlot);
             await _sender.Send(command);
             return NoContent();
         }
@@ -61,7 +61,8 @@ namespace Clinic.API.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Cancel([FromRoute] Guid shiftId, [FromBody] CancelShiftRequest request)
         {
-            var command = new CancelWorkScheduleCommand(shiftId, request.Reason);
+            var userId = _currentUser.UserId ?? throw new UnauthorizedAccessException();
+            var command = new CancelWorkScheduleCommand(userId, shiftId, request.Reason);
             await _sender.Send(command);
             return NoContent();
         }
@@ -74,7 +75,7 @@ namespace Clinic.API.Controllers
         public async Task<IActionResult> CreateSuggestion([FromBody] CreateShiftSuggestionRequest request)
         {
             var userId = _currentUser.UserId;
-            var command = new AddDoctorShiftRequestCommand(userId, request.StartTime, request.EndTime, request.PatientLimitPerSlot, request.Reason);
+            var command = new AddDoctorShiftRequestCommand(userId, request.Date, request.StartTime, request.EndTime, request.PatientLimit, request.Reason);
             var result = await _sender.Send(command);
             return Created((string?)null, result);
         }
@@ -87,7 +88,7 @@ namespace Clinic.API.Controllers
         public async Task<IActionResult> PatchSuggestion([FromRoute] Guid suggestionId, [FromBody] UpdateShiftSuggestionRequest request)
         {
             var userId = _currentUser.UserId;
-            var command = new UpdateShiftRequestCommand(suggestionId, userId, request.StartTime, request.EndTime, request.PatientLimitPerSlot, request.Reason);
+            var command = new UpdateShiftRequestCommand(suggestionId, userId, request.Date, request.StartTime, request.EndTime, request.PatientLimitPerSlot, request.Reason);
             await _sender.Send(command);
             return NoContent();
         }
