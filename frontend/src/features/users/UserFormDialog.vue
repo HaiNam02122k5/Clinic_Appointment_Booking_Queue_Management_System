@@ -42,7 +42,9 @@ watch(
       form.fullName = props.initial.fullName || props.initial.name || ''
       form.email = props.initial.email || ''
       form.phoneNumber = props.initial.phoneNumber || ''
-      form.role = props.initial.roles?.[0] || 'Receptionist'
+      // Ưu tiên chọn vai trò nhân viên nếu tài khoản có nhiều vai trò
+      const staffRole = props.initial.roles?.find((r) => r === 'Admin' || r === 'Receptionist')
+      form.role = staffRole || 'Receptionist'
       form.isActive = props.initial.isActive ?? true
     } else {
       form.username = ''

@@ -1,4 +1,4 @@
-﻿import axios, { AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from 'axios'
+import axios, { AxiosError, type AxiosInstance, type InternalAxiosRequestConfig } from 'axios'
 import { env } from '@/config/env'
 import { tokenStorage } from './token-storage'
 import { logger } from '@/lib/logger'
@@ -69,17 +69,19 @@ async function refreshSession(): Promise<void> {
   }
 
   const persistent = tokenStorage.isPersistent()
-  const { data } = await axios.post<{ accessToken?: string }>(
+  const { data } = await axios.post<any>(
     `${env.apiBaseUrl}/auth/refresh`,
     {},
     { withCredentials: true },
   )
 
-  if (!data?.accessToken) {
+  const newAccessToken = data?.result?.accessToken ?? data?.accessToken
+
+  if (!newAccessToken) {
     throw new Error('Refresh endpoint did not return a new access token')
   }
 
-  tokenStorage.set(data.accessToken, undefined, persistent)
+  tokenStorage.set(newAccessToken, undefined, persistent)
 }
 
 http.interceptors.response.use(
