@@ -69,7 +69,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                     Value = currentTotal,
                     Change = CalculatePercentChange(currentTotal, previousTotal)
                 },
-                ["ActiveDoctor"] = new ValueWithChange<int>
+                ["ActiveDoctors"] = new ValueWithChange<int>
                 {
                     Value = currentActive,
                     Change = CalculatePercentChange(currentActive, previousActive)
