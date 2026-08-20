@@ -4,6 +4,9 @@ using Clinic.Application.Features.Appointments.Queries;
 using Clinic.Application.Features.Users.Queries;
 using MapsterMapper;
 using MediatR;
+using Clinic.Application.Features;
+using Clinic.Domain.Enums;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

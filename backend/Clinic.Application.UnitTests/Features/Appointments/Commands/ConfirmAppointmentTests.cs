@@ -13,7 +13,9 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Commands
             // Arrange
             var appointmentRepository = new FakeAppointmentRepository();
             var unitOfWork = new FakeUnitOfWork();
-            var handler = new ConfirmAppointmentCommandHandler(appointmentRepository, unitOfWork);
+            var notiQueue = new FakeNotificationQueue();
+            var notiService = new FakeNotificationService();
+            var handler = new ConfirmAppointmentCommandHandler(appointmentRepository, notiQueue, notiService, unitOfWork);
 
             var appointment = TestDataFactory.CreateAppointment();
             await appointmentRepository.AddAsync(appointment);
@@ -31,7 +33,9 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Commands
             // Arrange
             var appointmentRepository = new FakeAppointmentRepository();
             var unitOfWork = new FakeUnitOfWork();
-            var handler = new ConfirmAppointmentCommandHandler(appointmentRepository, unitOfWork);
+            var notiQueue = new FakeNotificationQueue();
+            var notiService = new FakeNotificationService();
+            var handler = new ConfirmAppointmentCommandHandler(appointmentRepository, notiQueue, notiService, unitOfWork);
 
             // Act & Assert
             await Assert.ThrowsAsync<NotFoundException>(() =>
@@ -44,7 +48,9 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Commands
             // Arrange
             var appointmentRepository = new FakeAppointmentRepository();
             var unitOfWork = new FakeUnitOfWork();
-            var handler = new ConfirmAppointmentCommandHandler(appointmentRepository, unitOfWork);
+            var notiQueue = new FakeNotificationQueue();
+            var notiService = new FakeNotificationService();
+            var handler = new ConfirmAppointmentCommandHandler(appointmentRepository, notiQueue, notiService, unitOfWork);
 
             var appointment = TestDataFactory.CreateAppointment(confirmed: true);
             await appointmentRepository.AddAsync(appointment);
@@ -60,7 +66,9 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Commands
             // Arrange
             var appointmentRepository = new FakeAppointmentRepository();
             var unitOfWork = new FakeUnitOfWork();
-            var handler = new ConfirmAppointmentCommandHandler(appointmentRepository, unitOfWork);
+            var notiQueue = new FakeNotificationQueue();
+            var notiService = new FakeNotificationService();
+            var handler = new ConfirmAppointmentCommandHandler(appointmentRepository, notiQueue, notiService, unitOfWork);
 
             var appointment = TestDataFactory.CreateAppointment();
             appointment.Cancel(Guid.NewGuid());

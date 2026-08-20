@@ -1,8 +1,12 @@
 using Clinic.API;
+using Clinic.API.Hubs;
+using Clinic.API.Workers;
 using Clinic.Application;
 using Clinic.Infrastructure.Sqlserver;
+using Clinic.Infrastructure.Sqlserver.Notifications;
 using Clinic.Infrastructure.Sqlserver.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.OpenApi;
 using System.Reflection;
 using System.Security.Claims;
@@ -19,6 +23,15 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
 });
+
+// Configure notification services
+builder.Services.Configure<EmailOptions>(
+    builder.Configuration.GetSection("Email"));
+builder.Services.AddSignalR();
+
+// Add workers
+builder.Services.AddHostedService<NotificationWorker>();
+builder.Services.AddHostedService<ScheduledNotificationWorker>();
 
 // Add Authentication and Authorization services
 builder.Services
@@ -87,6 +100,8 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 var app = builder.Build();
+
+app.MapHub<NotificationHub>("/hubs/notifications");
 
 // Seed the database with an initial admin user if it doesn't exist
 using (var scope = app.Services.CreateScope())
