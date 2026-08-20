@@ -1,5 +1,6 @@
 using Clinic.API.Models;
 using Clinic.Application.Contracts;
+using Clinic.Application.Features.Admin.Queries;
 using Clinic.Application.Features.Appointments.Queries;
 using Clinic.Application.Features.Users.Queries;
 using MapsterMapper;
@@ -84,6 +85,34 @@ namespace Clinic.API.Controllers
         public async Task<IActionResult> GetAppointmentChangelog(Guid appointmentId)
         {
             var command = new GetAppointmentChangelogQuery(appointmentId);
+            var result = await _sender.Send(command);
+            return Ok(result);
+        }
+
+        [HttpGet("dashboard")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetDashboardData()
+        {
+            // placeholder: implement dashboard data retrieval
+            var result = await _sender.Send(new GetDashboardDataQuery());
+            return Ok(result);
+        }
+
+        [HttpGet("statistics")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetStatistics([FromQuery] Period period)
+        {
+            // placeholder: implement dashboard data retrieval
+            var result = await _sender.Send(new GetStatisticsDataQuery(period));
+            return Ok(result);
+        }
+
+        [HttpGet("appointments")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetAppointmentsByDate([FromQuery] GetAppointmentsByDateRequest request)
+        {
+            // placeholder: implement dashboard data retrieval
+            var command = _mapper.Map<GetAppointmentByDateQuery>(request);
             var result = await _sender.Send(command);
             return Ok(result);
         }
