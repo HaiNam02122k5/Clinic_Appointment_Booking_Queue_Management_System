@@ -9,6 +9,10 @@ namespace Clinic.Application.Features.Users.Queries
         string? Search = null,
         string SortBy = "fullName",
         Gender? Gender = null,
+
+        string? Role = null,
+        bool? IsActive = null,
+
         bool Descending = false,
         int PageNumber = 1,
         int PageSize = 10
@@ -26,6 +30,8 @@ namespace Clinic.Application.Features.Users.Queries
                 request.Search,
                 request.SortBy,
                 request.Gender,
+                request.Role,
+                request.IsActive,
                 request.Descending,
                 request.PageNumber,
                 request.PageSize

@@ -4,6 +4,7 @@ using Clinic.Application.Features.Admin.Queries;
 using Clinic.Application.Features.Appointments.Queries;
 using Clinic.Application.Features.Doctors.Queries;
 using Clinic.Application.Features.Users.Queries;
+using Clinic.Application.Features.Users.Commands;
 using MapsterMapper;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -127,6 +128,21 @@ namespace Clinic.API.Controllers
             var command = _mapper.Map<GetAppointmentByDateQuery>(request);
             var result = await _sender.Send(command);
             return Ok(result);
+        }
+        [HttpPatch("users/{userId}/status")]
+        [Authorize(Policy = "Permission:user.manage")]
+        public async Task<IActionResult> UpdateUserStatus(
+            Guid userId,
+            [FromBody] UpdateUserStatusRequest request)
+        {
+            var command = new UpdateUserStatusCommand(
+                userId,
+                request.IsActive
+            );
+
+            await _sender.Send(command);
+
+            return NoContent();
         }
     }
 }

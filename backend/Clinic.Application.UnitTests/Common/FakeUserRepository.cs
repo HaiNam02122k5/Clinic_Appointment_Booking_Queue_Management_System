@@ -38,7 +38,7 @@ namespace Clinic.Application.UnitTests.Common
             return _users.FirstOrDefault(u => u.Username == username);
         }
 
-        public async Task<PagedResult<User>> GetPagedAsync(string? search, string sortBy, Gender? gender, bool descending, int pageNumber, int pageSize)
+        public async Task<PagedResult<User>> GetPagedAsync(string? search, string sortBy, Gender? gender, string? role, bool? isActive, bool descending, int pageNumber, int pageSize)
         {
             var query = _users
                 .Where(u => u.IsDeleted == false);

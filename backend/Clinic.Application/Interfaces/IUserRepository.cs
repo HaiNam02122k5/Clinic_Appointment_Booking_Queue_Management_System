@@ -44,6 +44,6 @@ namespace Clinic.Application.Interfaces
         /// <summary>
         /// Gets a paginated list of users based on search criteria, sorting, and filtering options.
         /// </summary>
-        Task<PagedResult<User>> GetPagedAsync(string? search, string sortBy, Gender? gender, bool descending, int pageNumber, int pageSize);
+        Task<PagedResult<User>> GetPagedAsync(string? search, string sortBy, Gender? gender, string? role, bool? isActive,   bool descending, int pageNumber, int pageSize);
     }
 }

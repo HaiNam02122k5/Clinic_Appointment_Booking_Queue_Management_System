@@ -88,7 +88,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                 .FirstOrDefaultAsync(u => u.PersonId == id);
         }
 
-        public async Task<PagedResult<User>> GetPagedAsync(string? search, string sortBy, Gender? gender, bool descending, int pageNumber, int pageSize)
+        public async Task<PagedResult<User>> GetPagedAsync(string? search, string sortBy, Gender? gender, string? role, bool? isActive, bool descending, int pageNumber, int pageSize)
         {
             var query = _context.Users
                 .Include(u => u.Person)
@@ -109,7 +109,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             query = sortBy.ToLower() switch
             {
                 "username" => descending ? query.OrderByDescending(u => u.Username) : query.OrderBy(u => u.Username),
-                "fullName" => descending ? query.OrderByDescending(u => u.Person.FullName) : query.OrderBy(u => u.Person.FullName),
+                "fullname" => descending ? query.OrderByDescending(u => u.Person.FullName) : query.OrderBy(u => u.Person.FullName),
                 _ => descending ? query.OrderByDescending(u => u.Person.FullName) : query.OrderBy(u => u.Person.FullName),
             };
 
