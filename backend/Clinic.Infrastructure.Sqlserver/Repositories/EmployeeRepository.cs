@@ -71,6 +71,11 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                 query = query.Where(e => e.Person.User.UserRoles.Any(ur => roles.Contains(ur.Role.Name)));
             }
 
+            if (string.IsNullOrEmpty(sortBy))
+            {
+                sortBy = "fullname"; // Default sorting by FullName
+            }
+
             query = sortBy?.ToLower() switch
             {
                 "fullname" => descending ? query.OrderByDescending(s => s.Person.FullName) : query.OrderBy(s => s.Person.FullName),

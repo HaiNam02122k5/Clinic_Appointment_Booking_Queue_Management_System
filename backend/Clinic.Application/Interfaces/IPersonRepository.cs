@@ -20,7 +20,14 @@ namespace Clinic.Application.Interfaces
         /// Gets a person by their phone number
         /// </summary>
         Task<Person?> GetByPhoneNumberAsync(string phoneNumber);
+
+        /// <summary>
+        /// Gets a person by their unique identifier (ID).
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         Task<Person?> GetByIdAsync(Guid id);
+
         Task DeleteAsync(Guid id);
 
         /// <summary>

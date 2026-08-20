@@ -15,7 +15,8 @@ namespace Clinic.Application.UnitTests.Features.Auth.Commands
             FakeTokenProvider tokenProvider = new FakeTokenProvider();
             FakeRefreshTokenRepository refreshTokenRepository = new FakeRefreshTokenRepository();
             FakeUnitOfWork unitOfWork = new FakeUnitOfWork();
-            LoginCommandHandler handler = new LoginCommandHandler(new UserService(userRepository, hasher), new TokenService(tokenProvider, refreshTokenRepository), unitOfWork);
+            var personRepository = new FakePersonRepository();
+            LoginCommandHandler handler = new LoginCommandHandler(new UserService(userRepository, personRepository, hasher), new TokenService(tokenProvider, refreshTokenRepository), unitOfWork);
             var person = TestDataFactory.CreatePerson();
             var user = TestDataFactory.CreateUser("Patient", "testuser", hasher.HashPassword("password"), person);
             await userRepository.AddAsync(user);
@@ -47,7 +48,8 @@ namespace Clinic.Application.UnitTests.Features.Auth.Commands
             FakeTokenProvider tokenProvider = new FakeTokenProvider();
             FakeRefreshTokenRepository refreshTokenRepository = new FakeRefreshTokenRepository();
             FakeUnitOfWork unitOfWork = new FakeUnitOfWork();
-            LoginCommandHandler handler = new LoginCommandHandler(new UserService(userRepository, hasher), new TokenService(tokenProvider, refreshTokenRepository), unitOfWork);
+            var personRepository = new FakePersonRepository();
+            LoginCommandHandler handler = new LoginCommandHandler(new UserService(userRepository, personRepository, hasher), new TokenService(tokenProvider, refreshTokenRepository), unitOfWork);
             var person = TestDataFactory.CreatePerson();
             var user = TestDataFactory.CreateUser("Patient", "testuser", hasher.HashPassword("password"), person);
             user.AssignRole(TestDataFactory.RoleSet.First(role => role.Name == "Receptionist"));
@@ -72,7 +74,8 @@ namespace Clinic.Application.UnitTests.Features.Auth.Commands
             FakeTokenProvider tokenProvider = new FakeTokenProvider();
             FakeRefreshTokenRepository refreshTokenRepository = new FakeRefreshTokenRepository();
             FakeUnitOfWork unitOfWork = new FakeUnitOfWork();
-            LoginCommandHandler handler = new LoginCommandHandler(new UserService(userRepository, hasher), new TokenService(tokenProvider, refreshTokenRepository), unitOfWork);
+            var personRepository = new FakePersonRepository();
+            LoginCommandHandler handler = new LoginCommandHandler(new UserService(userRepository, personRepository, hasher), new TokenService(tokenProvider, refreshTokenRepository), unitOfWork);
             var person = TestDataFactory.CreatePerson();
             var user = TestDataFactory.CreateUser("Patient", "testuser", hasher.HashPassword("password"), person);
             await userRepository.AddAsync(user);

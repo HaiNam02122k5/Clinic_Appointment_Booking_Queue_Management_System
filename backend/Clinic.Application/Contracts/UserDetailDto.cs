@@ -7,5 +7,6 @@ namespace Clinic.Application.Contracts
     public class UserDetailDto : UserSummaryDto
     {
         public string Address { get; set; }
+        public DateOnly DateOfBirth { get; set; }
     }
 }

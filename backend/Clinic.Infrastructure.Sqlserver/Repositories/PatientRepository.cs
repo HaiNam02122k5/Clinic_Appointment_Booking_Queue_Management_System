@@ -29,6 +29,11 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                 query = query.Where(p => p.Person.FullName.Contains(search) || p.Person.Email.Contains(search));
             }
 
+            if (string.IsNullOrEmpty(sortBy))
+            {
+                sortBy = "fullname"; // Default sorting by FullName
+            }
+
             query = sortBy.ToLower() switch
             {
                 "fullname" => descending ? query.OrderByDescending(p => p.Person.FullName) : query.OrderBy(p => p.Person.FullName),

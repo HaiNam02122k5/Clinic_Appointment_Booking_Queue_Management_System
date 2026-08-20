@@ -13,14 +13,7 @@ namespace Clinic.Domain.UnitTests
             var person = TestDataFactory.CreatePerson();
 
             // Act
-            var notification = new Notification
-            {
-                PersonId = person.Id,
-                Person = person,
-                Type = NotificationType.AppointmentConfirmation,
-                Channel = NotificationChannel.Email,
-                Message = "Your appointment is confirmed."
-            };
+            var notification = new Notification(person.Id, NotificationType.AppointmentConfirmation, "Title", "Message", NotificationChannel.Email);
 
             // Assert
             Assert.Equal(NotificationStatus.Pending, notification.Status);
@@ -34,18 +27,10 @@ namespace Clinic.Domain.UnitTests
         {
             // Arrange
             var person = TestDataFactory.CreatePerson();
-            var notification = new Notification
-            {
-                PersonId = person.Id,
-                Person = person,
-                Type = NotificationType.AppointmentReminder,
-                Channel = NotificationChannel.Sms,
-                Message = "Reminder: Your appointment is in 1 hour."
-            };
+            var notification = new Notification(person.Id, NotificationType.AppointmentReminder, "Title", "Message", NotificationChannel.Sms);
 
             // Act
-            notification.Status = NotificationStatus.Sent;
-            notification.SendTime = DateTime.UtcNow;
+            notification.MarkAsSent();
 
             // Assert
             Assert.Equal(NotificationStatus.Sent, notification.Status);

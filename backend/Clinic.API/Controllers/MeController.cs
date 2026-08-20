@@ -1,5 +1,6 @@
 ﻿using Clinic.Application.Features.MedicalReports.Queries;
 using Clinic.Application.Features.Queue.Queries;
+using Clinic.Application.Features.Users.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -39,6 +40,14 @@ namespace Clinic.API.Controllers
         public async Task<IActionResult> GetMyMedicalHistory()
         {
             var result = await _sender.Send(new GetMyMedicalHistoryQuery());
+            return Ok(result);
+        }
+
+        [Authorize]
+        [HttpGet("notifications")]
+        public async Task<IActionResult> GetNotifications([FromQuery] DateTime createdBefore, [FromQuery] int limit)
+        {
+            var result = await _sender.Send(new GetNotificationsQuery{ CreatedBefore = createdBefore, Limit = limit });
             return Ok(result);
         }
     }

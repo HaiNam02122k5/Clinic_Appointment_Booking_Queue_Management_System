@@ -44,6 +44,11 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                     (s.Description != null && s.Description.Contains(search)));
             }
 
+            if (string.IsNullOrEmpty(sortBy))
+            {
+                sortBy = "name"; // Default sorting by Name
+            }
+
             query = sortBy.ToLower() switch
             {
                 "name" => descending ? query.OrderByDescending(s => s.Name) : query.OrderBy(s => s.Name),

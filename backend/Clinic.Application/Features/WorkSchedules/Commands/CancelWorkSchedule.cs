@@ -1,5 +1,7 @@
 ﻿using Clinic.Application.Common.Exceptions;
 using Clinic.Application.Interfaces;
+using Clinic.Domain.Entities;
+using Clinic.Domain.Enums;
 using MediatR;
 using System;
 using System.Collections.Generic;
@@ -17,10 +19,12 @@ namespace Clinic.Application.Features.WorkSchedules.Commands
     {
         private readonly IWorkScheduleRepository _workScheduleRepository;
         private readonly IUnitOfWork _unitOfWork;
-        public CancelWorkScheduleCommandHandler(IWorkScheduleRepository workScheduleRepository, IUnitOfWork unitOfWork)
+        private readonly INotificationQueue _notificationQueue;
+        public CancelWorkScheduleCommandHandler(IWorkScheduleRepository workScheduleRepository, IUnitOfWork unitOfWork, INotificationQueue notificationQueue)
         {
             _workScheduleRepository = workScheduleRepository;
             _unitOfWork = unitOfWork;
+            _notificationQueue = notificationQueue;
         }
 
         public async Task<Guid> Handle(CancelWorkScheduleCommand request, CancellationToken cancellationToken)
@@ -32,7 +36,13 @@ namespace Clinic.Application.Features.WorkSchedules.Commands
             foreach (var appointment in workSchedule.Appointments)
             {
                 appointment.AdminCancel(request.UserId);
-                // TODO: notify patients and doctor
+                await _notificationQueue.EnqueueAsync(new NotificationJob<Appointment>(
+                    appointment.Patient.Person,
+                    appointment,
+                    NotificationType.AppointmentCancellation,
+                    true,
+                    true,
+                    true));
             }
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return workSchedule.Id;
