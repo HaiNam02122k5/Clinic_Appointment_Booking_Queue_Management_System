@@ -1,612 +1,398 @@
 <script setup lang="ts">
-import {
-  computed,
-  onMounted,
-  ref,
-  watch,
-} from 'vue'
-
+import { onMounted, ref, watch } from 'vue'
+import { usersApi } from '@/features/users/users.api'
+import type { CreateUserInput, UpdateUserInput, User } from '@/features/users/users.types'
+import AdminFilterToolbar from '@/features/admin/components/AdminFilterToolbar.vue'
 import AdminPagination from '@/features/admin/components/AdminPagination.vue'
 import AdminRoleBadge from '@/features/admin/components/AdminRoleBadge.vue'
-
-import { usersApi } from '@/features/users/users.api'
-
-import type {
-  User,
-  AccountRole,
-} from '@/features/users/users.types'
-
-// ================================
-// STATE
-// ================================
+import BaseStatusBadge from '@/components/ui/BaseStatusBadge.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
+import BaseAlert from '@/components/ui/BaseAlert.vue'
+import BaseModal from '@/components/ui/BaseModal.vue'
+import UserFormDialog from '@/features/users/UserFormDialog.vue'
 
 const accounts = ref<User[]>([])
-
 const loading = ref(false)
 const error = ref('')
+const successMessage = ref('')
 
 const search = ref('')
-const roleFilter = ref<'all' | string>('all')
-const statusFilter = ref<'all' | 'active' | 'inactive'>('all')
-
+const roleFilter = ref('all')
 const currentPage = ref(1)
-
-const pageSize = 5
-
+const pageSize = 8
 const totalPages = ref(1)
 const totalCount = ref(0)
 
-// ================================
-// LOAD API
-// ================================
+// Dialogs
+const formDialogOpen = ref(false)
+const editingUser = ref<User | null>(null)
+const submitting = ref(false)
+
+const viewModalOpen = ref(false)
+const viewingUser = ref<User | null>(null)
+
+const deleteConfirmOpen = ref(false)
+const deletingUser = ref<User | null>(null)
+const deleting = ref(false)
 
 async function loadUsers() {
   loading.value = true
   error.value = ''
 
   try {
-    const response = await usersApi.list({
-      search: search.value || undefined,
+    const res = await usersApi.list({
+      search: search.value.trim() || undefined,
       pageNumber: currentPage.value,
       pageSize,
     })
 
-    accounts.value = response.items
+    const rawItems = res?.items || (Array.isArray(res as any) ? (res as any) : [])
+    let items: User[] = Array.isArray(rawItems) ? rawItems : []
 
-    totalPages.value = response.totalPages
-    totalCount.value = response.totalCount
+    if (roleFilter.value !== 'all') {
+      items = items.filter((u) =>
+        u.roles?.some((r) => r.toLowerCase() === roleFilter.value.toLowerCase()),
+      )
+    }
 
-    console.log('Users from API:', response)
-  } catch (err: unknown) {
-    console.error('Failed to load users:', err)
-
-    error.value = 'Không thể tải danh sách tài khoản.'
+    accounts.value = items
+    totalPages.value = res?.totalPages || 1
+    totalCount.value = res?.totalCount ?? items.length
+  } catch (err: any) {
+    accounts.value = []
+    error.value = err?.response?.data?.message || err?.message || 'Không thể tải danh sách tài khoản từ máy chủ.'
   } finally {
     loading.value = false
   }
 }
 
-// ================================
-// FILTER
-// ================================
-
-const filteredAccounts = computed(() => {
-  return accounts.value.filter((account) => {
-    const accountRole =
-      account.roles[0]?.toLowerCase() ?? ''
-
-    const matchesRole =
-      roleFilter.value === 'all' ||
-      accountRole === roleFilter.value.toLowerCase()
-
-    // API chưa trả về status
-    const matchesStatus =
-      statusFilter.value === 'all'
-
-    return matchesRole && matchesStatus
-  })
+onMounted(() => {
+  loadUsers()
 })
 
-// ================================
-// WATCH
-// ================================
+watch([search, roleFilter], () => {
+  currentPage.value = 1
+  loadUsers()
+})
 
-watch(
-  [search, roleFilter, statusFilter],
-  () => {
-    currentPage.value = 1
-    loadUsers()
-  },
-)
-
-watch(
-  currentPage,
-  () => {
-    loadUsers()
-  },
-)
-
-// ================================
-// HELPERS
-// ================================
-
-function statusText(
-  status: 'active' | 'inactive',
-) {
-  return status === 'active'
-    ? 'Hoạt động'
-    : 'Không hoạt động'
-}
-
-function statusClass(
-  status: 'active' | 'inactive',
-) {
-  return status === 'active'
-    ? 'bg-green-50 text-green-700'
-    : 'bg-slate-100 text-slate-500'
-}
-
-function getAccountRole(
-  account: User,
-): AccountRole {
-  const role =
-    account.roles[0]?.toLowerCase()
-
-  if (
-    role === 'admin' ||
-    role === 'doctor' ||
-    role === 'receptionist' ||
-    role === 'patient'
-  ) {
-    return role
-  }
-
-  return 'patient'
-}
-
-function getAccountStatus(): 'active' | 'inactive' {
-  // API hiện chưa trả về trạng thái
-  return 'active'
-}
-
-function getAccountCreated() {
-  // API hiện chưa trả về createdAt
-  return '-'
-}
-
-function getAccountName(
-  account: User,
-) {
-  return (
-    account.fullName ||
-    account.username ||
-    'Chưa có tên'
-  )
-}
-
-function getAccountEmail(
-  account: User,
-) {
-  return account.email ?? '-'
-}
-
-
-// ================================
-// RESET
-// ================================
+watch(currentPage, () => {
+  loadUsers()
+})
 
 function resetFilters() {
   search.value = ''
   roleFilter.value = 'all'
-  statusFilter.value = 'all'
   currentPage.value = 1
+  loadUsers()
 }
 
-// ================================
-// INIT
-// ================================
+function openCreate() {
+  editingUser.value = null
+  formDialogOpen.value = true
+}
 
-onMounted(() => {
-  loadUsers()
-})
+function openEdit(user: User) {
+  editingUser.value = user
+  formDialogOpen.value = true
+}
+
+function openView(user: User) {
+  viewingUser.value = user
+  viewModalOpen.value = true
+}
+
+function confirmDelete(user: User) {
+  deletingUser.value = user
+  deleteConfirmOpen.value = true
+}
+
+async function handleFormSubmit(payload: CreateUserInput | UpdateUserInput) {
+  submitting.value = true
+  error.value = ''
+
+  try {
+    if (editingUser.value) {
+      await usersApi.update(editingUser.value.id, payload as UpdateUserInput)
+      successMessage.value = `Đã cập nhật thông tin tài khoản ${payload.fullName || payload.name} thành công!`
+    } else {
+      await usersApi.create(payload as CreateUserInput)
+      successMessage.value = `Đã tạo tài khoản ${payload.username} thành công!`
+    }
+
+    formDialogOpen.value = false
+    await loadUsers()
+
+    setTimeout(() => {
+      successMessage.value = ''
+    }, 4000)
+  } catch (err: any) {
+    error.value = err?.response?.data?.message || err?.message || 'Thao tác không thành công.'
+  } finally {
+    submitting.value = false
+  }
+}
+
+async function handleDelete() {
+  if (!deletingUser.value) return
+
+  deleting.value = true
+  try {
+    await usersApi.remove(deletingUser.value.id)
+    successMessage.value = `Đã vô hiệu hóa tài khoản @${deletingUser.value.username}!`
+    deleteConfirmOpen.value = false
+    await loadUsers()
+
+    setTimeout(() => {
+      successMessage.value = ''
+    }, 4000)
+  } catch (err: any) {
+    error.value = err?.response?.data?.message || err?.message || 'Không thể khóa tài khoản.'
+  } finally {
+    deleting.value = false
+  }
+}
 </script>
 
 <template>
-  <div class="space-y-5">
+  <div class="space-y-5 font-sans">
+    <!-- Header Title -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Quản lý Tài khoản</h1>
+        <p class="mt-1 text-sm text-slate-500">
+          Quản lý phân quyền, tài khoản nhân viên và người dùng trong toàn hệ thống
+        </p>
+      </div>
 
-    <!-- =========================
-         TITLE
-    ========================== -->
-
-    <div>
-      <h1 class="text-xl font-semibold text-slate-800">
-        Quản lý tài khoản
-      </h1>
-
-      <p class="mt-1 text-sm text-slate-500">
-        Quản lý tài khoản người dùng trong hệ thống
-      </p>
+      <BaseButton
+        type="button"
+        variant="primary"
+        size="md"
+        @click="openCreate"
+      >
+        + Thêm Tài khoản
+      </BaseButton>
     </div>
 
-    <!-- =========================
-         TOOLBAR
-    ========================== -->
+    <!-- Alert thông báo -->
+    <div v-if="successMessage">
+      <BaseAlert type="success" :message="successMessage" dismissible @dismiss="successMessage = ''" />
+    </div>
+    <div v-if="error">
+      <BaseAlert type="error" :message="error" dismissible @dismiss="error = ''" />
+    </div>
 
-    <div
-      class="rounded-xl border border-slate-200
-             bg-white p-5"
+    <!-- Filter Toolbar -->
+    <AdminFilterToolbar
+      v-model:search="search"
+      search-placeholder="Tìm theo họ tên, username, email, SĐT..."
+      add-button-label="+ Thêm Tài khoản"
+      :show-add-button="false"
+      @reset="resetFilters"
+      @add="openCreate"
     >
-      <div
-        class="flex flex-col gap-3
-               lg:flex-row lg:items-center"
-      >
-
-        <!-- SEARCH -->
-
-        <div class="relative flex-1">
-          <input
-            v-model="search"
-            type="text"
-            placeholder="Tìm kiếm theo tên hoặc email..."
-            class="w-full rounded-lg border border-slate-200
-                   bg-white px-3 py-2.5 pl-10
-                   text-sm text-slate-800
-                   placeholder:text-slate-400
-                   focus:border-violet-500
-                   focus:outline-none"
-          />
-
-          <svg
-            class="absolute left-3 top-1/2 h-4 w-4
-                   -translate-y-1/2 text-slate-400"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <circle cx="11" cy="11" r="7" />
-            <path d="m20 20-3.5-3.5" />
-          </svg>
-        </div>
-
-        <!-- ROLE -->
-
+      <template #filters>
+        <!-- Role Filter -->
         <select
           v-model="roleFilter"
-          class="rounded-lg border border-slate-200
-                 bg-white px-3 py-2.5
-                 text-sm text-slate-600
-                 focus:border-violet-500
-                 focus:outline-none"
+          class="rounded-xl border border-slate-200 bg-slate-50/50 px-3 py-2 text-xs font-medium text-slate-700 focus:border-[#0E4D92] focus:bg-white focus:outline-none transition-colors"
         >
-          <option value="all">
-            Tất cả vai trò
-          </option>
-
-          <option value="patient">
-            Bệnh nhân
-          </option>
-
-          <option value="doctor">
-            Bác sĩ
-          </option>
-
-          <option value="receptionist">
-            Lễ tân
-          </option>
-
-          <option value="admin">
-            Quản trị viên
-          </option>
+          <option value="all">Tất cả vai trò</option>
+          <option value="Admin">Quản trị viên (Admin)</option>
+          <option value="Doctor">Bác sĩ (Doctor)</option>
+          <option value="Receptionist">Lễ tân (Receptionist)</option>
+          <option value="Patient">Bệnh nhân (Patient)</option>
         </select>
+      </template>
+    </AdminFilterToolbar>
 
-        <!-- STATUS -->
-
-        <select
-          v-model="statusFilter"
-          class="rounded-lg border border-slate-200
-                 bg-white px-3 py-2.5
-                 text-sm text-slate-600
-                 focus:border-violet-500
-                 focus:outline-none"
-        >
-          <option value="all">
-            Tất cả trạng thái
-          </option>
-
-          <option value="active">
-            Hoạt động
-          </option>
-
-          <option value="inactive">
-            Không hoạt động
-          </option>
-        </select>
-
-        <!-- RESET -->
-
-        <button
-          class="rounded-lg border border-slate-200
-                 px-4 py-2.5 text-sm font-medium
-                 text-slate-600
-                 hover:bg-slate-50"
-          @click="resetFilters"
-        >
-          Đặt lại
-        </button>
-
-        <!-- ADD -->
-
-        <button
-          class="rounded-lg bg-violet-600
-                 px-4 py-2.5 text-sm font-semibold
-                 text-white
-                 hover:bg-violet-700"
-        >
-          + Thêm tài khoản
-        </button>
-
-      </div>
-    </div>
-
-    <!-- =========================
-         TABLE
-    ========================== -->
-
-    <div
-      class="rounded-xl border border-slate-200
-             bg-white p-5"
-    >
-
+    <!-- Table Container -->
+    <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs">
       <div class="mb-4 flex items-center justify-between">
         <div>
-          <h2 class="text-sm font-semibold text-slate-800">
-            Danh sách tài khoản
-          </h2>
-
-          <p class="mt-1 text-xs text-slate-400">
-            {{ totalCount }} tài khoản
-          </p>
+          <h2 class="text-base font-bold text-slate-800">Danh sách Tài khoản</h2>
+          <p class="text-xs text-slate-400 mt-0.5">Tất cả tài khoản định danh trong hệ thống</p>
         </div>
       </div>
 
-      <div
-        class="overflow-hidden rounded-lg
-               border border-slate-200"
-      >
-
-        <!-- LOADING -->
-
-        <div
-          v-if="loading"
-          class="py-12 text-center
-                 text-sm text-slate-400"
-        >
-          Đang tải danh sách tài khoản...
+      <div class="overflow-x-auto rounded-xl border border-slate-100">
+        <!-- Loading State -->
+        <div v-if="loading" class="py-16 text-center text-slate-400 text-sm">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-3 border-[#0E4D92] border-t-transparent mb-2"></div>
+          <p>Đang tải danh sách tài khoản…</p>
         </div>
 
-        <!-- ERROR -->
-
-        <div
-          v-else-if="error"
-          class="py-12 text-center
-                 text-sm text-red-500"
-        >
-          {{ error }}
-        </div>
-
-        <!-- TABLE -->
-
-        <table
-          v-else
-          class="w-full text-sm"
-        >
-
+        <!-- Table -->
+        <table v-else class="w-full text-left text-sm border-collapse">
           <thead>
-            <tr
-              class="border-b border-slate-200
-                     bg-slate-50"
-            >
-
-              <!-- NUMBER -->
-
-              <th
-                class="px-4 py-3 text-left
-                       text-xs font-semibold
-                       uppercase tracking-wide
-                       text-slate-500"
-              >
-                #
-              </th>
-
-              <!-- USER -->
-
-              <th
-                class="px-4 py-3 text-left
-                       text-xs font-semibold
-                       uppercase tracking-wide
-                       text-slate-500"
-              >
-                Người dùng
-              </th>
-
-              <!-- EMAIL -->
-
-              <th
-                class="px-4 py-3 text-left
-                       text-xs font-semibold
-                       uppercase tracking-wide
-                       text-slate-500"
-              >
-                Email
-              </th>
-
-              <!-- ROLE -->
-
-              <th
-                class="px-4 py-3 text-left
-                       text-xs font-semibold
-                       uppercase tracking-wide
-                       text-slate-500"
-              >
-                Vai trò
-              </th>
-
-              <!-- STATUS -->
-
-              <th
-                class="px-4 py-3 text-left
-                       text-xs font-semibold
-                       uppercase tracking-wide
-                       text-slate-500"
-              >
-                Trạng thái
-              </th>
-
-              <!-- CREATED -->
-
-              <th
-                class="px-4 py-3 text-left
-                       text-xs font-semibold
-                       uppercase tracking-wide
-                       text-slate-500"
-              >
-                Ngày tạo
-              </th>
-
-              <!-- ACTION -->
-
-              <th
-                class="px-4 py-3 text-right
-                       text-xs font-semibold
-                       uppercase tracking-wide
-                       text-slate-500"
-              >
-                Thao tác
-              </th>
-
+            <tr class="border-b border-slate-100 bg-slate-50/75 text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <th class="px-4 py-3.5">#</th>
+              <th class="px-4 py-3.5">Người dùng</th>
+              <th class="px-4 py-3.5">Email / Số điện thoại</th>
+              <th class="px-4 py-3.5">Vai trò</th>
+              <th class="px-4 py-3.5">Trạng thái</th>
+              <th class="px-4 py-3.5">Ngày tạo</th>
+              <th class="px-4 py-3.5 text-right">Thao tác</th>
             </tr>
           </thead>
 
           <tbody class="divide-y divide-slate-100">
-
-            <!-- ACCOUNT -->
-
             <tr
-              v-for="(account, index) in filteredAccounts"
+              v-for="(account, index) in accounts"
               :key="account.id"
-              class="hover:bg-slate-50"
+              class="hover:bg-slate-50/80 transition-colors"
             >
-
-              <!-- NUMBER -->
-
-              <td
-                class="px-4 py-3
-                       text-xs text-slate-400"
-              >
-                {{
-                  (currentPage - 1) * pageSize +
-                  index +
-                  1
-                }}
+              <td class="px-4 py-3.5 text-xs text-slate-400 font-mono">
+                {{ (currentPage - 1) * pageSize + index + 1 }}
               </td>
 
-              <!-- USER -->
-
-              <td class="px-4 py-3">
-                <div
-                  class="font-medium
-                         text-slate-800"
-                >
-                  {{ getAccountName(account) }}
+              <!-- Người dùng -->
+              <td class="px-4 py-3.5">
+                <div class="font-bold text-slate-800">
+                  {{ account.fullName || account.name || account.username }}
                 </div>
-
-                <div
-                  class="mt-0.5 text-xs
-                         text-slate-400"
-                >
+                <div class="text-xs text-slate-400 mt-0.5 font-mono">
                   @{{ account.username }}
                 </div>
               </td>
 
-              <!-- EMAIL -->
-
-              <td
-                class="px-4 py-3
-                       text-slate-500"
-              >
-                {{ getAccountEmail(account) }}
+              <!-- Email / SĐT -->
+              <td class="px-4 py-3.5 text-xs text-slate-600">
+                <div>{{ account.email || '—' }}</div>
+                <div class="text-slate-400 mt-0.5">{{ account.phoneNumber || '—' }}</div>
               </td>
 
-              <!-- ROLE -->
-
-              <td class="px-4 py-3">
+              <!-- Role -->
+              <td class="px-4 py-3.5">
                 <AdminRoleBadge
-                  :role="getAccountRole(account)"
+                  :role="account.roles?.[0] || 'Patient'"
                 />
               </td>
 
-              <!-- STATUS -->
-
-              <td class="px-4 py-3">
-                <span
-                  class="rounded-md px-2.5 py-1
-                         text-xs font-medium"
-                  :class="statusClass(getAccountStatus())"
-                >
-                  {{ statusText(getAccountStatus()) }}
-                </span>
+              <!-- Status -->
+              <td class="px-4 py-3.5">
+                <BaseStatusBadge
+                  :status="account.isActive === false ? 'inactive' : 'active'"
+                />
               </td>
 
-              <!-- CREATED -->
-
-              <td
-                class="px-4 py-3
-                       text-xs text-slate-500"
-              >
-                {{ getAccountCreated() }}
+              <!-- CreatedAt -->
+              <td class="px-4 py-3.5 text-xs text-slate-500 font-mono">
+                {{ account.createdAt ? new Date(account.createdAt).toLocaleDateString('vi-VN') : '—' }}
               </td>
 
-              <!-- ACTIONS -->
-
-              <td class="px-4 py-3">
-                <div
-                  class="flex justify-end gap-2"
-                >
-
+              <!-- Actions -->
+              <td class="px-4 py-3.5 text-right">
+                <div class="inline-flex items-center gap-1.5">
                   <button
-                    class="rounded-md px-2.5 py-1.5
-                           text-xs font-medium
-                           text-slate-600
-                           hover:bg-slate-100"
+                    type="button"
+                    class="rounded-lg px-2.5 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                    @click="openView(account)"
                   >
                     Xem
                   </button>
 
                   <button
-                    class="rounded-md px-2.5 py-1.5
-                           text-xs font-medium
-                           text-violet-600
-                           hover:bg-violet-50"
+                    type="button"
+                    class="rounded-lg px-2.5 py-1 text-xs font-semibold text-[#0E4D92] hover:bg-blue-50 transition-colors cursor-pointer"
+                    @click="openEdit(account)"
                   >
                     Sửa
                   </button>
 
+                  <button
+                    type="button"
+                    class="rounded-lg px-2.5 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                    @click="confirmDelete(account)"
+                  >
+                    Khóa
+                  </button>
                 </div>
               </td>
-
             </tr>
 
-            <!-- EMPTY -->
-
-            <tr
-              v-if="filteredAccounts.length === 0"
-            >
-              <td
-                colspan="7"
-                class="px-4 py-12
-                       text-center text-sm
-                       text-slate-400"
-              >
+            <!-- Empty State -->
+            <tr v-if="!accounts || accounts.length === 0">
+              <td colspan="7" class="px-4 py-12 text-center text-slate-400 text-sm">
                 Không tìm thấy tài khoản phù hợp.
               </td>
             </tr>
-
           </tbody>
         </table>
-
       </div>
 
-      <!-- =========================
-           PAGINATION
-      ========================== -->
-
+      <!-- Pagination -->
       <AdminPagination
         v-model:current-page="currentPage"
         :total-pages="totalPages"
+        :total-count="totalCount"
       />
-
     </div>
 
+    <!-- User Form Dialog -->
+    <UserFormDialog
+      :open="formDialogOpen"
+      :initial="editingUser"
+      :submitting="submitting"
+      @close="formDialogOpen = false"
+      @submit="handleFormSubmit"
+    />
+
+    <!-- User Detail Modal -->
+    <BaseModal
+      :open="viewModalOpen"
+      title="Chi tiết Tài khoản"
+      size="md"
+      icon="👤"
+      @close="viewModalOpen = false"
+    >
+      <div v-if="viewingUser" class="space-y-4 text-sm">
+        <div class="flex items-center gap-3.5 pb-4 border-b border-slate-100">
+          <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-lg">
+            {{ (viewingUser.fullName || viewingUser.name || viewingUser.username || 'U').charAt(0).toUpperCase() }}
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-slate-800">{{ viewingUser.fullName || viewingUser.name }}</h3>
+            <p class="text-xs text-slate-500 font-mono">@{{ viewingUser.username }}</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 text-xs">
+          <div>
+            <span class="text-slate-400 block">Email:</span>
+            <span class="font-medium text-slate-700">{{ viewingUser.email || '—' }}</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block">Số điện thoại:</span>
+            <span class="font-medium text-slate-700">{{ viewingUser.phoneNumber || '—' }}</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block">Vai trò:</span>
+            <AdminRoleBadge :role="viewingUser.roles?.[0] || 'Patient'" />
+          </div>
+          <div>
+            <span class="text-slate-400 block">Trạng thái:</span>
+            <BaseStatusBadge :status="viewingUser.isActive === false ? 'inactive' : 'active'" />
+          </div>
+        </div>
+      </div>
+    </BaseModal>
+
+    <!-- Delete Confirmation Modal -->
+    <BaseModal
+      :open="deleteConfirmOpen"
+      title="Xác nhận vô hiệu hóa"
+      size="sm"
+      icon="🔒"
+      @close="deleteConfirmOpen = false"
+    >
+      <p class="text-sm text-slate-600">
+        Bạn có chắc chắn muốn khóa tài khoản <strong class="text-slate-800">@{{ deletingUser?.username }}</strong> không?
+      </p>
+      <template #footer>
+        <BaseButton variant="outline" size="sm" @click="deleteConfirmOpen = false">Hủy</BaseButton>
+        <BaseButton variant="danger" size="sm" :loading="deleting" @click="handleDelete">Xác nhận</BaseButton>
+      </template>
+    </BaseModal>
   </div>
 </template>
