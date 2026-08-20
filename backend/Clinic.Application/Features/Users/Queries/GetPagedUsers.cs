@@ -40,7 +40,9 @@ namespace Clinic.Application.Features.Users.Queries
                     PhoneNumber = user.Person.PhoneNumber,
                     Email = user.Person.Email,
                     Gender = user.Person.Gender,
-                    Roles = user.UserRoles.Select(ur => ur.Role.Name).ToList()
+                    Roles = user.UserRoles.Select(ur => ur.Role.Name).ToList(),
+                    IsActive = user.IsActive,
+                    CreatedAt = user.CreatedAt,
                 }).ToList(),
                 TotalCount = users.TotalCount,
                 PageNumber = request.PageNumber,

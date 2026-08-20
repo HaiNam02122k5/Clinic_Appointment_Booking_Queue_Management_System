@@ -35,6 +35,9 @@ namespace Clinic.Infrastructure.Authentication
                 claims.Add(new Claim(ClaimTypes.Role, role.Name));
             }
 
+            var personId = user.Person.Id;
+            claims.Add(new Claim("personId", personId.ToString()));
+
             // Nếu user là Patient, thêm claim patientId để dùng cho ownership check (vd: appointment.cancel.own).
             var patientId = user.Person?.Patient?.Id;
             if (patientId is not null)
