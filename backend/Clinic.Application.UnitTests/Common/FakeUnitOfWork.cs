@@ -16,7 +16,7 @@ namespace Clinic.Application.UnitTests.Common
             return Task.FromResult(0);
         }
 
-        public Task BeginTransactionAsync(CancellationToken cancellationToken = default)
+        public Task InitializeTransactionLockAsync(CancellationToken cancellationToken = default)
         {
             TransactionOpen = true;
             return Task.CompletedTask;

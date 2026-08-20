@@ -16,7 +16,7 @@ namespace Clinic.Application.UnitTests.Features.Auth.Commands
             var roleRepository = new FakeRoleRepository();
             var patientRepository = new FakePatientRepository();
             var unitOfWork = new FakeUnitOfWork();
-            var handler = new RegisterCommandHandler(new UserService(userRepository, passwordHasher), new PersonService(personRepository), roleRepository, patientRepository, unitOfWork);
+            var handler = new RegisterCommandHandler(new UserService(userRepository, personRepository, passwordHasher), new PersonService(personRepository), roleRepository, patientRepository, unitOfWork);
             var command = new RegisterCommand(
                 Username: "newpatient",
                 Password: "password123",

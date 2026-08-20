@@ -1,4 +1,6 @@
-﻿using Clinic.Domain.Entities;
+using Clinic.Application.Common.Models;
+using Clinic.Application.Contracts;
+using Clinic.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -8,25 +10,14 @@ namespace Clinic.Application.Interfaces
     public interface IAppointmentRepository
     {
         /// <summary>
-        /// Gets an appointment by its unique identifier (ID). Trả về null nếu không tìm thấy.
+        /// Gets a paged list of appointments for a specific patient, filtered by category.
         /// </summary>
-        Task<Appointment?> GetByIdAsync(Guid id);
+        Task<PagedResult<Appointment>> GetAppointmentsByPatientIdAsync(Guid patientId, string category);
 
         /// <summary>
-        /// Adds a new appointment to the system.
+        /// Gets an appointment by its ID, Include related doctor and patient information.
         /// </summary>
-        Task AddAsync(Appointment appointment);
-
-        /// <summary>
-        /// Updates an existing appointment's information in the system.
-        /// </summary>
-        Task UpdateAsync(Appointment appointment);
-
-        /// <summary>
-        /// Lấy toàn bộ lịch hẹn của 1 bệnh nhân, kèm WorkSchedule -> Doctor -> Employee -> Person
-        /// (để hiển thị tên bác sĩ), sắp xếp lịch hẹn mới nhất trước.
-        /// </summary>
-        Task<List<Appointment>> GetByPatientIdAsync(Guid patientId);
+        Task<Appointment?> GetByIdAsync(Guid appointmentId);
 
         /// <summary>
         /// Kiểm tra bác sĩ có từng/đang phụ trách ca khám nào của bệnh nhân này không
@@ -34,5 +25,15 @@ namespace Clinic.Application.Interfaces
         /// Dùng để scope "related" cho medical-report.view/patient-history.view của Doctor.
         /// </summary>
         Task<bool> ExistsForDoctorAndPatientAsync(Guid doctorId, Guid patientId);
+
+        /// <summary>
+        /// Gets a summary of total appointments within a specified date range, including counts of completed, waiting, canceled, and no-show appointments, as well as average waiting time and cancellation rate.
+        /// </summary>
+        Task<TotalAppointmentSummaryDto> GetTotalAppointmentSummaryAsync(DateOnly startDate, DateOnly endDate, Guid doctorId, Guid specialtyId);
+
+        /// <summary>
+        /// Gets the changelog of an appointment, including all snapshots of the appointment's state over time, doctor, patient, and updator information.
+        /// </summary>
+        Task<Appointment?> GetAppointmentChangelogAsync(Guid appointmentId);
     }
 }

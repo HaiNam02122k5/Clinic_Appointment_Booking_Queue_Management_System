@@ -1,5 +1,6 @@
-﻿using Clinic.Application.Common.Exceptions;
+using Clinic.Application.Common.Exceptions;
 using Clinic.Application.Interfaces;
+using Clinic.Domain.Common.Exceptions;
 using Clinic.Infrastructure.Sqlserver.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -32,7 +33,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             }
         }
 
-        public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
+        public async Task InitializeTransactionLockAsync(CancellationToken cancellationToken = default)
         {
             // Tránh mở đè 1 transaction khác lên transaction đang mở dở nếu handler lỡ gọi
             // 2 lần - giữ nguyên transaction đầu tiên, không rò rỉ connection.
@@ -41,7 +42,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                 return;
             }
 
-            _currentTransaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+            _currentTransaction = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken);
         }
 
         public async Task CommitTransactionAsync(CancellationToken cancellationToken = default)

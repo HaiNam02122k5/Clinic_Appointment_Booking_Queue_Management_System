@@ -6,11 +6,13 @@ namespace Clinic.Application.Services
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
+        private readonly IPersonRepository _personRepository;
         private readonly IPasswordHasher _passwordHasher;
 
-        public UserService(IUserRepository userRepository, IPasswordHasher passwordHasher)
+        public UserService(IUserRepository userRepository, IPersonRepository personRepository, IPasswordHasher passwordHasher)
         {
             _userRepository = userRepository;
+            _personRepository = personRepository;
             _passwordHasher = passwordHasher;
         }
 
@@ -50,6 +52,19 @@ namespace Clinic.Application.Services
         public async Task<User> VerifyUser(string username, string password)
         {
             var user = await _userRepository.GetByUsernameAsync(username);
+            if (user == null)
+            {
+                var person = await _personRepository.GetByEmailAsync(username);
+                if (person == null)
+                {
+                    person = await _personRepository.GetByPhoneNumberAsync(username);
+                    if (person == null)
+                    {
+                        throw new UnauthorizedAccessException("Username or password is incorrect.");
+                    }
+                }
+                user = person.User;
+            }
             if (user == null
                 || !_passwordHasher.VerifyPassword(password, user.PasswordHash)
                 || !user.IsActive
@@ -58,6 +73,29 @@ namespace Clinic.Application.Services
             }
 
             return user;
+        }
+
+        public async Task UpdatePassword(User user, string password)
+        {
+            var hashedPassword = _passwordHasher.HashPassword(password);
+            user.ResetPassword(hashedPassword);
+            await _userRepository.UpdateAsync(user);
+        }
+
+        public async Task VerifyAndUpdatePassword(Guid userId, string currentPassword, string newPassword)
+        {
+            var user = await GetByIdAsync(userId);
+            if (user == null)
+            {
+                throw new ArgumentException("User not found.");
+            }
+
+            if (!_passwordHasher.VerifyPassword(currentPassword, user.PasswordHash))
+            {
+                throw new UnauthorizedAccessException("Current password is incorrect.");
+            }
+
+            await UpdatePassword(user, newPassword);
         }
     }
 }

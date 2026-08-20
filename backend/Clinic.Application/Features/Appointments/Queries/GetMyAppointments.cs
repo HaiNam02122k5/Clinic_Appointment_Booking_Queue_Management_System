@@ -25,15 +25,17 @@ namespace Clinic.Application.Features.Appointments.Queries
                 throw new ForbiddenException("Only a patient account has appointments to view here.");
             }
 
-            var appointments = await _appointmentRepository.GetByPatientIdAsync(_currentUser.PatientId.Value);
+            var appointments = await _appointmentRepository.GetAppointmentsByPatientIdAsync(_currentUser.PatientId.Value, "upcoming");
 
-            return appointments.Select(a => new AppointmentDto
+            return appointments.Items.Select(a => new AppointmentDto
             {
                 Id = a.Id,
+                PatientId = a.PatientId,
+                PatientName = a.Patient?.Person?.FullName ?? string.Empty,
                 DoctorId = a.WorkSchedule.DoctorId,
                 DoctorName = a.WorkSchedule.Doctor?.Employee?.Person?.FullName ?? string.Empty,
                 TimeSlot = a.TimeSlot,
-                Status = a.Status.ToString(),
+                Status = a.Status,
                 Reason = a.Reason,
                 IsWalkIn = a.IsWalkIn
             }).ToList();

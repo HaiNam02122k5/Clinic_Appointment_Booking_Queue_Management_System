@@ -12,13 +12,7 @@ namespace Clinic.Domain.UnitTests
             var person = TestDataFactory.CreatePerson(fullName: "Alice Smith");
 
             // Act
-            var patient = new Patient
-            {
-                PersonId = person.Id,
-                Person = person,
-                InsuranceNumber = "INS-987654321",
-                EmergencyContact = "0987654321"
-            };
+            var patient = new Patient(person, "INS-987654321", "0987654321");
 
             // Assert
             Assert.Equal(person.Id, patient.PersonId);
@@ -34,7 +28,7 @@ namespace Clinic.Domain.UnitTests
         {
             // Arrange
             var person = TestDataFactory.CreatePerson();
-            var patient = new Patient { PersonId = person.Id, Person = person };
+            var patient = new Patient(person, "INS-987654321", "0987654321");
 
             var appointment = TestDataFactory.CreateAppointment(patientId: patient.Id);
 

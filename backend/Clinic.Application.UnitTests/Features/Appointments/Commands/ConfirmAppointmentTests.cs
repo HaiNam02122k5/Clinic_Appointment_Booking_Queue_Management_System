@@ -13,13 +13,15 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Commands
             // Arrange
             var appointmentRepository = new FakeAppointmentRepository();
             var unitOfWork = new FakeUnitOfWork();
-            var handler = new ConfirmAppointmentHandler(appointmentRepository, unitOfWork);
+            var notiQueue = new FakeNotificationQueue();
+            var notiService = new FakeNotificationService();
+            var handler = new ConfirmAppointmentCommandHandler(appointmentRepository, notiQueue, notiService, unitOfWork);
 
             var appointment = TestDataFactory.CreateAppointment();
             await appointmentRepository.AddAsync(appointment);
 
             // Act
-            await handler.Handle(new ConfirmAppointmentCommand(appointment.Id), CancellationToken.None);
+            await handler.Handle(new ConfirmAppointmentCommand(appointment.Id, Guid.NewGuid()), CancellationToken.None);
 
             // Assert
             Assert.Equal(AppointmentStatus.Confirmed, appointment.Status);
@@ -31,11 +33,13 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Commands
             // Arrange
             var appointmentRepository = new FakeAppointmentRepository();
             var unitOfWork = new FakeUnitOfWork();
-            var handler = new ConfirmAppointmentHandler(appointmentRepository, unitOfWork);
+            var notiQueue = new FakeNotificationQueue();
+            var notiService = new FakeNotificationService();
+            var handler = new ConfirmAppointmentCommandHandler(appointmentRepository, notiQueue, notiService, unitOfWork);
 
             // Act & Assert
             await Assert.ThrowsAsync<NotFoundException>(() =>
-                handler.Handle(new ConfirmAppointmentCommand(Guid.NewGuid()), CancellationToken.None));
+                handler.Handle(new ConfirmAppointmentCommand(Guid.NewGuid(), Guid.NewGuid()), CancellationToken.None));
         }
 
         [Fact]
@@ -44,14 +48,16 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Commands
             // Arrange
             var appointmentRepository = new FakeAppointmentRepository();
             var unitOfWork = new FakeUnitOfWork();
-            var handler = new ConfirmAppointmentHandler(appointmentRepository, unitOfWork);
+            var notiQueue = new FakeNotificationQueue();
+            var notiService = new FakeNotificationService();
+            var handler = new ConfirmAppointmentCommandHandler(appointmentRepository, notiQueue, notiService, unitOfWork);
 
             var appointment = TestDataFactory.CreateAppointment(confirmed: true);
             await appointmentRepository.AddAsync(appointment);
 
             // Act & Assert
-            await Assert.ThrowsAsync<ArgumentException>(() =>
-                handler.Handle(new ConfirmAppointmentCommand(appointment.Id), CancellationToken.None));
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                handler.Handle(new ConfirmAppointmentCommand(appointment.Id, Guid.NewGuid()), CancellationToken.None));
         }
 
         [Fact]
@@ -60,15 +66,17 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Commands
             // Arrange
             var appointmentRepository = new FakeAppointmentRepository();
             var unitOfWork = new FakeUnitOfWork();
-            var handler = new ConfirmAppointmentHandler(appointmentRepository, unitOfWork);
+            var notiQueue = new FakeNotificationQueue();
+            var notiService = new FakeNotificationService();
+            var handler = new ConfirmAppointmentCommandHandler(appointmentRepository, notiQueue, notiService, unitOfWork);
 
             var appointment = TestDataFactory.CreateAppointment();
-            appointment.Cancel();
+            appointment.Cancel(Guid.NewGuid());
             await appointmentRepository.AddAsync(appointment);
 
             // Act & Assert
-            await Assert.ThrowsAsync<ArgumentException>(() =>
-                handler.Handle(new ConfirmAppointmentCommand(appointment.Id), CancellationToken.None));
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                handler.Handle(new ConfirmAppointmentCommand(appointment.Id, Guid.NewGuid()), CancellationToken.None));
         }
     }
 }

@@ -16,13 +16,14 @@ namespace Clinic.Application.UnitTests.Features.Queue.Queries
             currentUser.GrantPermission("queue.view");
             var handler = new GetQueueByDoctorHandler(queueTicketRepository, currentUser);
 
-            var doctorId = Guid.NewGuid();
-            var appointment = TestDataFactory.CreateAppointment(doctorId: doctorId, confirmed: true);
+            var doctor = TestDataFactory.CreateDoctor();
+            var ws = TestDataFactory.CreateWorkSchedule(doctor, date: DateOnly.FromDateTime(DateTime.Today));
+            var appointment = TestDataFactory.CreateAppointment(confirmed: true, workSchedule: ws);
             var queueTicket = TestDataFactory.CreateQueueTicket(appointment, queueNumber: 1);
             await queueTicketRepository.AddAsync(queueTicket);
 
             // Act
-            var result = await handler.Handle(new GetQueueByDoctorQuery(doctorId), CancellationToken.None);
+            var result = await handler.Handle(new GetQueueByDoctorQuery(doctor.Id), CancellationToken.None);
 
             // Assert
             Assert.Single(result);
@@ -35,16 +36,17 @@ namespace Clinic.Application.UnitTests.Features.Queue.Queries
         {
             // Arrange: Doctor không có "queue.view" nhưng DoctorId khớp với bác sĩ được truy vấn.
             var queueTicketRepository = new FakeQueueTicketRepository();
-            var doctorId = Guid.NewGuid();
-            var currentUser = new FakeCurrentUser { DoctorId = doctorId };
+            var doctor = TestDataFactory.CreateDoctor();
+            var ws = TestDataFactory.CreateWorkSchedule(doctor, date: DateOnly.FromDateTime(DateTime.Today));
+            var currentUser = new FakeCurrentUser { DoctorId = doctor.Id };
             var handler = new GetQueueByDoctorHandler(queueTicketRepository, currentUser);
 
-            var appointment = TestDataFactory.CreateAppointment(doctorId: doctorId, confirmed: true);
+            var appointment = TestDataFactory.CreateAppointment(confirmed: true, workSchedule: ws);
             var queueTicket = TestDataFactory.CreateQueueTicket(appointment, queueNumber: 1);
             await queueTicketRepository.AddAsync(queueTicket);
 
             // Act
-            var result = await handler.Handle(new GetQueueByDoctorQuery(doctorId), CancellationToken.None);
+            var result = await handler.Handle(new GetQueueByDoctorQuery(doctor.Id), CancellationToken.None);
 
             // Assert
             Assert.Single(result);
@@ -74,21 +76,22 @@ namespace Clinic.Application.UnitTests.Features.Queue.Queries
             currentUser.GrantPermission("queue.view");
             var handler = new GetQueueByDoctorHandler(queueTicketRepository, currentUser);
 
-            var doctorId = Guid.NewGuid();
+            var doctor = TestDataFactory.CreateDoctor();
+            var ws = TestDataFactory.CreateWorkSchedule(doctor, date: DateOnly.FromDateTime(DateTime.Today));
 
             var ticket1 = TestDataFactory.CreateQueueTicket(
-                TestDataFactory.CreateAppointment(doctorId: doctorId, confirmed: true), queueNumber: 1);
+                TestDataFactory.CreateAppointment(confirmed: true, workSchedule: ws), queueNumber: 1);
             var ticket2Priority = TestDataFactory.CreateQueueTicket(
-                TestDataFactory.CreateAppointment(doctorId: doctorId, confirmed: true), queueNumber: 2, priority: true);
+                TestDataFactory.CreateAppointment(confirmed: true, workSchedule: ws), queueNumber: 2, priority: true);
             var ticket3 = TestDataFactory.CreateQueueTicket(
-                TestDataFactory.CreateAppointment(doctorId: doctorId, confirmed: true), queueNumber: 3);
+                TestDataFactory.CreateAppointment(confirmed: true, workSchedule: ws), queueNumber: 3);
 
             await queueTicketRepository.AddAsync(ticket1);
             await queueTicketRepository.AddAsync(ticket2Priority);
             await queueTicketRepository.AddAsync(ticket3);
 
             // Act
-            var result = await handler.Handle(new GetQueueByDoctorQuery(doctorId), CancellationToken.None);
+            var result = await handler.Handle(new GetQueueByDoctorQuery(doctor.Id), CancellationToken.None);
 
             // Assert: vé ưu tiên (số 2) phải đứng đầu, dù số thứ tự không nhỏ nhất.
             Assert.Equal(3, result.Count);

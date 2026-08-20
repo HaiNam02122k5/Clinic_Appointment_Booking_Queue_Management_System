@@ -31,9 +31,10 @@ namespace Clinic.Application.Features.Slots.Queries
                 WorkScheduleId = w.Id,
                 DoctorId = w.DoctorId,
                 DoctorName = w.Doctor?.Employee?.Person?.FullName ?? string.Empty,
+                Date = w.Date,
                 ShiftStart = w.ShiftStart,
                 ShiftEnd = w.ShiftEnd,
-                RemainingCapacity = w.PatientLimitPerSlot - w.Appointments.Count(a => a.Status != AppointmentStatus.Cancelled)
+                RemainingCapacity = w.PatientLimit - w.Appointments.Count(a => a.Status != AppointmentStatus.Cancelled)
             }).ToList();
         }
     }

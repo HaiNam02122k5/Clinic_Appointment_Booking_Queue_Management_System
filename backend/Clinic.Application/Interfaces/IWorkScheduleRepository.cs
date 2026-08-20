@@ -46,12 +46,12 @@ namespace Clinic.Application.Interfaces
         Task<IEnumerable<ShiftRequest>> GetRequestedSchedulesByDoctorIdAsync(Guid? doctorId, DateOnly startDate, DateOnly endDate);
 
         /// <summary>
-        /// Retrieves a work schedule by its unique identifier asynchronously (không kèm include, dùng cho nghiệp vụ ca trực).
+        /// Retrieves a work schedule by its unique identifier asynchronously, including its associated doctor-person info.
         /// </summary>
         Task<WorkSchedule?> GetWorkScheduleByIdAsync(Guid scheduleId);
 
         /// <summary>
-        /// Retrieves a requested shift by its unique identifier asynchronously.
+        /// Retrieves a requested shift by its unique identifier asynchronously, including its associated doctor and active appointments.
         /// </summary>
         Task<ShiftRequest?> GetShiftRequestByIdAsync(Guid scheduleId);
 
@@ -69,12 +69,14 @@ namespace Clinic.Application.Interfaces
         /// Checks if a doctor has overlapping work schedules within the specified time range asynchronously.
         /// If currentWSId is provided, it will be excluded from the check (useful for updates).
         /// </summary>
-        Task<bool> HasOverlappingWorkSchedule(Guid doctorId, DateTime startTime, DateTime endTime, Guid? currentWSId = null);
+        Task<bool> HasOverlappingWorkSchedule(Guid doctorId, DateOnly date, TimeOnly startTime, TimeOnly endTime, Guid? currentWSId = null);
 
         /// <summary>
         /// Checks if a doctor has already requested a shift that has exact same time range asynchronously.
         /// If currentSRId is provided, it will be excluded from the check (useful for updates).
         /// </summary>
-        Task<bool> HasDuplicateShiftRequest(Guid doctorId, DateTime startTime, DateTime endTime, Guid? currentSRId = null);
+        Task<bool> HasDuplicateShiftRequest(Guid doctorId, DateOnly date, TimeOnly startTime, TimeOnly endTime, Guid? currentSRId = null);
+
+        Task<IEnumerable<WorkSchedule>> GetDoctorSchedulesWithAppointmentByDateAsync(Guid? doctorId, DateOnly date);
     }
 }

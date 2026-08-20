@@ -34,13 +34,15 @@ namespace Clinic.Application.Features.Users.Queries
             {
                 Items = users.Items.Select(user => new UserSummaryDto
                 {
-                    Id = user.Id,
+                    UserId = user.Id,
                     Username = user.Username,
                     FullName = user.Person.FullName,
                     PhoneNumber = user.Person.PhoneNumber,
                     Email = user.Person.Email,
                     Gender = user.Person.Gender,
-                    Roles = user.UserRoles.Select(ur => ur.Role.Name).ToList()
+                    Roles = user.UserRoles.Select(ur => ur.Role.Name).ToList(),
+                    IsActive = user.IsActive,
+                    CreatedAt = user.CreatedAt,
                 }).ToList(),
                 TotalCount = users.TotalCount,
                 PageNumber = request.PageNumber,

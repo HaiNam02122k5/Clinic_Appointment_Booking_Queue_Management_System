@@ -17,7 +17,7 @@ namespace Clinic.Application.UnitTests.Features.Queue.Commands
             var unitOfWork = new FakeUnitOfWork();
             var handler = new CheckInHandler(appointmentRepository, queueTicketRepository, unitOfWork);
 
-            var appointment = TestDataFactory.CreateAppointment(confirmed: true);
+            var appointment = TestDataFactory.CreateAppointment(confirmed: true, today: true);
             await appointmentRepository.AddAsync(appointment);
 
             // Act
@@ -38,10 +38,9 @@ namespace Clinic.Application.UnitTests.Features.Queue.Commands
             var queueTicketRepository = new FakeQueueTicketRepository();
             var unitOfWork = new FakeUnitOfWork();
             var handler = new CheckInHandler(appointmentRepository, queueTicketRepository, unitOfWork);
-
-            var doctorId = Guid.NewGuid();
-            var firstAppointment = TestDataFactory.CreateAppointment(doctorId: doctorId, confirmed: true);
-            var secondAppointment = TestDataFactory.CreateAppointment(doctorId: doctorId, confirmed: true);
+            var ws = TestDataFactory.CreateWorkSchedule(date: DateOnly.FromDateTime(DateTime.UtcNow));
+            var firstAppointment = TestDataFactory.CreateAppointment(confirmed: true, workSchedule: ws);
+            var secondAppointment = TestDataFactory.CreateAppointment(confirmed: true, workSchedule: ws);
             await appointmentRepository.AddAsync(firstAppointment);
             await appointmentRepository.AddAsync(secondAppointment);
 
@@ -63,8 +62,8 @@ namespace Clinic.Application.UnitTests.Features.Queue.Commands
             var unitOfWork = new FakeUnitOfWork();
             var handler = new CheckInHandler(appointmentRepository, queueTicketRepository, unitOfWork);
 
-            var appointmentForDoctorA = TestDataFactory.CreateAppointment(confirmed: true);
-            var appointmentForDoctorB = TestDataFactory.CreateAppointment(confirmed: true);
+            var appointmentForDoctorA = TestDataFactory.CreateAppointment(confirmed: true, today: true);
+            var appointmentForDoctorB = TestDataFactory.CreateAppointment(confirmed: true, today: true);
             await appointmentRepository.AddAsync(appointmentForDoctorA);
             await appointmentRepository.AddAsync(appointmentForDoctorB);
 
@@ -118,7 +117,7 @@ namespace Clinic.Application.UnitTests.Features.Queue.Commands
             var unitOfWork = new FakeUnitOfWork();
             var handler = new CheckInHandler(appointmentRepository, queueTicketRepository, unitOfWork);
 
-            var appointment = TestDataFactory.CreateAppointment(confirmed: true, timeSlot: DateTime.UtcNow.AddDays(1));
+            var appointment = TestDataFactory.CreateAppointment(confirmed: true);
             await appointmentRepository.AddAsync(appointment);
 
             // Act & Assert
@@ -137,10 +136,8 @@ namespace Clinic.Application.UnitTests.Features.Queue.Commands
             var queueTicketRepository = new FakeQueueTicketRepository();
             var unitOfWork = new FakeUnitOfWork();
             var handler = new CheckInHandler(appointmentRepository, queueTicketRepository, unitOfWork);
-
-            var appointment = TestDataFactory.CreateAppointment(confirmed: true);
+            var appointment = TestDataFactory.CreateAppointment(confirmed: true, checkedIn: true);
             await appointmentRepository.AddAsync(appointment);
-            await handler.Handle(new CheckInCommand(appointment.Id), CancellationToken.None);
 
             // Act & Assert: gọi check-in lần 2 cho cùng 1 appointment phải bị chặn.
             await Assert.ThrowsAsync<ArgumentException>(() =>

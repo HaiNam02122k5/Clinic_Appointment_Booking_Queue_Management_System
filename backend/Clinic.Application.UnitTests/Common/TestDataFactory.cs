@@ -45,7 +45,7 @@ namespace Clinic.Application.UnitTests.Common
                 QueueNumber = queueNumber,
                 CheckInTime = DateTime.UtcNow
             };
-            appointment.QueueTicket = queueTicket;
+            appointment.CheckIn(queueTicket);
 
             if (priority)
             {
@@ -59,63 +59,6 @@ namespace Clinic.Application.UnitTests.Common
         {
             var refreshToken = new RefreshToken(hashedToken, DateTime.UtcNow.AddDays(7), user);
             return refreshToken;
-        }
-
-        /// <summary>
-        /// Tạo 1 Appointment hợp lệ (kèm WorkSchedule gắn với doctorId) để dùng cho test
-        /// Confirm/CheckIn/Cancel. Status mặc định là Pending (trạng thái khởi tạo của Appointment);
-        /// truyền confirmed = true để có sẵn Appointment ở trạng thái Confirmed (phục vụ test CheckIn),
-        /// hoặc checkedIn = true để có sẵn Appointment ở trạng thái CheckedIn (phục vụ test Cancel
-        /// sau khi đã có QueueTicket).
-        /// </summary>
-        public static Appointment CreateAppointment(Guid? patientId = null, Guid? doctorId = null, bool confirmed = false, bool checkedIn = false, DateTime? timeSlot = null)
-        {
-            // WorkSchedule giờ bắt buộc gắn với 1 Doctor object (không chỉ DoctorId), nên
-            // dựng 1 Doctor "giả" qua constructor reconstruct để giữ đúng Id đã truyền vào,
-            // tránh phải dựng cả Employee/Specialty chỉ để phục vụ test Appointment/Queue.
-            var doctor = new Doctor(
-                id: doctorId ?? Guid.NewGuid(),
-                employeeId: Guid.NewGuid(),
-                licenseNumber: "TEST-LICENSE",
-                qualification: "MD",
-                experienceYears: 0,
-                biography: null,
-                status: DoctorStatus.Active,
-                createdAt: DateTime.UtcNow,
-                updatedAt: DateTime.UtcNow,
-                isDeleted: false
-            );
-
-            var workSchedule = new WorkSchedule(
-                doctor,
-                DateTime.UtcNow.AddHours(1),
-                DateTime.UtcNow.AddHours(2),
-                5
-            );
-
-            var appointment = new Appointment
-            {
-                PatientId = patientId ?? Guid.NewGuid(),
-                WorkScheduleId = workSchedule.Id,
-                WorkSchedule = workSchedule,
-                TimeSlot = timeSlot ?? DateTime.UtcNow.AddHours(1),
-            };
-
-            if (confirmed || checkedIn)
-            {
-                appointment.Confirm();
-            }
-
-            if (checkedIn)
-            {
-                // Lưu ý: nếu truyền timeSlot khác ngày hôm nay kèm checkedIn: true, dòng này sẽ tự
-                // ném ConflictException ngay trong lúc dựng dữ liệu test (đúng theo domain rule mới) -
-                // muốn test case "check-in lịch ngày khác" thì dùng confirmed: true + timeSlot khác
-                // ngày, rồi tự gọi handler.Handle(...) để assert exception, không dùng checkedIn: true.
-                appointment.CheckIn(DateTime.UtcNow);
-            }
-
-            return appointment;
         }
 
         public static Specialty CreateSpecialty(string? name = "Cardiology", string? description = "Heart specialist")
@@ -139,26 +82,39 @@ namespace Clinic.Application.UnitTests.Common
             return doctor;
         }
 
-        public static Patient CreatePatient(Person? person = null, string? insuranceNumber = null, string? emergencyContact = null)
+        internal static Patient CreatePatient(Person? person = null)
         {
             person ??= CreatePerson(userRole: "Patient");
-            var patient = new Patient
-            {
-                PersonId = person.Id,
-                Person = person,
-                InsuranceNumber = insuranceNumber,
-                EmergencyContact = emergencyContact
-            };
+            var patient = new Patient(person, "ABC123", "0111111111");
             person.Patient = patient;
             return patient;
         }
 
-        public static WorkSchedule CreateWorkSchedule(Doctor? doctor = null, DateTime? shiftStart = null, DateTime? shiftEnd = null, int limit = 5)
+        internal static WorkSchedule CreateWorkSchedule(Doctor? doctor = null, DateOnly? date = null, TimeOnly? startTime = null, TimeOnly? endTime = null, int patientLimit = 15)
         {
-            doctor ??= CreateDoctor();
-            var start = shiftStart ?? DateTime.UtcNow.AddDays(1).Date.AddHours(8);
-            var end = shiftEnd ?? start.AddHours(4);
-            return new WorkSchedule(doctor, start, end, limit);
+            return new WorkSchedule(doctor ?? CreateDoctor(), date ?? DateOnly.FromDateTime(DateTime.UtcNow.AddDays(2)), startTime ?? (date != null ? TimeOnly.FromDateTime(DateTime.UtcNow.AddHours(7).AddMinutes(1)) : new TimeOnly(9, 0)), endTime ?? (date != null ? TimeOnly.FromDateTime(DateTime.UtcNow.AddHours(9)) : new TimeOnly(11, 0)), patientLimit);
+        }
+
+        internal static Appointment CreateAppointment(Patient? patient = null, WorkSchedule? workSchedule = null, TimeOnly? timeSlot = null, string? reason = null, Guid? createdBy = null, bool confirmed = false, bool checkedIn = false, int queueNumber = 0, bool today = false)
+        {
+            workSchedule ??= CreateWorkSchedule(date: checkedIn | today ? DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7).AddMinutes(1)) : null, startTime: timeSlot, endTime: timeSlot?.AddHours(8));
+            timeSlot ??= workSchedule.ShiftStart;
+            var app = new Appointment(patient ?? CreatePatient(), workSchedule, timeSlot.Value, reason ?? "Reason", createdBy ?? Guid.NewGuid());
+            if (confirmed || checkedIn)
+            {
+                app.Confirm(new Guid());
+            }
+
+            if (checkedIn)
+            {
+                // Lưu ý: nếu truyền timeSlot khác ngày hôm nay kèm checkedIn: true, dòng này sẽ tự
+                // ném ConflictException ngay trong lúc dựng dữ liệu test (đúng theo domain rule mới) -
+                // muốn test case "check-in lịch ngày khác" thì dùng confirmed: true + timeSlot khác
+                // ngày, rồi tự gọi handler.Handle(...) để assert exception, không dùng checkedIn: true.
+                app.CheckIn(DateTime.UtcNow, queueNumber);
+            }
+
+            return app;
         }
 
         public static MedicalReport CreateMedicalReport(QueueTicket? queueTicket = null, MedicalReportStatus status = MedicalReportStatus.Draft, string? symptoms = "Headache", string? diagnosis = "Mild migraine", string? prescription = "Paracetamol 500mg")

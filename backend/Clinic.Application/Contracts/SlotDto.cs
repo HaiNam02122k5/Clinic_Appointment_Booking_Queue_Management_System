@@ -13,11 +13,13 @@ namespace Clinic.Application.Contracts
         [JsonPropertyName("doctorName")]
         public string DoctorName { get; set; } = string.Empty;
 
+        public DateOnly Date { get; set; }
+
         [JsonPropertyName("shiftStart")]
-        public DateTime ShiftStart { get; set; }
+        public TimeOnly ShiftStart { get; set; }
 
         [JsonPropertyName("shiftEnd")]
-        public DateTime ShiftEnd { get; set; }
+        public TimeOnly ShiftEnd { get; set; }
 
         [JsonPropertyName("remainingCapacity")]
         public int RemainingCapacity { get; set; }

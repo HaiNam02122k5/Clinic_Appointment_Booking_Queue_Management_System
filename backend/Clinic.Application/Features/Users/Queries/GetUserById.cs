@@ -26,13 +26,18 @@ namespace Clinic.Application.Features.Users.Queries
             }
             return new UserDetailDto
             {
-                Id = user.Id,
+                UserId = user.Id,
+                PersonId = user.PersonId,
                 Username = user.Username,
                 FullName = user.Person.FullName,
                 PhoneNumber = user.Person.PhoneNumber,
                 Email = user.Person.Email,
                 Gender = user.Person.Gender,
-                Address = user.Person.Address
+                Address = user.Person.Address,
+                Roles = user.UserRoles.Select(ur => ur.Role.Name).ToList(),
+                DateOfBirth = user.Person.DateOfBirth,
+                IsActive = user.IsActive,
+                CreatedAt = user.CreatedAt,
             };
         }
     }

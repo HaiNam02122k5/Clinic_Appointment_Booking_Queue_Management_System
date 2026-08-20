@@ -30,7 +30,7 @@ namespace Clinic.Domain.UnitTests.Common
         /// Status mặc định là Pending; truyền confirmed = true / checkedIn = true để có sẵn
         /// Appointment ở trạng thái tương ứng.
         /// </summary>
-        public static Appointment CreateAppointment(Guid? patientId = null, Guid? doctorId = null, bool confirmed = false, bool checkedIn = false)
+        public static Appointment CreateAppointment(Guid? patientId = null, Guid? doctorId = null, bool confirmed = false, bool checkedIn = false, double? day = 0, TimeOnly? startTime = null, TimeOnly? endTime = null)
         {
             // WorkSchedule giờ bắt buộc gắn với 1 Doctor object (không chỉ DoctorId), nên
             // dựng 1 Doctor "giả" qua constructor reconstruct để giữ đúng Id đã truyền vào,
@@ -50,27 +50,28 @@ namespace Clinic.Domain.UnitTests.Common
 
             var workSchedule = new WorkSchedule(
                 doctor,
-                DateTime.UtcNow.AddHours(1),
-                DateTime.UtcNow.AddHours(2),
+                DateOnly.FromDateTime(DateTime.UtcNow.AddDays(day.Value)),
+                TimeOnly.FromDateTime(DateTime.UtcNow.AddHours(8)), // UTC+7 +1
+                TimeOnly.FromDateTime(DateTime.UtcNow.AddHours(9)), // UTC+7 +2
                 5
             );
 
-            var appointment = new Appointment
-            {
-                PatientId = patientId ?? Guid.NewGuid(),
-                WorkScheduleId = workSchedule.Id,
-                WorkSchedule = workSchedule,
-                TimeSlot = DateTime.UtcNow.AddHours(1),
-            };
+            var patientPerson = CreatePerson(fullName: "Test Patient");
+
+            var patient = new Patient(
+                patientPerson, "", ""
+            );
+
+            var appointment = new Appointment(patient, workSchedule, TimeOnly.FromDateTime(DateTime.UtcNow.AddHours(8)), "Reason", Guid.NewGuid());
 
             if (confirmed || checkedIn)
             {
-                appointment.Confirm();
+                appointment.Confirm(Guid.NewGuid());
             }
 
             if (checkedIn)
             {
-                appointment.CheckIn(DateTime.UtcNow);
+                appointment.CheckIn(DateTime.UtcNow, 1);
             }
 
             return appointment;
@@ -88,7 +89,7 @@ namespace Clinic.Domain.UnitTests.Common
                 QueueNumber = queueNumber,
                 CheckInTime = DateTime.UtcNow
             };
-            appointment.QueueTicket = queueTicket;
+            appointment.CheckIn(queueTicket);
 
             if (priority)
             {

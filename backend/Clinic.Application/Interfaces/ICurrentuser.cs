@@ -12,6 +12,7 @@ namespace Clinic.Application.Interfaces
         /// <summary>Id của User hiện tại, lấy từ claim "sub". Null nếu chưa đăng nhập.</summary>
         Guid? UserId { get; }
         Guid? EmployeeId { get; }
+        Guid? PersonId { get; }
         bool HasPermission(string permission);
     }
 }

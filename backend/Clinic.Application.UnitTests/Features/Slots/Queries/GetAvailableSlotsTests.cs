@@ -17,8 +17,8 @@ namespace Clinic.Application.UnitTests.Features.Slots.Queries
             var doctor1 = TestDataFactory.CreateDoctor();
             var doctor2 = TestDataFactory.CreateDoctor();
 
-            var schedule1 = TestDataFactory.CreateWorkSchedule(doctor: doctor1, shiftStart: DateTime.UtcNow.AddDays(1).Date.AddHours(8), shiftEnd: DateTime.UtcNow.AddDays(1).Date.AddHours(12));
-            var schedule2 = TestDataFactory.CreateWorkSchedule(doctor: doctor2, shiftStart: DateTime.UtcNow.AddDays(1).Date.AddHours(13), shiftEnd: DateTime.UtcNow.AddDays(1).Date.AddHours(17));
+            var schedule1 = TestDataFactory.CreateWorkSchedule(doctor: doctor1);
+            var schedule2 = TestDataFactory.CreateWorkSchedule(doctor: doctor2);
 
             workScheduleRepository.Add(schedule1);
             workScheduleRepository.Add(schedule2);
@@ -44,8 +44,8 @@ namespace Clinic.Application.UnitTests.Features.Slots.Queries
 
             var doctor = TestDataFactory.CreateDoctor();
 
-            var scheduleDay1 = TestDataFactory.CreateWorkSchedule(doctor: doctor, shiftStart: DateTime.UtcNow.AddDays(1).Date.AddHours(8), shiftEnd: DateTime.UtcNow.AddDays(1).Date.AddHours(12));
-            var scheduleDay5 = TestDataFactory.CreateWorkSchedule(doctor: doctor, shiftStart: DateTime.UtcNow.AddDays(5).Date.AddHours(8), shiftEnd: DateTime.UtcNow.AddDays(5).Date.AddHours(12));
+            var scheduleDay1 = TestDataFactory.CreateWorkSchedule(doctor: doctor, date: DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)));
+            var scheduleDay5 = TestDataFactory.CreateWorkSchedule(doctor: doctor, date: DateOnly.FromDateTime(DateTime.UtcNow.AddDays(5)));
 
             workScheduleRepository.Add(scheduleDay1);
             workScheduleRepository.Add(scheduleDay5);
@@ -70,12 +70,12 @@ namespace Clinic.Application.UnitTests.Features.Slots.Queries
             var workScheduleRepository = new FakeWorkScheduleRepository();
             var handler = new GetAvailableSlotsQueryHandler(workScheduleRepository);
 
-            var workSchedule = TestDataFactory.CreateWorkSchedule(limit: 5);
+            var workSchedule = TestDataFactory.CreateWorkSchedule(patientLimit: 5);
             // 2 active appointments + 1 cancelled appointment
-            var active1 = new Appointment { PatientId = Guid.NewGuid(), WorkScheduleId = workSchedule.Id, WorkSchedule = workSchedule, TimeSlot = workSchedule.ShiftStart };
-            var active2 = new Appointment { PatientId = Guid.NewGuid(), WorkScheduleId = workSchedule.Id, WorkSchedule = workSchedule, TimeSlot = workSchedule.ShiftStart };
-            var cancelled = new Appointment { PatientId = Guid.NewGuid(), WorkScheduleId = workSchedule.Id, WorkSchedule = workSchedule, TimeSlot = workSchedule.ShiftStart };
-            cancelled.Cancel();
+            var active1 = TestDataFactory.CreateAppointment(workSchedule: workSchedule);
+            var active2 = TestDataFactory.CreateAppointment(workSchedule: workSchedule);
+            var cancelled = TestDataFactory.CreateAppointment(workSchedule: workSchedule);
+            cancelled.Cancel(Guid.NewGuid());
 
             workSchedule.Appointments.Add(active1);
             workSchedule.Appointments.Add(active2);
@@ -102,8 +102,8 @@ namespace Clinic.Application.UnitTests.Features.Slots.Queries
             var workScheduleRepository = new FakeWorkScheduleRepository();
             var handler = new GetAvailableSlotsQueryHandler(workScheduleRepository);
 
-            var fullSchedule = TestDataFactory.CreateWorkSchedule(limit: 1);
-            var activeApp = new Appointment { PatientId = Guid.NewGuid(), WorkScheduleId = fullSchedule.Id, WorkSchedule = fullSchedule, TimeSlot = fullSchedule.ShiftStart };
+            var fullSchedule = TestDataFactory.CreateWorkSchedule(patientLimit: 1);
+            var activeApp = TestDataFactory.CreateAppointment(workSchedule: fullSchedule);
             fullSchedule.Appointments.Add(activeApp);
 
             workScheduleRepository.Add(fullSchedule);

@@ -16,8 +16,9 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Queries
             var handler = new GetDoctorSchedulesHandler(doctorRepository, workScheduleRepository);
             var doctor = TestDataFactory.CreateDoctor();
             await doctorRepository.AddAsync(doctor);
-            var schedule1 = new WorkSchedule(doctor, DateTime.UtcNow.AddDays(1), DateTime.UtcNow.AddDays(1).AddHours(1), 5);
-            var schedule2 = new WorkSchedule(doctor, DateTime.UtcNow.AddDays(10), DateTime.UtcNow.AddDays(10).AddHours(1), 5);
+            var now = DateTime.UtcNow;
+            var schedule1 = new WorkSchedule(doctor, DateOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddDays(1).AddHours(1)), 5);
+            var schedule2 = new WorkSchedule(doctor, DateOnly.FromDateTime(now.AddDays(10)), TimeOnly.FromDateTime(now.AddDays(10)), TimeOnly.FromDateTime(now.AddDays(10).AddHours(1)), 5);
             doctor.AddWorkSchedule(schedule1);
             doctor.AddWorkSchedule(schedule2);
             await workScheduleRepository.AddWorkScheduleAsync(schedule1);

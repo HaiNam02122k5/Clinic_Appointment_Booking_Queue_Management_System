@@ -12,13 +12,15 @@ namespace Clinic.Application.UnitTests.Features.Queue.Commands
         {
             // Arrange
             var queueTicketRepository = new FakeQueueTicketRepository();
-            var doctorId = Guid.NewGuid();
-            var currentUser = new FakeCurrentUser { DoctorId = doctorId };
+            var currentUser = new FakeCurrentUser();
             var unitOfWork = new FakeUnitOfWork();
             var handler = new CompleteExamHandler(queueTicketRepository, currentUser, unitOfWork);
 
-            var appointment = TestDataFactory.CreateAppointment(doctorId: doctorId, checkedIn: true);
+            var appointment = TestDataFactory.CreateAppointment(checkedIn: true);
             var queueTicket = TestDataFactory.CreateQueueTicket(appointment, queueNumber: 1);
+            currentUser.UserId = appointment.WorkSchedule.Doctor.Employee.Person.User.Id;
+            currentUser.DoctorId = appointment.WorkSchedule.Doctor.Id;
+            currentUser.GrantPermission("queue.complete-exam.own");
             queueTicket.Call();
             queueTicket.StartExam();
             await queueTicketRepository.AddAsync(queueTicket);
@@ -38,10 +40,11 @@ namespace Clinic.Application.UnitTests.Features.Queue.Commands
             var queueTicketRepository = new FakeQueueTicketRepository();
             var currentUser = new FakeCurrentUser();
             currentUser.GrantPermission("queue.complete-exam.any");
+            currentUser.UserId = Guid.NewGuid();
             var unitOfWork = new FakeUnitOfWork();
             var handler = new CompleteExamHandler(queueTicketRepository, currentUser, unitOfWork);
 
-            var appointment = TestDataFactory.CreateAppointment(doctorId: Guid.NewGuid(), checkedIn: true);
+            var appointment = TestDataFactory.CreateAppointment(checkedIn: true);
             var queueTicket = TestDataFactory.CreateQueueTicket(appointment, queueNumber: 1);
             queueTicket.Call();
             queueTicket.StartExam();
@@ -64,7 +67,7 @@ namespace Clinic.Application.UnitTests.Features.Queue.Commands
             var unitOfWork = new FakeUnitOfWork();
             var handler = new CompleteExamHandler(queueTicketRepository, currentUser, unitOfWork);
 
-            var appointment = TestDataFactory.CreateAppointment(doctorId: Guid.NewGuid(), checkedIn: true);
+            var appointment = TestDataFactory.CreateAppointment(checkedIn: true);
             var queueTicket = TestDataFactory.CreateQueueTicket(appointment, queueNumber: 1);
             queueTicket.Call();
             queueTicket.StartExam();
