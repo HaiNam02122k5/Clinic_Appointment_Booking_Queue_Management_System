@@ -1,15 +1,26 @@
 import { http } from '@/lib/api/http'
-import type { CreateUserInput, UpdateUserInput, User } from './users.types'
+import type {
+  GetUsersParams,
+  PagedUsersResponse,
+  User,
+} from './users.types'
 
-/**
- * Users API. Talks to VITE_API_BASE_URL (defaults to jsonplaceholder, which
- * fakes writes) so the starter is runnable with zero backend setup.
- */
 export const usersApi = {
-  list: () => http.get<User[]>('/users').then((r) => r.data),
-  get: (id: number) => http.get<User>(`/users/${id}`).then((r) => r.data),
-  create: (input: CreateUserInput) => http.post<User>('/users', input).then((r) => r.data),
-  update: (id: number, input: UpdateUserInput) =>
-    http.patch<User>(`/users/${id}`, input).then((r) => r.data),
-  remove: (id: number) => http.delete(`/users/${id}`).then(() => id),
+  // GET /admin/users
+  list: (params?: GetUsersParams) =>
+    http
+      .get<PagedUsersResponse>('/admin/users', { params })
+      .then((r) => r.data),
+
+  // GET /admin/users/all-brief
+  listAllBrief: () =>
+    http
+      .get<User[]>('/admin/users/all-brief')
+      .then((r) => r.data),
+
+  // GET /admin/users/{userId}
+  get: (id: string) =>
+    http
+      .get<User>(`/admin/users/${id}`)
+      .then((r) => r.data),
 }

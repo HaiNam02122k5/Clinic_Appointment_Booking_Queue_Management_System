@@ -1,4 +1,5 @@
 ﻿using Clinic.Application.Common.Models;
+using Clinic.Application.Contracts;
 using Clinic.Application.Interfaces;
 using Clinic.Domain.Entities;
 using Clinic.Domain.Enums;
@@ -21,6 +22,11 @@ namespace Clinic.Application.UnitTests.Common
                 query = query.Where(d => d.WorkHistories.Any(wh => wh.EndDate == null && wh.SpecialtyId == specialtyId));
             }
             return query.ToList();
+        }
+
+        public Task<Dictionary<string, IValueWithChange>> GetDashboardData()
+        {
+            throw new NotImplementedException();
         }
 
         public async Task<Doctor?> GetInfoByIdAsync(Guid? doctorId)

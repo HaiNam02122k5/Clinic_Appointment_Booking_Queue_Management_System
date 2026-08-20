@@ -1,74 +1,108 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import {
+  computed,
+  onMounted,
+  ref,
+  watch,
+} from 'vue'
 
 import AdminPagination from '@/features/admin/components/AdminPagination.vue'
 import AdminRoleBadge from '@/features/admin/components/AdminRoleBadge.vue'
 
-import {
-  ACCOUNTS,
-  type AccountRole,
-} from '@/features/admin/admin.mock'
+import { usersApi } from '@/features/users/users.api'
+
+import type {
+  User,
+  AccountRole,
+} from '@/features/users/users.types'
 
 // ================================
 // STATE
 // ================================
 
+const accounts = ref<User[]>([])
+
+const loading = ref(false)
+const error = ref('')
+
 const search = ref('')
-const roleFilter = ref<'all' | AccountRole>('all')
+const roleFilter = ref<'all' | string>('all')
 const statusFilter = ref<'all' | 'active' | 'inactive'>('all')
+
 const currentPage = ref(1)
 
 const pageSize = 5
+
+const totalPages = ref(1)
+const totalCount = ref(0)
+
+// ================================
+// LOAD API
+// ================================
+
+async function loadUsers() {
+  loading.value = true
+  error.value = ''
+
+  try {
+    const response = await usersApi.list({
+      search: search.value || undefined,
+      pageNumber: currentPage.value,
+      pageSize,
+    })
+
+    accounts.value = response.items
+
+    totalPages.value = response.totalPages
+    totalCount.value = response.totalCount
+
+    console.log('Users from API:', response)
+  } catch (err: unknown) {
+    console.error('Failed to load users:', err)
+
+    error.value = 'Không thể tải danh sách tài khoản.'
+  } finally {
+    loading.value = false
+  }
+}
 
 // ================================
 // FILTER
 // ================================
 
 const filteredAccounts = computed(() => {
-  const keyword = search.value.trim().toLowerCase()
-
-  return ACCOUNTS.filter((account) => {
-    const matchesSearch =
-      !keyword ||
-      account.name.toLowerCase().includes(keyword) ||
-      account.email.toLowerCase().includes(keyword)
+  return accounts.value.filter((account) => {
+    const accountRole =
+      account.roles[0]?.toLowerCase() ?? ''
 
     const matchesRole =
       roleFilter.value === 'all' ||
-      account.role === roleFilter.value
+      accountRole === roleFilter.value.toLowerCase()
 
+    // API chưa trả về status
     const matchesStatus =
-      statusFilter.value === 'all' ||
-      account.status === statusFilter.value
+      statusFilter.value === 'all'
 
-    return matchesSearch && matchesRole && matchesStatus
+    return matchesRole && matchesStatus
   })
 })
 
 // ================================
-// PAGINATION
+// WATCH
 // ================================
-
-const totalPages = computed(() => {
-  return Math.max(
-    1,
-    Math.ceil(filteredAccounts.value.length / pageSize),
-  )
-})
-
-const pagedAccounts = computed(() => {
-  const start = (currentPage.value - 1) * pageSize
-
-  return filteredAccounts.value.slice(
-    start,
-    start + pageSize,
-  )
-})
 
 watch(
   [search, roleFilter, statusFilter],
   () => {
     currentPage.value = 1
+    loadUsers()
+  },
+)
+
+watch(
+  currentPage,
+  () => {
+    loadUsers()
   },
 )
 
@@ -76,17 +110,70 @@ watch(
 // HELPERS
 // ================================
 
-function statusText(status: 'active' | 'inactive') {
+function statusText(
+  status: 'active' | 'inactive',
+) {
   return status === 'active'
     ? 'Hoạt động'
     : 'Không hoạt động'
 }
 
-function statusClass(status: 'active' | 'inactive') {
+function statusClass(
+  status: 'active' | 'inactive',
+) {
   return status === 'active'
     ? 'bg-green-50 text-green-700'
     : 'bg-slate-100 text-slate-500'
 }
+
+function getAccountRole(
+  account: User,
+): AccountRole {
+  const role =
+    account.roles[0]?.toLowerCase()
+
+  if (
+    role === 'admin' ||
+    role === 'doctor' ||
+    role === 'receptionist' ||
+    role === 'patient'
+  ) {
+    return role
+  }
+
+  return 'patient'
+}
+
+function getAccountStatus(): 'active' | 'inactive' {
+  // API hiện chưa trả về trạng thái
+  return 'active'
+}
+
+function getAccountCreated() {
+  // API hiện chưa trả về createdAt
+  return '-'
+}
+
+function getAccountName(
+  account: User,
+) {
+  return (
+    account.fullName ||
+    account.username ||
+    'Chưa có tên'
+  )
+}
+
+function getAccountEmail(
+  account: User,
+) {
+  return account.email ?? '-'
+}
+
+
+// ================================
+// RESET
+// ================================
 
 function resetFilters() {
   search.value = ''
@@ -94,6 +181,14 @@ function resetFilters() {
   statusFilter.value = 'all'
   currentPage.value = 1
 }
+
+// ================================
+// INIT
+// ================================
+
+onMounted(() => {
+  loadUsers()
+})
 </script>
 
 <template>
@@ -121,7 +216,10 @@ function resetFilters() {
       class="rounded-xl border border-slate-200
              bg-white p-5"
     >
-      <div class="flex flex-col gap-3 lg:flex-row lg:items-center">
+      <div
+        class="flex flex-col gap-3
+               lg:flex-row lg:items-center"
+      >
 
         <!-- SEARCH -->
 
@@ -205,6 +303,8 @@ function resetFilters() {
           </option>
         </select>
 
+        <!-- RESET -->
+
         <button
           class="rounded-lg border border-slate-200
                  px-4 py-2.5 text-sm font-medium
@@ -214,6 +314,8 @@ function resetFilters() {
         >
           Đặt lại
         </button>
+
+        <!-- ADD -->
 
         <button
           class="rounded-lg bg-violet-600
@@ -243,7 +345,7 @@ function resetFilters() {
           </h2>
 
           <p class="mt-1 text-xs text-slate-400">
-            {{ filteredAccounts.length }} tài khoản
+            {{ totalCount }} tài khoản
           </p>
         </div>
       </div>
@@ -252,13 +354,42 @@ function resetFilters() {
         class="overflow-hidden rounded-lg
                border border-slate-200"
       >
-        <table class="w-full text-sm">
+
+        <!-- LOADING -->
+
+        <div
+          v-if="loading"
+          class="py-12 text-center
+                 text-sm text-slate-400"
+        >
+          Đang tải danh sách tài khoản...
+        </div>
+
+        <!-- ERROR -->
+
+        <div
+          v-else-if="error"
+          class="py-12 text-center
+                 text-sm text-red-500"
+        >
+          {{ error }}
+        </div>
+
+        <!-- TABLE -->
+
+        <table
+          v-else
+          class="w-full text-sm"
+        >
 
           <thead>
             <tr
               class="border-b border-slate-200
                      bg-slate-50"
             >
+
+              <!-- NUMBER -->
+
               <th
                 class="px-4 py-3 text-left
                        text-xs font-semibold
@@ -267,6 +398,8 @@ function resetFilters() {
               >
                 #
               </th>
+
+              <!-- USER -->
 
               <th
                 class="px-4 py-3 text-left
@@ -277,6 +410,8 @@ function resetFilters() {
                 Người dùng
               </th>
 
+              <!-- EMAIL -->
+
               <th
                 class="px-4 py-3 text-left
                        text-xs font-semibold
@@ -285,6 +420,8 @@ function resetFilters() {
               >
                 Email
               </th>
+
+              <!-- ROLE -->
 
               <th
                 class="px-4 py-3 text-left
@@ -295,6 +432,8 @@ function resetFilters() {
                 Vai trò
               </th>
 
+              <!-- STATUS -->
+
               <th
                 class="px-4 py-3 text-left
                        text-xs font-semibold
@@ -303,6 +442,8 @@ function resetFilters() {
               >
                 Trạng thái
               </th>
+
+              <!-- CREATED -->
 
               <th
                 class="px-4 py-3 text-left
@@ -313,6 +454,8 @@ function resetFilters() {
                 Ngày tạo
               </th>
 
+              <!-- ACTION -->
+
               <th
                 class="px-4 py-3 text-right
                        text-xs font-semibold
@@ -321,41 +464,66 @@ function resetFilters() {
               >
                 Thao tác
               </th>
+
             </tr>
           </thead>
 
           <tbody class="divide-y divide-slate-100">
 
+            <!-- ACCOUNT -->
+
             <tr
-              v-for="(account, index) in pagedAccounts"
+              v-for="(account, index) in filteredAccounts"
               :key="account.id"
               class="hover:bg-slate-50"
             >
 
               <!-- NUMBER -->
 
-              <td class="px-4 py-3 text-xs text-slate-400">
-                {{ (currentPage - 1) * pageSize + index + 1 }}
+              <td
+                class="px-4 py-3
+                       text-xs text-slate-400"
+              >
+                {{
+                  (currentPage - 1) * pageSize +
+                  index +
+                  1
+                }}
               </td>
 
               <!-- USER -->
 
               <td class="px-4 py-3">
-                <div class="font-medium text-slate-800">
-                  {{ account.name }}
+                <div
+                  class="font-medium
+                         text-slate-800"
+                >
+                  {{ getAccountName(account) }}
+                </div>
+
+                <div
+                  class="mt-0.5 text-xs
+                         text-slate-400"
+                >
+                  @{{ account.username }}
                 </div>
               </td>
 
               <!-- EMAIL -->
 
-              <td class="px-4 py-3 text-slate-500">
-                {{ account.email }}
+              <td
+                class="px-4 py-3
+                       text-slate-500"
+              >
+                {{ getAccountEmail(account) }}
               </td>
 
               <!-- ROLE -->
 
               <td class="px-4 py-3">
-                <AdminRoleBadge :role="account.role" />
+                <AdminRoleBadge
+                  :role="getAccountRole(account)"
+                />
               </td>
 
               <!-- STATUS -->
@@ -364,25 +532,27 @@ function resetFilters() {
                 <span
                   class="rounded-md px-2.5 py-1
                          text-xs font-medium"
-                  :class="statusClass(account.status)"
+                  :class="statusClass(getAccountStatus())"
                 >
-                  {{ statusText(account.status) }}
+                  {{ statusText(getAccountStatus()) }}
                 </span>
               </td>
 
               <!-- CREATED -->
 
               <td
-                class="px-4 py-3 text-xs
-                       text-slate-500"
+                class="px-4 py-3
+                       text-xs text-slate-500"
               >
-                {{ account.created }}
+                {{ getAccountCreated() }}
               </td>
 
               <!-- ACTIONS -->
 
               <td class="px-4 py-3">
-                <div class="flex justify-end gap-2">
+                <div
+                  class="flex justify-end gap-2"
+                >
 
                   <button
                     class="rounded-md px-2.5 py-1.5
@@ -409,11 +579,14 @@ function resetFilters() {
 
             <!-- EMPTY -->
 
-            <tr v-if="pagedAccounts.length === 0">
+            <tr
+              v-if="filteredAccounts.length === 0"
+            >
               <td
                 colspan="7"
-                class="px-4 py-12 text-center
-                       text-sm text-slate-400"
+                class="px-4 py-12
+                       text-center text-sm
+                       text-slate-400"
               >
                 Không tìm thấy tài khoản phù hợp.
               </td>
@@ -421,9 +594,12 @@ function resetFilters() {
 
           </tbody>
         </table>
+
       </div>
 
-      <!-- PAGINATION -->
+      <!-- =========================
+           PAGINATION
+      ========================== -->
 
       <AdminPagination
         v-model:current-page="currentPage"
