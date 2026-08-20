@@ -1,11 +1,37 @@
 <script setup lang="ts">
-defineProps<{
+import { computed } from 'vue'
+
+const props = defineProps<{
   data: {
     label: string
     value: number
     color: string
   }[]
 }>()
+
+const total = computed(() =>
+  props.data.reduce((sum, item) => sum + item.value, 0),
+)
+
+const gradient = computed(() => {
+  if (total.value === 0) {
+    return '#E2E8F0'
+  }
+
+  let currentDegree = 0
+
+  const parts = props.data.map((item) => {
+    const degree = (item.value / total.value) * 360
+    const start = currentDegree
+    const end = currentDegree + degree
+
+    currentDegree = end
+
+    return `${item.color} ${start}deg ${end}deg`
+  })
+
+  return `conic-gradient(${parts.join(', ')})`
+})
 </script>
 
 <template>
@@ -13,22 +39,16 @@ defineProps<{
     <div class="relative h-40 w-40 shrink-0">
       <div
         class="h-full w-full rounded-full"
-        style="
-          background: conic-gradient(
-            #00A878 0deg 230deg,
-            #0E4D92 230deg 318deg,
-            #EF4444 318deg 354deg,
-            #F59E0B 354deg 360deg
-          );
-        "
+        :style="{
+          background: gradient,
+        }"
       />
 
       <div
-        class="absolute inset-7 flex items-center justify-center
-               rounded-full bg-white"
+        class="absolute inset-7 flex items-center justify-center rounded-full bg-white"
       >
         <span class="text-lg font-bold text-slate-800">
-          {{ data.reduce((sum, item) => sum + item.value, 0) }}
+          {{ total }}
         </span>
       </div>
     </div>

@@ -12,13 +12,13 @@ import AdminRoleBadge from '@/features/admin/components/AdminRoleBadge.vue'
 import { usersApi } from '@/features/users/users.api'
 
 import type {
-  User,
   AccountRole,
+  User,
 } from '@/features/users/users.types'
 
-// ================================
+// =================================
 // STATE
-// ================================
+// =================================
 
 const accounts = ref<User[]>([])
 
@@ -26,8 +26,14 @@ const loading = ref(false)
 const error = ref('')
 
 const search = ref('')
-const roleFilter = ref<'all' | string>('all')
-const statusFilter = ref<'all' | 'active' | 'inactive'>('all')
+
+const roleFilter = ref<
+  'all' | AccountRole
+>('all')
+
+const statusFilter = ref<
+  'all' | 'active' | 'inactive'
+>('all')
 
 const currentPage = ref(1)
 
@@ -36,68 +42,130 @@ const pageSize = 5
 const totalPages = ref(1)
 const totalCount = ref(0)
 
-// ================================
-// LOAD API
-// ================================
+// =================================
+// LOAD USERS
+// =================================
 
 async function loadUsers() {
   loading.value = true
   error.value = ''
 
   try {
-    const response = await usersApi.list({
-      search: search.value || undefined,
-      pageNumber: currentPage.value,
-      pageSize,
-    })
+    const response =
+      await usersApi.list({
+        Search:
+          search.value.trim() || undefined,
 
-    accounts.value = response.items
+        PageNumber:
+          currentPage.value,
 
-    totalPages.value = response.totalPages
-    totalCount.value = response.totalCount
+        PageSize:
+          pageSize,
+      })
 
-    console.log('Users from API:', response)
+    accounts.value =
+      response.items ?? []
+
+    totalPages.value =
+      response.totalPages > 0
+        ? response.totalPages
+        : 1
+
+    totalCount.value =
+      response.totalCount ?? 0
+
+    console.log(
+      'Users from API:',
+      response,
+    )
   } catch (err: unknown) {
-    console.error('Failed to load users:', err)
+    console.error(
+      'Failed to load users:',
+      err,
+    )
 
-    error.value = 'Không thể tải danh sách tài khoản.'
+    accounts.value = []
+
+    totalPages.value = 1
+    totalCount.value = 0
+
+    error.value =
+      'Không thể tải danh sách tài khoản.'
   } finally {
     loading.value = false
   }
 }
 
-// ================================
-// FILTER
-// ================================
+// =================================
+// FILTER FRONTEND
+// =================================
 
 const filteredAccounts = computed(() => {
-  return accounts.value.filter((account) => {
-    const accountRole =
-      account.roles[0]?.toLowerCase() ?? ''
+  return accounts.value.filter(
+    (account) => {
+      const accountRole =
+        account.roles?.[0]
+          ?.toLowerCase() ?? ''
 
-    const matchesRole =
-      roleFilter.value === 'all' ||
-      accountRole === roleFilter.value.toLowerCase()
+      const matchesRole =
+        roleFilter.value === 'all' ||
+        accountRole === roleFilter.value
 
-    // API chưa trả về status
-    const matchesStatus =
-      statusFilter.value === 'all'
+      const matchesStatus =
+        statusFilter.value === 'all' ||
+        (
+          statusFilter.value ===
+            'active' &&
+          account.isActive
+        ) ||
+        (
+          statusFilter.value ===
+            'inactive' &&
+          !account.isActive
+        )
 
-    return matchesRole && matchesStatus
-  })
+      return (
+        matchesRole &&
+        matchesStatus
+      )
+    },
+  )
 })
 
-// ================================
-// WATCH
-// ================================
+// =================================
+// WATCH SEARCH
+// =================================
 
 watch(
-  [search, roleFilter, statusFilter],
+  search,
   () => {
-    currentPage.value = 1
-    loadUsers()
+    if (
+      currentPage.value !== 1
+    ) {
+      currentPage.value = 1
+    } else {
+      loadUsers()
+    }
   },
 )
+
+// =================================
+// WATCH ROLE + STATUS
+// =================================
+
+watch(
+  [
+    roleFilter,
+    statusFilter,
+  ],
+  () => {
+    currentPage.value = 1
+  },
+)
+
+// =================================
+// WATCH PAGINATION
+// =================================
 
 watch(
   currentPage,
@@ -106,22 +174,22 @@ watch(
   },
 )
 
-// ================================
+// =================================
 // HELPERS
-// ================================
+// =================================
 
 function statusText(
-  status: 'active' | 'inactive',
+  isActive: boolean,
 ) {
-  return status === 'active'
+  return isActive
     ? 'Hoạt động'
     : 'Không hoạt động'
 }
 
 function statusClass(
-  status: 'active' | 'inactive',
+  isActive: boolean,
 ) {
-  return status === 'active'
+  return isActive
     ? 'bg-green-50 text-green-700'
     : 'bg-slate-100 text-slate-500'
 }
@@ -130,7 +198,8 @@ function getAccountRole(
   account: User,
 ): AccountRole {
   const role =
-    account.roles[0]?.toLowerCase()
+    account.roles?.[0]
+      ?.toLowerCase()
 
   if (
     role === 'admin' ||
@@ -144,14 +213,23 @@ function getAccountRole(
   return 'patient'
 }
 
-function getAccountStatus(): 'active' | 'inactive' {
-  // API hiện chưa trả về trạng thái
-  return 'active'
-}
+function formatCreatedAt(
+  createdAt: string,
+) {
+  if (!createdAt) {
+    return '-'
+  }
 
-function getAccountCreated() {
-  // API hiện chưa trả về createdAt
-  return '-'
+  return new Date(
+    createdAt,
+  ).toLocaleDateString(
+    'vi-VN',
+    {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    },
+  )
 }
 
 function getAccountName(
@@ -167,24 +245,35 @@ function getAccountName(
 function getAccountEmail(
   account: User,
 ) {
-  return account.email ?? '-'
+  return (
+    account.email ||
+    '-'
+  )
 }
 
-
-// ================================
-// RESET
-// ================================
+// =================================
+// RESET FILTER
+// =================================
 
 function resetFilters() {
   search.value = ''
+
   roleFilter.value = 'all'
+
   statusFilter.value = 'all'
-  currentPage.value = 1
+
+  if (
+    currentPage.value !== 1
+  ) {
+    currentPage.value = 1
+  } else {
+    loadUsers()
+  }
 }
 
-// ================================
+// =================================
 // INIT
-// ================================
+// =================================
 
 onMounted(() => {
   loadUsers()
@@ -199,12 +288,19 @@ onMounted(() => {
     ========================== -->
 
     <div>
-      <h1 class="text-xl font-semibold text-slate-800">
+      <h1
+        class="text-xl font-semibold
+               text-slate-800"
+      >
         Quản lý tài khoản
       </h1>
 
-      <p class="mt-1 text-sm text-slate-500">
-        Quản lý tài khoản người dùng trong hệ thống
+      <p
+        class="mt-1 text-sm
+               text-slate-500"
+      >
+        Quản lý tài khoản người dùng
+        trong hệ thống
       </p>
     </div>
 
@@ -213,23 +309,29 @@ onMounted(() => {
     ========================== -->
 
     <div
-      class="rounded-xl border border-slate-200
+      class="rounded-xl border
+             border-slate-200
              bg-white p-5"
     >
       <div
         class="flex flex-col gap-3
-               lg:flex-row lg:items-center"
+               lg:flex-row
+               lg:items-center"
       >
 
         <!-- SEARCH -->
 
-        <div class="relative flex-1">
+        <div
+          class="relative flex-1"
+        >
           <input
             v-model="search"
             type="text"
             placeholder="Tìm kiếm theo tên hoặc email..."
-            class="w-full rounded-lg border border-slate-200
-                   bg-white px-3 py-2.5 pl-10
+            class="w-full rounded-lg
+                   border border-slate-200
+                   bg-white
+                   px-3 py-2.5 pl-10
                    text-sm text-slate-800
                    placeholder:text-slate-400
                    focus:border-violet-500
@@ -237,24 +339,35 @@ onMounted(() => {
           />
 
           <svg
-            class="absolute left-3 top-1/2 h-4 w-4
-                   -translate-y-1/2 text-slate-400"
+            class="absolute left-3 top-1/2
+                   h-4 w-4
+                   -translate-y-1/2
+                   text-slate-400"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
             stroke-width="2"
           >
-            <circle cx="11" cy="11" r="7" />
-            <path d="m20 20-3.5-3.5" />
+            <circle
+              cx="11"
+              cy="11"
+              r="7"
+            />
+
+            <path
+              d="m20 20-3.5-3.5"
+            />
           </svg>
         </div>
 
-        <!-- ROLE -->
+        <!-- ROLE FILTER -->
 
         <select
           v-model="roleFilter"
-          class="rounded-lg border border-slate-200
-                 bg-white px-3 py-2.5
+          class="rounded-lg
+                 border border-slate-200
+                 bg-white
+                 px-3 py-2.5
                  text-sm text-slate-600
                  focus:border-violet-500
                  focus:outline-none"
@@ -280,12 +393,14 @@ onMounted(() => {
           </option>
         </select>
 
-        <!-- STATUS -->
+        <!-- STATUS FILTER -->
 
         <select
           v-model="statusFilter"
-          class="rounded-lg border border-slate-200
-                 bg-white px-3 py-2.5
+          class="rounded-lg
+                 border border-slate-200
+                 bg-white
+                 px-3 py-2.5
                  text-sm text-slate-600
                  focus:border-violet-500
                  focus:outline-none"
@@ -306,8 +421,10 @@ onMounted(() => {
         <!-- RESET -->
 
         <button
-          class="rounded-lg border border-slate-200
-                 px-4 py-2.5 text-sm font-medium
+          class="rounded-lg
+                 border border-slate-200
+                 px-4 py-2.5
+                 text-sm font-medium
                  text-slate-600
                  hover:bg-slate-50"
           @click="resetFilters"
@@ -318,8 +435,10 @@ onMounted(() => {
         <!-- ADD -->
 
         <button
-          class="rounded-lg bg-violet-600
-                 px-4 py-2.5 text-sm font-semibold
+          class="rounded-lg
+                 bg-violet-600
+                 px-4 py-2.5
+                 text-sm font-semibold
                  text-white
                  hover:bg-violet-700"
         >
@@ -330,28 +449,40 @@ onMounted(() => {
     </div>
 
     <!-- =========================
-         TABLE
+         TABLE CARD
     ========================== -->
 
     <div
-      class="rounded-xl border border-slate-200
+      class="rounded-xl
+             border border-slate-200
              bg-white p-5"
     >
 
-      <div class="mb-4 flex items-center justify-between">
-        <div>
-          <h2 class="text-sm font-semibold text-slate-800">
-            Danh sách tài khoản
-          </h2>
-
-          <p class="mt-1 text-xs text-slate-400">
-            {{ totalCount }} tài khoản
-          </p>
-        </div>
-      </div>
+      <!-- HEADER -->
 
       <div
-        class="overflow-hidden rounded-lg
+        class="mb-4"
+      >
+        <h2
+          class="text-sm font-semibold
+                 text-slate-800"
+        >
+          Danh sách tài khoản
+        </h2>
+
+        <p
+          class="mt-1 text-xs
+                 text-slate-400"
+        >
+          {{ totalCount }} tài khoản
+        </p>
+      </div>
+
+      <!-- TABLE -->
+
+      <div
+        class="overflow-x-auto
+               rounded-lg
                border border-slate-200"
       >
 
@@ -359,7 +490,8 @@ onMounted(() => {
 
         <div
           v-if="loading"
-          class="py-12 text-center
+          class="py-12
+                 text-center
                  text-sm text-slate-400"
         >
           Đang tải danh sách tài khoản...
@@ -369,97 +501,101 @@ onMounted(() => {
 
         <div
           v-else-if="error"
-          class="py-12 text-center
+          class="py-12
+                 text-center
                  text-sm text-red-500"
         >
           {{ error }}
         </div>
 
-        <!-- TABLE -->
+        <!-- DATA -->
 
         <table
           v-else
-          class="w-full text-sm"
+          class="w-full
+                 min-w-[900px]
+                 text-sm"
         >
 
           <thead>
             <tr
-              class="border-b border-slate-200
+              class="border-b
+                     border-slate-200
                      bg-slate-50"
             >
 
-              <!-- NUMBER -->
-
               <th
-                class="px-4 py-3 text-left
+                class="px-4 py-3
+                       text-left
                        text-xs font-semibold
-                       uppercase tracking-wide
+                       uppercase
+                       tracking-wide
                        text-slate-500"
               >
                 #
               </th>
 
-              <!-- USER -->
-
               <th
-                class="px-4 py-3 text-left
+                class="px-4 py-3
+                       text-left
                        text-xs font-semibold
-                       uppercase tracking-wide
+                       uppercase
+                       tracking-wide
                        text-slate-500"
               >
                 Người dùng
               </th>
 
-              <!-- EMAIL -->
-
               <th
-                class="px-4 py-3 text-left
+                class="px-4 py-3
+                       text-left
                        text-xs font-semibold
-                       uppercase tracking-wide
+                       uppercase
+                       tracking-wide
                        text-slate-500"
               >
                 Email
               </th>
 
-              <!-- ROLE -->
-
               <th
-                class="px-4 py-3 text-left
+                class="px-4 py-3
+                       text-left
                        text-xs font-semibold
-                       uppercase tracking-wide
+                       uppercase
+                       tracking-wide
                        text-slate-500"
               >
                 Vai trò
               </th>
 
-              <!-- STATUS -->
-
               <th
-                class="px-4 py-3 text-left
+                class="px-4 py-3
+                       text-left
                        text-xs font-semibold
-                       uppercase tracking-wide
+                       uppercase
+                       tracking-wide
                        text-slate-500"
               >
                 Trạng thái
               </th>
 
-              <!-- CREATED -->
-
               <th
-                class="px-4 py-3 text-left
+                class="px-4 py-3
+                       text-left
                        text-xs font-semibold
-                       uppercase tracking-wide
+                       uppercase
+                       tracking-wide
                        text-slate-500"
               >
                 Ngày tạo
               </th>
 
-              <!-- ACTION -->
-
               <th
-                class="px-4 py-3 text-right
+                class="px-4 py-3
+                       text-right
                        text-xs font-semibold
-                       uppercase tracking-wide
+                       uppercase
+                       tracking-wide
                        text-slate-500"
               >
                 Thao tác
@@ -468,12 +604,18 @@ onMounted(() => {
             </tr>
           </thead>
 
-          <tbody class="divide-y divide-slate-100">
+          <tbody
+            class="divide-y
+                   divide-slate-100"
+          >
 
-            <!-- ACCOUNT -->
+            <!-- USER -->
 
             <tr
-              v-for="(account, index) in filteredAccounts"
+              v-for="(
+                account,
+                index
+              ) in filteredAccounts"
               :key="account.id"
               class="hover:bg-slate-50"
             >
@@ -482,10 +624,12 @@ onMounted(() => {
 
               <td
                 class="px-4 py-3
-                       text-xs text-slate-400"
+                       text-xs
+                       text-slate-400"
               >
                 {{
-                  (currentPage - 1) * pageSize +
+                  (currentPage - 1) *
+                    pageSize +
                   index +
                   1
                 }}
@@ -493,16 +637,23 @@ onMounted(() => {
 
               <!-- USER -->
 
-              <td class="px-4 py-3">
+              <td
+                class="px-4 py-3"
+              >
                 <div
                   class="font-medium
                          text-slate-800"
                 >
-                  {{ getAccountName(account) }}
+                  {{
+                    getAccountName(
+                      account,
+                    )
+                  }}
                 </div>
 
                 <div
-                  class="mt-0.5 text-xs
+                  class="mt-0.5
+                         text-xs
                          text-slate-400"
                 >
                   @{{ account.username }}
@@ -515,26 +666,48 @@ onMounted(() => {
                 class="px-4 py-3
                        text-slate-500"
               >
-                {{ getAccountEmail(account) }}
+                {{
+                  getAccountEmail(
+                    account,
+                  )
+                }}
               </td>
 
               <!-- ROLE -->
 
-              <td class="px-4 py-3">
+              <td
+                class="px-4 py-3"
+              >
                 <AdminRoleBadge
-                  :role="getAccountRole(account)"
+                  :role="
+                    getAccountRole(
+                      account,
+                    )
+                  "
                 />
               </td>
 
               <!-- STATUS -->
 
-              <td class="px-4 py-3">
+              <td
+                class="px-4 py-3"
+              >
                 <span
-                  class="rounded-md px-2.5 py-1
-                         text-xs font-medium"
-                  :class="statusClass(getAccountStatus())"
+                  class="rounded-md
+                         px-2.5 py-1
+                         text-xs
+                         font-medium"
+                  :class="
+                    statusClass(
+                      account.isActive,
+                    )
+                  "
                 >
-                  {{ statusText(getAccountStatus()) }}
+                  {{
+                    statusText(
+                      account.isActive,
+                    )
+                  }}
                 </span>
               </td>
 
@@ -542,21 +715,31 @@ onMounted(() => {
 
               <td
                 class="px-4 py-3
-                       text-xs text-slate-500"
+                       text-xs
+                       text-slate-500"
               >
-                {{ getAccountCreated() }}
+                {{
+                  formatCreatedAt(
+                    account.createdAt,
+                  )
+                }}
               </td>
 
-              <!-- ACTIONS -->
+              <!-- ACTION -->
 
-              <td class="px-4 py-3">
+              <td
+                class="px-4 py-3"
+              >
                 <div
-                  class="flex justify-end gap-2"
+                  class="flex
+                         justify-end
+                         gap-2"
                 >
-
                   <button
-                    class="rounded-md px-2.5 py-1.5
-                           text-xs font-medium
+                    class="rounded-md
+                           px-2.5 py-1.5
+                           text-xs
+                           font-medium
                            text-slate-600
                            hover:bg-slate-100"
                   >
@@ -564,14 +747,15 @@ onMounted(() => {
                   </button>
 
                   <button
-                    class="rounded-md px-2.5 py-1.5
-                           text-xs font-medium
+                    class="rounded-md
+                           px-2.5 py-1.5
+                           text-xs
+                           font-medium
                            text-violet-600
                            hover:bg-violet-50"
                   >
                     Sửa
                   </button>
-
                 </div>
               </td>
 
@@ -580,12 +764,15 @@ onMounted(() => {
             <!-- EMPTY -->
 
             <tr
-              v-if="filteredAccounts.length === 0"
+              v-if="
+                filteredAccounts.length === 0
+              "
             >
               <td
                 colspan="7"
                 class="px-4 py-12
-                       text-center text-sm
+                       text-center
+                       text-sm
                        text-slate-400"
               >
                 Không tìm thấy tài khoản phù hợp.
@@ -602,8 +789,12 @@ onMounted(() => {
       ========================== -->
 
       <AdminPagination
-        v-model:current-page="currentPage"
-        :total-pages="totalPages"
+        v-model:current-page="
+          currentPage
+        "
+        :total-pages="
+          totalPages
+        "
       />
 
     </div>

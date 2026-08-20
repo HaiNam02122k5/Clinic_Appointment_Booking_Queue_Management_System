@@ -1,536 +1,782 @@
 <script setup lang="ts">
-import {
-  computed,
-  onMounted,
-  ref,
-  watch,
-} from 'vue'
-
-import AdminPagination from '@/features/admin/components/AdminPagination.vue'
-
+import { computed, onMounted, ref } from 'vue'
+import axios from 'axios'
+import DoctorFormModal from '@/features/doctors/components/DoctorFormModal.vue'
 import { doctorsApi } from '@/features/doctors/doctors.api'
-import type { Doctor } from '@/features/doctors/doctors.types'
+import { specialtiesApi } from '@/features/specialties/specialties.api'
 
-// ================================
-// STATE
-// ================================
+import type {
+  CreateDoctorRequest,
+  Doctor,
+  DoctorDetail,
+  DoctorStatus,
+  Specialty,
+  UpdateDoctorRequest,
+} from '@/features/doctors/doctors.types'
 
 const doctors = ref<Doctor[]>([])
-const loading = ref(false)
-const error = ref('')
+const specialties = ref<Specialty[]>([])
+
+const loadingDoctors = ref(false)
+const loadingSpecialties = ref(false)
+const submitting = ref(false)
 
 const search = ref('')
-const specialtyFilter = ref('all')
-const statusFilter = ref<'all' | 'active' | 'inactive'>('all')
-const currentPage = ref(1)
+const selectedStatus = ref<DoctorStatus | ''>('')
 
-const pageSize = 5
+const pageNumber = ref(1)
+const pageSize = ref(5)
 
-// ================================
-// LOAD API
-// ================================
+const totalCount = ref(0)
+const totalPages = ref(1)
 
-async function loadDoctors() {
-  loading.value = true
-  error.value = ''
+const isModalOpen = ref(false)
+const selectedDoctor = ref<DoctorDetail | null>(null)
 
+const pageNumbers = computed(() => {
+  const pages: number[] = []
+
+  for (let i = 1; i <= totalPages.value; i += 1) {
+    pages.push(i)
+  }
+
+  return pages
+})
+
+const loadDoctors = async () => {
   try {
-    const response = await doctorsApi.list()
+    loadingDoctors.value = true
+
+    const response = await doctorsApi.list({
+      Search: search.value || undefined,
+      Status: selectedStatus.value || undefined,
+      PageNumber: pageNumber.value,
+      PageSize: pageSize.value,
+    })
 
     doctors.value = response.items
 
-    console.log('Doctors from API:', doctors.value)
-  } catch (err: unknown) {
-    console.error('Failed to load doctors:', err)
+    totalCount.value = response.totalCount
+    totalPages.value = response.totalPages || 1
+  } catch (error) {
+    console.error('Không thể tải danh sách bác sĩ:', error)
 
-    error.value = 'Không thể tải danh sách bác sĩ.'
+    doctors.value = []
+    totalCount.value = 0
+    totalPages.value = 1
   } finally {
-    loading.value = false
+    loadingDoctors.value = false
   }
 }
 
-onMounted(() => {
-  loadDoctors()
-})
+const loadSpecialties = async () => {
+  try {
+    loadingSpecialties.value = true
 
-// ================================
-// SPECIALTIES
-// ================================
+    const response = await specialtiesApi.list({
+      Page: 1,
+      PageSize: 100,
+    })
 
-const specialties = computed(() => {
-  return [
-    ...new Set(
-      doctors.value
-        .map((doctor) => doctor.currentSpecialty)
-        .filter(Boolean),
-    ),
-  ]
-})
+    specialties.value = response.items
+  } catch (error) {
+    console.error('Không thể tải danh sách chuyên khoa:', error)
 
-// ================================
-// FILTER
-// ================================
-
-const filteredDoctors = computed(() => {
-  const keyword = search.value.trim().toLowerCase()
-
-  return doctors.value.filter((doctor) => {
-    const matchesSearch =
-      !keyword ||
-      doctor.fullName.toLowerCase().includes(keyword) ||
-      doctor.currentSpecialty.toLowerCase().includes(keyword) ||
-      (doctor.email ?? '').toLowerCase().includes(keyword)
-
-    const matchesSpecialty =
-      specialtyFilter.value === 'all' ||
-      doctor.currentSpecialty === specialtyFilter.value
-
-    const doctorStatus =
-      doctor.status === 0
-        ? 'active'
-        : 'inactive'
-
-    const matchesStatus =
-      statusFilter.value === 'all' ||
-      doctorStatus === statusFilter.value
-
-    return (
-      matchesSearch &&
-      matchesSpecialty &&
-      matchesStatus
-    )
-  })
-})
-
-// ================================
-// PAGINATION
-// ================================
-
-const totalPages = computed(() => {
-  return Math.max(
-    1,
-    Math.ceil(filteredDoctors.value.length / pageSize),
-  )
-})
-
-const pagedDoctors = computed(() => {
-  const start =
-    (currentPage.value - 1) * pageSize
-
-  return filteredDoctors.value.slice(
-    start,
-    start + pageSize,
-  )
-})
-
-watch(
-  [search, specialtyFilter, statusFilter],
-  () => {
-    currentPage.value = 1
-  },
-)
-
-// ================================
-// HELPERS
-// ================================
-
-function getDoctorStatus(
-  doctor: Doctor,
-): 'active' | 'inactive' {
-  return doctor.status === 0
-    ? 'active'
-    : 'inactive'
+    specialties.value = []
+  } finally {
+    loadingSpecialties.value = false
+  }
 }
 
-function statusText(
-  status: 'active' | 'inactive',
-) {
-  return status === 'active'
+const handleSearch = async () => {
+  pageNumber.value = 1
+
+  await loadDoctors()
+}
+
+const handleStatusChange = async () => {
+  pageNumber.value = 1
+
+  await loadDoctors()
+}
+
+const changePage = async (page: number) => {
+  if (page < 1 || page > totalPages.value) {
+    return
+  }
+
+  pageNumber.value = page
+
+  await loadDoctors()
+}
+
+const openCreateModal = () => {
+  selectedDoctor.value = null
+
+  isModalOpen.value = true
+}
+
+const openEditModal = async (doctor: Doctor) => {
+  try {
+    submitting.value = true
+
+    const doctorDetail = await doctorsApi.get(doctor.id)
+
+    selectedDoctor.value = doctorDetail
+
+    isModalOpen.value = true
+  } catch (error) {
+    console.error('Không thể lấy thông tin bác sĩ:', error)
+
+    alert('Không thể tải thông tin bác sĩ')
+  } finally {
+    submitting.value = false
+  }
+}
+
+const closeModal = () => {
+  if (submitting.value) return
+
+  isModalOpen.value = false
+
+  selectedDoctor.value = null
+}
+
+const handleSubmitDoctor = async (payload: {
+  mode: 'create' | 'edit'
+  data: CreateDoctorRequest | UpdateDoctorRequest
+}) => {
+  try {
+    submitting.value = true
+
+    if (payload.mode === 'create') {
+      await doctorsApi.create(
+        payload.data as CreateDoctorRequest,
+      )
+    } else {
+      if (!selectedDoctor.value) {
+        return
+      }
+
+      const data = payload.data as UpdateDoctorRequest
+
+      const updateData: UpdateDoctorRequest = {
+        fullName: data.fullName,
+        phoneNumber: data.phoneNumber,
+        email: data.email,
+        dateOfBirth: data.dateOfBirth,
+        gender: data.gender,
+        address: data.address,
+        licenseNumber: data.licenseNumber,
+        qualification: data.qualification,
+        experienceYears: Number(data.experienceYears),
+        biography: data.biography,
+      }
+
+      console.log('UPDATE DATA:', updateData)
+
+      await doctorsApi.update(
+        selectedDoctor.value.id,
+        updateData,
+      )
+    }
+
+    isModalOpen.value = false
+    selectedDoctor.value = null
+
+    await loadDoctors()
+  } catch (error: unknown) {
+  console.error('UPDATE ERROR:', error)
+
+  if (axios.isAxiosError(error)) {
+    console.error('RESPONSE:', error.response?.data)
+
+    const responseData = error.response?.data as {
+      detail?: string
+      errorMessages?: string[]
+    }
+
+    alert(
+      responseData.detail ||
+      responseData.errorMessages?.join(', ') ||
+      'Không thể cập nhật bác sĩ',
+    )
+  } else {
+    alert('Không thể cập nhật bác sĩ')
+  }
+} finally {
+  submitting.value = false
+}
+}
+
+const getGenderText = (gender: string) => {
+  switch (gender) {
+    case 'Male':
+      return 'Nam'
+
+    case 'Female':
+      return 'Nữ'
+
+    default:
+      return 'Khác'
+  }
+}
+
+const getStatusText = (status: DoctorStatus) => {
+  return status === 'Active'
     ? 'Đang hoạt động'
     : 'Ngừng hoạt động'
 }
 
-function statusClass(
-  status: 'active' | 'inactive',
-) {
-  return status === 'active'
-    ? 'bg-green-50 text-green-700'
-    : 'bg-slate-100 text-slate-500'
-}
-
-function resetFilters() {
-  search.value = ''
-  specialtyFilter.value = 'all'
-  statusFilter.value = 'all'
-  currentPage.value = 1
-}
+onMounted(async () => {
+  await Promise.all([
+    loadDoctors(),
+    loadSpecialties(),
+  ])
+})
 </script>
 
 <template>
-  <div class="space-y-5">
+  <div class="doctors-page">
+    <div class="page-header">
+      <div>
+        <h1>Quản lý bác sĩ</h1>
 
-    <!-- =========================
-         TITLE
-    ========================== -->
-
-    <div>
-      <h1 class="text-xl font-semibold text-slate-800">
-        Quản lý bác sĩ
-      </h1>
-
-      <p class="mt-1 text-sm text-slate-500">
-        Quản lý thông tin và lịch làm việc của bác sĩ
-      </p>
-    </div>
-
-    <!-- =========================
-         TOOLBAR
-    ========================== -->
-
-    <div
-      class="rounded-xl border border-slate-200
-             bg-white p-5"
-    >
-      <div
-        class="flex flex-col gap-3
-               lg:flex-row lg:items-center"
-      >
-
-        <!-- SEARCH -->
-
-        <div class="relative flex-1">
-          <input
-            v-model="search"
-            type="text"
-            placeholder="Tìm kiếm bác sĩ..."
-            class="w-full rounded-lg
-                   border border-slate-200
-                   bg-white px-3 py-2.5 pl-10
-                   text-sm text-slate-800
-                   placeholder:text-slate-400
-                   focus:border-violet-500
-                   focus:outline-none"
-          />
-
-          <svg
-            class="absolute left-3 top-1/2
-                   h-4 w-4 -translate-y-1/2
-                   text-slate-400"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <circle cx="11" cy="11" r="7" />
-            <path d="m20 20-3.5-3.5" />
-          </svg>
-        </div>
-
-        <!-- SPECIALTY -->
-
-        <select
-          v-model="specialtyFilter"
-          class="rounded-lg
-                 border border-slate-200
-                 bg-white px-3 py-2.5
-                 text-sm text-slate-600
-                 focus:border-violet-500
-                 focus:outline-none"
-        >
-          <option value="all">
-            Tất cả chuyên khoa
-          </option>
-
-          <option
-            v-for="specialty in specialties"
-            :key="specialty"
-            :value="specialty"
-          >
-            {{ specialty }}
-          </option>
-        </select>
-
-        <!-- STATUS -->
-
-        <select
-          v-model="statusFilter"
-          class="rounded-lg
-                 border border-slate-200
-                 bg-white px-3 py-2.5
-                 text-sm text-slate-600
-                 focus:border-violet-500
-                 focus:outline-none"
-        >
-          <option value="all">
-            Tất cả trạng thái
-          </option>
-
-          <option value="active">
-            Đang hoạt động
-          </option>
-
-          <option value="inactive">
-            Ngừng hoạt động
-          </option>
-        </select>
-
-        <!-- RESET -->
-
-        <button
-          class="rounded-lg
-                 border border-slate-200
-                 px-4 py-2.5
-                 text-sm font-medium
-                 text-slate-600
-                 hover:bg-slate-50"
-          @click="resetFilters"
-        >
-          Đặt lại
-        </button>
-
-        <!-- ADD -->
-
-        <button
-          class="rounded-lg
-                 bg-violet-600
-                 px-4 py-2.5
-                 text-sm font-semibold
-                 text-white
-                 hover:bg-violet-700"
-        >
-          + Thêm bác sĩ
-        </button>
-
+        <p>
+          Quản lý thông tin và tài khoản của các bác sĩ
+        </p>
       </div>
+
+      <button
+        class="btn-add"
+        type="button"
+        @click="openCreateModal"
+      >
+        + Thêm bác sĩ
+      </button>
     </div>
 
-    <!-- =========================
-         TABLE
-    ========================== -->
+    <div class="filter-card">
+      <div class="search-group">
+        <input
+          v-model="search"
+          type="text"
+          placeholder="Tìm kiếm tên, email hoặc số điện thoại..."
+          @keyup.enter="handleSearch"
+        >
 
-    <div
-      class="rounded-xl border border-slate-200
-            bg-white p-5"
-    >
-      <div
-        class="mb-4 flex items-center
-              justify-between"
+        <button
+          type="button"
+          class="btn-search"
+          @click="handleSearch"
+        >
+          Tìm kiếm
+        </button>
+      </div>
+
+      <select
+        v-model="selectedStatus"
+        class="status-filter"
+        @change="handleStatusChange"
       >
-        <div>
-          <h2
-            class="text-sm font-semibold
-                  text-slate-800"
-          >
-            Danh sách bác sĩ
-          </h2>
+        <option value="">
+          Tất cả trạng thái
+        </option>
 
-          <p class="mt-1 text-xs text-slate-400">
-            {{ filteredDoctors.length }} bác sĩ
+        <option value="Active">
+          Đang hoạt động
+        </option>
+
+        <option value="Inactive">
+          Ngừng hoạt động
+        </option>
+      </select>
+    </div>
+
+    <div class="table-card">
+      <div class="table-header">
+        <div>
+          <h2>Danh sách bác sĩ</h2>
+
+          <p>
+            Tổng cộng {{ totalCount }} bác sĩ
           </p>
         </div>
       </div>
 
       <div
-        class="overflow-hidden
-              rounded-lg border
-              border-slate-200"
+        v-if="loadingDoctors"
+        class="loading-state"
       >
-        <!-- LOADING -->
+        Đang tải danh sách bác sĩ...
+      </div>
 
-        <div
-          v-if="loading"
-          class="py-12 text-center text-sm text-slate-400"
-        >
-          Đang tải danh sách bác sĩ...
-        </div>
+      <div
+        v-else-if="doctors.length === 0"
+        class="empty-state"
+      >
+        Chưa có bác sĩ nào.
+      </div>
 
-        <!-- ERROR -->
-
-        <div
-          v-else-if="error"
-          class="py-12 text-center text-sm text-red-500"
-        >
-          {{ error }}
-        </div>
-
-        <!-- TABLE -->
-
-        <table
-          v-else
-          class="w-full text-sm"
-        >
+      <div
+        v-else
+        class="table-wrapper"
+      >
+        <table>
           <thead>
-            <tr
-              class="border-b
-                    border-slate-200
-                    bg-slate-50"
-            >
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                #
-              </th>
-
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Bác sĩ
-              </th>
-
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Chuyên khoa
-              </th>
-
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Phòng
-              </th>
-
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Lịch làm việc
-              </th>
-
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Số bệnh nhân
-              </th>
-
-              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Trạng thái
-              </th>
-
-              <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Thao tác
-              </th>
+            <tr>
+              <th>Bác sĩ</th>
+              <th>Liên hệ</th>
+              <th>Chuyên môn</th>
+              <th>Kinh nghiệm</th>
+              <th>Trạng thái</th>
+              <th>Thao tác</th>
             </tr>
           </thead>
 
-          <tbody class="divide-y divide-slate-100">
-
+          <tbody>
             <tr
-              v-for="(doctor, index) in pagedDoctors"
+              v-for="doctor in doctors"
               :key="doctor.id"
-              class="hover:bg-slate-50"
             >
-              <!-- NUMBER -->
+              <td>
+                <div class="doctor-info">
+                  <div class="avatar">
+                    {{
+                      doctor.fullName
+                        .charAt(0)
+                        .toUpperCase()
+                    }}
+                  </div>
 
-              <td
-                class="px-4 py-3
-                      text-xs text-slate-400"
-              >
-                {{
-                  (currentPage - 1) * pageSize +
-                  index +
-                  1
-                }}
-              </td>
+                  <div>
+                    <strong>
+                      {{ doctor.fullName }}
+                    </strong>
 
-              <!-- DOCTOR -->
-
-              <td class="px-4 py-3">
-                <div
-                  class="font-medium
-                        text-slate-800"
-                >
-                  {{ doctor.fullName }}
+                    <span>
+                      {{ getGenderText(doctor.gender) }}
+                    </span>
+                  </div>
                 </div>
               </td>
 
-              <!-- SPECIALTY -->
+              <td>
+                <div class="contact-info">
+                  <span>{{ doctor.email }}</span>
 
-              <td
-                class="px-4 py-3
-                      text-slate-600"
-              >
-                {{ doctor.currentSpecialty }}
+                  <span>{{ doctor.phoneNumber }}</span>
+                </div>
               </td>
 
-              <!-- ROOM -->
+              <td>
+                <div class="professional-info">
+                  <strong>
+                    {{ doctor.currentSpecialty }}
+                  </strong>
 
-              <td
-                class="px-4 py-3
-                      text-slate-600"
-              >
-                -
+                  <span>
+                    {{ doctor.qualification }}
+                  </span>
+                </div>
               </td>
 
-              <!-- SCHEDULE -->
-
-              <td
-                class="px-4 py-3
-                      text-xs text-slate-500"
-              >
-                -
+              <td>
+                {{ doctor.experienceYears }} năm
               </td>
 
-              <!-- PATIENTS -->
-
-              <td
-                class="px-4 py-3
-                      font-medium
-                      text-slate-700"
-              >
-                -
-              </td>
-
-              <!-- STATUS -->
-
-              <td class="px-4 py-3">
+              <td>
                 <span
-                  class="rounded-md px-2.5 py-1
-                        text-xs font-medium"
-                  :class="statusClass(getDoctorStatus(doctor))"
+                  class="status-badge"
+                  :class="{
+                    active: doctor.status === 'Active',
+                    inactive: doctor.status === 'Inactive',
+                  }"
                 >
-                  {{ statusText(getDoctorStatus(doctor)) }}
+                  {{ getStatusText(doctor.status) }}
                 </span>
               </td>
 
-              <!-- ACTIONS -->
-
-              <td class="px-4 py-3">
-                <div
-                  class="flex justify-end
-                        gap-2"
+              <td>
+                <button
+                  class="btn-edit"
+                  type="button"
+                  :disabled="submitting"
+                  @click="openEditModal(doctor)"
                 >
-                  <button
-                    class="rounded-md px-2.5 py-1.5
-                          text-xs font-medium
-                          text-slate-600
-                          hover:bg-slate-100"
-                  >
-                    Xem
-                  </button>
-
-                  <button
-                    class="rounded-md px-2.5 py-1.5
-                          text-xs font-medium
-                          text-violet-600
-                          hover:bg-violet-50"
-                  >
-                    Sửa
-                  </button>
-                </div>
+                  Chỉnh sửa
+                </button>
               </td>
             </tr>
-
-            <!-- EMPTY -->
-
-            <tr v-if="pagedDoctors.length === 0">
-              <td
-                colspan="8"
-                class="px-4 py-12
-                      text-center
-                      text-sm text-slate-400"
-              >
-                Không tìm thấy bác sĩ phù hợp.
-              </td>
-            </tr>
-
           </tbody>
         </table>
       </div>
 
-      <!-- PAGINATION -->
+      <div
+        v-if="totalPages > 1"
+        class="pagination"
+      >
+        <button
+          type="button"
+          :disabled="pageNumber === 1"
+          @click="changePage(pageNumber - 1)"
+        >
+          ←
+        </button>
 
-      <AdminPagination
-        v-model:current-page="currentPage"
-        :total-pages="totalPages"
-      />
+        <button
+          v-for="page in pageNumbers"
+          :key="page"
+          type="button"
+          :class="{ active: page === pageNumber }"
+          @click="changePage(page)"
+        >
+          {{ page }}
+        </button>
+
+        <button
+          type="button"
+          :disabled="pageNumber === totalPages"
+          @click="changePage(pageNumber + 1)"
+        >
+          →
+        </button>
+      </div>
     </div>
 
+    <DoctorFormModal
+      :open="isModalOpen"
+      :doctor="selectedDoctor"
+      :specialties="specialties"
+      :loading="submitting || loadingSpecialties"
+      @close="closeModal"
+      @submit="handleSubmitDoctor"
+    />
   </div>
 </template>
+
+<style scoped>
+.doctors-page {
+  padding: 28px;
+
+  color: #1e293b;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  margin-bottom: 24px;
+}
+
+.page-header h1 {
+  margin: 0;
+
+  font-size: 28px;
+  font-weight: 700;
+
+  color: #0f172a;
+}
+
+.page-header p {
+  margin: 8px 0 0;
+
+  color: #64748b;
+}
+
+.btn-add {
+  padding: 11px 18px;
+
+  border: none;
+  border-radius: 8px;
+
+  background: #2563eb;
+
+  color: white;
+
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.btn-add:hover {
+  background: #1d4ed8;
+}
+
+.filter-card,
+.table-card {
+  background: white;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+
+  box-shadow: 0 2px 8px rgb(15 23 42 / 4%);
+}
+
+.filter-card {
+  display: flex;
+  gap: 16px;
+
+  padding: 18px;
+
+  margin-bottom: 24px;
+}
+
+.search-group {
+  display: flex;
+
+  flex: 1;
+}
+
+.search-group input {
+  flex: 1;
+
+  padding: 11px 14px;
+
+  border: 1px solid #cbd5e1;
+  border-radius: 8px 0 0 8px;
+
+  outline: none;
+}
+
+.btn-search {
+  padding: 0 20px;
+
+  border: none;
+  border-radius: 0 8px 8px 0;
+
+  background: #334155;
+
+  color: white;
+
+  cursor: pointer;
+}
+
+.status-filter {
+  min-width: 190px;
+
+  padding: 0 12px;
+
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+
+  background: white;
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+
+  padding: 20px 24px;
+
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.table-header h2 {
+  margin: 0;
+
+  font-size: 18px;
+}
+
+.table-header p {
+  margin: 5px 0 0;
+
+  font-size: 14px;
+
+  color: #64748b;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+
+  border-collapse: collapse;
+}
+
+th {
+  padding: 14px 24px;
+
+  background: #f8fafc;
+
+  text-align: left;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  color: #64748b;
+
+  text-transform: uppercase;
+}
+
+td {
+  padding: 18px 24px;
+
+  border-top: 1px solid #f1f5f9;
+
+  font-size: 14px;
+}
+
+.doctor-info {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+}
+
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 40px;
+  height: 40px;
+
+  border-radius: 50%;
+
+  background: #dbeafe;
+
+  color: #2563eb;
+
+  font-weight: 700;
+}
+
+.doctor-info strong,
+.professional-info strong {
+  display: block;
+
+  margin-bottom: 4px;
+}
+
+.doctor-info span,
+.contact-info span,
+.professional-info span {
+  display: block;
+
+  font-size: 13px;
+
+  color: #64748b;
+}
+
+.contact-info {
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+.status-badge {
+  display: inline-flex;
+
+  padding: 6px 10px;
+
+  border-radius: 999px;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-badge.active {
+  background: #dcfce7;
+
+  color: #15803d;
+}
+
+.status-badge.inactive {
+  background: #fee2e2;
+
+  color: #dc2626;
+}
+
+.btn-edit {
+  padding: 8px 13px;
+
+  border: 1px solid #bfdbfe;
+  border-radius: 7px;
+
+  background: #eff6ff;
+
+  color: #2563eb;
+
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.btn-edit:hover {
+  background: #dbeafe;
+}
+
+.loading-state,
+.empty-state {
+  padding: 50px 20px;
+
+  text-align: center;
+
+  color: #64748b;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+
+  gap: 6px;
+
+  padding: 20px;
+}
+
+.pagination button {
+  min-width: 36px;
+  height: 36px;
+
+  padding: 0 10px;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
+
+  background: white;
+
+  cursor: pointer;
+}
+
+.pagination button.active {
+  border-color: #2563eb;
+
+  background: #2563eb;
+
+  color: white;
+}
+
+.pagination button:disabled {
+  cursor: not-allowed;
+
+  opacity: 0.4;
+}
+
+@media (max-width: 768px) {
+  .doctors-page {
+    padding: 16px;
+  }
+
+  .page-header,
+  .filter-card {
+    flex-direction: column;
+  }
+
+  .page-header {
+    gap: 16px;
+  }
+
+  .filter-card {
+    align-items: stretch;
+  }
+
+  .status-filter {
+    min-width: auto;
+    min-height: 42px;
+  }
+}
+</style>

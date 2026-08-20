@@ -4,14 +4,30 @@ export type AccountRole =
   | 'receptionist'
   | 'patient'
 
+export type Gender =
+  | 'Male'
+  | 'Female'
+  | 'Other'
+
 export interface User {
   id: string
   username: string
   fullName: string
-  phoneNumber: string | null
-  email: string | null
-  gender: number
+  phoneNumber: string
+  email: string
+  gender: Gender
   roles: string[]
+  isActive: boolean
+  createdAt: string
+}
+
+export interface GetUsersParams {
+  Search?: string
+  SortBy?: string
+  OrderBy?: string
+  Gender?: Gender
+  PageNumber?: number
+  PageSize?: number
 }
 
 export interface PagedUsersResponse {
@@ -22,13 +38,4 @@ export interface PagedUsersResponse {
   totalPages: number
   hasPrevious: boolean
   hasNext: boolean
-}
-
-export interface GetUsersParams {
-  search?: string
-  sortBy?: string
-  orderBy?: string
-  gender?: number
-  pageNumber?: number
-  pageSize?: number
 }

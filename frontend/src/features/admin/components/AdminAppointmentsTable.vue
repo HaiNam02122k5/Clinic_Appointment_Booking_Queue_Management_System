@@ -1,19 +1,15 @@
 <script setup lang="ts">
-import type { ApptStatus } from '@/features/admin/admin.mock'
+import type {
+  AdminAppointment,
+  AppointmentStatus,
+} from '@/features/admin/admin.types'
 
 defineProps<{
-  data: {
-    id: number
-    patient: string
-    doctor: string
-    specialty: string
-    datetime: string
-    status: ApptStatus
-  }[]
+  data: AdminAppointment[]
 }>()
 
-function statusText(status: ApptStatus) {
-  const map: Record<ApptStatus, string> = {
+function statusText(status: AppointmentStatus) {
+  const map: Record<AppointmentStatus, string> = {
     completed: 'Hoàn thành',
     waiting: 'Đang chờ',
     cancelled: 'Đã hủy',
@@ -23,8 +19,8 @@ function statusText(status: ApptStatus) {
   return map[status]
 }
 
-function statusClass(status: ApptStatus) {
-  const map: Record<ApptStatus, string> = {
+function statusClass(status: AppointmentStatus) {
+  const map: Record<AppointmentStatus, string> = {
     completed: 'bg-green-50 text-green-700',
     waiting: 'bg-blue-50 text-blue-700',
     cancelled: 'bg-red-50 text-red-600',
