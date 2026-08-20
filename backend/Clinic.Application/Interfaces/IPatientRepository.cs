@@ -34,5 +34,6 @@ namespace Clinic.Application.Interfaces
         /// trước khi tạo mới (tránh vi phạm UNIQUE index PersonId).
         /// </summary>
         Task<Patient?> GetByPersonIdAsync(Guid personId);
+        Task<Dictionary<string, IValueWithChange>> GetDashboardData();
     }
 }
