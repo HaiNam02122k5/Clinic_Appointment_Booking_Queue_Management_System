@@ -106,6 +106,11 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                 query = query.Where(u => u.Person.Gender == gender.Value);
             }
 
+            if (string.IsNullOrEmpty(sortBy))
+            {
+                sortBy = "fullname"; // Default sorting by FullName
+            }
+
             query = sortBy.ToLower() switch
             {
                 "username" => descending ? query.OrderByDescending(u => u.Username) : query.OrderBy(u => u.Username),

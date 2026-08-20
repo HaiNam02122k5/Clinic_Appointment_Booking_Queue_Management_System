@@ -138,6 +138,10 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                 query = query.Where(d => d.WorkHistories.Any(wh => wh.EndDate == null && wh.SpecialtyId == specialtyId));
             }
 
+            if (string.IsNullOrEmpty(sortBy))
+            {
+                sortBy = "fullname"; // Default sorting by Name
+            }
             query = sortBy?.ToLower() switch
             {
                 "fullname" => !descending ? query.OrderBy(d => d.Employee.Person.FullName) : query.OrderByDescending(d => d.Employee.Person.FullName),

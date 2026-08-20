@@ -32,13 +32,19 @@ namespace Clinic.Application.UnitTests.Common
                 query = query.Where(s => s.Name.Contains(search) || s.Description.Contains(search));
             }
 
-            query = sortBy.ToLower() switch
+            if (!string.IsNullOrEmpty(sortBy))
             {
-                "name" => descending ? query.OrderByDescending(s => s.Name) : query.OrderBy(s => s.Name),
-                "description" => descending ? query.OrderByDescending(s => s.Description) : query.OrderBy(s => s.Description),
-                "establisheddate" => descending ? query.OrderByDescending(s => s.EstablishedDate) : query.OrderBy(s => s.EstablishedDate),
-                _ => query.OrderBy(s => s.Name), // Default sorting by Name
-            };
+                query = sortBy.ToLower() switch
+                {
+                    "name" => descending ? query.OrderByDescending(s => s.Name) : query.OrderBy(s => s.Name),
+                    "description" => descending ? query.OrderByDescending(s => s.Description) : query.OrderBy(s => s.Description),
+                    "establisheddate" => descending ? query.OrderByDescending(s => s.EstablishedDate) : query.OrderBy(s => s.EstablishedDate),
+                    _ => query.OrderBy(s => s.Name), // Default sorting by Name
+                };
+            } else
+            {
+                query = query.OrderBy(s => s.Name); // Default sorting by Name
+            }
 
             var totalCount = query.Count();
             var items = query.Skip((page - 1) * pageSize).Take(pageSize).ToList();
