@@ -58,12 +58,18 @@ namespace Clinic.Application.UnitTests.Common
                 query = query.Where(d => d.WorkHistories.Any(wh => wh.EndDate == null && wh.SpecialtyId == specialtyId));
             }
 
-            query = sortBy.ToLower() switch
+            if (!string.IsNullOrEmpty(sortBy))
             {
-                "name" => !descending ? query.OrderBy(d => d.Employee.Person.FullName) : query.OrderByDescending(d => d.Employee.Person.FullName),
-                "experienceyears" => !descending ? query.OrderBy(d => d.ExperienceYears) : query.OrderByDescending(d => d.ExperienceYears),
-                _ => !descending ? query.OrderBy(d => d.Employee.Person.FullName) : query.OrderByDescending(d => d.Employee.Person.FullName), // Default sorting by Name
-            };
+                query = sortBy.ToLower() switch
+                {
+                    "name" => !descending ? query.OrderBy(d => d.Employee.Person.FullName) : query.OrderByDescending(d => d.Employee.Person.FullName),
+                    "experienceyears" => !descending ? query.OrderBy(d => d.ExperienceYears) : query.OrderByDescending(d => d.ExperienceYears),
+                    _ => !descending ? query.OrderBy(d => d.Employee.Person.FullName) : query.OrderByDescending(d => d.Employee.Person.FullName), // Default sorting by Name
+                };
+            } else
+            {
+                query = !descending ? query.OrderBy(d => d.Employee.Person.FullName) : query.OrderByDescending(d => d.Employee.Person.FullName); // Default sorting by Name
+            }
 
             var totalCount = query.Count();
 
