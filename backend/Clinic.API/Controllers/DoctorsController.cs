@@ -93,7 +93,7 @@ namespace Clinic.API.Controllers
 
         [HttpGet("{doctorId}/available")]
         [AllowAnonymous]
-        [ProducesResponseType(typeof(BookingDoctorDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<WorkSchedulesBookingDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetAvailableSchedule([FromRoute] Guid doctorId, [FromQuery] DateOnly? date)
         {

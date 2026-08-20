@@ -11,14 +11,42 @@ import type {
 
 function toTimeString(value: unknown): string {
   if (!value) return ''
-  if (typeof value === 'string') return value.slice(0, 5)
+
+  if (typeof value === 'string') {
+    const text = value.trim()
+    if (!text) return ''
+
+    const timeMatch = text.match(/(\d{1,2}:\d{2})(?::\d{2})?(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?$/)
+    if (timeMatch?.[1]) return timeMatch[1]
+
+    const isoMatch = text.match(/T(\d{1,2}):(\d{2})(?::(\d{2}))?(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?$/)
+    if (isoMatch) {
+      const hh = String(Number(isoMatch[1])).padStart(2, '0')
+      const mm = String(Number(isoMatch[2])).padStart(2, '0')
+      return `${hh}:${mm}`
+    }
+
+    const date = new Date(text)
+    if (!Number.isNaN(date.getTime())) {
+      return date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false })
+    }
+
+    return text.slice(0, 5)
+  }
+
   if (typeof value === 'object' && value && 'hours' in (value as object)) {
     const v = value as { hours?: number; minutes?: number; seconds?: number }
     const hh = String(v.hours ?? 0).padStart(2, '0')
     const mm = String(v.minutes ?? 0).padStart(2, '0')
     return `${hh}:${mm}`
   }
-  return String(value)
+
+  const raw = String(value)
+  if (raw.includes(':')) {
+    return raw.slice(0, 5)
+  }
+
+  return raw
 }
 
 const PATIENT_PROTECTED_ENDPOINTS_DISABLED_KEY = 'clinic.patient.protected-disabled'
@@ -56,13 +84,30 @@ function shouldSkipProtectedPatientRequest(): boolean {
   return isProtectedPatientEndpointsDisabled()
 }
 
+function normalizeId(value: unknown): number | string {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (!trimmed) return 0
+    const numeric = Number(trimmed)
+    if (!Number.isNaN(numeric) && String(numeric) === trimmed) return numeric
+    return trimmed
+  }
+  if (value == null) return 0
+
+  const str = String(value).trim()
+  if (!str) return 0
+  const numeric = Number(str)
+  return Number.isNaN(numeric) ? str : numeric
+}
+
 function mapDoctor(raw: any): Doctor {
-  const id = Number(raw?.id ?? raw?.doctorId ?? raw?.DoctorId ?? 0)
+  const id = normalizeId(raw?.id ?? raw?.doctorId ?? raw?.DoctorId ?? raw?.doctorID ?? raw?.Id ?? 0)
   const name = raw?.fullName ?? raw?.name ?? raw?.doctorName ?? raw?.FullName ?? 'BS. Chưa xác định'
   const specialty = raw?.currentSpecialty ?? raw?.specialty ?? raw?.CurrentSpecialty ?? raw?.Specialty ?? 'Khác'
 
   return {
-    id: Number.isFinite(id) ? id : 0,
+    id,
     name,
     specialty,
     room: raw?.room ?? raw?.roomNumber,
@@ -86,6 +131,22 @@ function normalizeSlotList(data: any): AvailableSlot[] {
     time: toTimeString(item?.shiftStart ?? item?.time ?? item?.startTime ?? item?.slotTime),
     available: Number(item?.remainingCapacity ?? item?.available ?? 1) > 0,
   }))
+}
+
+function normalizeGenderValue(value: unknown): number {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase()
+    if (normalized === 'male') return 0
+    if (normalized === 'female') return 1
+    if (normalized === 'other') return 2
+
+    const numeric = Number(value)
+    if (Number.isFinite(numeric)) return numeric
+  }
+
+  return 0
 }
 
 import { logger } from '@/lib/logger'
@@ -137,7 +198,7 @@ export const patientApi = {
     )
   },
 
-  getAvailableSlots(doctorId: number, date: string): Promise<AvailableSlot[]> {
+  getAvailableSlots(doctorId: number | string, date: string): Promise<AvailableSlot[]> {
     return callWithFallback<AvailableSlot[]>(
       async () => {
         const fromDate = new Date(`${date}T00:00:00`).toISOString()
@@ -176,7 +237,7 @@ export const patientApi = {
 
         return {
           id: Number(created?.id ?? Date.now()),
-          doctorId: Number(created?.doctorId ?? payload.doctorId ?? 0),
+          doctorId: normalizeId(created?.doctorId ?? payload.doctorId ?? 0),
           doctorName,
           specialty,
           appointmentDate: created?.date ?? payload.appointmentDate ?? '',
@@ -187,7 +248,7 @@ export const patientApi = {
       },
       {
         id: Date.now(),
-        doctorId: payload.doctorId ?? 0,
+        doctorId: normalizeId(payload.doctorId ?? 0),
         doctorName: 'BS. Chưa xác định',
         specialty: 'Khác',
         appointmentDate: payload.appointmentDate ?? '',
@@ -212,7 +273,7 @@ export const patientApi = {
           return items.map((item: any) => {
             // Handle various field name formats from backend
             const id = Number(item.id ?? item.Id ?? 0)
-            const doctorId = Number(item.doctorId ?? item.DoctorId ?? 0)
+            const doctorId = normalizeId(item.doctorId ?? item.DoctorId ?? 0)
             const doctorName = item.doctorName ?? item.DoctorName ?? 'BS. Chưa xác định'
 
             // Backend doesn't return specialty, so use fallback
@@ -415,7 +476,9 @@ export const patientApi = {
               phoneNumber: data.phoneNumber ?? data.PhoneNumber ?? data.phone ?? data.Phone ?? data.phone_number,
               address: data.address ?? data.Address ?? data.location ?? data.Location,
               dateOfBirth: data.dateOfBirth ?? data.DateOfBirth ?? data.dob ?? data.Dob ?? data.birthDate ?? data.BirthDate,
-              gender: data.gender ?? data.Gender ?? data.sex ?? data.Sex,
+              gender: normalizeGenderValue(data.gender ?? data.Gender ?? data.sex ?? data.Sex),
+              insuranceNumber: data.insuranceNumber ?? data.InsuranceNumber ?? data.insurance_number ?? data.Insurance_Number,
+              emergencyContact: data.emergencyContact ?? data.EmergencyContact ?? data.emergency_contact ?? data.Emergency_Contact,
             }
           } catch (e: any) {
             const status = e?.response?.status

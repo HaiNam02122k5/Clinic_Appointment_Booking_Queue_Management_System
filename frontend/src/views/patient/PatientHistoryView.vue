@@ -25,7 +25,17 @@ async function connectToBackend() {
 // Hàm bổ trợ định dạng ngày tháng
 const formatDate = (dateString?: string) => {
   if (!dateString) return ''
-  return new Date(dateString).toLocaleDateString('vi-VN')
+
+  const normalized = String(dateString).trim()
+  if (!normalized) return ''
+
+  const safeDate = normalized.includes('T')
+    ? new Date(normalized)
+    : new Date(`${normalized}T00:00:00`)
+
+  if (Number.isNaN(safeDate.getTime())) return normalized.slice(0, 10)
+
+  return safeDate.toLocaleDateString('vi-VN')
 }
 </script>
 

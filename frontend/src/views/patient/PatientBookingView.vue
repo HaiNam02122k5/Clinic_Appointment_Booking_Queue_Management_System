@@ -14,7 +14,7 @@ const auth = useAuthStore()
 const step = ref(1)
 
 const specialty = ref('')
-const doctorId = ref<number | null>(null)
+const doctorId = ref<number | string | null>(null)
 const selectedSlotId = ref<number | string | null>(null)
 const appointmentDate = ref('')
 const appointmentTime = ref('')
@@ -107,7 +107,7 @@ async function connectToBackend() {
 }
 
 // Hàm xử lý sự kiện khi người dùng chọn bác sĩ
-async function selectDoctor(id: number) {
+async function selectDoctor(id: number | string) {
   doctorId.value = id
   selectedSlotId.value = null
   appointmentTime.value = ''

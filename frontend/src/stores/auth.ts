@@ -442,8 +442,46 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  function logout() {
+  function clearBrowserSessionState() {
     tokenStorage.clear()
+
+    const authKeys = new Set<string>()
+    for (const storage of [localStorage, sessionStorage]) {
+      try {
+        for (let i = 0; i < storage.length; i += 1) {
+          const key = storage.key(i)
+          if (key && (key.startsWith('auth.') || key.startsWith('clinic.auth.'))) {
+            authKeys.add(key)
+          }
+        }
+      } catch {
+        // ignore storage access issues in restricted/private browsers
+      }
+    }
+
+    for (const key of authKeys) {
+      try {
+        localStorage.removeItem(key)
+      } catch {
+        // ignore
+      }
+      try {
+        sessionStorage.removeItem(key)
+      } catch {
+        // ignore
+      }
+    }
+
+    try {
+      localStorage.removeItem('clinic.auth.rememberMe')
+      sessionStorage.removeItem('clinic.auth.rememberMe')
+    } catch {
+      // ignore storage issues in restricted browsers
+    }
+  }
+
+  function logout() {
+    clearBrowserSessionState()
     setUser(null)
     status.value = 'idle'
     error.value = null
@@ -460,6 +498,7 @@ export const useAuthStore = defineStore('auth', () => {
     setUser,
     setActiveRole,
     logout,
+    clearBrowserSessionState,
     hasRole,
     login,
     register,

@@ -15,11 +15,53 @@ const message = ref<string | null>(null)
 const form = ref({
   fullName: auth.user?.name ?? '',
   email: auth.user?.email ?? '',
-  phoneNumber: (auth.user as any)?.phoneNumber ?? '',
-  address: (auth.user as any)?.address ?? '',
-  dateOfBirth: (auth.user as any)?.dateOfBirth ?? '',
-  gender: (auth.user as any)?.gender ?? 0,
+  phoneNumber: '',
+  address: '',
+  dateOfBirth: '',
+  gender: 0,
+  insuranceNumber: '',
+  emergencyContact: '',
 })
+
+function normalizeDateInput(value: unknown): string {
+  if (!value) return ''
+
+  if (typeof value === 'string') {
+    const text = value.trim()
+    if (!text) return ''
+    const match = text.match(/^(\d{4}-\d{2}-\d{2})/)
+    if (match && match[1]) return match[1]
+
+    const parsed = new Date(text)
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed.toISOString().slice(0, 10)
+    }
+
+    return text.slice(0, 10)
+  }
+
+  if (value instanceof Date) {
+    return value.toISOString().slice(0, 10)
+  }
+
+  return String(value).slice(0, 10)
+}
+
+function normalizeGenderValue(value: unknown): number {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase()
+    if (normalized === 'male') return 0
+    if (normalized === 'female') return 1
+    if (normalized === 'other') return 2
+
+    const numeric = Number(value)
+    if (Number.isFinite(numeric)) return numeric
+  }
+
+  return 0
+}
 
 onMounted(async () => {
   try {
@@ -32,8 +74,10 @@ onMounted(async () => {
       email: profile.email ?? auth.user?.email ?? '',
       phoneNumber: profile.phoneNumber ?? '',
       address: profile.address ?? '',
-      dateOfBirth: profile.dateOfBirth ?? '',
-      gender: profile.gender ?? 0,
+      dateOfBirth: normalizeDateInput(profile.dateOfBirth ?? ''),
+      gender: normalizeGenderValue(profile.gender ?? 0),
+      insuranceNumber: profile.insuranceNumber ?? '',
+      emergencyContact: profile.emergencyContact ?? '',
     }
   } catch (error) {
     // ignore; form stays with auth data if profile endpoint is unavailable
@@ -43,23 +87,30 @@ onMounted(async () => {
 async function save() {
   saving.value = true
   message.value = null
+
   try {
-    // Try to create patient profile via POST /patients
-    await http.post('/patients', form.value)
+    const payload = {
+      email: form.value.email,
+      gender: Number(form.value.gender ?? 0),
+      address: form.value.address,
+      insuranceNumber: form.value.insuranceNumber || null,
+      emergencyContact: form.value.emergencyContact || null,
+    }
+
+    await http.put('/patients/me', payload)
+    await patient.loadProfile()
     message.value = 'Đã lưu hồ sơ bệnh nhân.'
 
-    // Re-run ensurePatientProfile to let app refresh and load patient data
     try {
       await auth.ensurePatientProfile()
     } catch (e) {
       // ignore — ensurePatientProfile reports friendly messages
     }
 
-    // Redirect to patient home
     router.push({ name: 'patient-home' })
   } catch (err: any) {
     const status = err?.response?.status ?? 0
-    const bodyMsg = err?.response?.data?.message ?? err?.message ?? 'Lỗi khi lưu hồ sơ'
+    const bodyMsg = err?.response?.data?.message ?? err?.response?.data?.title ?? err?.message ?? 'Lỗi khi lưu hồ sơ'
     message.value = `Lỗi (${status}): ${bodyMsg}`
   } finally {
     saving.value = false
@@ -76,7 +127,7 @@ async function save() {
     <form @submit.prevent="save" class="space-y-4">
       <div>
         <label class="block text-sm font-medium text-slate-700">Họ và tên</label>
-        <input v-model="form.fullName" class="mt-1 w-full rounded border px-3 py-2" />
+        <input v-model="form.fullName" readonly class="mt-1 w-full rounded border bg-slate-50 px-3 py-2" />
       </div>
 
       <div>
@@ -86,7 +137,7 @@ async function save() {
 
       <div>
         <label class="block text-sm font-medium text-slate-700">Số điện thoại</label>
-        <input v-model="form.phoneNumber" class="mt-1 w-full rounded border px-3 py-2" />
+        <input v-model="form.phoneNumber" readonly class="mt-1 w-full rounded border bg-slate-50 px-3 py-2" />
       </div>
 
       <div>
@@ -97,7 +148,7 @@ async function save() {
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium text-slate-700">Ngày sinh</label>
-          <input type="date" v-model="form.dateOfBirth" class="mt-1 w-full rounded border px-3 py-2" />
+          <input type="date" v-model="form.dateOfBirth" readonly class="mt-1 w-full rounded border bg-slate-50 px-3 py-2" />
         </div>
 
         <div>
@@ -108,6 +159,16 @@ async function save() {
             <option :value="2">Khác</option>
           </select>
         </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-slate-700">Số bảo hiểm</label>
+        <input v-model="form.insuranceNumber" class="mt-1 w-full rounded border px-3 py-2" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-slate-700">Liên hệ khẩn cấp</label>
+        <input v-model="form.emergencyContact" class="mt-1 w-full rounded border px-3 py-2" />
       </div>
 
       <div class="flex items-center gap-3">

@@ -20,8 +20,24 @@ const username = ref('')
 const password = ref('')
 const rememberMe = ref(false)
 
+// Khai báo biến lưu trữ thông báo lỗi validation của form
+const errors = ref({
+  username: '',
+  password: '',
+})
+
+function clearLoginForm() {
+  username.value = ''
+  password.value = ''
+  errors.value.username = ''
+  errors.value.password = ''
+}
+
 // Khi component được mounted, kiểm tra localStorage để lấy trạng thái "Ghi nhớ đăng nhập"
 onMounted(() => {
+  authStore.clearBrowserSessionState()
+  clearLoginForm()
+
   try {
     const saved = localStorage.getItem(REMEMBER_ME_KEY)
     rememberMe.value = saved === 'true'
@@ -29,6 +45,16 @@ onMounted(() => {
     rememberMe.value = false
   }
 })
+
+watch(
+  () => authStore.isAuthenticated,
+  (isAuthenticated) => {
+    if (!isAuthenticated) {
+      clearLoginForm()
+    }
+  },
+  { immediate: true },
+)
 
 // Theo dõi thay đổi của biến rememberMe và lưu trạng thái vào localStorage
 watch(
@@ -42,12 +68,6 @@ watch(
   },
   { immediate: true },
 )
-
-// Khai báo biến lưu trữ thông báo lỗi validation của form
-const errors = ref({
-  username: '',
-  password: '',
-})
 
 // Định nghĩa theme cho giao diện đăng nhập
 const LOGIN_THEME = {
@@ -211,7 +231,7 @@ router.push('/forgot-password')
         </div>
 
         <!-- Form nhập thông tin đăng nhập -->
-        <form @submit.prevent="handleLogin" class="space-y-4 mb-6">
+        <form @submit.prevent="handleLogin" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" class="space-y-4 mb-6">
           <div>
             <label class="block text-sm font-medium text-slate-700 mb-1.5">
               Tên đăng nhập <span class="text-red-500">*</span>
@@ -219,6 +239,11 @@ router.push('/forgot-password')
             <input
               v-model="username"
               type="text"
+              name="username"
+              autocomplete="off"
+              autocapitalize="none"
+              autocorrect="off"
+              spellcheck="false"
               required
               :placeholder="LOGIN_THEME.hintUsername"
               class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0E4D92] bg-white transition-all"
@@ -238,6 +263,11 @@ router.push('/forgot-password')
             <input
               v-model="password"
               type="password"
+              name="password"
+              autocomplete="new-password"
+              autocapitalize="none"
+              autocorrect="off"
+              spellcheck="false"
               required
               placeholder="••••••••"
               class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0E4D92] bg-white transition-all"

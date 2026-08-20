@@ -61,7 +61,7 @@ export const usePatientStore = defineStore('patient', () => {
     }
   }
 
-  async function loadSlots(doctorId: number, date: string) {
+  async function loadSlots(doctorId: number | string, date: string) {
     slotsLoading.value = true
     slotsError.value = null
 

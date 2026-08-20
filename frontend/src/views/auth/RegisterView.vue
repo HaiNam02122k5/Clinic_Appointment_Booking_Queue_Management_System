@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
@@ -8,6 +9,10 @@ import { useFormValidation } from '@/composables/useFormValidation'
 // Khởi tạo router và authStore để thao tác với luồng người dùng
 const router = useRouter()
 const authStore = useAuthStore()
+
+onMounted(() => {
+  authStore.clearBrowserSessionState()
+})
 
 // Trích xuất thông báo lỗi từ authStore để hiển thị lỗi backend trong form validation
 const { error: backendError } = storeToRefs(authStore)
@@ -124,13 +129,18 @@ async function handleRegister() {
           ⚠️ {{ authStore.error }}
         </div>       
 
-        <form @submit.prevent="handleRegister" class="space-y-4" novalidate>
+        <form @submit.prevent="handleRegister" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" class="space-y-4" novalidate>
           <div>
             <label class="block text-sm font-medium text-slate-700 mb-1">Tên đăng nhập <span class="text-red-500">*</span></label>
             <input
               v-model="formData.username"
               @blur="handleBlur('username')"
               type="text"
+              name="username"
+              autocomplete="off"
+              autocapitalize="none"
+              autocorrect="off"
+              spellcheck="false"
               placeholder="patient01"
               :class="[
                 'w-full border rounded-xl px-3.5 py-2.5 text-sm focus:outline-none transition-all',
@@ -235,6 +245,11 @@ async function handleRegister() {
                 v-model="formData.password"
                 @blur="handleBlur('password')"
                 type="password"
+                name="new-password"
+                autocomplete="new-password"
+                autocapitalize="none"
+                autocorrect="off"
+                spellcheck="false"
                 placeholder="••••••••"
                 :class="[
                   'w-full border rounded-xl px-3.5 py-2.5 text-sm focus:outline-none transition-all',
@@ -250,6 +265,11 @@ async function handleRegister() {
                 v-model="formData.confirmPassword"
                 @blur="handleBlur('confirmPassword')"
                 type="password"
+                name="new-password"
+                autocomplete="new-password"
+                autocapitalize="none"
+                autocorrect="off"
+                spellcheck="false"
                 placeholder="••••••••"
                 :class="[
                   'w-full border rounded-xl px-3.5 py-2.5 text-sm focus:outline-none transition-all',

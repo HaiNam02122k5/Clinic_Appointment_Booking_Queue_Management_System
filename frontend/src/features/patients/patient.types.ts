@@ -1,5 +1,5 @@
 export interface Doctor {
-  id: number
+  id: number | string
   name: string
   specialty: string
   room?: string
@@ -14,7 +14,7 @@ export interface AvailableSlot {
 
 export interface Appointment {
   id: number
-  doctorId: number
+  doctorId: number | string
   doctorName: string
   specialty: string
   appointmentDate: string
@@ -24,7 +24,7 @@ export interface Appointment {
 }
 
 export interface CreateAppointmentRequest {
-  doctorId?: number
+  doctorId?: number | string
   workScheduleId?: number | string
   appointmentDate?: string
   appointmentTime?: string
@@ -73,4 +73,6 @@ export interface PatientProfile {
   address?: string
   dateOfBirth?: string
   gender?: number | string
+  insuranceNumber?: string
+  emergencyContact?: string
 }
