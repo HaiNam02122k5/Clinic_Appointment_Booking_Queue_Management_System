@@ -68,7 +68,7 @@ namespace Clinic.API.Controllers
         {
             var command = _mapper.Map<CreatePatientCommand>(request);
             var result = await _sender.Send(command);
-            return CreatedAtAction(nameof(CreatePatient), new { id = result }, null);
+            return CreatedAtAction(nameof(PatientsController.GetPatient), new { id = result.Id }, result);
         }
 
         [HttpPut("/patients/{patientId}")]

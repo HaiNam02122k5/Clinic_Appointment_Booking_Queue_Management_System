@@ -31,7 +31,7 @@ namespace Clinic.Domain.Entities
             AppointmentId = appointment.Id;
             OldWorkScheduleId = appointment.WorkScheduleId;
             TimeSlot = appointment.TimeSlot;
-            UpdatedAt = (DateTime)appointment.UpdatedAt;
+            UpdatedAt = appointment.UpdatedAt ?? appointment.CreatedAt;
             Status = appointment.Status;
             Reason = appointment.Reason;
             UpdatedByUserId = appointment.UpdatedByUserId;

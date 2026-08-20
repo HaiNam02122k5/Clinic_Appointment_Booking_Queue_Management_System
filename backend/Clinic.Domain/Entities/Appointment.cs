@@ -161,6 +161,7 @@ namespace Clinic.Domain.Entities
             Snapshots.Add(new AppointmentSnapshot(this));
             Status = AppointmentStatus.Cancelled;
             UpdatedByUserId = cancelledByUserId;
+            MarkUpdated();
         }
 
         public void Confirm(Guid confirmedByUserId)

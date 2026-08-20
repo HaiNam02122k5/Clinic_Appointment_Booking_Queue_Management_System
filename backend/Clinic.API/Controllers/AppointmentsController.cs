@@ -54,7 +54,7 @@ namespace Clinic.API.Controllers
             var userId = _currentUser.UserId;
             var command = new CreateAppointmentCommand(userId, request.WorkScheduleId, request.TimeSlot, request.Reason, false);
             var result = await _sender.Send(command);
-            return CreatedAtAction(nameof(GetAppointment), new { appointmentId = result }, result);
+            return CreatedAtAction(nameof(GetAppointment), new { appointmentId = result.Id }, result);
         }
 
         // For patient only

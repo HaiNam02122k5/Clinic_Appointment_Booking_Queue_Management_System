@@ -32,7 +32,7 @@ namespace Clinic.Application.Features.Appointments.Queries
                 Date = appointment.WorkSchedule.Date,
                 Reason = appointment.Reason,
                 Status = appointment.Status,
-                UpdatedAt = appointment.CreatedAt,
+                UpdatedAt = appointment.UpdatedAt ?? appointment.CreatedAt,
                 UpdatedByUserId = appointment.UpdatedByUserId,
                 UpdatorName = appointment.Updator.Person.FullName
             });
