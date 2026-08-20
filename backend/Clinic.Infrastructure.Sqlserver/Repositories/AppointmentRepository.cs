@@ -109,5 +109,143 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                 .Where(a => a.Id == appointmentId);
             return await query.FirstOrDefaultAsync();
         }
+
+        public async Task<Dictionary<string, IValueWithChange>> GetDashboardData()
+        {
+            var today = DateOnly.FromDateTime(DateTime.UtcNow.Date);
+            var yesterday = today.AddDays(-1);
+
+            var currentPeriodStart = today.AddDays(-30);
+            var previousPeriodStart = today.AddDays(-60);
+
+            var stats = await _context.Appointments
+                .Where(a => !a.IsDeleted)
+                .GroupBy(a => 1)
+                .Select(g => new
+                {
+                    CurrentTotal = g.Count(a => a.WorkSchedule.Date >= currentPeriodStart && a.WorkSchedule.Date < today),
+                    PreviousTotal = g.Count(a => a.WorkSchedule.Date >= previousPeriodStart && a.WorkSchedule.Date < currentPeriodStart),
+                    TodayTotal = g.Count(a => a.WorkSchedule.Date == today),
+                    YesterdayTotal = g.Count(a => a.WorkSchedule.Date == yesterday),
+                    CurrentCompleted = g.Count(a => a.Status == AppointmentStatus.Completed && a.WorkSchedule.Date >= currentPeriodStart && a.WorkSchedule.Date < today),
+                    PreviousCompleted = g.Count(a => a.Status == AppointmentStatus.Completed && a.WorkSchedule.Date >= previousPeriodStart && a.WorkSchedule.Date < currentPeriodStart),
+                    CurrentWaitingTime = g.Where(a => a.Status == AppointmentStatus.Completed && a.WorkSchedule.Date >= currentPeriodStart && a.WorkSchedule.Date < today)
+                        .Average(a => EF.Functions.DateDiffMinute(a.QueueTicket.CheckInTime, a.QueueTicket.CalledAt)) ?? 0,
+                    PreviousWaitingTime = g.Where(a => a.Status == AppointmentStatus.Completed && a.WorkSchedule.Date >= previousPeriodStart && a.WorkSchedule.Date < currentPeriodStart)
+                        .Average(a => EF.Functions.DateDiffMinute(a.QueueTicket.CheckInTime, a.QueueTicket.CalledAt)) ?? 0
+                })
+                .FirstOrDefaultAsync();
+
+            var currentTotal = stats?.CurrentTotal ?? 0;
+            var previousTotal = stats?.PreviousTotal ?? 0;
+            var todayTotal = stats?.TodayTotal ?? 0;
+            var yesterdayTotal = stats?.YesterdayTotal ?? 0;
+            var currentCompleted = stats?.CurrentCompleted ?? 0;
+            var previousCompleted = stats?.PreviousCompleted ?? 0;
+            var currentWaitingTime = stats?.CurrentWaitingTime ?? 0;
+            var previousWaitingTime = stats?.PreviousWaitingTime ?? 0;
+
+            var currentCompletionRate = currentTotal == 0 ? 0 : (double)currentCompleted / currentTotal * 100;
+            var previousCompletionRate = previousTotal == 0 ? 0 : (double)previousCompleted / previousTotal * 100;
+
+            return new Dictionary<string, IValueWithChange>
+            {
+                ["TotalAppointmentsLast30Days"] = new ValueWithChange<int>
+                {
+                    Value = currentTotal,
+                    Change = CalculatePercentChange(currentTotal, previousTotal)
+                },
+                ["TodayAppointments"] = new ValueWithChange<int>
+                {
+                    Value = todayTotal,
+                    Change = CalculatePercentChange(todayTotal, yesterdayTotal)
+                },
+                ["CompletionRateLast30Days"] = new ValueWithChange<double>
+                {
+                    Value = Math.Round(currentCompletionRate),
+                    Change = CalculatePercentChange(currentCompletionRate, previousCompletionRate)
+                },
+                ["AverageWaitingTimeLast30Days"] = new ValueWithChange<double>
+                {
+                    Value = Math.Round(currentWaitingTime),
+                    Change = CalculatePercentChange(currentWaitingTime, previousWaitingTime)
+                }
+            };
+        }
+
+        private static double CalculatePercentChange(double currentValue, double previousValue)
+        {
+            if (previousValue == 0)
+            {
+                return currentValue == 0 ? 0 : 100;
+            }
+
+            return (currentValue - previousValue) / previousValue * 100;
+        }
+
+        public async Task<StatisticsDataDto> GetStatistics(bool isWeekPeriod)
+        {
+            var totalDays = isWeekPeriod ? 7 : 30;
+            var endDate = DateOnly.FromDateTime(DateTime.UtcNow.Date);
+            var startDate = endDate.AddDays(-(totalDays - 1));
+
+            var countsByDate = await _context.Appointments
+                .Where(a => !a.IsDeleted && a.WorkSchedule.Date >= startDate && a.WorkSchedule.Date <= endDate)
+                .GroupBy(a => a.WorkSchedule.Date)
+                .Select(g => new
+                {
+                    Date = g.Key,
+                    Count = g.Count()
+                })
+                .ToListAsync();
+
+            var countLookup = countsByDate.ToDictionary(x => x.Date, x => x.Count);
+            var appointmentsByDay = new List<AppointmentByDayDto>(totalDays);
+
+            for (var i = 0; i < totalDays; i++)
+            {
+                var date = startDate.AddDays(i);
+                appointmentsByDay.Add(new AppointmentByDayDto
+                {
+                    Date = date,
+                    Count = countLookup.TryGetValue(date, out var value) ? value : 0
+                });
+            }
+
+            var appointmentsByStatus = await _context.Appointments
+                .Where(a => !a.IsDeleted && a.WorkSchedule.Date >= startDate && a.WorkSchedule.Date <= endDate)
+                .GroupBy(a => a.Status)
+                .Select(g => new AppointmentByStatusDto
+                {
+                    Status = g.Key,
+                    Count = g.Count()
+                })
+                .ToListAsync();
+
+            return new StatisticsDataDto
+            {
+                Period = isWeekPeriod ? "week" : "month",
+                AppointmentsByDay = appointmentsByDay,
+                AppointmentsByStatus = appointmentsByStatus
+            };
+        }
+
+        public async Task<PagedResult<Appointment>> GetAppointmentsByDateAsync(DateOnly date, int pageNumber, int pageSize)
+        {
+            var query = _context.Appointments
+                .Include(a => a.Patient).ThenInclude(p => p.Person)
+                .Include(a => a.WorkSchedule).ThenInclude(ws => ws.Doctor).ThenInclude(d => d.Employee).ThenInclude(e => e.Person)
+                .Include(a => a.WorkSchedule).ThenInclude(ws => ws.Doctor).ThenInclude(d => d.WorkHistories.Where(wh => date >= wh.StartDate && (wh.EndDate == null || date <= wh.EndDate))).ThenInclude(wh => wh.Specialty)
+                .Where(a => !a.IsDeleted && a.WorkSchedule.Date == date);
+
+            var count = await query.CountAsync();
+            var items = await query.OrderByDescending(a => a.TimeSlot)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .AsNoTracking()
+                .ToListAsync();
+
+            return new PagedResult<Appointment>(items, count);
+        }
     }
 }

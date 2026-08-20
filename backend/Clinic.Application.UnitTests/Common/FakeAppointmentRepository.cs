@@ -87,5 +87,20 @@ namespace Clinic.Application.UnitTests.Common
         {
             return _appointments.FirstOrDefault(a => a.Id == appointmentId && !a.IsDeleted);
         }
+
+        public Task<Dictionary<string, IValueWithChange>> GetDashboardData()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<StatisticsDataDto> GetStatistics(bool isWeekPeriod)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<PagedResult<Appointment>> GetAppointmentsByDateAsync(DateOnly date, int pageNumber, int pageSize)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
