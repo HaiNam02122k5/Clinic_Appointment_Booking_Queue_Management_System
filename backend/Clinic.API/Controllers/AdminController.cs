@@ -49,7 +49,7 @@ namespace Clinic.API.Controllers
 
         [HttpGet("users/all-brief")]
         [Authorize(Policy = "Permission:user.manage")]
-        [ProducesResponseType(typeof(PaginationResponse<UserSummaryDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<UserBriefDto>), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetAllUsers()
         {
             var result = await _sender.Send(new GetAllUsersQuery());

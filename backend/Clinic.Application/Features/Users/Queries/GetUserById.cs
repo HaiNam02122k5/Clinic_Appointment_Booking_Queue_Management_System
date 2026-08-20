@@ -32,7 +32,10 @@ namespace Clinic.Application.Features.Users.Queries
                 PhoneNumber = user.Person.PhoneNumber,
                 Email = user.Person.Email,
                 Gender = user.Person.Gender,
-                Address = user.Person.Address
+                Address = user.Person.Address,
+                DateOfBirth = user.Person.DateOfBirth,
+                IsActive = user.IsActive,
+                CreatedAt = user.CreatedAt,
             };
         }
     }
