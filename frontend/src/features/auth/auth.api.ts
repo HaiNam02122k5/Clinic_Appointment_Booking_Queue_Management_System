@@ -86,15 +86,28 @@ function buildLoginBody(payload: LoginPayload) {
 }
 
 function buildRegisterBody(payload: RegisterPayload) {
+  const username = (payload.username ?? payload.email ?? '').trim()
+  const fullName = (payload.fullName ?? '').trim()
+  const phoneNumber = (payload.phoneNumber ?? '').trim()
+  const email = (payload.email ?? '').trim()
+  const address = (payload.address ?? '').trim() || 'Chưa cập nhật'
+  const dateOfBirth = (payload.dateOfBirth ?? '').trim()
+
+  const genderMap: Record<string, number> = {
+    Male: 0,
+    Female: 1,
+    Other: 2,
+  }
+
   return {
-    username: payload.username ?? payload.email,
-    fullName: payload.fullName,
-    phoneNumber: payload.phoneNumber,
-    email: payload.email,
+    username,
     password: payload.password,
-    gender: payload.gender,
-    dateOfBirth: payload.dateOfBirth,
-    address: payload.address ?? 'Chưa cập nhật',
+    fullName,
+    phoneNumber,
+    email: email || null,
+    gender: genderMap[payload.gender] ?? 0,
+    dateOfBirth,
+    address,
   }
 }
 

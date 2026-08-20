@@ -20,14 +20,14 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/select-role',
     name: 'select-role',
-    component: () => import('@/views/SelectRoleView.vue'),
+    component: () => import('@/views/auth/SelectRoleView.vue'),
   },
 
   // Route public: Đăng nhập
   {
     path: '/login',
     name: 'login',
-    component: () => import('@/views/LoginView.vue'),
+    component: () => import('@/views/auth/LoginView.vue'),
     meta: { public: true },
   },
 
@@ -35,7 +35,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/register',
     name: 'register',
-    component: () => import('@/views/RegisterView.vue'),
+    component: () => import('@/views/auth/RegisterView.vue'),
     meta: { public: true },
   },
 
@@ -43,7 +43,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/forgot-password',
     name: 'forgot-password',
-    component: () => import('@/views/ForgotPasswordView.vue'),
+    component: () => import('@/views/auth/ForgotPasswordView.vue'),
     meta: { public: true },
   },
 

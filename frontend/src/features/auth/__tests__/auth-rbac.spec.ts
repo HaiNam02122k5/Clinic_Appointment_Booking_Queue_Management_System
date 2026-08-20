@@ -19,7 +19,7 @@ import { useAuthStore } from '@/stores/auth'
 import { authApi } from '@/features/auth/auth.api'
 import { http } from '@/lib/api/http'
 import { tokenStorage } from '@/lib/api/token-storage'
-import SelectRoleView from '@/views/SelectRoleView.vue'
+import SelectRoleView from '@/views/auth/SelectRoleView.vue'
 import type { UserRole } from '@/features/auth/auth.types'
 
 describe('auth complete flow', () => {

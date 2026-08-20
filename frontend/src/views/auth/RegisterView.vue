@@ -31,7 +31,10 @@ const {
     rememberMe: false,
   },
   {
-    username: [(val) => validators.required(val, 'Tên đăng nhập')],
+    username: [
+      (val) => validators.required(val, 'Tên đăng nhập'),
+      (val) => (val && val.trim().length < 8 ? { isValid: false, message: 'Tên đăng nhập phải có ít nhất 8 ký tự' } : { isValid: true, message: '' }),
+    ],
     fullName: [(val) => validators.required(val, 'Họ và tên')],
     phoneNumber: [
       (val) => validators.required(val, 'Số điện thoại'),
@@ -42,9 +45,11 @@ const {
       (val) => validators.email(val),
     ],
     address: [(val) => validators.required(val, 'Địa chỉ')],
+    dateOfBirth: [(val) => (val ? { isValid: true, message: '' } : { isValid: false, message: 'Ngày sinh là bắt buộc' })],
     password: [
       (val) => validators.required(val, 'Mật khẩu'),
-      (val) => validators.password(val),
+      (val) => (val && val.trim().length < 8 ? { isValid: false, message: 'Mật khẩu phải có ít nhất 8 ký tự' } : { isValid: true, message: '' }),
+      (val) => validators.password(val, 8),
     ],
     confirmPassword: [(val, formData) => validators.confirmPassword(formData.password, val)],
   },
@@ -59,7 +64,12 @@ async function handleRegister() {
     await authStore.register({
       ...formData,
       username: (formData.username || formData.email).trim(),
+      email: formData.email.trim(),
+      fullName: formData.fullName.trim(),
+      phoneNumber: formData.phoneNumber.trim(),
       address: formData.address?.trim() || 'Chưa cập nhật',
+      dateOfBirth: formData.dateOfBirth,
+      gender: formData.gender,
     })
 
     if (authStore.isAuthenticated) {

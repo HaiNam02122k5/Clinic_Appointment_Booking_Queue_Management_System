@@ -4,19 +4,23 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import type { UserRole } from '@/features/auth/auth.types'
 import { validators } from '@/utils/validators'
-import { ApiError } from '@/lib/api/http'
 import { getFieldErrors } from '@/lib/api/error-utils'
 import { logger } from '@/lib/logger'
 
+// Khai báo các biến và store cần thiết
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+
+// Key để lưu trạng thái "Ghi nhớ đăng nhập" vào localStorage
 const REMEMBER_ME_KEY = 'clinic.auth.rememberMe'
 
-const email = ref('')
+// Khai báo các biến phản ứng (reactive) cho username, password và rememberMe
+const username = ref('')
 const password = ref('')
 const rememberMe = ref(false)
 
+// Khi component được mounted, kiểm tra localStorage để lấy trạng thái "Ghi nhớ đăng nhập"
 onMounted(() => {
   try {
     const saved = localStorage.getItem(REMEMBER_ME_KEY)
@@ -26,30 +30,34 @@ onMounted(() => {
   }
 })
 
+// Theo dõi thay đổi của biến rememberMe và lưu trạng thái vào localStorage
 watch(
   rememberMe,
   (value) => {
     try {
       localStorage.setItem(REMEMBER_ME_KEY, String(value))
     } catch {
-      // ignore storage errors for this UI preference
+      // Bỏ qua lỗi bộ nhớ cục bộ trên các trình duyệt chặn cookie/storage
     }
   },
   { immediate: true },
 )
 
+// Khai báo biến lưu trữ thông báo lỗi validation của form
 const errors = ref({
-  email: '',
+  username: '',
   password: '',
 })
 
+// Định nghĩa theme cho giao diện đăng nhập
 const LOGIN_THEME = {
   label: 'Clinic Queue',
   colorClass: 'from-[#0E4D92] to-[#1565c0]',
   badgeClass: 'bg-blue-50 text-blue-700 border-blue-200',
-  hintEmail: 'name@clinic.com',
+  hintUsername: 'name',
 } as const
 
+// Trả về đường dẫn dựa trên vai trò người dùng
 function getRoleRoute(role: UserRole) {
   if (role === 'Admin') return '/admin/doctors'
   if (role === 'Receptionist') return '/reception/queue'
@@ -57,13 +65,14 @@ function getRoleRoute(role: UserRole) {
   return '/patient'
 }
 
+// Kiểm tra tính hợp lệ của dữ liệu đầu vào trước khi submit
 function validateLogin(): boolean {
-  errors.value.email = ''
+  errors.value.username = ''
   errors.value.password = ''
 
-  const usernameRequired = validators.required(email.value, 'Tên đăng nhập')
+  const usernameRequired = validators.required(username.value, 'Tên đăng nhập')
   if (!usernameRequired.isValid) {
-    errors.value.email = usernameRequired.message
+    errors.value.username = usernameRequired.message
   }
 
   const passwordRequired = validators.required(password.value, 'Mật khẩu')
@@ -76,16 +85,18 @@ function validateLogin(): boolean {
     }
   }
 
-  return !errors.value.email && !errors.value.password
+  return !errors.value.username && !errors.value.password
 }
 
+
+// Xử lý gửi dữ liệu đăng nhập và điều hướng người dùng dựa trên vai trò
 async function handleLogin() {
   if (!validateLogin()) return
 
   try {
+    // Gọi API đăng nhập và nhận thông tin người dùng đã đăng nhập
     const loggedInUser = await authStore.login({
-      username: email.value.trim(),
-      email: email.value.trim(),
+      username: username.value.trim(),
       password: password.value,
       rememberMe: rememberMe.value,
     })
@@ -93,6 +104,7 @@ async function handleLogin() {
     const redirectQuery = route.query.redirect as string | undefined
     const availableRoles = loggedInUser?.roles?.length ? loggedInUser.roles : [loggedInUser?.activeRole ?? loggedInUser?.role ?? 'Patient']
 
+    // Chuyển hướng người dùng đến màn hình chọn vai trò nếu có nhiều hơn 1 vai trò khả dụng
     if (availableRoles.length > 1) {
       router.replace({
         path: '/select-role',
@@ -101,30 +113,31 @@ async function handleLogin() {
       return
     }
 
+    // Nếu chỉ có 1 vai trò khả dụng, đặt vai trò đó làm vai trò hoạt động và chuyển hướng người dùng đến màn hình tương ứng
     const activeRole =
       (loggedInUser?.activeRole ?? loggedInUser?.role ?? availableRoles[0] ?? 'Patient') as UserRole
     authStore.setActiveRole(activeRole)
 
     router.replace(redirectQuery || getRoleRoute(activeRole))
   } catch (e: any) {
-    // Map API field errors into form fields when available
+    // Ánh xạ lỗi từ backend sang các thông báo lỗi validation của form
     let mapped = false
     try {
       const fe = getFieldErrors(e)
       if (fe) {
-        errors.value.email = fe.email ? fe.email.join(' ') : errors.value.email
+        errors.value.username = fe.username ? fe.username.join(' ') : errors.value.username
         errors.value.password = fe.password ? fe.password.join(' ') : errors.value.password
         mapped = true
       }
     } catch (mapErr) {
-      // ignore mapping errors
+      // Bỏ qua lỗi nếu khôgn bóc tách được chi tiết lỗi từ backend
     }
 
-    // If backend only returned a global error, show it in the top banner and near the username field
+    // Nếu không ánh xạ được lỗi, hiển thị thông báo lỗi chung
     if (!mapped) {
       const global = authStore.error || (e?.response?.data?.errorMessages && e.response.data.errorMessages.join(' ')) || (e?.message)
       if (global) {
-        errors.value.email = errors.value.email || global
+        errors.value.username = errors.value.username || global
       }
     }
 
@@ -132,10 +145,7 @@ async function handleLogin() {
   }
 }
 
-function goBackToRoleSelect() {
-  router.push('/select-role')
-}
-
+// Điều hướng người dùng đến màn hình quên mật khẩu
 function goToForgotPassword() {
 router.push('/forgot-password')
 }
@@ -143,8 +153,8 @@ router.push('/forgot-password')
 
 <template>
   <div class="min-h-screen bg-slate-50 flex font-sans">
-    <!-- Left Panel (Hiển thị trên màn hình Laptop/Desktop) -->
-    <div
+    <!-- Panel bên trái: Bìa giới thiệu ứng dụng (Chỉ hiển thị trên Desktop) -->
+     <div
       :class="[
         'hidden lg:flex lg:w-2/5 bg-gradient-to-br flex-col justify-between p-10 transition-colors duration-300',
         LOGIN_THEME.colorClass
@@ -179,10 +189,10 @@ router.push('/forgot-password')
       <p class="text-white/40 text-xs">© 2026 ClinicQueue</p>
     </div>
 
-    <!-- Right Panel (Form Đăng nhập) -->
+    <!-- Pannel bên phải:Form chứa thông tin đăng nhập -->
     <div class="flex-1 flex flex-col items-center justify-center px-5 py-10">
       <div class="w-full max-w-md">
-        <!-- Logo Mobile -->
+        <!-- Logo hiển thị trên màn hình thiết bị di động -->
         <div class="flex items-center gap-2.5 mb-8 lg:hidden">
           <div class="w-8 h-8 bg-[#0E4D92] rounded-xl flex items-center justify-center text-white font-bold text-lg">
             +
@@ -195,28 +205,29 @@ router.push('/forgot-password')
           <p class="text-sm text-slate-500">Đăng nhập để sử dụng các chức năng của hệ thống.</p>
         </div>
 
-        <!-- Thông báo Lỗi -->
+        <!-- Banner hiển thị thông báo lỗi chung từ Auth Store -->
         <div v-if="authStore.error" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600">
           ⚠️ {{ authStore.error }}
         </div>
 
+        <!-- Form nhập thông tin đăng nhập -->
         <form @submit.prevent="handleLogin" class="space-y-4 mb-6">
           <div>
             <label class="block text-sm font-medium text-slate-700 mb-1.5">
-              Tên đăng nhập / Email <span class="text-red-500">*</span>
+              Tên đăng nhập <span class="text-red-500">*</span>
             </label>
             <input
-              v-model="email"
+              v-model="username"
               type="text"
               required
-              :placeholder="LOGIN_THEME.hintEmail"
+              :placeholder="LOGIN_THEME.hintUsername"
               class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0E4D92] bg-white transition-all"
             />
             <p
-              v-if="errors.email"
+              v-if="errors.username"
               class="mt-1 text-xs text-red-500"
             >
-              ⚠️ {{ errors.email }}
+              ⚠️ {{ errors.username }}
             </p>
           </div>
 
@@ -239,6 +250,7 @@ router.push('/forgot-password')
             </p>
           </div>
 
+          <!-- Tùy chọn "Ghi nhớ đăng nhập" và liên kết "Quên mật khẩu" -->
           <div class="flex items-center justify-between">
             <label class="flex items-start gap-2 text-sm text-slate-600 cursor-pointer select-none">
               <input v-model="rememberMe" type="checkbox" class="mt-1 rounded text-[#0E4D92]" />
@@ -252,6 +264,7 @@ router.push('/forgot-password')
             </button>
           </div>
 
+          <!--Nút hành động Submit Form đăng nhập-->
           <button
             type="submit"
             :disabled="authStore.status === 'loading'"
@@ -264,6 +277,7 @@ router.push('/forgot-password')
             <span v-else>Đăng nhập</span>
           </button>
 
+          <!-- Liên kết đăng ký tài khoản mới-->
           <p class="text-center text-sm text-slate-500 mt-4">
             Chưa có tài khoản?
             <router-link to="/register" class="text-[#0E4D92] font-semibold hover:underline">
@@ -272,6 +286,7 @@ router.push('/forgot-password')
           </p>
         </form>
 
+        <!-- Thông tin hỗ trợ kỹ thuật -->
         <p class="text-xs text-slate-400 text-center mt-5">
           Gặp vấn đề? Liên hệ <span class="text-[#0E4D92]">hotro@phongkham.vn</span>
         </p>
