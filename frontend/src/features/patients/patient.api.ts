@@ -16,15 +16,22 @@ import type {
   MedicalRecord,
 } from './patient.types'
 
+function toTimeString(value: unknown): string {
+  if (!value) return ''
+  if (typeof value === 'string') return value.slice(0, 5)
+  if (typeof value === 'object' && value && 'hours' in (value as object)) {
+    const v = value as { hours?: number; minutes?: number; seconds?: number }
+    const hh = String(v.hours ?? 0).padStart(2, '0')
+    const mm = String(v.minutes ?? 0).padStart(2, '0')
+    return `${hh}:${mm}`
+  }
+  return String(value)
+}
+
 function mapDoctor(raw: any): Doctor {
   const id = Number(raw?.id ?? raw?.doctorId ?? raw?.DoctorId ?? 0)
-  const name = raw?.fullName ?? raw?.name ?? raw?.doctorName ?? 'BS. Chưa xác định'
-  const specialty =
-    raw?.currentSpecialty ??
-    raw?.specialty ??
-    raw?.specialtyName ??
-    raw?.CurrentSpecialty ??
-    'Khác'
+  const name = raw?.fullName ?? raw?.name ?? raw?.doctorName ?? raw?.FullName ?? 'BS. Chưa xác định'
+  const specialty = raw?.currentSpecialty ?? raw?.specialty ?? raw?.CurrentSpecialty ?? raw?.Specialty ?? 'Khác'
 
   return {
     id: Number.isFinite(id) ? id : 0,
@@ -35,19 +42,25 @@ function mapDoctor(raw: any): Doctor {
 }
 
 function normalizeDoctorList(data: any): Doctor[] {
-  if (Array.isArray(data)) return data.map((item) => mapDoctor(item))
+  if (Array.isArray(data)) return data.map((item: any) => mapDoctor(item))
   if (Array.isArray(data?.items)) return data.items.map((item: any) => mapDoctor(item))
+  if (Array.isArray(data?.result?.items)) return data.result.items.map((item: any) => mapDoctor(item))
   if (Array.isArray(data?.result)) return data.result.map((item: any) => mapDoctor(item))
   if (Array.isArray(data?.data)) return data.data.map((item: any) => mapDoctor(item))
   return []
 }
 
 function normalizeSlotList(data: any): AvailableSlot[] {
-  if (Array.isArray(data)) return data as AvailableSlot[]
-  if (Array.isArray(data?.items)) return data.items as AvailableSlot[]
-  if (Array.isArray(data?.result)) return data.result as AvailableSlot[]
-  return []
+  const items = Array.isArray(data) ? data : data?.items ?? data?.result ?? data?.data ?? []
+  return (Array.isArray(items) ? items : []).map((item: any) => ({
+    id: item?.workScheduleId ?? item?.id ?? item?.workScheduleID ?? 0,
+    workScheduleId: item?.workScheduleId ?? item?.id ?? item?.workScheduleID ?? 0,
+    time: toTimeString(item?.shiftStart ?? item?.time ?? item?.startTime ?? item?.slotTime),
+    available: Number(item?.remainingCapacity ?? item?.available ?? 1) > 0,
+  }))
 }
+
+import { logger } from '@/lib/logger'
 
 async function callWithFallback<T>(
   call: () => Promise<T>,
@@ -58,36 +71,47 @@ async function callWithFallback<T>(
     return await call()
   } catch (error: any) {
     const status = Number(error?.response?.status ?? error?.status ?? 0)
-    if (allowFallbackStatus.includes(status) || status >= 500) {
+    const details = error?.response?.data ?? error ?? {}
+
+    // For expected client-side statuses (e.g., 403/404) treat as informational and avoid noisy warnings
+    if (allowFallbackStatus.includes(status)) {
+      logger.debug('[patientApi] Backend request returned allowed status, using fallback data.', {
+        status,
+        error: details,
+      })
       return fallback
     }
+
+    // For server errors (5xx) still warn
+    if (status >= 500) {
+      logger.warn('[patientApi] Backend request failed (server error), using fallback data.', {
+        status,
+        error: details,
+      })
+      return fallback
+    }
+
     throw error
   }
 }
 
 export const patientApi = {
-  // Lấy danh sách bác sĩ
   getDoctors(specialty?: string): Promise<Doctor[]> {
     if (env.enableMock) {
       const doctors = specialty
-        ? mockDoctors.filter((doctor) =>
-            doctor.specialty.toLowerCase().includes(specialty.toLowerCase()),
-          )
+        ? mockDoctors.filter((doctor) => doctor.specialty.toLowerCase().includes(specialty.toLowerCase()))
         : mockDoctors
-
       return Promise.resolve(doctors)
     }
 
     const fallbackDoctors = specialty
-      ? mockDoctors.filter((doctor) =>
-          doctor.specialty.toLowerCase().includes(specialty.toLowerCase()),
-        )
+      ? mockDoctors.filter((doctor) => doctor.specialty.toLowerCase().includes(specialty.toLowerCase()))
       : mockDoctors
 
-    return callWithFallback(
+    return callWithFallback<Doctor[]>(
       async () => {
         const res = await http.get<any>('/doctors', {
-          params: specialty ? { specialty } : undefined,
+          params: { pageNumber: 1, pageSize: 20 },
         })
         const list = normalizeDoctorList(res.data)
         return list.length > 0 ? list : fallbackDoctors
@@ -96,20 +120,22 @@ export const patientApi = {
     )
   },
 
-  // Lấy các giờ còn trống
-  getAvailableSlots(
-    doctorId: number,
-    date: string,
-  ): Promise<AvailableSlot[]> {
+  getAvailableSlots(doctorId: number, date: string): Promise<AvailableSlot[]> {
     if (env.enableMock) {
       return Promise.resolve(mockAvailableSlots[doctorId] ?? [])
     }
 
     const fallbackSlots = mockAvailableSlots[doctorId] ?? []
-    return callWithFallback(
+    return callWithFallback<AvailableSlot[]>(
       async () => {
-        const res = await http.get<any>(`/doctors/${doctorId}/shifts`, {
-          params: { startDate: date, endDate: date },
+        const fromDate = new Date(`${date}T00:00:00`).toISOString()
+        const toDate = new Date(`${date}T23:59:59`).toISOString()
+        const res = await http.get<any>('/slots', {
+          params: {
+            doctorId,
+            fromDate,
+            toDate,
+          },
         })
         const list = normalizeSlotList(res.data)
         return list.length > 0 ? list : fallbackSlots
@@ -118,146 +144,168 @@ export const patientApi = {
     )
   },
 
-  // Tạo lịch hẹn
-  createAppointment(
-    payload: CreateAppointmentRequest,
-  ): Promise<Appointment> {
+  createAppointment(payload: CreateAppointmentRequest): Promise<Appointment> {
     if (env.enableMock) {
-      const doctor =
-        mockDoctors.find((item) => item.id === payload.doctorId) ?? mockDoctors[0]
+      const doctor = mockDoctors.find((item) => item.id === (payload.doctorId ?? 0)) ?? mockDoctors[0]
       const fallbackDoctor: Doctor = doctor ?? {
-        id: payload.doctorId,
+        id: payload.doctorId ?? 0,
         name: 'BS. Chưa xác định',
         specialty: 'Khác',
       }
       const nextAppointment: Appointment = {
         id: Date.now(),
-        doctorId: payload.doctorId,
+        doctorId: payload.doctorId ?? 0,
         doctorName: fallbackDoctor.name,
         specialty: fallbackDoctor.specialty,
-        appointmentDate: payload.appointmentDate,
-        appointmentTime: payload.appointmentTime,
+        appointmentDate: payload.appointmentDate ?? '',
+        appointmentTime: payload.appointmentTime ?? payload.timeSlot ?? '',
         status: 'Pending',
         queueNumber: `A-${Math.floor(10 + Math.random() * 90)}`,
       }
-
       mockAppointments.unshift(nextAppointment)
       return Promise.resolve(nextAppointment)
     }
 
-    const doctor =
-      mockDoctors.find((item) => item.id === payload.doctorId) ?? mockDoctors[0]
-    const fallbackDoctor: Doctor = doctor ?? {
-      id: payload.doctorId,
-      name: 'BS. Chưa xác định',
-      specialty: 'Khác',
-    }
+    const workScheduleId = payload.workScheduleId ?? payload.doctorId
+    const reason = payload.reason ?? payload.symptoms ?? 'Đặt lịch khám'
+    const timeSlot = payload.timeSlot ?? payload.appointmentTime ?? '08:00:00'
 
-    return callWithFallback(
+    return callWithFallback<Appointment>(
       async () => {
-        const res = await http.post<any>('/appointments', payload)
-        const data = res.data
-        const created = data?.result ?? data
-
-        if (created && typeof created === 'object') {
-          return {
-            id: Number(created.id ?? Date.now()),
-            doctorId: Number(created.doctorId ?? payload.doctorId),
-            doctorName: created.doctorName ?? fallbackDoctor.name,
-            specialty: created.specialty ?? fallbackDoctor.specialty,
-            appointmentDate: created.appointmentDate ?? payload.appointmentDate,
-            appointmentTime: created.appointmentTime ?? payload.appointmentTime,
-            status: created.status ?? 'Pending',
-            queueNumber: created.queueNumber ?? `A-${Math.floor(10 + Math.random() * 90)}`,
-          }
+        const body = {
+          workScheduleId,
+          timeSlot,
+          reason,
         }
 
+        const res = await http.post<any>('/appointments', body)
+        const created = res.data?.result ?? res.data
+        const doctorName = created?.doctorName ?? 'BS. Chưa xác định'
+        const specialty = created?.specialty ?? 'Khác'
+
         return {
-          id: Date.now(),
-          doctorId: payload.doctorId,
-          doctorName: fallbackDoctor.name,
-          specialty: fallbackDoctor.specialty,
-          appointmentDate: payload.appointmentDate,
-          appointmentTime: payload.appointmentTime,
-          status: 'Pending',
-          queueNumber: `A-${Math.floor(10 + Math.random() * 90)}`,
+          id: Number(created?.id ?? Date.now()),
+          doctorId: Number(created?.doctorId ?? payload.doctorId ?? 0),
+          doctorName,
+          specialty,
+          appointmentDate: created?.date ?? payload.appointmentDate ?? '',
+          appointmentTime: created?.timeSlot ?? payload.appointmentTime ?? payload.timeSlot ?? timeSlot,
+          status: created?.status ?? 'Pending',
+          queueNumber: created?.queueNumber ?? `A-${Math.floor(10 + Math.random() * 90)}`,
         }
       },
       {
         id: Date.now(),
-        doctorId: payload.doctorId,
-        doctorName: fallbackDoctor.name,
-        specialty: fallbackDoctor.specialty,
-        appointmentDate: payload.appointmentDate,
-        appointmentTime: payload.appointmentTime,
+        doctorId: payload.doctorId ?? 0,
+        doctorName: 'BS. Chưa xác định',
+        specialty: 'Khác',
+        appointmentDate: payload.appointmentDate ?? '',
+        appointmentTime: payload.appointmentTime ?? payload.timeSlot ?? '08:00:00',
         status: 'Pending',
         queueNumber: `A-${Math.floor(10 + Math.random() * 90)}`,
       },
     )
   },
 
-  // Lấy lịch hẹn sắp tới của bệnh nhân
   getMyAppointments(): Promise<Appointment[]> {
     if (env.enableMock) {
       return Promise.resolve(mockAppointments)
     }
 
-    return callWithFallback(
+    return callWithFallback<Appointment[]>(
       async () => {
         const res = await http.get<any>('/me/appointments')
         const list = Array.isArray(res.data) ? res.data : res.data?.items ?? res.data?.result ?? []
-        return Array.isArray(list) ? list : mockAppointments
+        const items = Array.isArray(list) ? list : []
+        return items.map((item: any) => ({
+          id: Number(item.id ?? 0),
+          doctorId: Number(item.doctorId ?? 0),
+          doctorName: item.doctorName ?? item.DoctorName ?? 'BS. Chưa xác định',
+          specialty: item.specialty ?? item.Specialty ?? 'Khác',
+          appointmentDate: item.date ?? item.appointmentDate ?? item.Date ?? '',
+          appointmentTime: toTimeString(item.timeSlot ?? item.TimeSlot ?? item.appointmentTime ?? '08:00'),
+          status: (item.status ?? item.Status ?? 'Pending') as Appointment['status'],
+          queueNumber: item.queueNumber ?? item.QueueNumber,
+        }))
       },
       mockAppointments,
     )
   },
 
-  // Hủy lịch
   cancelAppointment(id: number): Promise<void> {
     if (env.enableMock) {
       const target = mockAppointments.find((appointment) => appointment.id === id)
-      if (target) {
-        target.status = 'Cancelled'
-      }
+      if (target) target.status = 'Cancelled'
       return Promise.resolve(undefined)
     }
 
     return callWithFallback(
       async () => {
-        await http.patch(`/appointments/${id}/cancel`)
+        await http.post(`/appointments/${id}/cancel`)
         return undefined
       },
       undefined,
     )
   },
 
-  // Hàng đợi của bệnh nhân
   getMyQueue(): Promise<QueueStatus> {
     if (env.enableMock) {
       return Promise.resolve(mockQueue)
     }
 
-    return callWithFallback(
+    return callWithFallback<QueueStatus>(
       async () => {
-        const res = await http.get<any>('/queue/my')
-        const data = res.data?.result ?? res.data
-        return data ?? mockQueue
+        const res = await http.get<any>('/me/queue-status')
+        const list = Array.isArray(res.data) ? res.data : res.data?.items ?? res.data?.result ?? []
+        const first = Array.isArray(list) && list.length > 0 ? list[0] : null
+
+        if (!first) {
+          return mockQueue
+        }
+
+        return {
+          myTicket: String(first.queueNumber ?? first.queueTicketId ?? ''),
+          position: Number(first.positionInQueue ?? 0),
+          estimatedWaitMinutes: Number(first.estimatedWaitMinutes ?? 0),
+          doctorName: first.doctorName ?? 'BS. Chưa xác định',
+          appointmentTime: '',
+          currentTicket: String(first.queueNumber ?? first.queueTicketId ?? ''),
+          entries: list.map((item: any) => ({
+            ticket: String(item.queueNumber ?? item.queueTicketId ?? ''),
+            patientName: 'Bệnh nhân',
+            doctorId: 0,
+            doctorName: item.doctorName ?? 'BS. Chưa xác định',
+            appointmentTime: '',
+            status: item.status === 'Waiting' ? 'Waiting' : 'InProgress',
+            estimatedWaitMinutes: Number(item.estimatedWaitMinutes ?? 0),
+            position: Number(item.positionInQueue ?? 0),
+            urgent: false,
+          })),
+        }
       },
       mockQueue,
     )
   },
 
-  // Lịch sử khám
   getMedicalHistory(): Promise<MedicalRecord[]> {
     if (env.enableMock) {
       return Promise.resolve(mockMedicalHistory)
     }
 
-    return callWithFallback(
+    return callWithFallback<MedicalRecord[]>(
       async () => {
-        const res = await http.get<any>('/medical-records/my')
+        const res = await http.get<any>('/me/medical-history')
         const list = Array.isArray(res.data) ? res.data : res.data?.items ?? res.data?.result ?? []
-        return Array.isArray(list) ? list : mockMedicalHistory
+
+        return (Array.isArray(list) ? list : []).map((item: any) => ({
+          id: Number(item.id ?? 0),
+          examinationDate: item.examDate ?? item.examinationDate ?? item.date ?? '',
+          doctorName: item.doctorName ?? 'BS. Chưa xác định',
+          specialty: item.specialty ?? 'Khác',
+          diagnosis: item.diagnosis ?? '',
+          prescription: item.prescription ?? '',
+          note: item.notes ?? item.note,
+        }))
       },
       mockMedicalHistory,
     )

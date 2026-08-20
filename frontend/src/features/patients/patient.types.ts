@@ -6,7 +6,8 @@ export interface Doctor {
 }
 
 export interface AvailableSlot {
-  id: number
+  id: number | string
+  workScheduleId?: number | string
   time: string
   available: boolean
 }
@@ -23,9 +24,12 @@ export interface Appointment {
 }
 
 export interface CreateAppointmentRequest {
-  doctorId: number
-  appointmentDate: string
-  appointmentTime: string
+  doctorId?: number
+  workScheduleId?: number | string
+  appointmentDate?: string
+  appointmentTime?: string
+  timeSlot?: string
+  reason?: string
   symptoms?: string
 }
 

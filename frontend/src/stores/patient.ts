@@ -108,9 +108,10 @@ export const usePatientStore = defineStore('patient', () => {
     appointmentsError.value = null
 
     try {
-      appointments.value =
-        await patientApi.getMyAppointments()
+      const result = await patientApi.getMyAppointments()
+      appointments.value = result
     } catch (e: any) {
+      appointments.value = []
       appointmentsError.value =
         e.response?.data?.message ||
         'Không thể tải lịch hẹn'
@@ -151,6 +152,7 @@ export const usePatientStore = defineStore('patient', () => {
     try {
       queue.value = await patientApi.getMyQueue()
     } catch (e: any) {
+      queue.value = null
       queueError.value =
         e.response?.data?.message ||
         'Không thể tải hàng đợi'
@@ -164,9 +166,10 @@ export const usePatientStore = defineStore('patient', () => {
     historyError.value = null
 
     try {
-      history.value =
-        await patientApi.getMedicalHistory()
+      const result = await patientApi.getMedicalHistory()
+      history.value = result
     } catch (e: any) {
+      history.value = []
       historyError.value =
         e.response?.data?.message ||
         'Không thể tải lịch sử khám'

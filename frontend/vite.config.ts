@@ -30,6 +30,46 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      '/appointments': {
+        target: 'https://localhost:61658',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/doctors': {
+        target: 'https://localhost:61658',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/slots': {
+        target: 'https://localhost:61658',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/queue': {
+        target: 'https://localhost:61658',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/me': {
+        target: 'https://localhost:61658',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/medical-records': {
+        target: 'https://localhost:61658',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/patients': {
+        target: 'https://localhost:61658',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/users': {
+        target: 'https://localhost:61658',
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
 })

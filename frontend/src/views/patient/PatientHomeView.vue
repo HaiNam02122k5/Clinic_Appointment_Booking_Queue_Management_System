@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import { useAuthStore } from '@/stores/auth'
@@ -15,23 +15,69 @@ const today = new Date().toLocaleDateString('vi-VN', {
   year: 'numeric',
 })
 
-const isLoading = ref(true)
+// initial loading when page first mounts
+const initialLoading = ref(true)
+
+// Compute overall connectivity status for display (true when any of the services is loading on first load)
+const connecting = computed(() => {
+  return (
+    initialLoading.value ||
+    patient.appointmentsLoading ||
+    patient.queueLoading ||
+    patient.historyLoading
+  )
+})
+
+// Derived helpers for template convenience
+const hasAnyError = computed(() => {
+  return Boolean(
+    patient.appointmentsError || patient.queueError || patient.historyError,
+  )
+})
 
 onMounted(async () => {
+  // Start three loads in parallel but wait for all settled so we can stop initialLoading
+  const tasks = [
+    patient.loadAppointments(),
+    patient.loadQueue(),
+    patient.loadHistory(),
+  ]
+
   try {
-    await Promise.all([
-      patient.loadAppointments(),
-      patient.loadQueue(),
-      patient.loadHistory()
-    ])
+    await Promise.allSettled(tasks)
   } finally {
-    isLoading.value = false
+    // Mark initial load complete — UI will then reflect per-service states from the store
+    initialLoading.value = false
   }
 })
+
+// Retry helpers for each section
+async function retryAppointments() {
+  await patient.loadAppointments()
+}
+
+async function retryQueue() {
+  await patient.loadQueue()
+}
+
+async function retryHistory() {
+  await patient.loadHistory()
+}
 </script>
 
 <template>
   <div class="mx-auto max-w-3xl space-y-5">
+    <!-- Global banner when connecting initially or when any service reports error -->
+    <div v-if="connecting" class="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+      {{ initialLoading ? 'Đang kết nối tới dịch vụ bệnh nhân...' : 'Đang đồng bộ dữ liệu...' }}
+    </div>
+
+    <div
+      v-if="!connecting && hasAnyError"
+      class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+    >
+      Một hoặc nhiều dịch vụ đang gặp sự cố — xem chi tiết bên dưới và thử lại từng mục.
+    </div>
 
     <!-- Greeting -->
     <section
@@ -89,81 +135,104 @@ onMounted(async () => {
     <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div class="mb-4 flex items-center justify-between">
         <h2 class="font-semibold text-slate-700">Lịch hẹn sắp tới</h2>
-        <RouterLink to="/patient/booking" class="text-xs font-medium text-[#0E4D92]">
-          + Đặt thêm
-        </RouterLink>
-      </div>
-
-      <div
-        v-if="!patient.upcomingAppointments?.length"
-        class="rounded-xl bg-slate-50 p-4 text-sm text-slate-500"
-      >
-        {{ isLoading ? 'Đang tải lịch hẹn...' : 'Bạn chưa có lịch hẹn sắp tới.' }}
-      </div>
-
-      <div
-        v-for="appointment in patient.upcomingAppointments"
-        :key="appointment.id"
-        class="rounded-xl border border-blue-200 bg-blue-50 p-4"
-      >
-        <div class="flex items-center gap-4">
-          <div class="w-16 text-center">
-            <p class="text-xs font-semibold text-blue-600">
-              {{ appointment.appointmentDate }}
-            </p>
-            <p class="text-xl font-bold text-[#0E4D92]">
-              {{ appointment.appointmentTime }}
-            </p>
-          </div>
-
-          <div class="h-10 w-px bg-blue-200" />
-
-          <div class="min-w-0 flex-1">
-            <p class="font-semibold text-slate-800">
-              {{ appointment.doctorName }}
-            </p>
-            <p class="text-xs text-slate-400">
-              {{ appointment.specialty }}
-            </p>
-          </div>
-
-          <div class="text-right">
-            <span
-              class="rounded-full bg-amber-50 px-2.5 py-1
-                     text-xs font-medium text-amber-700"
-            >
-              {{ appointment.status }}
-            </span>
-
-            <p
-              v-if="appointment.queueNumber"
-              class="mt-1 text-xs font-bold text-[#0E4D92]"
-            >
-              {{ appointment.queueNumber }}
-            </p>
-          </div>
+        <div class="flex items-center gap-3">
+          <RouterLink to="/patient/booking" class="text-xs font-medium text-[#0E4D92]">
+            + Đặt thêm
+          </RouterLink>
+          <button
+            v-if="patient.appointmentsError"
+            @click="retryAppointments"
+            class="text-xs rounded px-2 py-1 bg-red-50 text-red-600 border border-red-100"
+          >Thử lại</button>
         </div>
+      </div>
 
-        <button
-          v-if="['Pending', 'Confirmed'].includes(appointment.status)"
-          class="mt-3 text-xs font-medium text-red-500"
-          @click="patient.cancelAppointment(appointment.id)"
+      <div v-if="patient.appointmentsLoading && initialLoading" class="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
+        Đang tải lịch hẹn...
+      </div>
+
+      <div v-else-if="patient.appointmentsError" class="rounded-xl bg-red-50 p-4 text-sm text-red-600">
+        {{ patient.appointmentsError }}
+      </div>
+
+      <div v-else-if="!patient.upcomingAppointments?.length" class="rounded-xl bg-slate-50 p-4 text-sm text-slate-500">
+        Bạn chưa có lịch hẹn sắp tới.
+      </div>
+
+      <div v-else>
+        <div
+          v-for="appointment in patient.upcomingAppointments"
+          :key="appointment.id"
+          class="rounded-xl border border-blue-200 bg-blue-50 p-4 mb-3"
         >
-          Hủy lịch
-        </button>
+          <div class="flex items-center gap-4">
+            <div class="w-16 text-center">
+              <p class="text-xs font-semibold text-blue-600">
+                {{ appointment.appointmentDate }}
+              </p>
+              <p class="text-xl font-bold text-[#0E4D92]">
+                {{ appointment.appointmentTime }}
+              </p>
+            </div>
+
+            <div class="h-10 w-px bg-blue-200" />
+
+            <div class="min-w-0 flex-1">
+              <p class="font-semibold text-slate-800">
+                {{ appointment.doctorName }}
+              </p>
+              <p class="text-xs text-slate-400">
+                {{ appointment.specialty }}
+              </p>
+            </div>
+
+            <div class="text-right">
+              <span class="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
+                {{ appointment.status }}
+              </span>
+
+              <p v-if="appointment.queueNumber" class="mt-1 text-xs font-bold text-[#0E4D92]">
+                {{ appointment.queueNumber }}
+              </p>
+            </div>
+          </div>
+
+          <button
+            v-if="['Pending', 'Confirmed'].includes(appointment.status)"
+            class="mt-3 text-xs font-medium text-red-500"
+            @click="patient.cancelAppointment(appointment.id)"
+          >
+            Hủy lịch
+          </button>
+        </div>
       </div>
     </section>
 
     <!-- Queue -->
     <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <h2 class="mb-4 font-semibold text-slate-700">Trạng thái hàng đợi</h2>
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-semibold text-slate-700">Trạng thái hàng đợi</h2>
+        <div>
+          <button
+            v-if="patient.queueError"
+            @click="retryQueue"
+            class="text-xs rounded px-2 py-1 bg-red-50 text-red-600 border border-red-100"
+          >Thử lại</button>
+        </div>
+      </div>
 
-      <div v-if="patient.queue" class="flex items-center gap-5">
+      <div v-if="patient.queueLoading && initialLoading" class="py-6 text-center text-sm text-slate-400">
+        Đang tải hàng đợi...
+      </div>
+
+      <div v-else-if="patient.queueError" class="rounded-xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-600">
+        {{ patient.queueError }}
+      </div>
+
+      <div v-else-if="patient.queue" class="flex items-center gap-5">
         <div class="text-center">
           <p class="text-xs text-slate-400">Số của bạn</p>
-          <p class="text-4xl font-bold text-[#0E4D92]">
-            {{ patient.queue.myTicket }}
-          </p>
+          <p class="text-4xl font-bold text-[#0E4D92]">{{ patient.queue.myTicket }}</p>
         </div>
 
         <div class="grid flex-1 grid-cols-2 gap-2">
@@ -174,23 +243,16 @@ onMounted(async () => {
 
           <div class="rounded-xl bg-slate-50 p-3">
             <p class="text-xs text-slate-400">Chờ ~</p>
-            <p class="font-bold text-amber-600">
-              {{ patient.queue.estimatedWaitMinutes }} phút
-            </p>
+            <p class="font-bold text-amber-600">{{ patient.queue.estimatedWaitMinutes }} phút</p>
           </div>
         </div>
       </div>
 
       <div v-else class="text-sm text-slate-500">
-        {{ isLoading ? 'Đang tải hàng đợi...' : 'Hiện tại bạn không có trong hàng đợi.' }}
+        Hiện tại bạn không có trong hàng đợi.
       </div>
 
-      <RouterLink
-        to="/patient/queue"
-        class="mt-4 block w-full rounded-xl border-2
-               border-[#0E4D92] py-2 text-center text-sm
-               font-semibold text-[#0E4D92]"
-      >
+      <RouterLink to="/patient/queue" class="mt-4 block w-full rounded-xl border-2 border-[#0E4D92] py-2 text-center text-sm font-semibold text-[#0E4D92]">
         Xem chi tiết hàng đợi
       </RouterLink>
     </section>
@@ -199,33 +261,48 @@ onMounted(async () => {
     <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div class="mb-4 flex items-center justify-between">
         <h2 class="font-semibold text-slate-700">Lịch khám gần đây</h2>
-        <RouterLink to="/patient/history" class="text-xs font-medium text-[#0E4D92]">
-          Xem tất cả
-        </RouterLink>
+        <div class="flex items-center gap-3">
+          <RouterLink to="/patient/history" class="text-xs font-medium text-[#0E4D92]">Xem tất cả</RouterLink>
+          <button v-if="patient.historyError" @click="retryHistory" class="text-xs rounded px-2 py-1 bg-red-50 text-red-600 border border-red-100">Thử lại</button>
+        </div>
       </div>
 
-      <div
-        v-for="record in patient.history?.slice(0, 3)"
-        :key="record.id"
-        class="flex items-center gap-3 border-b border-slate-100 py-2.5 last:border-0"
-      >
-        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50">
-          🏥
-        </div>
+      <div v-if="patient.historyLoading && initialLoading" class="py-6 text-center text-sm text-slate-400">Đang tải lịch sử khám...</div>
 
-        <div class="min-w-0 flex-1">
-          <p class="truncate text-sm font-medium">
-            {{ record.doctorName }}
-          </p>
-          <p class="truncate text-xs text-slate-400">
-            {{ record.specialty }} · {{ record.diagnosis }}
-          </p>
-        </div>
+      <div v-else-if="patient.historyError" class="rounded-xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-600">{{ patient.historyError }}</div>
 
-        <p class="shrink-0 text-xs text-slate-400">
-          {{ record.examinationDate }}
-        </p>
-      </div>
+      <template v-else>
+        <div v-if="!patient.history || patient.history.length === 0" class="rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-400">Chưa có lịch sử khám.</div>
+
+        <article v-else v-for="record in patient.history?.slice(0, 3)" :key="record.id" class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div class="mb-3 flex items-start justify-between gap-3">
+            <div>
+              <p class="text-xs text-slate-400">{{ new Date(record.examinationDate).toLocaleDateString('vi-VN') }}</p>
+
+              <h2 class="font-bold text-slate-800">{{ record.doctorName }}</h2>
+            </div>
+
+            <span class="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs text-blue-700">{{ record.specialty }}</span>
+          </div>
+
+          <div class="space-y-3 rounded-xl bg-slate-50 p-4 text-sm">
+            <div>
+              <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Chẩn đoán</p>
+              <p class="mt-1 text-slate-800">{{ record.diagnosis }}</p>
+            </div>
+
+            <div class="border-t border-slate-200 pt-3">
+              <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Đơn thuốc</p>
+              <p class="mt-1 text-slate-800">{{ record.prescription }}</p>
+            </div>
+
+            <div v-if="record.note" class="border-t border-slate-200 pt-3">
+              <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Ghi chú</p>
+              <p class="mt-1 italic text-slate-600">{{ record.note }}</p>
+            </div>
+          </div>
+        </article>
+      </template>
     </section>
 
   </div>

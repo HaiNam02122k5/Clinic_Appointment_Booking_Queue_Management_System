@@ -12,6 +12,7 @@ const auth = useAuthStore()
 const step = ref(1)
 const specialty = ref('')
 const doctorId = ref<number | null>(null)
+const selectedSlotId = ref<number | string | null>(null)
 const appointmentDate = ref('')
 const appointmentTime = ref('')
 const symptoms = ref('')
@@ -23,6 +24,7 @@ const todayDate = new Date().toLocaleDateString('sv-SE')
 
 watch(specialty, () => {
   doctorId.value = null
+  selectedSlotId.value = null
   appointmentTime.value = ''
   patient.clearSlots()
 })
@@ -51,6 +53,7 @@ onMounted(async () => {
 
 async function selectDoctor(id: number) {
   doctorId.value = id
+  selectedSlotId.value = null
   appointmentTime.value = ''
   patient.clearSlots()
 
@@ -60,6 +63,7 @@ async function selectDoctor(id: number) {
 }
 
 async function changeDate() {
+  selectedSlotId.value = null
   appointmentTime.value = ''
   patient.clearSlots()
 
@@ -68,9 +72,14 @@ async function changeDate() {
   }
 }
 
+function chooseSlot(slot: { id: number | string; workScheduleId?: number | string; time: string }) {
+  selectedSlotId.value = slot.workScheduleId ?? slot.id
+  appointmentTime.value = slot.time
+}
+
 function nextStep() {
   if (step.value === 1) {
-    if (!doctorId.value || !appointmentDate.value || !appointmentTime.value) {
+    if (!doctorId.value || !appointmentDate.value || !appointmentTime.value || !selectedSlotId.value) {
       return
     }
   }
@@ -84,14 +93,17 @@ function previousStep() {
 }
 
 async function confirmBooking() {
-  if (!doctorId.value) return
+  if (!doctorId.value || !selectedSlotId.value) return
 
   try {
     createdAppointment.value = await patient.createAppointment({
       doctorId: doctorId.value,
+      workScheduleId: selectedSlotId.value,
       appointmentDate: appointmentDate.value,
       appointmentTime: appointmentTime.value,
+      timeSlot: appointmentTime.value,
       symptoms: symptoms.value,
+      reason: symptoms.value,
     })
     success.value = true
   } catch {
@@ -103,6 +115,7 @@ function newBooking() {
   step.value = 1
   specialty.value = ''
   doctorId.value = null
+  selectedSlotId.value = null
   appointmentDate.value = ''
   appointmentTime.value = ''
   symptoms.value = ''
@@ -393,9 +406,7 @@ function newBooking() {
                         ? 'border-[#0E4D92] bg-[#0E4D92] text-white'
                         : 'border-slate-200 text-slate-700'
                   "
-                  @click.stop="
-                    appointmentTime = slot.time
-                  "
+                  @click.stop="chooseSlot(slot)"
                 >
                   {{ slot.time }}
                 </button>
@@ -414,7 +425,8 @@ function newBooking() {
           :disabled="
             !doctorId ||
             !appointmentDate ||
-            !appointmentTime
+            !appointmentTime ||
+            !selectedSlotId
           "
           @click="nextStep"
         >
