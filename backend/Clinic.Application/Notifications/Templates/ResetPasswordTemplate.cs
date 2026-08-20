@@ -14,7 +14,7 @@ namespace Clinic.Application.Notifications.Templates
                 <!DOCTYPE html>
                 <html>
                 <body style="font-family: Arial, sans-serif;">
-                    <h2 style="color: #333;">Xác nhận lịch khám</h2>
+                    <h2 style="color: #333;">Đặt lại mật khẩu</h2>
 
                     <p>Xin chào {info.FullName},</p>
 
@@ -23,10 +23,6 @@ namespace Clinic.Application.Notifications.Templates
                     <p>
                         Mật khẩu mới của bạn là: <strong>{info.Password}</strong>
                     </p>
-
-                    <p>Vui lòng đến đúng giờ để đảm bảo lịch trình khám bệnh của bạn.</p>
-
-                    <p>Nếu quý khách muốn thay đổi hoặc hủy lịch hẹn, vui lòng thực hiện trước 24 giờ so với thời gian đã hẹn.</p>
 
                     <p>Trân trọng,<br>Phòng khám của chúng tôi</p>
                 </body>
