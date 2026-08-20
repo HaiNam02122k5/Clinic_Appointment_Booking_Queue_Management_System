@@ -19,11 +19,12 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Commands
             var unitOfWork = new FakeUnitOfWork();
             var handler = new CancelWorkScheduleCommandHandler(workScheduleRepository, unitOfWork);
             var doctor = TestDataFactory.CreateDoctor();
-            var workSchedule = new WorkSchedule(doctor, DateTime.UtcNow.AddDays(1), DateTime.UtcNow.AddDays(1).AddHours(1), 5);
+            var now = new DateTime(2027, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            var workSchedule = new WorkSchedule(doctor, DateOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddDays(1).AddHours(1)), 5);
             await workScheduleRepository.AddWorkScheduleAsync(workSchedule);
 
             // Act
-            var command = new CancelWorkScheduleCommand(workSchedule.Id, "Cancellation reason");
+            var command = new CancelWorkScheduleCommand(Guid.NewGuid(), workSchedule.Id, "Cancellation reason");
             var result = await handler.Handle(command, CancellationToken.None);
 
             // Assert
@@ -39,11 +40,12 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Commands
             var unitOfWork = new FakeUnitOfWork();
             var handler = new CancelWorkScheduleCommandHandler(workScheduleRepository, unitOfWork);
             var doctor = TestDataFactory.CreateDoctor();
-            var workSchedule = new WorkSchedule(doctor, DateTime.UtcNow.AddDays(1), DateTime.UtcNow.AddDays(1).AddHours(1), 5);
+            var now = new DateTime(2027, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            var workSchedule = new WorkSchedule(doctor, DateOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddDays(1)), TimeOnly.FromDateTime(now.AddDays(1).AddHours(1)), 5);
             await workScheduleRepository.AddWorkScheduleAsync(workSchedule);
 
             // Act
-            var command = new CancelWorkScheduleCommand(Guid.NewGuid(), "Cancellation reason");
+            var command = new CancelWorkScheduleCommand(Guid.NewGuid(), Guid.NewGuid(), "Cancellation reason");
             await Assert.ThrowsAsync<NotFoundException>(async () =>
             {
                 await handler.Handle(command, CancellationToken.None);
@@ -52,7 +54,7 @@ namespace Clinic.Application.UnitTests.Features.WorkSchedules.Commands
             workSchedule.Delete(); // Mark the work schedule as deleted
             await Assert.ThrowsAsync<NotFoundException>(async () =>
             {
-                await handler.Handle(new CancelWorkScheduleCommand(workSchedule.Id, "Cancellation reason"), CancellationToken.None);
+                await handler.Handle(new CancelWorkScheduleCommand(Guid.NewGuid(), workSchedule.Id, "Cancellation reason"), CancellationToken.None);
             });
         }
     }

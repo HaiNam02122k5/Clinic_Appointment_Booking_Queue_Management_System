@@ -12,9 +12,10 @@ namespace Clinic.Application.Features.WorkSchedules.Commands
     // Use-case: Admin updates an existing work schedule for a doctor
     public record UpdateWorkScheduleCommand(
         Guid Id,
-        DateTime StartTime,
-        DateTime EndTime,
-        int PatientLimitPerSlot
+        DateOnly Date,
+        TimeOnly StartTime,
+        TimeOnly EndTime,
+        int PatientLimit
     ) : IRequest<Guid>;
     public class UpdateWorkScheduleCommandHandler : IRequestHandler<UpdateWorkScheduleCommand, Guid>
     {
@@ -33,12 +34,12 @@ namespace Clinic.Application.Features.WorkSchedules.Commands
             {
                 throw new NotFoundException("Work schedule not found");
             }
-            var hasOverlappingSchedules = await _workScheduleRepository.HasOverlappingWorkSchedule(workSchedule.DoctorId, request.StartTime, request.EndTime, workSchedule.Id);
+            var hasOverlappingSchedules = await _workScheduleRepository.HasOverlappingWorkSchedule(workSchedule.DoctorId, request.Date, request.StartTime, request.EndTime, workSchedule.Id);
             if (hasOverlappingSchedules)
             {
                 throw new InvalidOperationException("The updated schedule overlaps with another existing schedule.");
             }
-            workSchedule.UpdateShift(request.StartTime, request.EndTime, request.PatientLimitPerSlot);
+            workSchedule.UpdateShift(request.Date, request.StartTime, request.EndTime, request.PatientLimit);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return workSchedule.Id;
         }

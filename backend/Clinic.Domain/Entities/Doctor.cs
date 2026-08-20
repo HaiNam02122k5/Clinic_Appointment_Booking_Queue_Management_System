@@ -41,7 +41,7 @@ namespace Clinic.Domain.Entities
             Qualification = qualification;
             Biography = biography;
             Status = status;
-            WorkHistories.Add(new WorkHistory(this, specialty, DateOnly.FromDateTime(DateTime.UtcNow)));
+            WorkHistories.Add(new WorkHistory(this, specialty, new TimeConverter().Today));
         }
 
         public Doctor(Guid id, Guid employeeId, string licenseNumber, string qualification, int experienceYears, string? biography, DoctorStatus status, DateTime createdAt, DateTime? updatedAt, bool isDeleted)
@@ -99,7 +99,7 @@ namespace Clinic.Domain.Entities
         public void AddWorkSchedule(WorkSchedule workSchedule)
         {
             if (workSchedule == null) throw new ArgumentNullException(nameof(workSchedule));
-            if (WorkSchedules.Where(ws => ws.ShiftStart < workSchedule.ShiftEnd && ws.ShiftEnd > workSchedule.ShiftStart).Any())
+            if (WorkSchedules.Where(ws => ws.Date == workSchedule.Date && ws.ShiftStart < workSchedule.ShiftEnd && ws.ShiftEnd > workSchedule.ShiftStart).Any())
             {
                 throw new ConflictException("An existing work schedule conflicts with that schedule.");
             }
@@ -132,7 +132,7 @@ namespace Clinic.Domain.Entities
             currentWorkHistory?.EndWorkHistory();
             if (newSpecialty != null && newSpecialty.IsDeleted == false)
             {
-                var newWorkHistory = new WorkHistory(this, newSpecialty, DateOnly.FromDateTime(DateTime.UtcNow));
+                var newWorkHistory = new WorkHistory(this, newSpecialty, new TimeConverter().Today);
                 WorkHistories.Add(newWorkHistory);
             }
             MarkUpdated();
@@ -149,6 +149,7 @@ namespace Clinic.Domain.Entities
             if (ShiftRequests.Any(sr =>
                 !sr.IsDeleted &&
                 (sr.Status == ShiftRequestStatus.Pending || sr.Status == ShiftRequestStatus.Approved) &&
+                sr.Date == shiftRequest.Date &&
                 sr.ShiftStart == shiftRequest.ShiftStart &&
                 sr.ShiftEnd == shiftRequest.ShiftEnd))
             {

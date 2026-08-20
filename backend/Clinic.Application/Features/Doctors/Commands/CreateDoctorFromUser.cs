@@ -89,6 +89,17 @@ namespace Clinic.Application.Features.Doctors.Commands
                 await _employeeRepository.AddAsync(employee);
             }
             var doctor = new Doctor(employee, request.LicenseNumber, request.Qualification, specialty, request.ExperienceYears, request.Biography, request.Status);
+            if (user.Person.Patient == null)
+            {
+                var patient = new Patient(user.Person, null, null);
+                var patientRole = await _roleRepository.GetByNameAsync("Patient");
+                if (patientRole == null)
+                {
+                    throw new ArgumentException("Role 'Patient' does not exist");
+                }
+                user.AssignRole(patientRole);
+                user.Person.Patient = patient;
+            }
             await _doctorRepository.AddAsync(doctor);
             await _unitOfWork.SaveChangesAsync();
             return new DoctorSummaryDto

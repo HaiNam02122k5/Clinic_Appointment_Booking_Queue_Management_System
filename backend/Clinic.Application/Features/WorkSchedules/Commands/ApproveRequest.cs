@@ -26,7 +26,7 @@ namespace Clinic.Application.Features.WorkSchedules.Commands
             {
                 throw new NotFoundException("Shift request not found");
             }
-            if (await _workScheduleRepository.HasOverlappingWorkSchedule(shiftRequest.DoctorId, shiftRequest.ShiftStart, shiftRequest.ShiftEnd))
+            if (await _workScheduleRepository.HasOverlappingWorkSchedule(shiftRequest.DoctorId, shiftRequest.Date, shiftRequest.ShiftStart, shiftRequest.ShiftEnd))
             {
                 throw new ConflictException("The shift request overlaps with an existing work schedule.");
             }

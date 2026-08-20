@@ -1,4 +1,5 @@
-﻿using Clinic.Domain.Entities;
+﻿using Clinic.Domain.Common.Exceptions;
+using Clinic.Domain.Entities;
 
 namespace Clinic.Domain.UnitTests
 {
@@ -7,75 +8,137 @@ namespace Clinic.Domain.UnitTests
         [Fact]
         public void TestCreateWorkScheduleValid()
         {
-            var person = new Person("Full name", "00000000", "email@example.com", DateOnly.FromDateTime(DateTime.UtcNow), Enums.Gender.Male, "");
-            var employee = new Employee(person, DateOnly.FromDateTime(DateTime.UtcNow));
-            var doctor = new Doctor(employee, "123ABC", "Tien si", new Specialty("name", "", DateOnly.FromDateTime(DateTime.UtcNow)), 0);
+            var now = DateTime.UtcNow.AddHours(7);
+            if (now.Hour >= 20)
+            {
+                now = now.AddHours(12);
+            }
+            var person = new Person("Full name", "00000000", "email@example.com", DateOnly.FromDateTime(now.AddYears(-30)), Enums.Gender.Male, "");
+            var employee = new Employee(person, DateOnly.FromDateTime(now.AddYears(-30)));
+            var doctor = new Doctor(employee, "123ABC", "Tien si", new Specialty("name", "", DateOnly.FromDateTime(now.AddYears(-30))), 0);
 
             // Act & Assert
-            var workSchedule = new WorkSchedule(doctor, DateTime.UtcNow.AddHours(1), DateTime.UtcNow.AddHours(2), 5);
+            var workSchedule = new WorkSchedule(doctor, DateOnly.FromDateTime(now), TimeOnly.FromDateTime(now.AddHours(1)), TimeOnly.FromDateTime(now.AddHours(2)), 5);
             Assert.Equal(doctor, workSchedule.Doctor);
         }
 
         [Fact]
         public void TestCreateWorkScheduleInvalid()
         {
-            var person = new Person("Full name", "00000000", "email@example.com", DateOnly.FromDateTime(DateTime.UtcNow), Enums.Gender.Male, "");
-            var employee = new Employee(person, DateOnly.FromDateTime(DateTime.UtcNow));
-            var doctor = new Doctor(employee, "123ABC", "Tien si", new Specialty("name", "", DateOnly.FromDateTime(DateTime.UtcNow)), 0);
+            var now = DateTime.UtcNow.AddHours(7);
+            if (now.Hour >= 20)
+            {
+                now = now.AddHours(12);
+            }
+            var person = new Person("Full name", "00000000", "email@example.com", DateOnly.FromDateTime(now.AddYears(-30)), Enums.Gender.Male, "");
+            var employee = new Employee(person, DateOnly.FromDateTime(now.AddYears(-30)));
+            var doctor = new Doctor(employee, "123ABC", "Tien si", new Specialty("name", "", DateOnly.FromDateTime(now.AddYears(-30))), 0);
 
-            Assert.Throws<ArgumentException>(() => new WorkSchedule(doctor, DateTime.UtcNow.AddHours(2), DateTime.UtcNow.AddHours(1), 5));
-            Assert.Throws<ArgumentException>(() => new WorkSchedule(doctor, DateTime.UtcNow.AddHours(-2), DateTime.UtcNow.AddHours(1), 5));
-            Assert.Throws<ArgumentException>(() => new WorkSchedule(doctor, DateTime.UtcNow.AddHours(2), DateTime.UtcNow.AddHours(3), -1));
+            Assert.Throws<ArgumentException>(() => new WorkSchedule(doctor, DateOnly.FromDateTime(now), TimeOnly.FromDateTime(now.AddHours(2)), TimeOnly.FromDateTime(now.AddHours(1)), 5));
+            Assert.Throws<ArgumentException>(() => new WorkSchedule(doctor, DateOnly.FromDateTime(now.AddDays(-1)), TimeOnly.FromDateTime(now.AddHours(1)), TimeOnly.FromDateTime(now.AddHours(2)), 5));
+            Assert.Throws<ArgumentException>(() => new WorkSchedule(doctor, DateOnly.FromDateTime(now), TimeOnly.FromDateTime(now.AddHours(2)), TimeOnly.FromDateTime(now.AddHours(3)), -1));
         }
 
         [Fact]
         public void TestUpdateWorkSchedule()
         {
-            var person = new Person("Full name", "00000000", "email@example.com", DateOnly.FromDateTime(DateTime.UtcNow), Enums.Gender.Male, "");
-            var employee = new Employee(person, DateOnly.FromDateTime(DateTime.UtcNow));
-            var doctor = new Doctor(employee, "123ABC", "Tien si", new Specialty("name", "", DateOnly.FromDateTime(DateTime.UtcNow)), 0);
+            var now = DateTime.UtcNow.AddHours(7);
+            if (now.Hour >= 20)
+            {
+                now = now.AddHours(12);
+            }
+            var person = new Person("Full name", "00000000", "email@example.com", DateOnly.FromDateTime(now.AddYears(-30)), Enums.Gender.Male, "");
+            var employee = new Employee(person, DateOnly.FromDateTime(now.AddYears(-30)));
+            var doctor = new Doctor(employee, "123ABC", "Tien si", new Specialty("name", "", DateOnly.FromDateTime(now.AddYears(-30))), 0);
 
-            var workSchedule = new WorkSchedule(doctor, DateTime.UtcNow.AddHours(1), DateTime.UtcNow.AddHours(2), 5);
-            workSchedule.UpdateShift(DateTime.UtcNow.AddHours(3), DateTime.UtcNow.AddHours(4), 10);
+            var workSchedule = new WorkSchedule(doctor, DateOnly.FromDateTime(now), TimeOnly.FromDateTime(now.AddHours(1)), TimeOnly.FromDateTime(now.AddHours(2)), 5);
+            workSchedule.UpdateShift(DateOnly.FromDateTime(now), TimeOnly.FromDateTime(now.AddHours(3)), TimeOnly.FromDateTime(now.AddHours(4)), 10);
 
-            Assert.True(workSchedule.ShiftStart > DateTime.UtcNow.AddHours(2));
-            Assert.True(workSchedule.ShiftEnd > DateTime.UtcNow.AddHours(3));
-            Assert.Equal(10, workSchedule.PatientLimitPerSlot);
+            Assert.True(workSchedule.ShiftStart > TimeOnly.FromDateTime(now.AddHours(2)));
+            Assert.True(workSchedule.ShiftEnd > TimeOnly.FromDateTime(now.AddHours(3)));
+            Assert.Equal(10, workSchedule.PatientLimit);
         }
 
         [Fact]
         public void TestUpdateWorkScheduleInvalid()
         {
-            var person = new Person("Full name", "00000000", "email@example.com", DateOnly.FromDateTime(DateTime.UtcNow), Enums.Gender.Male, "");
-            var employee = new Employee(person, DateOnly.FromDateTime(DateTime.UtcNow));
-            var doctor = new Doctor(employee, "123ABC", "Tien si", new Specialty("name", "", DateOnly.FromDateTime(DateTime.UtcNow)), 0);
-            var workSchedule = new WorkSchedule(doctor, DateTime.UtcNow.AddHours(1), DateTime.UtcNow.AddHours(2), 5);
+            var now = DateTime.UtcNow.AddHours(7);
+            if (now.Hour >= 20)
+            {
+                now = now.AddHours(12);
+            }
+            var person = new Person("Full name", "00000000", "email@example.com", DateOnly.FromDateTime(now.AddYears(-30)), Enums.Gender.Male, "");
+            var employee = new Employee(person, DateOnly.FromDateTime(now.AddYears(-30)));
+            var doctor = new Doctor(employee, "123ABC", "Tien si", new Specialty("name", "", DateOnly.FromDateTime(now.AddYears(-30))), 0);
+            var workSchedule = new WorkSchedule(doctor, DateOnly.FromDateTime(now), TimeOnly.FromDateTime(now.AddHours(1)), TimeOnly.FromDateTime(now.AddHours(2)), 5);
 
-            Assert.Throws<ArgumentException>(() => workSchedule.UpdateShift(DateTime.UtcNow.AddHours(2), DateTime.UtcNow.AddHours(1), 5));
-            Assert.Throws<ArgumentException>(() => workSchedule.UpdateShift(DateTime.UtcNow.AddHours(-2), DateTime.UtcNow.AddHours(1), 5));
-            Assert.Throws<ArgumentException>(() => workSchedule.UpdateShift(DateTime.UtcNow.AddHours(2), DateTime.UtcNow.AddHours(3), -1));
+            Assert.Throws<ArgumentException>(() => workSchedule.UpdateShift(DateOnly.FromDateTime(now), TimeOnly.FromDateTime(now.AddHours(2)), TimeOnly.FromDateTime(now.AddHours(1)), 5));
+            Assert.Throws<ArgumentException>(() => workSchedule.UpdateShift(DateOnly.FromDateTime(now.AddDays(-1)), TimeOnly.FromDateTime(now.AddHours(-2)), TimeOnly.FromDateTime(now.AddHours(1)), 5));
+            Assert.Throws<ArgumentException>(() => workSchedule.UpdateShift(DateOnly.FromDateTime(now), TimeOnly.FromDateTime(now.AddHours(2)), TimeOnly.FromDateTime(now.AddHours(3)), -1));
 
-            var nowShift = new WorkSchedule(doctor, DateTime.UtcNow.AddSeconds(1), DateTime.UtcNow.AddHours(2), 5);
+            // Test updating a shift that has already started
+            // Pls ignore if getting an error about shift start greater than shift end (wish i knew abt TimeProvider earlier).
+            // Better go to bed at that moment then
+            now = DateTime.UtcNow.AddHours(7);
+            var nowShift = new WorkSchedule(doctor, DateOnly.FromDateTime(now), TimeOnly.FromDateTime(now.AddSeconds(1)), TimeOnly.FromDateTime(now.AddHours(1)), 5);
             Thread.Sleep(2000); // Wait for 2 seconds to ensure the shift has started
-            Assert.Throws<InvalidOperationException>(() => nowShift.UpdateShift(DateTime.UtcNow.AddHours(2), DateTime.UtcNow.AddHours(3), 10));
-            nowShift.UpdateShift(nowShift.ShiftStart, nowShift.ShiftEnd.AddHours(1), 15); // This should be valid since we are not changing the start time
-            Assert.Equal(15, nowShift.PatientLimitPerSlot);
+            Assert.Throws<InvalidOperationException>(() => nowShift.UpdateShift(DateOnly.FromDateTime(now), TimeOnly.FromDateTime(now.AddHours(2)), TimeOnly.FromDateTime(now.AddHours(3)), 10));
+            nowShift.UpdateShift(DateOnly.FromDateTime(now), nowShift.ShiftStart, nowShift.ShiftEnd.AddHours(1), 15); // This should be valid since we are not changing the start time
+            Assert.Equal(15, nowShift.PatientLimit);
             Assert.Throws<InvalidOperationException>(() => nowShift.Delete());
         }
 
         [Fact]
         public void TestDeleteWorkSchedule()
         {
-            var person = new Person("Full name", "00000000", "email@example.com", DateOnly.FromDateTime(DateTime.UtcNow), Enums.Gender.Male, "");
-            var employee = new Employee(person, DateOnly.FromDateTime(DateTime.UtcNow));
-            var doctor = new Doctor(employee, "123ABC", "Tien si", new Specialty("name", "", DateOnly.FromDateTime(DateTime.UtcNow)), 0);
-            var workSchedule = new WorkSchedule(doctor, DateTime.UtcNow.AddHours(1), DateTime.UtcNow.AddHours(2), 5);
+            var now = DateTime.UtcNow.AddHours(7);
+            if (now.Hour >= 20)
+            {
+                now = now.AddHours(12);
+            }
+            var person = new Person("Full name", "00000000", "email@example.com", DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-30)), Enums.Gender.Male, "");
+            var employee = new Employee(person, DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-30)));
+            var doctor = new Doctor(employee, "123ABC", "Tien si", new Specialty("name", "", DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-30))), 0);
+            var workSchedule = new WorkSchedule(doctor, DateOnly.FromDateTime(now), TimeOnly.FromDateTime(now.AddHours(1)), TimeOnly.FromDateTime(now.AddHours(2)), 5);
             workSchedule.Delete();
             Assert.True(workSchedule.IsDeleted);
 
-            var nowShift = new WorkSchedule(doctor, DateTime.UtcNow.AddSeconds(1), DateTime.UtcNow.AddHours(2), 5);
+            // Test deleting a shift that has already started
+            // Pls ignore if getting an error about shift start greater than shift end (wish i knew abt TimeProvider earlier).
+            // Better go to bed at that moment then
+            now = DateTime.UtcNow.AddHours(7);
+            var nowShift = new WorkSchedule(doctor, DateOnly.FromDateTime(now), TimeOnly.FromDateTime(now.AddSeconds(1)), TimeOnly.FromDateTime(now.AddHours(1)), 5);
             Thread.Sleep(2000); // Wait for 2 seconds to ensure the shift has started
             Assert.Throws<InvalidOperationException>(() => nowShift.Delete());
+        }
+
+        [Fact]
+        public void TestAddAppointmentToWorkSchedule()
+        {
+            var now = new DateTime(2027, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            var person = new Person("Full name", "00000000", "email@example.com", DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-30)), Enums.Gender.Male, "");
+            var employee = new Employee(person, DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-30)));
+            var doctor = new Doctor(employee, "123ABC", "Tien si", new Specialty("name", "", DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-30))), 0);
+            var workSchedule = new WorkSchedule(doctor, DateOnly.FromDateTime(now), TimeOnly.FromDateTime(now.AddHours(1)), TimeOnly.FromDateTime(now.AddHours(2)), 2);
+            var patient = new Patient(person, "INS123", "00000000");
+            var appointment = new Appointment(patient, workSchedule, TimeOnly.FromDateTime(now.AddHours(1)), "Reason", Guid.NewGuid());
+
+            workSchedule.AddAppointment(appointment);
+            Assert.Single(workSchedule.Appointments);
+            
+            var appointment2 = new Appointment(patient, workSchedule, TimeOnly.FromDateTime(now.AddHours(1)), "Reason2", Guid.NewGuid());
+            Assert.Throws<ConflictException>(() => workSchedule.AddAppointment(appointment2));
+            
+            appointment2.Update(workSchedule, TimeOnly.FromDateTime(now.AddHours(1).AddMinutes(15)), "Reason2", Guid.NewGuid());
+            workSchedule.AddAppointment(appointment2);
+            Assert.Equal(2, workSchedule.Appointments.Count);
+            
+            var appointment3 = new Appointment(patient, workSchedule, TimeOnly.FromDateTime(now.AddHours(1).AddMinutes(30)), "Reason3", Guid.NewGuid());
+            Assert.Throws<ConflictException>(() => workSchedule.AddAppointment(appointment3));
+
+            workSchedule.UpdateShift(DateOnly.FromDateTime(now), TimeOnly.FromDateTime(now.AddHours(1)), TimeOnly.FromDateTime(now.AddHours(3)), 3);
+            workSchedule.Cancel("Reason");
+            Assert.Throws<InvalidOperationException>(() => workSchedule.AddAppointment(appointment3));
         }
     }
 }

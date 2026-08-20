@@ -8,6 +8,7 @@ namespace Clinic.Application.Features.Doctors.Queries
 {
     public record GetDoctorsQuery(
         string? Search = null,
+
         string? SortBy = "fullName",
         string? Qualification = null,
         DoctorStatus? Status = null,
@@ -58,4 +59,5 @@ namespace Clinic.Application.Features.Doctors.Queries
             };
         }
     }
+
 }
