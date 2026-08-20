@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Clinic.Application.Notifications.Interfaces
 {
-    public interface IAppointmentNotificatinHandler
+    public interface IAppointmentNotificationHandler
     {
         /// <summary>
         /// Handles the notification job for an appointment, sending notifications based on the specified notification type and channels (email, in-app, SMS).

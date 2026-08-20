@@ -1,4 +1,5 @@
-﻿using Clinic.Domain.Entities;
+﻿using Clinic.Application.Common.Models;
+using Clinic.Domain.Entities;
 
 namespace Clinic.Application.Interfaces
 {
@@ -19,5 +20,10 @@ namespace Clinic.Application.Interfaces
         /// Retrieves a notification by its unique identifier, including the associated person and user information for lookup and resend.
         /// </summary>
         Task<Notification?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Retrieves a list of notifications for a specific user that are created older than the specified date and time, limited to the specified number of results.
+        /// </summary>
+        Task<PagedResult<Notification>> GetNotificationsForUser(Guid? userId, DateTime createdBefore, int limit);
     }
 }

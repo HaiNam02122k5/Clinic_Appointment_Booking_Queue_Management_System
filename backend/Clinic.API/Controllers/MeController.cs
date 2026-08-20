@@ -41,5 +41,13 @@ namespace Clinic.API.Controllers
             var result = await _sender.Send(new GetMyMedicalHistoryQuery());
             return Ok(result);
         }
+
+        [Authorize]
+        [HttpGet("notifications")]
+        public async Task<IActionResult> GetNotifications([FromQuery] DateTime olderThan, [FromQuery] int limit)
+        {
+            var result = await _sender.Send(new GetNotification(reportId));
+            return Ok(result);
+        }
     }
 }
