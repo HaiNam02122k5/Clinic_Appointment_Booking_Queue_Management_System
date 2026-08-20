@@ -13,7 +13,8 @@ namespace Clinic.Application.UnitTests.Common
 
         public Task<bool> ExistsForDoctorAndPatientAsync(Guid doctorId, Guid patientId)
         {
-            throw new NotImplementedException();
+            var exists = _appointments.Any(a => !a.IsDeleted && a.PatientId == patientId && a.WorkSchedule.DoctorId == doctorId);
+            return Task.FromResult(exists);
         }
 
         public async Task<PagedResult<Appointment>> GetAppointmentsByPatientIdAsync(Guid patientId, string category)
