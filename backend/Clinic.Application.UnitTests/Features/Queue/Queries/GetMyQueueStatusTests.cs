@@ -17,25 +17,25 @@ namespace Clinic.Application.UnitTests.Features.Queue.Queries
             var handler = new GetMyQueueStatusHandler(queueTicketRepository, currentUser);
 
             var doctor = TestDataFactory.CreateDoctor();
-            var patientId = Guid.NewGuid();
-            currentUser.PatientId = patientId;
+            var patient = TestDataFactory.CreatePatient();
+            currentUser.PatientId = patient.Id;
 
             // Doctor's work schedule
-            var workSchedule = TestDataFactory.CreateWorkSchedule(doctor: doctor);
+            var workSchedule = TestDataFactory.CreateWorkSchedule(doctor: doctor, date: DateOnly.FromDateTime(DateTime.Today));
 
             // Ticket 1: Other patient (Waiting)
-            var app1 = new Appointment { PatientId = Guid.NewGuid(), WorkScheduleId = workSchedule.Id, WorkSchedule = workSchedule, TimeSlot = workSchedule.ShiftStart };
+            var app1 = TestDataFactory.CreateAppointment(workSchedule: workSchedule);
             var ticket1 = TestDataFactory.CreateQueueTicket(app1, queueNumber: 1);
             await queueTicketRepository.AddAsync(ticket1);
 
             // Ticket 2: Other patient (Called)
-            var app2 = new Appointment { PatientId = Guid.NewGuid(), WorkScheduleId = workSchedule.Id, WorkSchedule = workSchedule, TimeSlot = workSchedule.ShiftStart };
+            var app2 = TestDataFactory.CreateAppointment(workSchedule: workSchedule);
             var ticket2 = TestDataFactory.CreateQueueTicket(app2, queueNumber: 2);
             ticket2.Call();
             await queueTicketRepository.AddAsync(ticket2);
 
             // Ticket 3: Current patient (Waiting)
-            var myApp = new Appointment { PatientId = patientId, WorkScheduleId = workSchedule.Id, WorkSchedule = workSchedule, TimeSlot = workSchedule.ShiftStart };
+            var myApp = TestDataFactory.CreateAppointment(workSchedule: workSchedule, patient: patient);
             var myTicket = TestDataFactory.CreateQueueTicket(myApp, queueNumber: 3);
             await queueTicketRepository.AddAsync(myTicket);
 
@@ -61,18 +61,18 @@ namespace Clinic.Application.UnitTests.Features.Queue.Queries
             var handler = new GetMyQueueStatusHandler(queueTicketRepository, currentUser);
 
             var doctor = TestDataFactory.CreateDoctor();
-            var patientId = Guid.NewGuid();
-            currentUser.PatientId = patientId;
+            var patient = TestDataFactory.CreatePatient();
+            currentUser.PatientId = patient.Id;
 
-            var workSchedule = TestDataFactory.CreateWorkSchedule(doctor: doctor);
+            var workSchedule = TestDataFactory.CreateWorkSchedule(doctor: doctor, date: DateOnly.FromDateTime(DateTime.Today));
 
             // Ticket 1: Normal patient (QueueNumber 1)
-            var app1 = new Appointment { PatientId = Guid.NewGuid(), WorkScheduleId = workSchedule.Id, WorkSchedule = workSchedule, TimeSlot = workSchedule.ShiftStart };
+            var app1 = TestDataFactory.CreateAppointment(workSchedule: workSchedule);
             var ticket1 = TestDataFactory.CreateQueueTicket(app1, queueNumber: 1, priority: false);
             await queueTicketRepository.AddAsync(ticket1);
 
             // Ticket 2: My Ticket (QueueNumber 2, Priority = true)
-            var myApp = new Appointment { PatientId = patientId, WorkScheduleId = workSchedule.Id, WorkSchedule = workSchedule, TimeSlot = workSchedule.ShiftStart };
+            var myApp = TestDataFactory.CreateAppointment(workSchedule: workSchedule, patient: patient);
             var myTicket = TestDataFactory.CreateQueueTicket(myApp, queueNumber: 2, priority: true);
             await queueTicketRepository.AddAsync(myTicket);
 

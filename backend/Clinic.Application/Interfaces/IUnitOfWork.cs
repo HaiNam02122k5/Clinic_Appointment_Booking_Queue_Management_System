@@ -1,4 +1,6 @@
-﻿namespace Clinic.Application.Interfaces
+﻿using Microsoft.EntityFrameworkCore.Storage;
+
+namespace Clinic.Application.Interfaces
 {
     /// <summary>
     /// Use this to commit all changes to the database in a single transaction.
@@ -6,7 +8,7 @@
     public interface IUnitOfWork
     {
         /// <summary>
-        /// Submit button.
+        /// Submit button. Throws DbUpdateException if the commit fails.
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
@@ -19,7 +21,7 @@
         /// cho từng lệnh. Bắt buộc gọi CommitTransactionAsync hoặc RollbackTransactionAsync
         /// sau đó để đóng transaction, nếu không sẽ giữ khóa/connection lâu hơn cần thiết.
         /// </summary>
-        Task BeginTransactionAsync(CancellationToken cancellationToken = default);
+        Task InitializeTransactionLockAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Commit transaction đã mở bằng BeginTransactionAsync. Không làm gì nếu chưa có

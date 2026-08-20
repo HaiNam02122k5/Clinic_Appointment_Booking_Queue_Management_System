@@ -64,13 +64,9 @@ namespace Clinic.Application.Features.Auth.Commands
             // Tạo hồ sơ Patient gắn với Person vừa tạo/tìm được. CreateOrGetPersonAsync có thể trả về
             // 1 Person đã tồn tại từ trước (khách vãng lai từng khám nhưng chưa có tài khoản) - trường hợp
             // đó Person có thể đã có Patient, nên phải kiểm tra tồn tại trước để tránh vi phạm UNIQUE (PersonId).
-            var existingPatient = await _patientRepository.GetByPersonIdAsync(newPerson.Id);
-            if (existingPatient is null)
+            if (newPerson.Patient is null)
             {
-                var newPatient = new Patient
-                {
-                    PersonId = newPerson.Id
-                };
+                var newPatient = new Patient(newPerson, null, null);
                 await _patientRepository.AddAsync(newPatient);
             }
 

@@ -12,6 +12,12 @@ namespace Clinic.Application.Interfaces
         Task AddAsync(Doctor doctor);
 
         /// <summary>
+        /// Retrieves a list of active doctors associated with a specific specialty asynchronously, including related entities Employee and Person for name retrieval.
+        /// If the specialtyId is null, it retrieves all active doctors regardless of specialty.
+        /// </summary>
+        Task<List<Doctor>> GetActiveDoctorsBySpecialty(Guid? specialtyId);
+
+        /// <summary>
         /// Retrieves personal information for a doctor by their unique identifier asynchronously. Includes related entities Employee, Person, User, and WorkHistories.
         /// </summary>
         Task<Doctor?> GetInfoByIdAsync(Guid? doctorId);

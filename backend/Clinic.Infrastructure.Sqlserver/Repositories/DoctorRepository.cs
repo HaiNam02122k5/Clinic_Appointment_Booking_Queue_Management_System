@@ -21,6 +21,23 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             _context.Doctors.Add(doctor);
         }
 
+        public async Task<List<Doctor>> GetActiveDoctorsBySpecialty(Guid? specialtyId)
+        {
+            var query = _context.Doctors
+                .Include(d => d.Employee)
+                    .ThenInclude(e => e.Person)
+                .Include(d => d.WorkHistories)
+                    .ThenInclude(wh => wh.Specialty)
+                .Where(d => d.IsDeleted == false && d.Status == DoctorStatus.Active);
+
+            if (specialtyId != null)
+            {
+                query = query.Where(d => d.WorkHistories.Any(wh => wh.SpecialtyId == specialtyId && wh.EndDate == null));
+            }
+
+            return await query.ToListAsync();
+        }
+
         public async Task<Doctor?> GetInfoByIdAsync(Guid? doctorId)
         {
             if (doctorId == null)

@@ -63,6 +63,17 @@ namespace Clinic.Application.Features.Employees.Commands
                 user.AssignRole(role);
             }
             var employee = new Employee(person, request.HireDate);
+            if (person.Patient == null)
+            {
+                var patient = new Patient(person, null, null);
+                var patientRole = await _roleRepository.GetByNameAsync("Patient");
+                if (patientRole == null)
+                {
+                    throw new ArgumentException("Role 'Patient' does not exist.");
+                }
+                user.AssignRole(patientRole);
+                person.Patient = patient;
+            }
             await _employeeRepository.AddAsync(employee);
             await _unitOfWork.SaveChangesAsync();
             return new EmployeeSummaryDto

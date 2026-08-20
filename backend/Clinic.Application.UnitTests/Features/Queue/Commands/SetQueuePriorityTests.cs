@@ -14,7 +14,7 @@ namespace Clinic.Application.UnitTests.Features.Queue.Commands
             var unitOfWork = new FakeUnitOfWork();
             var handler = new SetQueuePriorityHandler(queueTicketRepository, unitOfWork);
 
-            var appointment = TestDataFactory.CreateAppointment(confirmed: true);
+            var appointment = TestDataFactory.CreateAppointment(confirmed: true, today: true);
             var queueTicket = TestDataFactory.CreateQueueTicket(appointment, queueNumber: 1);
             await queueTicketRepository.AddAsync(queueTicket);
 
@@ -33,7 +33,7 @@ namespace Clinic.Application.UnitTests.Features.Queue.Commands
             var unitOfWork = new FakeUnitOfWork();
             var handler = new SetQueuePriorityHandler(queueTicketRepository, unitOfWork);
 
-            var appointment = TestDataFactory.CreateAppointment(confirmed: true);
+            var appointment = TestDataFactory.CreateAppointment(confirmed: true, today: true);
             var queueTicket = TestDataFactory.CreateQueueTicket(appointment, queueNumber: 1, priority: true);
             await queueTicketRepository.AddAsync(queueTicket);
 
@@ -65,7 +65,7 @@ namespace Clinic.Application.UnitTests.Features.Queue.Commands
             var unitOfWork = new FakeUnitOfWork();
             var handler = new SetQueuePriorityHandler(queueTicketRepository, unitOfWork);
 
-            var appointment = TestDataFactory.CreateAppointment(confirmed: true);
+            var appointment = TestDataFactory.CreateAppointment(confirmed: true, today: true);
             var queueTicket = TestDataFactory.CreateQueueTicket(appointment, queueNumber: 1);
             queueTicket.Call();
             await queueTicketRepository.AddAsync(queueTicket);

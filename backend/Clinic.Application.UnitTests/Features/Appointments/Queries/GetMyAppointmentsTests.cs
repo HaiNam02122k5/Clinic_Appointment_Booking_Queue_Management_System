@@ -13,14 +13,16 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Queries
             var appointmentRepository = new FakeAppointmentRepository();
             var currentUser = new FakeCurrentUser();
             var handler = new GetMyAppointmentsHandler(appointmentRepository, currentUser);
+            var patient = TestDataFactory.CreatePatient();
+            currentUser.PatientId = patient.Id;
 
-            var patientId = Guid.NewGuid();
-            currentUser.PatientId = patientId;
+            var workScheduleD1 = TestDataFactory.CreateWorkSchedule(date: DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)));
+            var workScheduleD2 = TestDataFactory.CreateWorkSchedule(date: DateOnly.FromDateTime(DateTime.UtcNow.AddDays(2)));
 
-            var appointment1 = TestDataFactory.CreateAppointment(patientId: patientId, timeSlot: DateTime.UtcNow.AddDays(1));
-            var appointment2 = TestDataFactory.CreateAppointment(patientId: patientId, timeSlot: DateTime.UtcNow.AddDays(2));
+            var appointment1 = TestDataFactory.CreateAppointment(patient: patient, workSchedule: workScheduleD1);
+            var appointment2 = TestDataFactory.CreateAppointment(patient: patient, workSchedule: workScheduleD2);
             // Another patient's appointment
-            var appointmentOther = TestDataFactory.CreateAppointment(patientId: Guid.NewGuid(), timeSlot: DateTime.UtcNow.AddDays(3));
+            var appointmentOther = TestDataFactory.CreateAppointment(patient: TestDataFactory.CreatePatient(), workSchedule: workScheduleD1);
 
             await appointmentRepository.AddAsync(appointment1);
             await appointmentRepository.AddAsync(appointment2);

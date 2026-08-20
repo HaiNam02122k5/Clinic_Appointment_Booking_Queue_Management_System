@@ -11,7 +11,7 @@ namespace Clinic.Application.Contracts
         public string DoctorName { get; set; } = string.Empty;
 
         [JsonPropertyName("examDate")]
-        public DateTime ExamDate { get; set; }
+        public DateOnly ExamDate { get; set; }
 
         [JsonPropertyName("symptoms")]
         public string? Symptoms { get; set; }

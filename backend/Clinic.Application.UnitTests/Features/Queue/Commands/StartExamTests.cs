@@ -13,12 +13,13 @@ namespace Clinic.Application.UnitTests.Features.Queue.Commands
             // Arrange: Doctor không có "queue.start-exam.any" nhưng DoctorId khớp với
             // bác sĩ sở hữu vé (đã được gọi số - Called) -> được phép bắt đầu khám.
             var queueTicketRepository = new FakeQueueTicketRepository();
-            var doctorId = Guid.NewGuid();
-            var currentUser = new FakeCurrentUser { DoctorId = doctorId };
+            var doctor = TestDataFactory.CreateDoctor();
+            var ws = TestDataFactory.CreateWorkSchedule(doctor, date: DateOnly.FromDateTime(DateTime.Today));
+            var currentUser = new FakeCurrentUser { DoctorId = doctor.Id };
             var unitOfWork = new FakeUnitOfWork();
             var handler = new StartExamHandler(queueTicketRepository, currentUser, unitOfWork);
 
-            var appointment = TestDataFactory.CreateAppointment(doctorId: doctorId, confirmed: true);
+            var appointment = TestDataFactory.CreateAppointment(confirmed: true, workSchedule: ws);
             var queueTicket = TestDataFactory.CreateQueueTicket(appointment, queueNumber: 1);
             queueTicket.Call();
             await queueTicketRepository.AddAsync(queueTicket);
@@ -41,7 +42,9 @@ namespace Clinic.Application.UnitTests.Features.Queue.Commands
             var unitOfWork = new FakeUnitOfWork();
             var handler = new StartExamHandler(queueTicketRepository, currentUser, unitOfWork);
 
-            var appointment = TestDataFactory.CreateAppointment(doctorId: Guid.NewGuid(), confirmed: true);
+            var doctor = TestDataFactory.CreateDoctor();
+            var ws = TestDataFactory.CreateWorkSchedule(doctor, date: DateOnly.FromDateTime(DateTime.Today));
+            var appointment = TestDataFactory.CreateAppointment(confirmed: true, workSchedule: ws);
             var queueTicket = TestDataFactory.CreateQueueTicket(appointment, queueNumber: 1);
             queueTicket.Call();
             await queueTicketRepository.AddAsync(queueTicket);
@@ -63,7 +66,9 @@ namespace Clinic.Application.UnitTests.Features.Queue.Commands
             var unitOfWork = new FakeUnitOfWork();
             var handler = new StartExamHandler(queueTicketRepository, currentUser, unitOfWork);
 
-            var appointment = TestDataFactory.CreateAppointment(doctorId: Guid.NewGuid(), confirmed: true);
+            var doctor = TestDataFactory.CreateDoctor();
+            var ws = TestDataFactory.CreateWorkSchedule(doctor, date: DateOnly.FromDateTime(DateTime.Today));
+            var appointment = TestDataFactory.CreateAppointment(confirmed: true, workSchedule: ws);
             var queueTicket = TestDataFactory.CreateQueueTicket(appointment, queueNumber: 1);
             queueTicket.Call();
             await queueTicketRepository.AddAsync(queueTicket);

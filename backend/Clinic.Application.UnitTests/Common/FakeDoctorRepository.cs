@@ -13,6 +13,16 @@ namespace Clinic.Application.UnitTests.Common
             _doctors.Add(doctor);
         }
 
+        public async Task<List<Doctor>> GetActiveDoctorsBySpecialty(Guid? specialtyId)
+        {
+            var query = _doctors.Where(d => d.Status == DoctorStatus.Active && d.IsDeleted == false);
+            if (specialtyId != null)
+            {
+                query = query.Where(d => d.WorkHistories.Any(wh => wh.EndDate == null && wh.SpecialtyId == specialtyId));
+            }
+            return query.ToList();
+        }
+
         public async Task<Doctor?> GetInfoByIdAsync(Guid? doctorId)
         {
             return _doctors.FirstOrDefault(d => d.Id == doctorId);

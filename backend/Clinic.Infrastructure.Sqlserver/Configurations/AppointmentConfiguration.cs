@@ -22,11 +22,18 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
                 .HasForeignKey(a => a.WorkScheduleId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            builder.HasOne(a => a.Updator)
+                .WithMany()
+                .HasForeignKey(a => a.UpdatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             builder.Property(a => a.Reason).HasMaxLength(500);
 
             builder.Property(a => a.Status)
                 .HasConversion<string>()
                 .HasMaxLength(20);
+
+            builder.HasIndex(a => new { a.TimeSlot, a.WorkScheduleId }).IsUnique().HasFilter("[IsWalkIn] = 0 AND [Status] <> 'Cancelled' AND [IsDeleted] = 0");
 
             // IsWalkIn: đánh dấu Appointment do Lễ tân tạo tại quầy cho khách
             // vãng lai (Cách B) - dùng để loại khỏi thống kê tỷ lệ hủy lịch.
