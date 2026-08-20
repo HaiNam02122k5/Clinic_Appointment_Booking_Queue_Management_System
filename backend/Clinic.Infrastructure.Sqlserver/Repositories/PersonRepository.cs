@@ -24,6 +24,10 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
         {
             return await _dbContext.Persons
                 .Include(p => p.User)
+                    .ThenInclude(u => u.UserRoles)
+                        .ThenInclude(ur => ur.Role)
+                            .ThenInclude(r => r.RolePermissions)
+                                .ThenInclude(rp => rp.Permission)
                 .Include(p => p.Patient)
                 .Include(p => p.Employee)
                     .ThenInclude(e => e.Doctor)
@@ -34,6 +38,10 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
         {
             return await _dbContext.Persons
                 .Include(p => p.User)
+                    .ThenInclude(u => u.UserRoles)
+                        .ThenInclude(ur => ur.Role)
+                            .ThenInclude(r => r.RolePermissions)
+                                .ThenInclude(rp => rp.Permission)
                 .Include(p => p.Patient)
                 .Include(p => p.Employee)
                     .ThenInclude(e => e.Doctor)
@@ -44,6 +52,8 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
         {
             return await _dbContext.Persons
                 .Include(p => p.User)
+                    .ThenInclude(u => u.UserRoles)
+                        .ThenInclude(ur => ur.Role)
                 .Include(p => p.Patient)
                 .Include(p => p.Employee)
                     .ThenInclude(e => e.Doctor)

@@ -6,7 +6,7 @@ using Clinic.Domain.Enums;
 
 namespace Clinic.Application.Notifications.Dispatchers
 {
-    public class AppointmentNotificationHandler : IAppointmentNotificatinHandler
+    public class AppointmentNotificationHandler : IAppointmentNotificationHandler
     {
         private readonly INotificationRepository _notificationRepository;
         private readonly IEmailSender _emailSender;
@@ -99,7 +99,7 @@ namespace Clinic.Application.Notifications.Dispatchers
                 var notification = new Notification(
                         appointmentJob.Person.Id,
                         appointmentJob.NotificationType,
-                        null,
+                        "<NO TITLE>",
                         content.Message,
                         NotificationChannel.Sms,
                         scheduledTime

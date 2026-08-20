@@ -19,7 +19,7 @@ namespace Clinic.Application.UnitTests.Features.Doctors.Commands
             var passwordHasher = new FakePasswordHasher();
             var userRepository = new FakeUserRepository();
             var personRepository = new FakePersonRepository();
-            var userService = new UserService(userRepository, passwordHasher);
+            var userService = new UserService(userRepository, personRepository, passwordHasher);
             var personService = new PersonService(personRepository);
             var handler = new CreateDoctorCommandHandler(userService, personService, doctorRepository, specialtyRepository, roleRepository, employeeRepository, unitOfWork);
 
@@ -59,7 +59,7 @@ namespace Clinic.Application.UnitTests.Features.Doctors.Commands
             var passwordHasher = new FakePasswordHasher();
             var userRepository = new FakeUserRepository();
             var personRepository = new FakePersonRepository();
-            var userService = new UserService(userRepository, passwordHasher);
+            var userService = new UserService(userRepository, personRepository, passwordHasher);
             var personService = new PersonService(personRepository);
             var handler = new CreateDoctorCommandHandler(userService, personService, doctorRepository, specialtyRepository, roleRepository, employeeRepository, unitOfWork);
             var command = new CreateDoctorCommand

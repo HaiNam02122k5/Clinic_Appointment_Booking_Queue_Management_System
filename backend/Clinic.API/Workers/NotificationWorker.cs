@@ -10,14 +10,12 @@ namespace Clinic.API.Workers
         public NotificationWorker(
             IServiceScopeFactory scopeFactory)
         {
-            Console.WriteLine("Initializing NotificationWorker");
             _scopeFactory = scopeFactory;
         }
 
         protected override async Task ExecuteAsync(
             CancellationToken stoppingToken)
         {
-            Console.WriteLine("Running");
             while (!stoppingToken.IsCancellationRequested)
             {
                 using var scope = _scopeFactory.CreateScope();
@@ -30,7 +28,6 @@ namespace Clinic.API.Workers
 
                 await foreach (var job in queue.ReadAllAsync(stoppingToken))
                 {
-                    Console.WriteLine("Processing notification job: Send via email: {0}", job.SendEmail);
                     await notificationService.SendAsync(
                         job,
                         stoppingToken);

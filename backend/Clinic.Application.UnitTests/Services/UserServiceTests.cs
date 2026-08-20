@@ -9,8 +9,9 @@ namespace Clinic.Application.UnitTests.Services
         public async Task TestFindUserById()
         {
             var userRepository = new FakeUserRepository();
+            var personRepository = new FakePersonRepository();
             var passwordHasher = new FakePasswordHasher();
-            var userService = new UserService(userRepository, passwordHasher);
+            var userService = new UserService(userRepository, personRepository, passwordHasher);
 
             var person = TestDataFactory.CreatePerson();
             var user = TestDataFactory.CreateUser("Patient", "username", "hashedpassword", person);
@@ -26,8 +27,9 @@ namespace Clinic.Application.UnitTests.Services
         public async Task TestUserCreation()
         {
             var userRepository = new FakeUserRepository();
+            var personRepository = new FakePersonRepository();
             var passwordHasher = new FakePasswordHasher();
-            var userService = new UserService(userRepository, passwordHasher);
+            var userService = new UserService(userRepository, personRepository, passwordHasher);
 
             var person = TestDataFactory.CreatePerson();
             var user = await userService.CreateUserAsync("newuser", "password", person);
@@ -40,8 +42,9 @@ namespace Clinic.Application.UnitTests.Services
         public async Task TestUserCreationDuplicateUsername()
         {
             var userRepository = new FakeUserRepository();
+            var personRepository = new FakePersonRepository();
             var passwordHasher = new FakePasswordHasher();
-            var userService = new UserService(userRepository, passwordHasher);
+            var userService = new UserService(userRepository, personRepository, passwordHasher);
 
             var person1 = TestDataFactory.CreatePerson();
             var user1 = TestDataFactory.CreateUser("Patient", "testuser", "hashedpassword", person1);
@@ -56,8 +59,9 @@ namespace Clinic.Application.UnitTests.Services
         public async Task TestVerifyUser()
         {
             var userRepository = new FakeUserRepository();
+            var personRepository = new FakePersonRepository();
             var passwordHasher = new FakePasswordHasher();
-            var userService = new UserService(userRepository, passwordHasher);
+            var userService = new UserService(userRepository, personRepository, passwordHasher);
 
             var person = TestDataFactory.CreatePerson();
             var user = TestDataFactory.CreateUser("Patient", "testuser", passwordHasher.HashPassword("password"), person);

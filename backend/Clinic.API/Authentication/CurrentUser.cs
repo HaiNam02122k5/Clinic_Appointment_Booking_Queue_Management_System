@@ -61,6 +61,17 @@ namespace Clinic.API.Authentication
             }
         }
 
+        public Guid? PersonId
+        {
+            get
+            {
+                var value = _httpContextAccessor.HttpContext?.User?
+                    .FindFirst("personId")?.Value;
+
+                return Guid.TryParse(value, out var id) ? id : null;
+            }
+        }
+
         public bool HasPermission(string permission)
         {
             return _httpContextAccessor.HttpContext?.User?

@@ -19,7 +19,7 @@ namespace Clinic.Application.UnitTests.Features.Employees.Commands
             var roleRepository = new FakeRoleRepository();
             var unitOfWork = new FakeUnitOfWork();
             var handler = new CreateEmployeeCommandHandler(
-                new UserService(userRepository, passwordHasher),
+                new UserService(userRepository, personRepository, passwordHasher),
                 new PersonService(personRepository),
                 employeeRepository,
                 roleRepository,
@@ -54,7 +54,7 @@ namespace Clinic.Application.UnitTests.Features.Employees.Commands
             var roleRepository = new FakeRoleRepository();
             var unitOfWork = new FakeUnitOfWork();
             var handler = new CreateEmployeeCommandHandler(
-                new UserService(userRepository, passwordHasher),
+                new UserService(userRepository, personRepository, passwordHasher),
                 new PersonService(personRepository),
                 employeeRepository,
                 roleRepository,

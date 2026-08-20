@@ -24,14 +24,14 @@ namespace Clinic.Application.Notifications.Dispatchers
         {
             var now = DateTimeOffset.UtcNow;
             var scheduledNotifications = await _notificationRepository.GetAllScheduledAndFailedByAsync(now, stoppingToken);
-            scheduledNotifications.AsParallel().ForAll(async notification =>
+            foreach (var notification in scheduledNotifications)
             {
                 switch (notification.Channel)
                 {
                     case NotificationChannel.Email:
                         if (string.IsNullOrWhiteSpace(notification.Person.Email))
                         {
-                            return;
+                            continue;
                         }
                         try
                         {
@@ -46,7 +46,7 @@ namespace Clinic.Application.Notifications.Dispatchers
                     case NotificationChannel.Sms:
                         if (string.IsNullOrWhiteSpace(notification.Person.PhoneNumber))
                         {
-                            return;
+                            continue;
                         }
                         try
                         {
@@ -61,7 +61,7 @@ namespace Clinic.Application.Notifications.Dispatchers
                     case NotificationChannel.InApp:
                         if (notification.Person.User == null)
                         {
-                            return;
+                            continue;
                         }
                         try
                         {
@@ -74,7 +74,7 @@ namespace Clinic.Application.Notifications.Dispatchers
                         }
                         break;
                 }
-            });
+            };
         }
     }
 }

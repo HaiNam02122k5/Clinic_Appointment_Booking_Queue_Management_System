@@ -33,7 +33,11 @@ namespace Clinic.Application.Features.Users.Queries
                 PhoneNumber = user.Person.PhoneNumber,
                 Email = user.Person.Email,
                 Gender = user.Person.Gender,
-                Address = user.Person.Address
+                Address = user.Person.Address,
+                Roles = user.UserRoles.Select(ur => ur.Role.Name).ToList(),
+                DateOfBirth = user.Person.DateOfBirth,
+                IsActive = user.IsActive,
+                CreatedAt = user.CreatedAt,
             };
         }
     }

@@ -8,5 +8,6 @@ namespace Clinic.Application.Contracts
     {
         public Guid PersonId { get; set; }
         public string Address { get; set; }
+        public DateOnly DateOfBirth { get; set; }
     }
 }

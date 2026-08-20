@@ -8,13 +8,13 @@ namespace Clinic.Application.Services
     public class NotificationService : INotificationService
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IAppointmentNotificatinHandler _appointmentHandler;
+        private readonly IAppointmentNotificationHandler _appointmentHandler;
         private readonly IDueNotificationHandler _dueHandler ;
         private readonly IAccountNotificationHandler _accountNotificationHandler;
         private readonly ICustomNotificationHandler _customNotificationHandler;
 
         public NotificationService(
-            IAppointmentNotificatinHandler appointmentHandler,
+            IAppointmentNotificationHandler appointmentHandler,
             IDueNotificationHandler dueHandler,
             IAccountNotificationHandler accountNotificationHandler,
             ICustomNotificationHandler customNotificationHandler,
@@ -31,7 +31,6 @@ namespace Clinic.Application.Services
             INotificationJob job,
             CancellationToken cancellationToken = default)
         {
-            Console.WriteLine("Processing job");
             switch (job)
             {
                 case NotificationJob<Appointment> appointmentJob:
