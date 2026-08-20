@@ -62,6 +62,15 @@ const routes: RouteRecordRaw[] = [
           roles: ['Patient'],
         },
       },
+      // Profile completion
+      {
+        path: 'profile',
+        name: 'profile',
+        component: () => import('@/views/ProfileView.vue'),
+        meta: {
+          roles: ['Patient'],
+        },
+      },
       {
         path: 'patient/booking',
         name: 'patient-booking',
