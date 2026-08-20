@@ -5,11 +5,14 @@ import { useAuthStore } from '@/stores/auth'
 import { validators } from '@/utils/validators'
 import { useFormValidation } from '@/composables/useFormValidation'
 
+// Khởi tạo router và authStore để thao tác với luồng người dùng
 const router = useRouter()
 const authStore = useAuthStore()
 
+// Trích xuất thông báo lỗi từ authStore để hiển thị lỗi backend trong form validation
 const { error: backendError } = storeToRefs(authStore)
 
+// Khởi tạo các biến và hàm xử lý form từ composable
 const {
   formData,
   errors,
@@ -30,6 +33,8 @@ const {
     address: '',
     rememberMe: false,
   },
+
+  // Các quy tắc kiểm tra (validation rules) cho từng trường dữ liệu
   {
     username: [
       (val) => validators.required(val, 'Tên đăng nhập'),
@@ -53,9 +58,11 @@ const {
     ],
     confirmPassword: [(val, formData) => validators.confirmPassword(formData.password, val)],
   },
+  // truyền lỗi từ be vào composable để hiển thị giao diện
   { externalError: backendError }
 )
 
+// Hàm xử lý khi người dùng nhấn nút đăng ký
 async function handleRegister() {
   if (!validateAll()) return
 

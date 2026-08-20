@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
+import { useAuthStore } from '@/stores/auth'
 import { patientApi } from '@/features/patients/patient.api'
 
 import type {
@@ -188,6 +189,15 @@ export const usePatientStore = defineStore('patient', () => {
     try {
       const result = await patientApi.getMyProfile()
       profile.value = result
+
+      const authStore = useAuthStore()
+      if (result?.fullName && authStore.user) {
+        authStore.setUser({
+          ...authStore.user,
+          name: result.fullName,
+          email: result.email ?? authStore.user.email,
+        })
+      }
     } catch (e: any) {
       profile.value = null
       profileError.value = e.response?.data?.message || 'Không thể tải hồ sơ bệnh nhân'

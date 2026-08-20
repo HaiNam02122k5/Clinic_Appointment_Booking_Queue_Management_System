@@ -3,13 +3,16 @@ import {computed, onMounted, ref, watch} from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { usePatientStore } from '@/stores/patient'
+import { areProtectedPatientEndpointsDisabled, enableProtectedPatientEndpoints } from '@/features/patients/patient.api'
 import type { Appointment } from '@/features/patients/patient.types'
 
 const router = useRouter()
 const patient = usePatientStore()
 const auth = useAuthStore()
 
+// Quản lý các bước trong quy trình đặt lịch: 1 - Chọn bác sĩ, 2 - Thông tin bệnh nhân, 3 - Xác nhận
 const step = ref(1)
+
 const specialty = ref('')
 const doctorId = ref<number | null>(null)
 const selectedSlotId = ref<number | string | null>(null)
@@ -17,17 +20,51 @@ const appointmentDate = ref('')
 const appointmentTime = ref('')
 const symptoms = ref('')
 
+// Trạng thái đặt lịch thành công và thông tin cuộc hẹn đã tạo
 const success = ref(false)
 const createdAppointment = ref<Appointment | null>(null)
-  
+
+// Trạng thái chờ kết nối tới backend để tải dữ liệu bác sĩ và khung giờ
+const tryingToConnect = ref(false)
+
+// Lấy ngày hiện tại theo định dạng yyyy-mm-dd để giới hạn ngày đặt lịch
 const todayDate = new Date().toLocaleDateString('sv-SE')
 
+// Hàm tìm và đồng bộ hóa khung giờ đã chọn dựa trên thời gian cuộc hẹn
+function syncSelectedSlotFromTime() {
+  if (!appointmentTime.value) {
+    selectedSlotId.value = null
+    return
+  }
+
+  const matched = patient.slots.find((slot) => slot.time === appointmentTime.value)
+  if (matched) {
+    selectedSlotId.value = matched.workScheduleId ?? matched.id
+  }
+}
+
+// Theo dõi sự thay đổi chuyên khoa để reset các lựa chọn liên quan đến bác sĩ và khung giờ
 watch(specialty, () => {
   doctorId.value = null
   selectedSlotId.value = null
   appointmentTime.value = ''
   patient.clearSlots()
 })
+
+// Theo dõi sự thay đổi bác sĩ để reset các lựa chọn liên quan đến khung giờ
+watch(() => appointmentTime.value, () => {
+  syncSelectedSlotFromTime()
+})
+
+// Theo dõi sự thay đổi khung giờ để đồng bộ hóa với thời gian cuộc hẹn
+watch(
+  () => patient.slots,
+  () => {
+    syncSelectedSlotFromTime()
+  },
+  { deep: true },
+)
+
 
 const specialties = [
   'Nội tổng quát',
@@ -38,19 +75,38 @@ const specialties = [
   'Tai mũi họng',
 ]
 
+// Tính toán danh sách bác sĩ dựa trên chuyên khoa đã chọn
 const filteredDoctors = computed(() => {
   if (!specialty.value) return patient.doctors
   return patient.doctors.filter((doctor) => doctor.specialty === specialty.value)
 })
 
+// Lấy thông tin bác sĩ đã chọn dựa trên doctorId
 const selectedDoctor = computed(() =>
   patient.doctors.find((doctor) => doctor.id === doctorId.value)
 )
 
+// Hàm tải danh sách bác sĩ khi component được mounted
 onMounted(async () => {
   await patient.loadDoctors()
 })
 
+// Hàm thử bật lại endpoint và tải dữ liệu từ backend
+async function connectToBackend() {
+  tryingToConnect.value = true
+  try {
+    enableProtectedPatientEndpoints()
+    // re-load current data: doctors, and slots if a doctor & date already selected
+    await patient.loadDoctors()
+    if (doctorId.value && appointmentDate.value) {
+      await patient.loadSlots(doctorId.value, appointmentDate.value)
+    }
+  } finally {
+    tryingToConnect.value = false
+  }
+}
+
+// Hàm xử lý sự kiện khi người dùng chọn bác sĩ
 async function selectDoctor(id: number) {
   doctorId.value = id
   selectedSlotId.value = null
@@ -62,6 +118,7 @@ async function selectDoctor(id: number) {
   }
 }
 
+// Hàm xử lý sự kiện khi người dùng thay đổi ngày đặt lịch
 async function changeDate() {
   selectedSlotId.value = null
   appointmentTime.value = ''
@@ -72,11 +129,13 @@ async function changeDate() {
   }
 }
 
+// Hàm xử lý sự kiện khi người dùng chọn khung giờ
 function chooseSlot(slot: { id: number | string; workScheduleId?: number | string; time: string }) {
   selectedSlotId.value = slot.workScheduleId ?? slot.id
   appointmentTime.value = slot.time
 }
 
+// Hàm chuyển sang bước tiếp theo trong quy trình đặt lịch
 function nextStep() {
   if (step.value === 1) {
     if (!doctorId.value || !appointmentDate.value || !appointmentTime.value || !selectedSlotId.value) {
@@ -86,31 +145,37 @@ function nextStep() {
   step.value++
 }
 
+// Hàm quay lại bước trước trong quy trình đặt lịch
 function previousStep() {
   if (step.value > 1) {
     step.value--
   }
 }
 
+// Hàm xác nhận đặt lịch, tạo cuộc hẹn mới dựa trên thông tin đã nhập
 async function confirmBooking() {
-  if (!doctorId.value || !selectedSlotId.value) return
+const resolvedSlotId = selectedSlotId.value ??
+  patient.slots.find((slot) => slot.time === appointmentTime.value)?.workScheduleId ??
+  patient.slots.find((slot) => slot.time === appointmentTime.value)?.id ??
+  null
 
-  try {
-    createdAppointment.value = await patient.createAppointment({
-      doctorId: doctorId.value,
-      workScheduleId: selectedSlotId.value,
-      appointmentDate: appointmentDate.value,
-      appointmentTime: appointmentTime.value,
-      timeSlot: appointmentTime.value,
-      symptoms: symptoms.value,
-      reason: symptoms.value,
-    })
-    success.value = true
-  } catch {
-    // Store xử lý lỗi
-  }
+if (!doctorId.value || !resolvedSlotId) return
+
+// Gọi API để tạo cuộc hẹn mới
+try {
+  createdAppointment.value = await patient.createAppointment({
+    doctorId: doctorId.value,
+    appointmentDate: appointmentDate.value,
+    appointmentTime: appointmentTime.value,
+    symptoms: symptoms.value,
+  })
+  success.value = true
+} catch {
+  // Store xử lý lỗi
+}
 }
 
+//Hàm reset lại trạng thái đặt lịch để người dùng có thể đặt lịch mới
 function newBooking() {
   step.value = 1
   specialty.value = ''
@@ -136,6 +201,14 @@ function newBooking() {
       <p class="mt-1 text-sm text-slate-400">
         Đặt lịch nhanh, nhận xác nhận ngay
       </p>
+    </div>
+
+    <!-- Nếu protected endpoints bị tắt, hiển thị banner cho phép bật lại -->
+    <div v-if="areProtectedPatientEndpointsDisabled()" class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+      Kết nối tới API đặt lịch hiện đang bị tắt để tránh lỗi. Nếu backend đã sẵn sàng, bạn có thể thử bật lại.
+      <div class="mt-3">
+        <button @click="connectToBackend" :disabled="tryingToConnect" class="px-4 py-2 rounded bg-[#0E4D92] text-white">{{ tryingToConnect ? 'Đang kết nối...' : 'Kết nối lại với backend' }}</button>
+      </div>
     </div>
 
     <!-- SUCCESS -->

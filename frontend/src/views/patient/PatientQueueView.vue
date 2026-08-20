@@ -191,5 +191,73 @@ onUnmounted(() => {
     timer = undefined
   }
 })
+
+// Expose a small API for tests and external callers
+defineExpose({
+  isError,
+  isFetching,
+  lastUpdatedTime,
+  waitingCount,
+  requestNotificationPermission,
+  fetchQueue,
+})
 </script>
 
+<template>
+  <div class="mx-auto max-w-2xl space-y-5">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-800">Trạng thái hàng đợi</h1>
+        <p class="text-sm text-slate-500" v-if="lastUpdatedTime">Cập nhật: {{ lastUpdatedTime }}</p>
+      </div>
+      <div class="text-right">
+        <p class="text-sm text-slate-500">Đang chờ: <span class="font-semibold">{{ waitingCount }}</span></p>
+      </div>
+    </div>
+
+    <div v-if="isFetching" class="py-6 text-center text-sm text-slate-400">Đang tải hàng đợi...</div>
+
+    <div v-else-if="isError" class="rounded-xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-600">
+      Không thể tải hàng đợi. Vui lòng thử lại sau.
+    </div>
+
+    <div v-else-if="!patient.queue">
+      <div class="rounded-xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-400">Hiện không có thông tin hàng đợi.</div>
+    </div>
+
+    <div v-else class="space-y-4">
+      <div class="rounded-2xl border border-blue-200 bg-blue-50 p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-slate-600">Số của bạn</p>
+            <p class="text-3xl font-bold text-[#0E4D92]">{{ patient.queue.myTicket }}</p>
+          </div>
+          <div class="text-right">
+            <p class="text-sm text-slate-600">Vị trí</p>
+            <p class="text-xl font-bold">#{{ patient.queue.position }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h2 class="font-semibold text-slate-700">Danh sách hàng đợi</h2>
+        <div v-for="entry in patient.queue.entries" :key="entry.ticket" class="mt-3 rounded-xl border p-3 bg-white">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-semibold">{{ entry.patientName }}</p>
+              <p class="text-xs text-slate-400">{{ entry.doctorName }} — {{ entry.appointmentTime }}</p>
+            </div>
+            <div class="text-right">
+              <p class="text-sm">{{ entry.ticket }}</p>
+              <p class="text-xs text-slate-400">Vị trí: {{ entry.position }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <button @click="requestNotificationPermission" class="px-4 py-2 rounded bg-[#0E4D92] text-white">Cho phép thông báo</button>
+      </div>
+    </div>
+  </div>
+</template>

@@ -1,7 +1,6 @@
 ﻿import { env } from '@/config/env'
 import { http } from '@/lib/api/http'
 import { tokenStorage } from '@/lib/api/token-storage'
-import { mockGetMe, mockLogin, mockRegister } from '@/mock/clinic-data'
 import type { LoginPayload, RegisterPayload, LoginResponse, AuthUser } from './auth.types'
 
 function decodeJwtPayload(token: string): Record<string, any> {
@@ -89,9 +88,41 @@ function buildRegisterBody(payload: RegisterPayload) {
   const username = (payload.username ?? payload.email ?? '').trim()
   const fullName = (payload.fullName ?? '').trim()
   const phoneNumber = (payload.phoneNumber ?? '').trim()
-  const email = (payload.email ?? '').trim()
+  const rawEmail = (payload.email ?? '').trim()
   const address = (payload.address ?? '').trim() || 'Chưa cập nhật'
-  const dateOfBirth = (payload.dateOfBirth ?? '').trim()
+  let dateOfBirthRaw: string | Date | null | undefined = payload.dateOfBirth ?? ''
+
+  // Normalize dateOfBirth to yyyy-MM-dd (DateOnly expected by backend)
+  let dateOfBirth: string | null = null
+  if (dateOfBirthRaw) {
+    // If it's already a string in yyyy-MM-dd, keep it. Otherwise try to parse.
+    if (typeof dateOfBirthRaw === 'string') {
+      // Some browsers may return yyyy-MM-dd; trim and use as-is if valid-looking
+      const s = dateOfBirthRaw.trim()
+      // Basic check: 4-2-2 digits
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+        dateOfBirth = s
+      } else {
+        const d = new Date(s)
+        if (!Number.isNaN(d.getTime())) {
+          const yyyy = d.getFullYear()
+          const mm = String(d.getMonth() + 1).padStart(2, '0')
+          const dd = String(d.getDate()).padStart(2, '0')
+          dateOfBirth = `${yyyy}-${mm}-${dd}`
+        } else {
+          dateOfBirth = s // fallback: send as-is
+        }
+      }
+    } else if (dateOfBirthRaw && Object.prototype.toString.call(dateOfBirthRaw) === '[object Date]') {
+      const d = dateOfBirthRaw as Date
+      const yyyy = d.getFullYear()
+      const mm = String(d.getMonth() + 1).padStart(2, '0')
+      const dd = String(d.getDate()).padStart(2, '0')
+      dateOfBirth = `${yyyy}-${mm}-${dd}`
+    } else {
+      dateOfBirth = String(dateOfBirthRaw)
+    }
+  }
 
   const genderMap: Record<string, number> = {
     Male: 0,
@@ -99,16 +130,22 @@ function buildRegisterBody(payload: RegisterPayload) {
     Other: 2,
   }
 
-  return {
+  const genderValue = typeof payload.gender === 'number' ? (payload.gender as number) : (genderMap[(payload as any).gender] ?? 0)
+
+  const body: any = {
     username,
     password: payload.password,
     fullName,
     phoneNumber,
-    email: email || null,
-    gender: genderMap[payload.gender] ?? 0,
-    dateOfBirth,
+    email: rawEmail || null,
+    gender: genderValue,
     address,
   }
+
+  // Only attach dateOfBirth if we were able to produce a non-empty value
+  if (dateOfBirth) body.dateOfBirth = dateOfBirth
+
+  return body
 }
 
 function unwrapApiResult<T>(payload: any): T {
@@ -119,15 +156,6 @@ function unwrapApiResult<T>(payload: any): T {
 
 export const authApi = {
   login(payload: LoginPayload): Promise<LoginResponse> {
-    if (env.enableMock) {
-      try {
-        const r = mockLogin(payload.email ?? payload.username ?? '', payload.password, payload.role)
-        return Promise.resolve(r)
-      } catch (e) {
-        return Promise.reject(e)
-      }
-    }
-
     return http.post<any>('/auth/login', buildLoginBody(payload)).then((r) => {
       const d = unwrapApiResult<any>(r.data)
       const accessToken = d?.accessToken ?? d?.token ?? ''
@@ -178,57 +206,59 @@ export const authApi = {
   },
 
   register(payload: RegisterPayload): Promise<LoginResponse> {
-    if (env.enableMock) {
-      try {
-        const r = mockRegister(payload as any)
-        return Promise.resolve(r)
-      } catch (e) {
-        return Promise.reject(e)
-      }
-    }
+    const body = buildRegisterBody(payload)
+    // Helpful debug: show exactly what will be sent to the backend
+    console.debug('[authApi] register payload', body)
 
-    return http.post<any>('/auth/register', buildRegisterBody(payload)).then((r) => {
-      const d = unwrapApiResult<any>(r.data)
-      if (d && d.token && !d.accessToken) d.accessToken = d.token
-      const accessToken = d?.accessToken ?? d?.token ?? ''
-      const fallbackUser = {
-        id: 'user',
-        name: payload.fullName,
-        email: payload.email,
-        role: 'Patient',
-        roles: ['Patient'],
-        activeRole: 'Patient',
-      } as AuthUser
-      return {
-        accessToken,
-        refreshToken: d?.refreshToken,
-        user: d?.user ?? fallbackUser,
-      } as LoginResponse
-    })
+    return http
+      .post<any>('/auth/register', body)
+      .then((r) => {
+        const d = unwrapApiResult<any>(r.data)
+        if (d && d.token && !d.accessToken) d.accessToken = d.token
+        const accessToken = d?.accessToken ?? d?.token ?? ''
+        const fallbackUser = {
+          id: 'user',
+          name: payload.fullName,
+          email: payload.email,
+          role: 'Patient',
+          roles: ['Patient'],
+          activeRole: 'Patient',
+        } as AuthUser
+        return {
+          accessToken,
+          refreshToken: d?.refreshToken,
+          user: d?.user ?? fallbackUser,
+        } as LoginResponse
+      })
+      .catch((err) => {
+        // Log error details to help debugging in DevTools
+        try {
+          console.debug('[authApi] register error', err)
+          // If axios/ApiError with structured body, attempt to log server payload
+          if (err?.response?.data) console.debug('[authApi] server response body', err.response.data)
+        } catch (loggingErr) {
+          console.warn('Failed to log register error', loggingErr)
+        }
+        throw err
+      })
   },
 
   async getMe(): Promise<AuthUser> {
-    if (env.enableMock) {
-      try {
-        const r = mockGetMe()
-        return r
-      } catch (e) {
-        throw e
-      }
-    }
-
     try {
       const response = await http.get<AuthUser>('/auth/me')
       return response.data
     } catch (error: any) {
       const token = tokenStorage.getAccess()
-      if (token) {
+      const looksLikeJwt = typeof token === 'string' && token.split('.').length === 3 && !!token.split('.')[1]
+
+      if (token && looksLikeJwt) {
         return buildUserFromToken(token)
       }
 
-      if (error?.response?.status === 404) {
-        throw new Error('Backend does not expose /auth/me. Falling back to JWT payload.')
+      if (error?.response?.status === 404 || error?.response?.status === 403) {
+        return buildUserFromToken(token)
       }
+
       throw error
     }
   },

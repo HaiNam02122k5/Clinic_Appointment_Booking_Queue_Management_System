@@ -210,15 +210,25 @@ export const useAuthStore = defineStore('auth', () => {
       const statusCode = e instanceof Error && (e as any).status ? (e as any).status : e?.response?.status
       const accessToken = tokenStorage.getAccess()
       const fallbackUser = buildUserFromToken(accessToken)
+      const hasUsefulTokenUser = Boolean(
+        accessToken &&
+          accessToken.includes('.') &&
+          (fallbackUser.name && fallbackUser.name !== 'User' ||
+            fallbackUser.email ||
+            (fallbackUser.roles?.length ?? 0) > 1),
+      )
 
-      if (statusCode === 401 || statusCode === 403) {
-        if (fallbackUser) {
+    if (statusCode === 401 || statusCode === 403 || statusCode === 404) {
+        if (hasUsefulTokenUser) {
           setUser(fallbackUser, tokenStorage.isPersistent())
           return fallbackUser
         }
         tokenStorage.clear()
         safeSetStoredUser(null, false)
-      } else if (fallbackUser) {
+      return fallbackUser
+      }
+
+      if (hasUsefulTokenUser) {
         setUser(fallbackUser, tokenStorage.isPersistent())
         return fallbackUser
       }
@@ -230,17 +240,30 @@ export const useAuthStore = defineStore('auth', () => {
   // Ensure there is a patient profile on the backend for the current user.
   // If patient-related endpoints return 403/404 we try to create a minimal profile (when we have data)
   async function ensurePatientProfile(createPayload?: any): Promise<boolean> {
+    const currentRole = user.value?.activeRole ?? user.value?.role ?? 'Patient'
+    if (currentRole !== 'Patient') {
+      return false
+    }
+
     try {
-      // Try a patient endpoint that requires a patient profile
+      // Try a patient endpoint that requires a patient profile.
+      // If the backend explicitly denies this route (403/404), do not auto-create a profile on the frontend;
+      // that usually means the API is not yet wired for the current user and would otherwise create noisy errors.
       await http.get('/me/appointments')
       return true
     } catch (err: any) {
       const status = Number(err?.response?.status ?? err?.status ?? 0)
+
+      if (status === 403 || status === 404) {
+        logger.debug('[auth] Patient profile endpoint unavailable; skipping auto-create to avoid noisy forbidden requests.', { status })
+        return false
+      }
+
       // If backend indicates missing profile/forbidden, attempt to create one using available data.
       // Additionally, when the caller explicitly provided createPayload (e.g., registration) we proactively
       // try to create a profile even if the GET returned other server/client errors (5xx or other 4xx),
       // because some backends may return 500 for missing profile instead of a 4xx.
-      if (status === 403 || status === 404 || (createPayload && status >= 400)) {
+      if (createPayload && status >= 400) {
         const candidate = createPayload ?? user.value ?? {}
         const body: Record<string, any> = {}
         if (candidate.fullName || candidate.name) body.fullName = candidate.fullName ?? candidate.name
@@ -310,11 +333,19 @@ export const useAuthStore = defineStore('auth', () => {
     if (hydrating.value) return
     hydrating.value = true
     try {
-      if (tokenStorage.getAccess()) {
-        await fetchMe()
+      const access = tokenStorage.getAccess()
+      if (access) {
+        // Avoid an automatic network round-trip to /auth/me on app start which may be 404/403
+        // in some deployment states. Use the JWT payload to hydrate the user synchronously.
+        // This reduces noisy 404s and keeps the UI usable while still allowing explicit
+        // fetchMe() calls later when necessary (e.g., after login/register).
+        const fallbackUser = buildUserFromToken(access)
+        setUser(fallbackUser, tokenStorage.isPersistent())
+        return fallbackUser
       }
     } catch (e) {
-      // swallow here: fetchMe already cleared tokens on 401/403
+      // No network call was made here; nothing to clear.
+      // Keep behavior lightly permissive — any explicit fetchMe() will still handle errors.
     } finally {
       hydrating.value = false
     }
@@ -346,14 +377,9 @@ export const useAuthStore = defineStore('auth', () => {
       setToken(res.accessToken, res.refreshToken, persistent)
       setUser(normalizedUser, persistent)
 
-      // Try to fetch authoritative profile from backend (overwrite token-derived user)
-      try {
-        await fetchMe()
-      } catch (meErr) {
-        // If fetching /auth/me fails, we still keep the token-derived user but surface no crash
-        logger.debug('fetchMe after login failed', meErr)
-      }
-
+      // Do not aggressively fetch /auth/me during login when this backend does not expose it.
+      // The JWT payload already contains the user identity, and the app can fall back gracefully
+      // when the server-side profile endpoints are unavailable or forbidden.
       status.value = 'idle'
       return normalizedUser
     } catch (e: any) {
@@ -392,12 +418,8 @@ export const useAuthStore = defineStore('auth', () => {
         setToken(token, res.refreshToken, persistent)
         setUser(normalizedUser, persistent)
 
-        // Try to fetch authoritative profile from backend (overwrite token-derived user)
-        try {
-          await fetchMe()
-        } catch (meErr) {
-          logger.debug('fetchMe after register failed', meErr)
-        }
+        // Avoid noisy /auth/me calls during register when the backend route is missing.
+        // Store the token-derived user directly and let explicit profile flows handle server-backed data.
 
         // After registration, attempt to create patient profile using provided payload
         try {
@@ -444,5 +466,6 @@ export const useAuthStore = defineStore('auth', () => {
     fetchMe,
     hydrating,
     hydrate,
+    ensurePatientProfile,
   }
 })

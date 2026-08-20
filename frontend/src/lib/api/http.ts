@@ -62,12 +62,6 @@ http.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 let refreshing: Promise<void> | null = null
 
 async function refreshSession(): Promise<void> {
-  if (env.enableMock) {
-    const newAccess = `mock-access-refreshed-${Date.now()}`
-    tokenStorage.set(newAccess, undefined, true)
-    return
-  }
-
   const persistent = tokenStorage.isPersistent()
   const { data } = await axios.post<{ accessToken?: string }>(
     `${env.apiBaseUrl}/auth/refresh`,

@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { usePatientStore } from '@/stores/patient'
 import { http } from '@/lib/api/http'
 
 const auth = useAuthStore()
+const patient = usePatientStore()
 const router = useRouter()
 
 const saving = ref(false)
@@ -17,6 +19,25 @@ const form = ref({
   address: (auth.user as any)?.address ?? '',
   dateOfBirth: (auth.user as any)?.dateOfBirth ?? '',
   gender: (auth.user as any)?.gender ?? 0,
+})
+
+onMounted(async () => {
+  try {
+    await patient.loadProfile()
+    const profile = patient.profile
+    if (!profile) return
+
+    form.value = {
+      fullName: profile.fullName ?? auth.user?.name ?? '',
+      email: profile.email ?? auth.user?.email ?? '',
+      phoneNumber: profile.phoneNumber ?? '',
+      address: profile.address ?? '',
+      dateOfBirth: profile.dateOfBirth ?? '',
+      gender: profile.gender ?? 0,
+    }
+  } catch (error) {
+    // ignore; form stays with auth data if profile endpoint is unavailable
+  }
 })
 
 async function save() {

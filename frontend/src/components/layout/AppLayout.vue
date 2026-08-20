@@ -2,11 +2,13 @@
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
+import { usePatientStore } from '@/stores/patient'
 import { supportedLocales, setLocale } from '@/lib/i18n'
 
 const { locale } = useI18n()
 const router = useRouter()
 const auth = useAuthStore()
+const patient = usePatientStore()
 
 function onLocaleChange(event: Event) {
   const value = (event.target as HTMLSelectElement).value
@@ -454,7 +456,7 @@ function logout() {
                     text-sm font-semibold
                     text-violet-700"
             >
-              {{ auth.user.name?.charAt(0)?.toUpperCase() || 'U' }}
+              {{ (patient.profile?.fullName ?? auth.user.name)?.charAt(0)?.toUpperCase() || 'U' }}
             </div>
 
             <!-- Name + role -->
@@ -465,7 +467,7 @@ function logout() {
                       text-sm font-medium
                       text-slate-800"
               >
-                {{ auth.user.name || 'Demo User' }}
+                {{ patient.profile?.fullName ?? auth.user.name ?? 'Demo User' }}
               </div>
 
               <div class="text-xs text-slate-400">

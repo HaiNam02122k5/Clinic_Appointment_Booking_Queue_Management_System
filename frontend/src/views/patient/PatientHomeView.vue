@@ -15,10 +15,9 @@ const today = new Date().toLocaleDateString('vi-VN', {
   year: 'numeric',
 })
 
-// initial loading when page first mounts
 const initialLoading = ref(true)
 
-// Compute overall connectivity status for display (true when any of the services is loading on first load)
+// Kiểm tra trạng thái kết nối tới backend và các dịch vụ bệnh nhân
 const connecting = computed(() => {
   return (
     initialLoading.value ||
@@ -28,41 +27,37 @@ const connecting = computed(() => {
   )
 })
 
-// Derived helpers for template convenience
+// Kiểm tra xem có bất kỳ lỗi nào từ các dịch vụ bệnh nhân hay không
 const hasAnyError = computed(() => {
   return Boolean(
     patient.appointmentsError || patient.queueError || patient.historyError,
   )
 })
 
+// Tải dữ liệu bệnh nhân khi component được mount
 onMounted(async () => {
-  // Ensure backend has a patient profile for this user if possible
-  try {
-    // ensurePatientProfile returns true when profile exists or was created
-    await auth.ensurePatientProfile().catch(() => {
-      // swallow — ensurePatientProfile puts friendly messages into auth.error
-    })
-  } catch {
-    // noop
-  }
-
-  // Start three loads in parallel but wait for all settled so we can stop initialLoading
+  // Tạo một mảng các tác vụ tải dữ liệu bệnh nhân từ be
   const tasks = [
     patient.loadAppointments(),
     patient.loadQueue(),
     patient.loadHistory(),
-    patient.loadProfile(),
   ]
+
+  try {
+    if (!patient.profile && localStorage.getItem('clinic.patient.protected-disabled') !== '1') {
+      void patient.loadProfile().catch(() => undefined)
+    }
+  } catch {
+  }
 
   try {
     await Promise.allSettled(tasks)
   } finally {
-    // Mark initial load complete — UI will then reflect per-service states from the store
     initialLoading.value = false
   }
 })
 
-// Retry helpers for each section
+
 async function retryAppointments() {
   await patient.loadAppointments()
 }
@@ -92,13 +87,18 @@ async function retryHistory() {
         <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm mb-2">
           <div class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-3 min-w-0">
-              <div class="h-12 w-12 rounded-full bg-[#6b46c1] flex items-center justify-center text-white font-bold text-lg">{{ (auth.user?.name || 'B').slice(0,1) }}</div>
+              <div class="h-12 w-12 rounded-full bg-[#6b46c1] flex items-center justify-center text-white font-bold text-lg">
+                {{ (patient.profile?.fullName ?? auth.user?.name ?? 'B').slice(0, 1) }}
+              </div>
               <div class="min-w-0">
-                <p class="text-sm font-semibold text-slate-800 truncate">{{ auth.user?.name || 'Bệnh nhân' }}</p>
-                <p class="text-xs text-slate-400 truncate">{{ auth.user?.email || '' }}</p>
+                <p class="text-sm font-semibold text-slate-800 truncate">
+                  {{ patient.profile?.fullName ?? auth.user?.name ?? 'Bệnh nhân' }}
+                </p>
+                <p class="text-xs text-slate-400 truncate">
+                  {{ patient.profile?.email ?? auth.user?.email ?? '' }}
+                </p>
               </div>
             </div>
-
             <div class="flex items-center gap-2">
               <div class="hidden sm:block text-sm text-slate-600">Lịch sắp tới: <span class="font-semibold text-[#0E4D92]">{{ patient.upcomingAppointments?.length || 0 }}</span></div>
               <div class="hidden sm:block text-sm text-slate-600">Trong hàng đợi: <span class="font-semibold text-[#0E4D92]">{{ patient.queue ? 'Có' : 'Chưa' }}</span></div>
@@ -119,7 +119,7 @@ async function retryHistory() {
         >
           <div>
             <p class="text-sm text-blue-200">Xin chào,</p>
-            <h1 class="text-2xl font-bold">{{ auth.user?.name || 'Bệnh nhân' }} 👋</h1>
+            <h1 class="text-2xl font-bold">{{ patient.profile?.fullName || auth.user?.name || 'Bệnh nhân' }} 👋</h1>
             <p class="mt-1 text-xs text-blue-200">{{ today }}</p>
           </div>
 
