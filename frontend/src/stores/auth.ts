@@ -345,6 +345,15 @@ export const useAuthStore = defineStore('auth', () => {
       const persistent = payload.rememberMe === true
       setToken(res.accessToken, res.refreshToken, persistent)
       setUser(normalizedUser, persistent)
+
+      // Try to fetch authoritative profile from backend (overwrite token-derived user)
+      try {
+        await fetchMe()
+      } catch (meErr) {
+        // If fetching /auth/me fails, we still keep the token-derived user but surface no crash
+        logger.debug('fetchMe after login failed', meErr)
+      }
+
       status.value = 'idle'
       return normalizedUser
     } catch (e: any) {
@@ -382,6 +391,13 @@ export const useAuthStore = defineStore('auth', () => {
         const persistent = (payload as any)?.rememberMe === true
         setToken(token, res.refreshToken, persistent)
         setUser(normalizedUser, persistent)
+
+        // Try to fetch authoritative profile from backend (overwrite token-derived user)
+        try {
+          await fetchMe()
+        } catch (meErr) {
+          logger.debug('fetchMe after register failed', meErr)
+        }
 
         // After registration, attempt to create patient profile using provided payload
         try {
