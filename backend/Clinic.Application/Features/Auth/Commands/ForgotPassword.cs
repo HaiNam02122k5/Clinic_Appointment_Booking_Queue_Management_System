@@ -60,7 +60,7 @@ namespace Clinic.Application.Features.Auth.Commands
                  user,
                  new Account { FullName = user.FullName, Password = new string(randomPassword) },
                  NotificationType.ResetPassword,
-                 false, true, false), cancellationToken
+                 true, false, false), cancellationToken
              );
             Console.WriteLine($"Temporary password for {user.FullName}: {new string(randomPassword)}");
 

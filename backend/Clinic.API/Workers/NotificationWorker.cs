@@ -30,7 +30,7 @@ namespace Clinic.API.Workers
 
                 await foreach (var job in queue.ReadAllAsync(stoppingToken))
                 {
-                    Console.WriteLine("Processing notification job");
+                    Console.WriteLine("Processing notification job: Send via email: {0}", job.SendEmail);
                     await notificationService.SendAsync(
                         job,
                         stoppingToken);

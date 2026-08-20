@@ -25,6 +25,7 @@ namespace Clinic.Application.Features.Users.NewFolder
         public async Task<int> Handle(UpdatePasswordCommand request, CancellationToken cancellationToken)
         {
             await _userService.VerifyAndUpdatePassword(_currentUser.UserId ?? throw new UnauthorizedAccessException(), request.CurrentPassword, request.NewPassword);
+            await _unitOfWork.SaveChangesAsync();
             return 0;
         }
     }
