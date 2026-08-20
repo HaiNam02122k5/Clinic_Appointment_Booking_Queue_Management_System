@@ -18,7 +18,6 @@ namespace Clinic.Application.Contracts
 
     public interface IValueWithChange
     {
-        object Value { get; set; }
         double Change { get; set; }
     }
 
