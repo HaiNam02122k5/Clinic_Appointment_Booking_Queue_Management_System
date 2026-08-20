@@ -22,12 +22,14 @@ namespace Clinic.Application.Features.Appointments.Commands
         private readonly IPatientRepository _patientRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly INotificationQueue _notificationQueue;
-        public CreateAppointmentCommandHandler(IWorkScheduleRepository workScheduleRepository, IPatientRepository patientRepository, IUnitOfWork unitOfWork, INotificationQueue notificationQueue)
+        private readonly IAppointmentRepository _appointmentRepository;
+        public CreateAppointmentCommandHandler(IWorkScheduleRepository workScheduleRepository, IPatientRepository patientRepository, IUnitOfWork unitOfWork, INotificationQueue notificationQueue, IAppointmentRepository appointmentRepository)
         {
             _workScheduleRepository = workScheduleRepository;
             _patientRepository = patientRepository;
             _unitOfWork = unitOfWork;
             _notificationQueue = notificationQueue;
+            _appointmentRepository = appointmentRepository;
         }
         public async Task<AppointmentDto> Handle(CreateAppointmentCommand request, CancellationToken cancellationToken)
         {
@@ -50,6 +52,7 @@ namespace Clinic.Application.Features.Appointments.Commands
                 }
                 var appointment = new Appointment(patient, workSchedule, request.TimeSlot, request.Reason, (Guid)request.UserId, request.IsWalkIn);
                 workSchedule.AddAppointment(appointment);
+                await _appointmentRepository.AddAsync(appointment);
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
                 await _unitOfWork.CommitTransactionAsync(cancellationToken);
                 return new AppointmentDto

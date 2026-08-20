@@ -24,6 +24,17 @@ namespace Clinic.Domain.Entities
             EmergencyContact = emergencyContact;
         }
 
+        /// <summary>
+        /// Reconstruct a <see cref="Patient"/> instance from the database with the specified parameters.
+        /// </summary>
+        public Patient(Guid id, Guid personId, string? insuranceNumber, string? emergencyContact, DateTime createdAt, DateTime? updatedAt, bool isDeleted)
+            : base(id, createdAt, updatedAt, isDeleted)
+        {
+            PersonId = personId;
+            InsuranceNumber = insuranceNumber;
+            EmergencyContact = emergencyContact;
+        }
+
         private Patient() { } // EF Core
 
         public void Update(string? insuranceNumber, string? emergencyContact)

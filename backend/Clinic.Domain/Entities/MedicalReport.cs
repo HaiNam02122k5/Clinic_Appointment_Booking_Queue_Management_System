@@ -5,7 +5,7 @@ using System;
 namespace Clinic.Domain.Entities
 {
     /// <summary>
-    /// Hồ sơ khám bệnh
+    /// Hồ sơ khám bệnh gắn với 1 lượt khám (QueueTicket)
     /// </summary>
     public class MedicalReport : BaseEntity
     {
@@ -29,5 +29,41 @@ namespace Clinic.Domain.Entities
 
         /// <summary>Draft trong lúc bác sĩ đang ghi, Finalized khi đã chốt (không cho sửa nữa qua PUT /medical-reports/{id}).</summary>
         public MedicalReportStatus Status { get; set; } = MedicalReportStatus.Draft;
+
+        public MedicalReport() { }
+
+        public MedicalReport(Guid queueTicketId, string? symptoms, string? diagnosis, string? prescription, string? notes, DateTime? examStartTime = null)
+        {
+            QueueTicketId = queueTicketId;
+            Symptoms = symptoms;
+            Diagnosis = diagnosis;
+            Prescription = prescription;
+            Notes = notes;
+            ExamStartTime = examStartTime ?? DateTime.UtcNow;
+            Status = MedicalReportStatus.Draft;
+        }
+
+        public void UpdateDetails(string? symptoms, string? diagnosis, string? prescription, string? notes)
+        {
+            if (Status == MedicalReportStatus.Finalized)
+            {
+                throw new InvalidOperationException("Cannot update a finalized medical report.");
+            }
+
+            Symptoms = symptoms;
+            Diagnosis = diagnosis;
+            Prescription = prescription;
+            Notes = notes;
+            MarkUpdated();
+        }
+
+        public void FinalizeReport(DateTime? examEndTime = null)
+        {
+            if (Status == MedicalReportStatus.Finalized) return;
+
+            Status = MedicalReportStatus.Finalized;
+            ExamEndTime = examEndTime ?? DateTime.UtcNow;
+            MarkUpdated();
+        }
     }
 }

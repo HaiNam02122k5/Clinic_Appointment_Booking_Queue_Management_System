@@ -1,5 +1,9 @@
 ﻿using Clinic.API.Models;
+using Clinic.Application.Contracts;
 using Clinic.Application.Features.Auth.Commands;
+using Clinic.Application.Features.Users.NewFolder;
+using Clinic.Application.Features.Users.Queries;
+using Clinic.Application.Interfaces;
 using MapsterMapper;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -13,11 +17,13 @@ namespace Clinic.API.Controllers
     {
         private readonly ISender _sender;
         private readonly IMapper _mapper;
+        private readonly ICurrentUser _currentUser;
 
-        public AuthController(ISender sender, IMapper mapper)
+        public AuthController(ISender sender, IMapper mapper, ICurrentUser currentUser)
         {
             _sender = sender;
             _mapper = mapper;
+            _currentUser = currentUser;
         }
 
         [HttpPost("login")]
@@ -106,5 +112,40 @@ namespace Clinic.API.Controllers
                 accessToken = response.AccessToken
             });
         }
+
+        [HttpGet("me")]
+        [Authorize]
+        [ProducesResponseType(typeof(UserDetailDto), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetUserInfo()
+        {
+            var userId = _currentUser.UserId ?? throw new UnauthorizedAccessException("User not found.");
+            
+            var command = new GetUserQuery(userId);
+            var response = await _sender.Send(command);
+            return Ok(response);
+        }
+
+        [HttpPost("/forgot-password")]
+        [AllowAnonymous]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+        {
+            var command = _mapper.Map<ForgotPasswordCommand>(request);
+            await _sender.Send(command);
+            return Ok(new { message = "If the email exists, a password reset link has been sent." });
+        }
+
+        [HttpPost("/change-password")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> ChangePassword([FromBody] UpdatePasswordRequest request)
+        {
+            var command = _mapper.Map<UpdatePasswordCommand>(request);
+            await _sender.Send(command);
+            return Ok(new { message = "Password updated successfully." });
+        }
+
     }
 }

@@ -17,6 +17,14 @@ namespace Clinic.Application.Interfaces
         Task<User?> GetByIdAsync(Guid id);
 
         /// <summary>
+        /// Hash and store the new password for the specified user. Throws an exception if the user is null or if the new password is invalid.
+        /// </summary>
+        /// <param name="user"></param>
+        /// <param name="newPassword"></param>
+        Task UpdatePassword(User user, string newPassword);
+        Task VerifyAndUpdatePassword(Guid UserId, string currentPassword, string newPassword);
+
+        /// <summary>
         /// Verifies the user's credentials and returns the user if valid, otherwise returns null.
         /// </summary>
         /// <returns></returns>

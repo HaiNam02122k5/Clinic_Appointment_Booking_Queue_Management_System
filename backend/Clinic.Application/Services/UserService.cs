@@ -74,5 +74,28 @@ namespace Clinic.Application.Services
 
             return user;
         }
+
+        public async Task UpdatePassword(User user, string password)
+        {
+            var hashedPassword = _passwordHasher.HashPassword(password);
+            user.ResetPassword(hashedPassword);
+            await _userRepository.UpdateAsync(user);
+        }
+
+        public async Task VerifyAndUpdatePassword(Guid userId, string currentPassword, string newPassword)
+        {
+            var user = await GetByIdAsync(userId);
+            if (user == null)
+            {
+                throw new ArgumentException("User not found.");
+            }
+
+            if (!_passwordHasher.VerifyPassword(currentPassword, user.PasswordHash))
+            {
+                throw new UnauthorizedAccessException("Current password is incorrect.");
+            }
+
+            await UpdatePassword(user, newPassword);
+        }
     }
 }

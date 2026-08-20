@@ -1,4 +1,5 @@
 using Clinic.Application.Common.Models;
+using Clinic.Application.Contracts;
 using Clinic.Application.Interfaces;
 using Clinic.Domain.Entities;
 using Clinic.Domain.Enums;
@@ -36,6 +37,54 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             }
 
             return await query.ToListAsync();
+        }
+
+        public async Task<Dictionary<string, IValueWithChange>> GetDashboardData()
+        {
+            var now = DateTime.UtcNow;
+            var currentPeriodStart = now.AddDays(-30);
+            var previousPeriodStart = now.AddDays(-60);
+
+            var stats = await _context.Doctors
+                .Where(d => !d.IsDeleted)
+                .GroupBy(d => 1)
+                .Select(g => new
+                {
+                    CurrentTotal = g.Count(d => d.CreatedAt >= currentPeriodStart && d.CreatedAt < now),
+                    PreviousTotal = g.Count(d => d.CreatedAt >= previousPeriodStart && d.CreatedAt < currentPeriodStart),
+                    CurrentActive = g.Count(d => d.Status == DoctorStatus.Active && d.CreatedAt >= currentPeriodStart && d.CreatedAt < now),
+                    PreviousActive = g.Count(d => d.Status == DoctorStatus.Active && d.CreatedAt >= previousPeriodStart && d.CreatedAt < currentPeriodStart)
+                })
+                .FirstOrDefaultAsync();
+
+            var currentTotal = stats?.CurrentTotal ?? 0;
+            var previousTotal = stats?.PreviousTotal ?? 0;
+            var currentActive = stats?.CurrentActive ?? 0;
+            var previousActive = stats?.PreviousActive ?? 0;
+
+            return new Dictionary<string, IValueWithChange>
+            {
+                ["TotalDoctors"] = new ValueWithChange<int>
+                {
+                    Value = currentTotal,
+                    Change = CalculatePercentChange(currentTotal, previousTotal)
+                },
+                ["ActiveDoctors"] = new ValueWithChange<int>
+                {
+                    Value = currentActive,
+                    Change = CalculatePercentChange(currentActive, previousActive)
+                }
+            };
+        }
+
+        private static double CalculatePercentChange(double currentValue, double previousValue)
+        {
+            if (previousValue == 0)
+            {
+                return currentValue == 0 ? 0 : 100;
+            }
+
+            return (currentValue - previousValue) / previousValue * 100;
         }
 
         public async Task<Doctor?> GetInfoByIdAsync(Guid? doctorId)

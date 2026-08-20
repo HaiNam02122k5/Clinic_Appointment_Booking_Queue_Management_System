@@ -162,6 +162,188 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         .IsUnique();
 
                     b.ToTable("Doctors", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("a0000004-0000-0000-0000-000000000001"),
+                            Biography = "Sample profile for Nguyen Van An.",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmployeeId = new Guid("a0000003-0000-0000-0000-000000000001"),
+                            ExperienceYears = 6,
+                            IsDeleted = false,
+                            LicenseNumber = "LIC-0001",
+                            Qualification = "MD, Cardiology Specialist I",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000004-0000-0000-0000-000000000002"),
+                            Biography = "Sample profile for Tran Thi Binh.",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmployeeId = new Guid("a0000003-0000-0000-0000-000000000002"),
+                            ExperienceYears = 7,
+                            IsDeleted = false,
+                            LicenseNumber = "LIC-0002",
+                            Qualification = "MD, Cardiology Specialist II",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000004-0000-0000-0000-000000000003"),
+                            Biography = "Sample profile for Le Minh Chau.",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmployeeId = new Guid("a0000003-0000-0000-0000-000000000003"),
+                            ExperienceYears = 8,
+                            IsDeleted = false,
+                            LicenseNumber = "LIC-0003",
+                            Qualification = "MD, Interventional Cardiology",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000004-0000-0000-0000-000000000004"),
+                            Biography = "Sample profile for Pham Quoc Dung.",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmployeeId = new Guid("a0000003-0000-0000-0000-000000000004"),
+                            ExperienceYears = 9,
+                            IsDeleted = false,
+                            LicenseNumber = "LIC-0004",
+                            Qualification = "MD, Dermatology Specialist I",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000004-0000-0000-0000-000000000005"),
+                            Biography = "Sample profile for Hoang Thi Em.",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmployeeId = new Guid("a0000003-0000-0000-0000-000000000005"),
+                            ExperienceYears = 10,
+                            IsDeleted = false,
+                            LicenseNumber = "LIC-0005",
+                            Qualification = "MD, Cosmetic Dermatology",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000004-0000-0000-0000-000000000006"),
+                            Biography = "Sample profile for Vu Van Phuc.",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmployeeId = new Guid("a0000003-0000-0000-0000-000000000006"),
+                            ExperienceYears = 11,
+                            IsDeleted = false,
+                            LicenseNumber = "LIC-0006",
+                            Qualification = "MD, Dermatology Specialist II",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000004-0000-0000-0000-000000000007"),
+                            Biography = "Sample profile for Dang Thi Giang.",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmployeeId = new Guid("a0000003-0000-0000-0000-000000000007"),
+                            ExperienceYears = 12,
+                            IsDeleted = false,
+                            LicenseNumber = "LIC-0007",
+                            Qualification = "MD, Pediatrics Specialist I",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000004-0000-0000-0000-000000000008"),
+                            Biography = "Sample profile for Bui Van Hai.",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmployeeId = new Guid("a0000003-0000-0000-0000-000000000008"),
+                            ExperienceYears = 13,
+                            IsDeleted = false,
+                            LicenseNumber = "LIC-0008",
+                            Qualification = "MD, Neonatology",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000004-0000-0000-0000-000000000009"),
+                            Biography = "Sample profile for Ngo Thi Hoa.",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmployeeId = new Guid("a0000003-0000-0000-0000-000000000009"),
+                            ExperienceYears = 14,
+                            IsDeleted = false,
+                            LicenseNumber = "LIC-0009",
+                            Qualification = "MD, Pediatrics Specialist II",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000004-0000-0000-0000-000000000010"),
+                            Biography = "Sample profile for Duong Van Khoa.",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmployeeId = new Guid("a0000003-0000-0000-0000-000000000010"),
+                            ExperienceYears = 15,
+                            IsDeleted = false,
+                            LicenseNumber = "LIC-0010",
+                            Qualification = "MD, Orthopedic Surgery",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000004-0000-0000-0000-000000000011"),
+                            Biography = "Sample profile for Luong Thi Lan.",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmployeeId = new Guid("a0000003-0000-0000-0000-000000000011"),
+                            ExperienceYears = 16,
+                            IsDeleted = false,
+                            LicenseNumber = "LIC-0011",
+                            Qualification = "MD, Sports Medicine",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000004-0000-0000-0000-000000000012"),
+                            Biography = "Sample profile for Trinh Van Minh.",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmployeeId = new Guid("a0000003-0000-0000-0000-000000000012"),
+                            ExperienceYears = 17,
+                            IsDeleted = false,
+                            LicenseNumber = "LIC-0012",
+                            Qualification = "MD, Trauma Orthopedics",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000004-0000-0000-0000-000000000013"),
+                            Biography = "Sample profile for Cao Thi Nga.",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmployeeId = new Guid("a0000003-0000-0000-0000-000000000013"),
+                            ExperienceYears = 18,
+                            IsDeleted = false,
+                            LicenseNumber = "LIC-0013",
+                            Qualification = "MD, Family Medicine",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000004-0000-0000-0000-000000000014"),
+                            Biography = "Sample profile for Phan Van Quang.",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmployeeId = new Guid("a0000003-0000-0000-0000-000000000014"),
+                            ExperienceYears = 19,
+                            IsDeleted = false,
+                            LicenseNumber = "LIC-0014",
+                            Qualification = "MD, Internal Medicine",
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000004-0000-0000-0000-000000000015"),
+                            Biography = "Sample profile for Do Thi Quyen.",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmployeeId = new Guid("a0000003-0000-0000-0000-000000000015"),
+                            ExperienceYears = 20,
+                            IsDeleted = false,
+                            LicenseNumber = "LIC-0015",
+                            Qualification = "MD, General Practice",
+                            Status = "Active"
+                        });
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.Employee", b =>
@@ -201,6 +383,206 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         .IsUnique();
 
                     b.ToTable("Employees", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("a0000003-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            HireDate = new DateOnly(2022, 2, 15),
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000001"),
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000003-0000-0000-0000-000000000002"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            HireDate = new DateOnly(2022, 3, 15),
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000002"),
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000003-0000-0000-0000-000000000003"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            HireDate = new DateOnly(2022, 4, 15),
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000003"),
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000003-0000-0000-0000-000000000004"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            HireDate = new DateOnly(2022, 5, 15),
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000004"),
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000003-0000-0000-0000-000000000005"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            HireDate = new DateOnly(2022, 6, 15),
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000005"),
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000003-0000-0000-0000-000000000006"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            HireDate = new DateOnly(2022, 7, 15),
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000006"),
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000003-0000-0000-0000-000000000007"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            HireDate = new DateOnly(2022, 8, 15),
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000007"),
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000003-0000-0000-0000-000000000008"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            HireDate = new DateOnly(2022, 9, 15),
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000008"),
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000003-0000-0000-0000-000000000009"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            HireDate = new DateOnly(2022, 10, 15),
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000009"),
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000003-0000-0000-0000-000000000010"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            HireDate = new DateOnly(2022, 11, 15),
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000010"),
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000003-0000-0000-0000-000000000011"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            HireDate = new DateOnly(2022, 12, 15),
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000011"),
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000003-0000-0000-0000-000000000012"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            HireDate = new DateOnly(2023, 1, 15),
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000012"),
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000003-0000-0000-0000-000000000013"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            HireDate = new DateOnly(2023, 2, 15),
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000013"),
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000003-0000-0000-0000-000000000014"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            HireDate = new DateOnly(2023, 3, 15),
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000014"),
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000003-0000-0000-0000-000000000015"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            HireDate = new DateOnly(2023, 4, 15),
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000015"),
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000003-0000-0000-0000-000000000016"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            HireDate = new DateOnly(2023, 5, 15),
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000016"),
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000003-0000-0000-0000-000000000017"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            HireDate = new DateOnly(2023, 6, 15),
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000017"),
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000003-0000-0000-0000-000000000018"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            HireDate = new DateOnly(2023, 7, 15),
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000018"),
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000003-0000-0000-0000-000000000019"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            HireDate = new DateOnly(2023, 8, 15),
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000019"),
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000003-0000-0000-0000-000000000020"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            HireDate = new DateOnly(2023, 9, 15),
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000020"),
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000003-0000-0000-0000-000000000021"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            HireDate = new DateOnly(2023, 10, 15),
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000021"),
+                            Status = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000003-0000-0000-0000-000000000022"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            HireDate = new DateOnly(2023, 11, 15),
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000022"),
+                            Status = "Active"
+                        });
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.MedicalReport", b =>
@@ -346,6 +728,278 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         .IsUnique();
 
                     b.ToTable("Patients", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("a0000005-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmergencyContact = "0908000001",
+                            InsuranceNumber = "BHXH-000001",
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000023")
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000005-0000-0000-0000-000000000002"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmergencyContact = "0908000002",
+                            InsuranceNumber = "BHXH-000002",
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000024")
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000005-0000-0000-0000-000000000003"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmergencyContact = "0908000003",
+                            InsuranceNumber = "BHXH-000003",
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000025")
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000005-0000-0000-0000-000000000004"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmergencyContact = "0908000004",
+                            InsuranceNumber = "BHXH-000004",
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000026")
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000005-0000-0000-0000-000000000005"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmergencyContact = "0908000005",
+                            InsuranceNumber = "BHXH-000005",
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000027")
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000005-0000-0000-0000-000000000006"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmergencyContact = "0908000006",
+                            InsuranceNumber = "BHXH-000006",
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000028")
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000005-0000-0000-0000-000000000007"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmergencyContact = "0908000007",
+                            InsuranceNumber = "BHXH-000007",
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000029")
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000005-0000-0000-0000-000000000008"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmergencyContact = "0908000008",
+                            InsuranceNumber = "BHXH-000008",
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000030")
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000005-0000-0000-0000-000000000009"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmergencyContact = "0908000009",
+                            InsuranceNumber = "BHXH-000009",
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000031")
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000005-0000-0000-0000-000000000010"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmergencyContact = "0908000010",
+                            InsuranceNumber = "BHXH-000010",
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000032")
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000005-0000-0000-0000-000000000011"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmergencyContact = "0908000011",
+                            InsuranceNumber = "BHXH-000011",
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000033")
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000005-0000-0000-0000-000000000012"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmergencyContact = "0908000012",
+                            InsuranceNumber = "BHXH-000012",
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000034")
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000005-0000-0000-0000-000000000013"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmergencyContact = "0908000013",
+                            InsuranceNumber = "BHXH-000013",
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000035")
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000005-0000-0000-0000-000000000014"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmergencyContact = "0908000014",
+                            InsuranceNumber = "BHXH-000014",
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000036")
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000005-0000-0000-0000-000000000015"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmergencyContact = "0908000015",
+                            InsuranceNumber = "BHXH-000015",
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000037")
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000005-0000-0000-0000-000000000016"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmergencyContact = "0908000016",
+                            InsuranceNumber = "BHXH-000016",
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000038")
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000005-0000-0000-0000-000000000017"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmergencyContact = "0908000017",
+                            InsuranceNumber = "BHXH-000017",
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000039")
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000005-0000-0000-0000-000000000018"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmergencyContact = "0908000018",
+                            InsuranceNumber = "BHXH-000018",
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000040")
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000005-0000-0000-0000-000000000019"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmergencyContact = "0908000019",
+                            InsuranceNumber = "BHXH-000019",
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000041")
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000005-0000-0000-0000-000000000020"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmergencyContact = "0908000020",
+                            InsuranceNumber = "BHXH-000020",
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000042")
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000005-0000-0000-0000-000000000021"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmergencyContact = "0908000021",
+                            InsuranceNumber = "BHXH-000021",
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000043")
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000005-0000-0000-0000-000000000022"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmergencyContact = "0908000022",
+                            InsuranceNumber = "BHXH-000022",
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000044")
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000005-0000-0000-0000-000000000023"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmergencyContact = "0908000023",
+                            InsuranceNumber = "BHXH-000023",
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000045")
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000005-0000-0000-0000-000000000024"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmergencyContact = "0908000024",
+                            InsuranceNumber = "BHXH-000024",
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000046")
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000005-0000-0000-0000-000000000025"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmergencyContact = "0908000025",
+                            InsuranceNumber = "BHXH-000025",
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000047")
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000005-0000-0000-0000-000000000026"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmergencyContact = "0908000026",
+                            InsuranceNumber = "BHXH-000026",
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000048")
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000005-0000-0000-0000-000000000027"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmergencyContact = "0908000027",
+                            InsuranceNumber = "BHXH-000027",
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000049")
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000005-0000-0000-0000-000000000028"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmergencyContact = "0908000028",
+                            InsuranceNumber = "BHXH-000028",
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000050")
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000005-0000-0000-0000-000000000029"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmergencyContact = "0908000029",
+                            InsuranceNumber = "BHXH-000029",
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000051")
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000005-0000-0000-0000-000000000030"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            EmergencyContact = "0908000030",
+                            InsuranceNumber = "BHXH-000030",
+                            IsDeleted = false,
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000052")
+                        });
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.Permission", b =>
@@ -859,6 +1513,632 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         .HasFilter("[PhoneNumber] IS NOT NULL");
 
                     b.ToTable("Persons", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000001"),
+                            Address = "1201 Nguyen Trai, District 2, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1978, 4, 12),
+                            Email = "doctor1@clinic.local",
+                            FullName = "Nguyen Van An",
+                            Gender = 0,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000001"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000002"),
+                            Address = "1202 Nguyen Trai, District 3, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1982, 8, 3),
+                            Email = "doctor2@clinic.local",
+                            FullName = "Tran Thi Binh",
+                            Gender = 1,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000002"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000003"),
+                            Address = "1203 Nguyen Trai, District 4, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1975, 1, 21),
+                            Email = "doctor3@clinic.local",
+                            FullName = "Le Minh Chau",
+                            Gender = 0,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000003"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000004"),
+                            Address = "1204 Nguyen Trai, District 5, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1980, 11, 9),
+                            Email = "doctor4@clinic.local",
+                            FullName = "Pham Quoc Dung",
+                            Gender = 0,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000004"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000005"),
+                            Address = "1205 Nguyen Trai, District 6, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1985, 2, 17),
+                            Email = "doctor5@clinic.local",
+                            FullName = "Hoang Thi Em",
+                            Gender = 1,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000005"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000006"),
+                            Address = "1206 Nguyen Trai, District 7, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1979, 7, 28),
+                            Email = "doctor6@clinic.local",
+                            FullName = "Vu Van Phuc",
+                            Gender = 0,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000006"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000007"),
+                            Address = "1207 Nguyen Trai, District 8, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1983, 5, 6),
+                            Email = "doctor7@clinic.local",
+                            FullName = "Dang Thi Giang",
+                            Gender = 1,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000007"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000008"),
+                            Address = "1208 Nguyen Trai, District 9, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1976, 12, 14),
+                            Email = "doctor8@clinic.local",
+                            FullName = "Bui Van Hai",
+                            Gender = 0,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000008"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000009"),
+                            Address = "1209 Nguyen Trai, District 10, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1981, 9, 30),
+                            Email = "doctor9@clinic.local",
+                            FullName = "Ngo Thi Hoa",
+                            Gender = 1,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000009"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000010"),
+                            Address = "1210 Nguyen Trai, District 11, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1974, 3, 18),
+                            Email = "doctor10@clinic.local",
+                            FullName = "Duong Van Khoa",
+                            Gender = 0,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000010"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000011"),
+                            Address = "1211 Nguyen Trai, District 12, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1984, 6, 22),
+                            Email = "doctor11@clinic.local",
+                            FullName = "Luong Thi Lan",
+                            Gender = 1,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000011"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000012"),
+                            Address = "1212 Nguyen Trai, District 1, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1977, 10, 5),
+                            Email = "doctor12@clinic.local",
+                            FullName = "Trinh Van Minh",
+                            Gender = 0,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000012"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000013"),
+                            Address = "1213 Nguyen Trai, District 2, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1986, 1, 11),
+                            Email = "doctor13@clinic.local",
+                            FullName = "Cao Thi Nga",
+                            Gender = 1,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000013"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000014"),
+                            Address = "1214 Nguyen Trai, District 3, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1973, 8, 19),
+                            Email = "doctor14@clinic.local",
+                            FullName = "Phan Van Quang",
+                            Gender = 0,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000014"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000015"),
+                            Address = "1215 Nguyen Trai, District 4, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1988, 4, 25),
+                            Email = "doctor15@clinic.local",
+                            FullName = "Do Thi Quyen",
+                            Gender = 1,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000015"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000016"),
+                            Address = "1216 Nguyen Trai, District 5, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1972, 2, 8),
+                            Email = "admin1@clinic.local",
+                            FullName = "Vo Thanh Son",
+                            Gender = 0,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000016"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000017"),
+                            Address = "1217 Nguyen Trai, District 6, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1980, 12, 1),
+                            Email = "admin2@clinic.local",
+                            FullName = "Mai Huu Tam",
+                            Gender = 0,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000017"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000018"),
+                            Address = "1218 Nguyen Trai, District 7, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1992, 3, 14),
+                            Email = "receptionist1@clinic.local",
+                            FullName = "Ly Thi Uyen",
+                            Gender = 1,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000018"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000019"),
+                            Address = "1219 Nguyen Trai, District 8, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1990, 7, 7),
+                            Email = "receptionist2@clinic.local",
+                            FullName = "Ho Van Vinh",
+                            Gender = 0,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000019"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000020"),
+                            Address = "1220 Nguyen Trai, District 9, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1993, 11, 23),
+                            Email = "receptionist3@clinic.local",
+                            FullName = "Dinh Thi Xuan",
+                            Gender = 1,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000020"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000021"),
+                            Address = "1221 Nguyen Trai, District 10, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1989, 5, 16),
+                            Email = "receptionist4@clinic.local",
+                            FullName = "Ta Van Yen",
+                            Gender = 0,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000021"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000022"),
+                            Address = "1222 Nguyen Trai, District 11, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1991, 9, 2),
+                            Email = "receptionist5@clinic.local",
+                            FullName = "Chau Thi Anh",
+                            Gender = 1,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000022"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000023"),
+                            Address = "1223 Nguyen Trai, District 12, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1995, 1, 4),
+                            Email = "patient1@clinic.local",
+                            FullName = "Nguyen Thi Bach",
+                            Gender = 1,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000023"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000024"),
+                            Address = "1224 Nguyen Trai, District 1, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1987, 6, 18),
+                            Email = "patient2@clinic.local",
+                            FullName = "Tran Van Cuong",
+                            Gender = 0,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000024"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000025"),
+                            Address = "1225 Nguyen Trai, District 2, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1998, 8, 9),
+                            Email = "patient3@clinic.local",
+                            FullName = "Le Thi Dao",
+                            Gender = 1,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000025"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000026"),
+                            Address = "1226 Nguyen Trai, District 3, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1994, 2, 27),
+                            Email = "patient4@clinic.local",
+                            FullName = "Pham Van Dat",
+                            Gender = 0,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000026"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000027"),
+                            Address = "1227 Nguyen Trai, District 4, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(2000, 10, 13),
+                            Email = "patient5@clinic.local",
+                            FullName = "Hoang Thi Hanh",
+                            Gender = 1,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000027"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000028"),
+                            Address = "1228 Nguyen Trai, District 5, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1986, 12, 20),
+                            Email = "patient6@clinic.local",
+                            FullName = "Huynh Van Hung",
+                            Gender = 0,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000028"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000029"),
+                            Address = "1229 Nguyen Trai, District 6, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1996, 4, 8),
+                            Email = "patient7@clinic.local",
+                            FullName = "Phan Thi Kim",
+                            Gender = 1,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000029"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000030"),
+                            Address = "1230 Nguyen Trai, District 7, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1991, 7, 31),
+                            Email = "patient8@clinic.local",
+                            FullName = "Vu Van Long",
+                            Gender = 0,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000030"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000031"),
+                            Address = "1231 Nguyen Trai, District 8, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1999, 3, 3),
+                            Email = "patient9@clinic.local",
+                            FullName = "Vo Thi Mai",
+                            Gender = 1,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000031"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000032"),
+                            Address = "1232 Nguyen Trai, District 9, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1985, 5, 15),
+                            Email = "patient10@clinic.local",
+                            FullName = "Dang Van Nam",
+                            Gender = 0,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000032"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000033"),
+                            Address = "1233 Nguyen Trai, District 10, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1997, 9, 21),
+                            Email = "patient11@clinic.local",
+                            FullName = "Bui Thi Oanh",
+                            Gender = 1,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000033"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000034"),
+                            Address = "1234 Nguyen Trai, District 11, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1993, 1, 29),
+                            Email = "patient12@clinic.local",
+                            FullName = "Ngo Van Phat",
+                            Gender = 0,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000034"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000035"),
+                            Address = "1235 Nguyen Trai, District 12, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(2001, 11, 6),
+                            Email = "patient13@clinic.local",
+                            FullName = "Duong Thi Quynh",
+                            Gender = 1,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000035"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000036"),
+                            Address = "1236 Nguyen Trai, District 1, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1984, 8, 12),
+                            Email = "patient14@clinic.local",
+                            FullName = "Luong Van Sang",
+                            Gender = 0,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000036"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000037"),
+                            Address = "1237 Nguyen Trai, District 2, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1992, 2, 2),
+                            Email = "patient15@clinic.local",
+                            FullName = "Trinh Thi Trang",
+                            Gender = 1,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000037"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000038"),
+                            Address = "1238 Nguyen Trai, District 3, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1988, 6, 26),
+                            Email = "patient16@clinic.local",
+                            FullName = "Cao Van Tuan",
+                            Gender = 0,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000038"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000039"),
+                            Address = "1239 Nguyen Trai, District 4, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1996, 12, 17),
+                            Email = "patient17@clinic.local",
+                            FullName = "Phan Thi Uyen",
+                            Gender = 1,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000039"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000040"),
+                            Address = "1240 Nguyen Trai, District 5, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1983, 4, 4),
+                            Email = "patient18@clinic.local",
+                            FullName = "Do Van Viet",
+                            Gender = 0,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000040"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000041"),
+                            Address = "1241 Nguyen Trai, District 6, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(2002, 7, 19),
+                            Email = "patient19@clinic.local",
+                            FullName = "Ly Thi Xinh",
+                            Gender = 1,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000041"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000042"),
+                            Address = "1242 Nguyen Trai, District 7, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1990, 10, 10),
+                            Email = "patient20@clinic.local",
+                            FullName = "Ho Van Yen",
+                            Gender = 0,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000042"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000043"),
+                            Address = "1243 Nguyen Trai, District 8, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1994, 1, 22),
+                            Email = "patient21@clinic.local",
+                            FullName = "Dinh Thi An",
+                            Gender = 1,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000043"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000044"),
+                            Address = "1244 Nguyen Trai, District 9, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1989, 3, 27),
+                            Email = "patient22@clinic.local",
+                            FullName = "Ta Van Bao",
+                            Gender = 0,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000044"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000045"),
+                            Address = "1245 Nguyen Trai, District 10, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1998, 5, 5),
+                            Email = "patient23@clinic.local",
+                            FullName = "Chau Thi Cam",
+                            Gender = 1,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000045"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000046"),
+                            Address = "1246 Nguyen Trai, District 11, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1979, 9, 14),
+                            Email = "patient24@clinic.local",
+                            FullName = "Nguyen Van Duc",
+                            Gender = 0,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000046"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000047"),
+                            Address = "1247 Nguyen Trai, District 12, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(2003, 8, 8),
+                            Email = "patient25@clinic.local",
+                            FullName = "Tran Thi En",
+                            Gender = 1,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000047"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000048"),
+                            Address = "1248 Nguyen Trai, District 1, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1995, 11, 11),
+                            Email = "patient26@clinic.local",
+                            FullName = "Le Van Giang",
+                            Gender = 0,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000048"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000049"),
+                            Address = "1249 Nguyen Trai, District 2, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1982, 2, 14),
+                            Email = "patient27@clinic.local",
+                            FullName = "Pham Thi Hien",
+                            Gender = 1,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000049"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000050"),
+                            Address = "1250 Nguyen Trai, District 3, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1997, 6, 1),
+                            Email = "patient28@clinic.local",
+                            FullName = "Hoang Van Kiet",
+                            Gender = 0,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000050"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000051"),
+                            Address = "1251 Nguyen Trai, District 4, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(2000, 12, 24),
+                            Email = "patient29@clinic.local",
+                            FullName = "Huynh Thi Linh",
+                            Gender = 1,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000051"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000001-0000-0000-0000-000000000052"),
+                            Address = "1252 Nguyen Trai, District 5, Ho Chi Minh City",
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DateOfBirth = new DateOnly(1981, 4, 30),
+                            Email = "patient30@clinic.local",
+                            FullName = "Phan Van My",
+                            Gender = 0,
+                            IsDeleted = false,
+                            PhoneNumber = "0901000052"
+                        });
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.QueueCounter", b =>
@@ -1537,6 +2817,53 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         .HasFilter("[IsDeleted] = 0");
 
                     b.ToTable("Specialties", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("a0000006-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Heart and cardiovascular care",
+                            EstablishedDate = new DateOnly(2010, 1, 15),
+                            IsDeleted = false,
+                            Name = "Cardiology"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000006-0000-0000-0000-000000000002"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Skin, hair, and nail care",
+                            EstablishedDate = new DateOnly(2012, 3, 1),
+                            IsDeleted = false,
+                            Name = "Dermatology"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000006-0000-0000-0000-000000000003"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Medical care for infants and children",
+                            EstablishedDate = new DateOnly(2008, 6, 20),
+                            IsDeleted = false,
+                            Name = "Pediatrics"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000006-0000-0000-0000-000000000004"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Bones, joints, and musculoskeletal care",
+                            EstablishedDate = new DateOnly(2011, 9, 10),
+                            IsDeleted = false,
+                            Name = "Orthopedics"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000006-0000-0000-0000-000000000005"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Primary care and general medicine",
+                            EstablishedDate = new DateOnly(2005, 4, 1),
+                            IsDeleted = false,
+                            Name = "General Practice"
+                        });
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.User", b =>
@@ -1578,6 +2905,528 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         .IsUnique();
 
                     b.ToTable("Users", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000001"),
+                            Username = "doctor1"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000002"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000002"),
+                            Username = "doctor2"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000003"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000003"),
+                            Username = "doctor3"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000004"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000004"),
+                            Username = "doctor4"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000005"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000005"),
+                            Username = "doctor5"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000006"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000006"),
+                            Username = "doctor6"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000007"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000007"),
+                            Username = "doctor7"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000008"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000008"),
+                            Username = "doctor8"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000009"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000009"),
+                            Username = "doctor9"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000010"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000010"),
+                            Username = "doctor10"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000011"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000011"),
+                            Username = "doctor11"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000012"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000012"),
+                            Username = "doctor12"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000013"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000013"),
+                            Username = "doctor13"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000014"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000014"),
+                            Username = "doctor14"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000015"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000015"),
+                            Username = "doctor15"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000016"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000016"),
+                            Username = "admin1"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000017"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000017"),
+                            Username = "admin2"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000018"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000018"),
+                            Username = "receptionist1"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000019"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000019"),
+                            Username = "receptionist2"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000020"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000020"),
+                            Username = "receptionist3"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000021"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000021"),
+                            Username = "receptionist4"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000022"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000022"),
+                            Username = "receptionist5"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000023"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000023"),
+                            Username = "patient1"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000024"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000024"),
+                            Username = "patient2"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000025"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000025"),
+                            Username = "patient3"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000026"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000026"),
+                            Username = "patient4"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000027"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000027"),
+                            Username = "patient5"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000028"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000028"),
+                            Username = "patient6"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000029"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000029"),
+                            Username = "patient7"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000030"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000030"),
+                            Username = "patient8"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000031"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000031"),
+                            Username = "patient9"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000032"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000032"),
+                            Username = "patient10"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000033"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000033"),
+                            Username = "patient11"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000034"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000034"),
+                            Username = "patient12"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000035"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000035"),
+                            Username = "patient13"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000036"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000036"),
+                            Username = "patient14"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000037"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000037"),
+                            Username = "patient15"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000038"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000038"),
+                            Username = "patient16"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000039"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000039"),
+                            Username = "patient17"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000040"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000040"),
+                            Username = "patient18"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000041"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000041"),
+                            Username = "patient19"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000042"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000042"),
+                            Username = "patient20"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000043"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000043"),
+                            Username = "patient21"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000044"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000044"),
+                            Username = "patient22"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000045"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000045"),
+                            Username = "patient23"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000046"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000046"),
+                            Username = "patient24"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000047"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000047"),
+                            Username = "patient25"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000048"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000048"),
+                            Username = "patient26"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000049"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000049"),
+                            Username = "patient27"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000050"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000050"),
+                            Username = "patient28"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000051"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000051"),
+                            Username = "patient29"
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000002-0000-0000-0000-000000000052"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            IsActive = true,
+                            IsDeleted = false,
+                            PasswordHash = "$2a$11$G0m4K.LSMeRwVPfVM1CMOux4zgF46UDGK57iWrKIDIAnH/kqOGv.K",
+                            PersonId = new Guid("a0000001-0000-0000-0000-000000000052"),
+                            Username = "patient30"
+                        });
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.UserRole", b =>
@@ -1593,6 +3442,378 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("UserRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000001"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000002"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000003"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000004"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000005"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000006"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000007"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000008"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000009"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000010"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000011"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000012"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000013"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000014"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000015"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000016"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000017"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000018"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000019"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000020"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000021"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000022"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000023"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000024"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000025"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000026"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000027"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000028"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000029"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000030"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000031"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000032"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000033"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000034"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000035"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000036"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000037"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000038"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000039"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000040"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000041"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000042"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000043"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000044"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000045"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000046"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000047"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000048"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000049"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000050"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000051"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000052"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000001"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000004")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000002"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000004")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000003"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000004")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000004"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000004")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000005"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000004")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000006"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000004")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000007"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000004")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000008"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000004")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000009"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000004")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000010"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000004")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000011"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000004")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000012"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000004")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000013"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000004")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000014"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000004")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000015"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000004")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000016"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000001")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000017"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000001")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000018"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000019"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000020"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000021"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            UserId = new Guid("a0000002-0000-0000-0000-000000000022"),
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000003")
+                        });
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.WorkHistory", b =>
@@ -1629,6 +3850,143 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                     b.HasIndex("SpecialtyId");
 
                     b.ToTable("WorkHistories", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("a0000007-0000-0000-0000-000000000001"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DoctorId = new Guid("a0000004-0000-0000-0000-000000000001"),
+                            IsDeleted = false,
+                            SpecialtyId = new Guid("a0000006-0000-0000-0000-000000000001"),
+                            StartDate = new DateOnly(2022, 2, 15)
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000007-0000-0000-0000-000000000002"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DoctorId = new Guid("a0000004-0000-0000-0000-000000000002"),
+                            IsDeleted = false,
+                            SpecialtyId = new Guid("a0000006-0000-0000-0000-000000000001"),
+                            StartDate = new DateOnly(2022, 3, 15)
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000007-0000-0000-0000-000000000003"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DoctorId = new Guid("a0000004-0000-0000-0000-000000000003"),
+                            IsDeleted = false,
+                            SpecialtyId = new Guid("a0000006-0000-0000-0000-000000000001"),
+                            StartDate = new DateOnly(2022, 4, 15)
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000007-0000-0000-0000-000000000004"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DoctorId = new Guid("a0000004-0000-0000-0000-000000000004"),
+                            IsDeleted = false,
+                            SpecialtyId = new Guid("a0000006-0000-0000-0000-000000000002"),
+                            StartDate = new DateOnly(2022, 5, 15)
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000007-0000-0000-0000-000000000005"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DoctorId = new Guid("a0000004-0000-0000-0000-000000000005"),
+                            IsDeleted = false,
+                            SpecialtyId = new Guid("a0000006-0000-0000-0000-000000000002"),
+                            StartDate = new DateOnly(2022, 6, 15)
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000007-0000-0000-0000-000000000006"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DoctorId = new Guid("a0000004-0000-0000-0000-000000000006"),
+                            IsDeleted = false,
+                            SpecialtyId = new Guid("a0000006-0000-0000-0000-000000000002"),
+                            StartDate = new DateOnly(2022, 7, 15)
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000007-0000-0000-0000-000000000007"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DoctorId = new Guid("a0000004-0000-0000-0000-000000000007"),
+                            IsDeleted = false,
+                            SpecialtyId = new Guid("a0000006-0000-0000-0000-000000000003"),
+                            StartDate = new DateOnly(2022, 8, 15)
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000007-0000-0000-0000-000000000008"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DoctorId = new Guid("a0000004-0000-0000-0000-000000000008"),
+                            IsDeleted = false,
+                            SpecialtyId = new Guid("a0000006-0000-0000-0000-000000000003"),
+                            StartDate = new DateOnly(2022, 9, 15)
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000007-0000-0000-0000-000000000009"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DoctorId = new Guid("a0000004-0000-0000-0000-000000000009"),
+                            IsDeleted = false,
+                            SpecialtyId = new Guid("a0000006-0000-0000-0000-000000000003"),
+                            StartDate = new DateOnly(2022, 10, 15)
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000007-0000-0000-0000-000000000010"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DoctorId = new Guid("a0000004-0000-0000-0000-000000000010"),
+                            IsDeleted = false,
+                            SpecialtyId = new Guid("a0000006-0000-0000-0000-000000000004"),
+                            StartDate = new DateOnly(2022, 11, 15)
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000007-0000-0000-0000-000000000011"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DoctorId = new Guid("a0000004-0000-0000-0000-000000000011"),
+                            IsDeleted = false,
+                            SpecialtyId = new Guid("a0000006-0000-0000-0000-000000000004"),
+                            StartDate = new DateOnly(2022, 12, 15)
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000007-0000-0000-0000-000000000012"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DoctorId = new Guid("a0000004-0000-0000-0000-000000000012"),
+                            IsDeleted = false,
+                            SpecialtyId = new Guid("a0000006-0000-0000-0000-000000000004"),
+                            StartDate = new DateOnly(2023, 1, 15)
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000007-0000-0000-0000-000000000013"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DoctorId = new Guid("a0000004-0000-0000-0000-000000000013"),
+                            IsDeleted = false,
+                            SpecialtyId = new Guid("a0000006-0000-0000-0000-000000000005"),
+                            StartDate = new DateOnly(2023, 2, 15)
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000007-0000-0000-0000-000000000014"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DoctorId = new Guid("a0000004-0000-0000-0000-000000000014"),
+                            IsDeleted = false,
+                            SpecialtyId = new Guid("a0000006-0000-0000-0000-000000000005"),
+                            StartDate = new DateOnly(2023, 3, 15)
+                        },
+                        new
+                        {
+                            Id = new Guid("a0000007-0000-0000-0000-000000000015"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            DoctorId = new Guid("a0000004-0000-0000-0000-000000000015"),
+                            IsDeleted = false,
+                            SpecialtyId = new Guid("a0000006-0000-0000-0000-000000000005"),
+                            StartDate = new DateOnly(2023, 4, 15)
+                        });
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.WorkSchedule", b =>

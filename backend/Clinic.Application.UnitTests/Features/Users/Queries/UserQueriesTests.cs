@@ -43,7 +43,7 @@ namespace Clinic.Application.UnitTests.Features.Users.Queries
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal(user.Id, result.Id);
+            Assert.Equal(user.Id, result.UserId);
             Assert.Equal("doctor_bob", result.Username);
             Assert.Equal(user.Person.FullName, result.FullName);
         }

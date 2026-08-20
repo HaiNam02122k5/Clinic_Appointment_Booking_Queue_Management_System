@@ -13,7 +13,8 @@ namespace Clinic.Application.UnitTests.Common
 
         public Task<bool> ExistsForDoctorAndPatientAsync(Guid doctorId, Guid patientId)
         {
-            throw new NotImplementedException();
+            var exists = _appointments.Any(a => !a.IsDeleted && a.PatientId == patientId && a.WorkSchedule.DoctorId == doctorId);
+            return Task.FromResult(exists);
         }
 
         public async Task<PagedResult<Appointment>> GetAppointmentsByPatientIdAsync(Guid patientId, string category)
@@ -88,6 +89,21 @@ namespace Clinic.Application.UnitTests.Common
         public async Task<Appointment?> GetAppointmentChangelogAsync(Guid appointmentId)
         {
             return _appointments.FirstOrDefault(a => a.Id == appointmentId && !a.IsDeleted);
+        }
+
+        public Task<Dictionary<string, IValueWithChange>> GetDashboardData()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<StatisticsDataDto> GetStatistics(bool isWeekPeriod)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<PagedResult<Appointment>> GetAppointmentsByDateAsync(DateOnly date, int pageNumber, int pageSize)
+        {
+            throw new NotImplementedException();
         }
     }
 }
