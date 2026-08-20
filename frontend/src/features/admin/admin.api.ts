@@ -26,7 +26,12 @@ export const adminApi = {
     }
 
     try {
-      return await http.get<DashboardData>('/admin/dashboard').then((r) => r.data)
+      const res = await http.get<any>('/admin/dashboard').then((r) => r.data)
+      const data = res?.result !== undefined ? res.result : res
+      if (data && (data.totalAppointments || data.totalDoctors || data.totalPatients)) {
+        return data
+      }
+      throw new Error('Fallback required')
     } catch {
       // Fallback tổng hợp số liệu thực từ các API thực tế
       try {
@@ -79,8 +84,9 @@ export const adminApi = {
 
     try {
       const res = await http.get<any>('/admin/statistics', { params: { period } }).then((r) => r.data)
-      const byDay = res.appointmentsByDay || res.AppointmentsByDay || []
-      const byStatus = res.appointmentsByStatus || res.AppointmentsByStatus || []
+      const data = res?.result !== undefined ? res.result : res
+      const byDay = data?.appointmentsByDay || data?.AppointmentsByDay || []
+      const byStatus = data?.appointmentsByStatus || data?.AppointmentsByStatus || []
 
       const statusLabels: Record<number | string, string> = {
         0: 'Đang chờ',
@@ -153,7 +159,8 @@ export const adminApi = {
         })
         .then((r) => r.data)
 
-      const rawItems = res.items || res.Items || []
+      const data = res?.result !== undefined ? res.result : res
+      const rawItems = data?.items || data?.Items || []
       const items: AppointmentExtended[] = rawItems.map((a: any) => ({
         id: String(a.id || a.Id || ''),
         patientId: String(a.patientId || a.PatientId || ''),
@@ -170,8 +177,8 @@ export const adminApi = {
 
       return {
         items,
-        totalPages: res.totalPages || res.TotalPages || 1,
-        totalCount: res.totalCount || res.TotalCount || items.length,
+        totalPages: data?.totalPages || data?.TotalPages || 1,
+        totalCount: data?.totalCount ?? data?.TotalCount ?? items.length,
       }
     } catch {
       // Fallback từ danh sách ca trực thực tế hôm nay
@@ -206,13 +213,44 @@ export const adminApi = {
   },
 
   // GET /admin/appointments/summary
-  async getAppointmentSummary(startDate?: string, endDate?: string): Promise<TotalAppointmentSummary> {
+  async getAppointmentSummary(
+    startDate?: string,
+    endDate?: string,
+    doctorId?: string,
+    specialtyId?: string,
+  ): Promise<TotalAppointmentSummary> {
     try {
-      return await http
-        .get<TotalAppointmentSummary>('/admin/appointments/summary', {
-          params: { startDate, endDate },
+      const res = await http
+        .get<any>('/admin/appointments/summary', {
+          params: {
+            StartDate: startDate,
+            EndDate: endDate,
+            DoctorId: doctorId,
+            SpecialtyId: specialtyId,
+          },
         })
         .then((r) => r.data)
+
+      const data = res?.result !== undefined ? res.result : res
+      if (!data) {
+        return {
+          total: 0,
+          confirmed: 0,
+          checkedIn: 0,
+          completed: 0,
+          cancelled: 0,
+          noShow: 0,
+        }
+      }
+
+      return {
+        total: data.appointmentCount ?? data.AppointmentCount ?? data.total ?? 0,
+        confirmed: data.appointmentOnlineCount ?? data.AppointmentOnlineCount ?? data.confirmed ?? 0,
+        checkedIn: data.checkedIn ?? 0,
+        completed: data.completedAppointments ?? data.CompletedAppointments ?? data.completed ?? 0,
+        cancelled: data.canceledAppointments ?? data.CanceledAppointments ?? data.cancelled ?? 0,
+        noShow: data.noShowAppointments ?? data.NoShowAppointments ?? data.noShow ?? 0,
+      }
     } catch {
       return {
         total: 0,
@@ -225,3 +263,4 @@ export const adminApi = {
     }
   },
 }
+
