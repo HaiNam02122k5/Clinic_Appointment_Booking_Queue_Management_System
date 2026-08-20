@@ -145,6 +145,40 @@ namespace Clinic.Application.UnitTests.Features.MedicalReports.Commands
         }
 
         [Fact]
+        public async Task Handle_TicketNotInProgress_ShouldThrowInvalidOperationException()
+        {
+            // Arrange
+            var medicalReportRepository = new FakeMedicalReportRepository();
+            var queueTicketRepository = new FakeQueueTicketRepository();
+            var unitOfWork = new FakeUnitOfWork();
+
+            var doctor = TestDataFactory.CreateDoctor();
+            var workSchedule = TestDataFactory.CreateWorkSchedule(doctor: doctor, date: DateOnly.FromDateTime(DateTime.Today));
+            var appointment = TestDataFactory.CreateAppointment(workSchedule: workSchedule, checkedIn: true);
+            var currentUser = new FakeCurrentUser { DoctorId = doctor.Id, UserId = Guid.NewGuid() };
+
+            // Ticket is in Waiting status, not InProgress
+            var ticket = TestDataFactory.CreateQueueTicket(appointment);
+            await queueTicketRepository.AddAsync(ticket);
+
+            var handler = new SaveMedicalReportHandler(medicalReportRepository, queueTicketRepository, currentUser, unitOfWork);
+
+            var command = new SaveMedicalReportCommand(
+                ticket.Id,
+                Symptoms: "Symptoms",
+                Diagnosis: "Diagnosis",
+                Prescription: "Rx",
+                Notes: null,
+                IsFinalize: false
+            );
+
+            // Act & Assert
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                handler.Handle(command, CancellationToken.None));
+            Assert.Contains("Examination must be in progress", ex.Message);
+        }
+
+        [Fact]
         public async Task Handle_UpdateFinalizedReport_ShouldThrowInvalidOperationException()
         {
             // Arrange
@@ -158,6 +192,8 @@ namespace Clinic.Application.UnitTests.Features.MedicalReports.Commands
             var currentUser = new FakeCurrentUser { DoctorId = doctor.Id, UserId = Guid.NewGuid() };
 
             var ticket = TestDataFactory.CreateQueueTicket(appointment);
+            ticket.Call();
+            ticket.StartExam();
             await queueTicketRepository.AddAsync(ticket);
 
             var finalizedReport = new MedicalReport(ticket.Id, "Initial", "Initial", "Initial", null);
@@ -195,6 +231,8 @@ namespace Clinic.Application.UnitTests.Features.MedicalReports.Commands
             var currentUser = new FakeCurrentUser { DoctorId = otherDoctor.Id, UserId = Guid.NewGuid() };
 
             var ticket = TestDataFactory.CreateQueueTicket(appointment);
+            ticket.Call();
+            ticket.StartExam();
             await queueTicketRepository.AddAsync(ticket);
 
             var handler = new SaveMedicalReportHandler(medicalReportRepository, queueTicketRepository, currentUser, unitOfWork);

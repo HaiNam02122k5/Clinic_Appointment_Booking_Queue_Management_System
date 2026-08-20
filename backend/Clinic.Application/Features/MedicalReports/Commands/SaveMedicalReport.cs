@@ -49,6 +49,11 @@ namespace Clinic.Application.Features.MedicalReports.Commands
                 throw new ForbiddenException("You are not allowed to record medical report for another doctor's queue.");
             }
 
+            if (ticket.Status != QueueStatus.InProgress)
+            {
+                throw new InvalidOperationException($"Cannot record medical report for queue ticket with status '{ticket.Status}'. Examination must be in progress.");
+            }
+
             var report = await _medicalReportRepository.GetByQueueTicketIdAsync(request.QueueTicketId);
             if (report == null)
             {
@@ -70,11 +75,7 @@ namespace Clinic.Application.Features.MedicalReports.Commands
             if (request.IsFinalize)
             {
                 report.FinalizeReport();
-
-                if (ticket.Status == QueueStatus.InProgress)
-                {
-                    ticket.Complete();
-                }
+                ticket.Complete();
 
                 if (ticket.Appointment.Status == AppointmentStatus.CheckedIn)
                 {
