@@ -32,6 +32,31 @@ namespace Clinic.Domain.Entities
 
         public MedicalReport() { }
 
+        public MedicalReport(
+            Guid id,
+            Guid queueTicketId,
+            string? symptoms,
+            string? diagnosis,
+            string? prescription,
+            string? notes,
+            DateTime? examStartTime,
+            DateTime? examEndTime,
+            MedicalReportStatus status,
+            DateTime createdAt,
+            DateTime? updatedAt,
+            bool isDeleted)
+            : base(id, createdAt, updatedAt, isDeleted)
+        {
+            QueueTicketId = queueTicketId;
+            Symptoms = symptoms;
+            Diagnosis = diagnosis;
+            Prescription = prescription;
+            Notes = notes;
+            ExamStartTime = examStartTime;
+            ExamEndTime = examEndTime;
+            Status = status;
+        }
+
         public MedicalReport(Guid queueTicketId, string? symptoms, string? diagnosis, string? prescription, string? notes, DateTime? examStartTime = null)
         {
             QueueTicketId = queueTicketId;

@@ -38,6 +38,8 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
             // IsWalkIn: đánh dấu Appointment do Lễ tân tạo tại quầy cho khách
             // vãng lai (Cách B) - dùng để loại khỏi thống kê tỷ lệ hủy lịch.
             builder.Property(a => a.IsWalkIn).IsRequired();
+
+            builder.HasData(SampleData.Appointments);
         }
     }
 }
