@@ -112,5 +112,10 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                 .Where(a => a.Id == appointmentId);
             return await query.FirstOrDefaultAsync();
         }
+
+        public async Task AddAsync(Appointment appointment)
+        {
+            await _context.Appointments.AddAsync(appointment);
+        }
     }
 }

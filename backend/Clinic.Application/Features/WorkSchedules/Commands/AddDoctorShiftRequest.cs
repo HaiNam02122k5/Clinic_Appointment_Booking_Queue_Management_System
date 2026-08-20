@@ -46,6 +46,7 @@ namespace Clinic.Application.Features.WorkSchedules.Commands
                 reason: request.reason
             );
             doctor.AddShiftRequest(shiftRequest);
+            await _workScheduleRepository.AddShiftRequestAsync(shiftRequest);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return new RequestedShiftDto
             {

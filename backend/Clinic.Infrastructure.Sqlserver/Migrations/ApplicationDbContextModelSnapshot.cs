@@ -273,9 +273,6 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<bool?>("IsRead")
-                        .HasColumnType("bit");
-
                     b.Property<string>("Message")
                         .IsRequired()
                         .HasMaxLength(1000)
@@ -284,9 +281,6 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                     b.Property<Guid>("PersonId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTimeOffset?>("ScheduledAt")
-                        .HasColumnType("datetimeoffset");
-
                     b.Property<DateTime?>("SendTime")
                         .HasColumnType("datetime2");
 
@@ -294,10 +288,6 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Type")
                         .IsRequired()
