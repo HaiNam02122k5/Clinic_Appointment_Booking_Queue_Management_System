@@ -24,7 +24,7 @@ namespace Clinic.Application.Notifications.Dispatchers
         {
             var now = DateTimeOffset.UtcNow;
             var scheduledNotifications = await _notificationRepository.GetAllScheduledAndFailedByAsync(now, stoppingToken);
-            scheduledNotifications.AsParallel().ForAll(async notification =>
+            foreach (var notification in scheduledNotifications)
             {
                 switch (notification.Channel)
                 {
