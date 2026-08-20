@@ -97,7 +97,7 @@ async function handleRegister() {
     if (authStore.isAuthenticated) {
       router.push('/select-role')
     } else {
-      router.push('/login')
+      router.push({ path: '/login', query: { registered: 'true' } })
     }
   } catch {
     /* Lỗi đã được lưu trong authStore */

@@ -148,9 +148,17 @@ function goToForgotPassword() {
     hero-badge="Clinic Queue"
     :features="['Bảo mật dữ liệu', 'Phân quyền theo chức năng (RBAC)', 'Hỗ trợ nhiều quy trình khám bệnh']"
   >
-    <!-- Slot Alert thông báo lỗi từ Auth Store -->
+    <!-- Slot Alert thông báo lỗi hoặc thông báo đăng ký thành công -->
     <template #alerts>
-      <div v-if="authStore.error" class="mb-4">
+      <div v-if="route.query.registered === 'true'" class="mb-4">
+        <BaseAlert
+          type="success"
+          title="Đăng ký thành công!"
+          message="Tài khoản của bạn đã được tạo thành công. Vui lòng đăng nhập để bắt đầu sử dụng."
+          dismissible
+        />
+      </div>
+      <div v-else-if="authStore.error" class="mb-4">
         <BaseAlert type="error" :message="authStore.error" />
       </div>
     </template>
