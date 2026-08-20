@@ -1,4 +1,5 @@
 ﻿using Clinic.Application.Common.Models;
+using Clinic.Application.Contracts;
 using Clinic.Domain.Entities;
 using Clinic.Domain.Enums;
 
@@ -16,6 +17,7 @@ namespace Clinic.Application.Interfaces
         /// If the specialtyId is null, it retrieves all active doctors regardless of specialty.
         /// </summary>
         Task<List<Doctor>> GetActiveDoctorsBySpecialty(Guid? specialtyId);
+        Task<Dictionary<string, IValueWithChange>> GetDashboardData();
 
         /// <summary>
         /// Retrieves personal information for a doctor by their unique identifier asynchronously. Includes related entities Employee, Person, User, and WorkHistories.

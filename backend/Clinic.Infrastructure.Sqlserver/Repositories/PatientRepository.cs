@@ -56,5 +56,44 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
         {
             await _context.Patients.AddAsync(patient);
         }
+
+        public async Task<Dictionary<string, IValueWithChange>> GetDashboardData()
+        {
+            var now = DateTime.UtcNow;
+            var currentPeriodStart = now.AddDays(-30);
+            var previousPeriodStart = now.AddDays(-60);
+
+            var stats = await _context.Patients
+                .Where(p => !p.IsDeleted)
+                .GroupBy(p => 1)
+                .Select(g => new
+                {
+                    CurrentTotal = g.Count(p => p.CreatedAt >= currentPeriodStart && p.CreatedAt < now),
+                    PreviousTotal = g.Count(p => p.CreatedAt >= previousPeriodStart && p.CreatedAt < currentPeriodStart),
+                })
+                .FirstOrDefaultAsync();
+
+            var currentTotal = stats?.CurrentTotal ?? 0;
+            var previousTotal = stats?.PreviousTotal ?? 0;
+
+            return new Dictionary<string, IValueWithChange>
+            {
+                ["TotalPatients"] = new ValueWithChange<int>
+                {
+                    Value = currentTotal,
+                    Change = CalculatePercentChange(currentTotal, previousTotal)
+                },
+            };
+        }
+
+        private static double CalculatePercentChange(double currentValue, double previousValue)
+        {
+            if (previousValue == 0)
+            {
+                return currentValue == 0 ? 0 : 100;
+            }
+
+            return (currentValue - previousValue) / previousValue * 100;
+        }
     }
 }
