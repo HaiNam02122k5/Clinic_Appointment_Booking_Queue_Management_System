@@ -64,3 +64,13 @@ export interface MedicalRecord {
   prescription: string
   note?: string
 }
+
+export interface PatientProfile {
+  id?: number | string
+  fullName?: string
+  email?: string
+  phoneNumber?: string
+  address?: string
+  dateOfBirth?: string
+  gender?: number | string
+}

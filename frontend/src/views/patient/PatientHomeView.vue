@@ -51,6 +51,7 @@ onMounted(async () => {
     patient.loadAppointments(),
     patient.loadQueue(),
     patient.loadHistory(),
+    patient.loadProfile(),
   ]
 
   try {

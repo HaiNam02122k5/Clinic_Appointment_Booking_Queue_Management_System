@@ -310,4 +310,40 @@ export const patientApi = {
       mockMedicalHistory,
     )
   },
+
+  // Try to load the patient profile. Support several endpoint shapes and fallbacks.
+  getMyProfile(): Promise<import('./patient.types').PatientProfile> {
+    if (env.enableMock) {
+      return Promise.resolve({ fullName: 'Demo Patient', email: 'demo@clinic.com', phoneNumber: '0123456789' })
+    }
+
+    const fallback = { fullName: '', email: '', phoneNumber: '' }
+    return callWithFallback<import('./patient.types').PatientProfile>(
+      async () => {
+        // Try several common endpoints
+        const tries = ['/patients/me', '/me/profile', '/auth/me']
+        for (const p of tries) {
+          try {
+            const res = await http.get<any>(p)
+            const data = res.data?.result ?? res.data ?? res.data?.data ?? res.data?.profile ?? {}
+            return {
+              id: data.id ?? data.patientId ?? data.userId,
+              fullName: data.fullName ?? data.name ?? data.full_name ?? data.username,
+              email: data.email ?? data.emailAddress ?? data.email_address,
+              phoneNumber: data.phoneNumber ?? data.phone ?? data.phone_number,
+              address: data.address ?? data.location,
+              dateOfBirth: data.dateOfBirth ?? data.dob ?? data.birthDate,
+              gender: data.gender ?? data.sex,
+            }
+          } catch (e) {
+            // try next
+            continue
+          }
+        }
+
+        return fallback
+      },
+      fallback,
+    )
+  },
 }
