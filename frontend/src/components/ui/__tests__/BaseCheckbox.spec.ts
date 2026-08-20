@@ -15,7 +15,7 @@ describe('BaseCheckbox', () => {
     expect(wrapper.text()).toContain('Lưu phiên trên thiết bị này')
   })
 
-  it('toggles value on click', async () => {
+  it('toggles value on input change', async () => {
     const wrapper = mount(BaseCheckbox, {
       props: {
         label: 'Ghi nhớ',
@@ -26,5 +26,17 @@ describe('BaseCheckbox', () => {
     const input = wrapper.find('input[type="checkbox"]')
     await input.setValue(true)
     expect(wrapper.props('modelValue')).toBe(true)
+  })
+
+  it('is disabled when disabled prop is true', () => {
+    const wrapper = mount(BaseCheckbox, {
+      props: {
+        label: 'Ghi nhớ',
+        disabled: true,
+      },
+    })
+    const input = wrapper.find('input[type="checkbox"]')
+    expect(input.attributes('disabled')).toBeDefined()
+    expect(wrapper.find('label').classes()).toContain('cursor-not-allowed')
   })
 })

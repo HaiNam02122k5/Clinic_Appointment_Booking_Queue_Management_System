@@ -20,35 +20,30 @@ const authStore = useAuthStore()
 // Key để lưu trạng thái "Ghi nhớ đăng nhập" vào localStorage
 const REMEMBER_ME_KEY = 'clinic.auth.rememberMe'
 
+function getInitialRememberMe(): boolean {
+  try {
+    return localStorage.getItem(REMEMBER_ME_KEY) === 'true'
+  } catch {
+    return false
+  }
+}
+
 const username = ref('')
 const password = ref('')
-const rememberMe = ref(false)
+const rememberMe = ref(getInitialRememberMe())
 
 const errors = ref({
   username: '',
   password: '',
 })
 
-onMounted(() => {
+watch(rememberMe, (value) => {
   try {
-    const saved = localStorage.getItem(REMEMBER_ME_KEY)
-    rememberMe.value = saved === 'true'
+    localStorage.setItem(REMEMBER_ME_KEY, String(value))
   } catch {
-    rememberMe.value = false
+    // Bỏ qua lỗi storage
   }
 })
-
-watch(
-  rememberMe,
-  (value) => {
-    try {
-      localStorage.setItem(REMEMBER_ME_KEY, String(value))
-    } catch {
-      // Bỏ qua lỗi storage
-    }
-  },
-  { immediate: true },
-)
 
 function getRoleRoute(role: UserRole) {
   if (role === 'Admin') return '/admin/doctors'

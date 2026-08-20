@@ -24,7 +24,6 @@ const autoId = useId()
 
 <template>
   <label
-    :for="autoId"
     :class="[
       'flex items-start gap-2.5 text-sm select-none cursor-pointer group',
       disabled ? 'cursor-not-allowed opacity-60' : '',
@@ -37,7 +36,6 @@ const autoId = useId()
         type="checkbox"
         :disabled="disabled"
         :required="required"
-        @change="emit('change', Boolean(model))"
         class="w-4 h-4 rounded border-slate-300 text-[#0E4D92] focus:ring-[#0E4D92] focus:ring-offset-0 transition-colors cursor-pointer disabled:cursor-not-allowed accent-[#0E4D92]"
       />
     </div>
