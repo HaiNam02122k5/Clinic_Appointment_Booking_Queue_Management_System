@@ -31,7 +31,6 @@ namespace Clinic.Application.Services
             INotificationJob job,
             CancellationToken cancellationToken = default)
         {
-            Console.WriteLine("Processing job");
             switch (job)
             {
                 case NotificationJob<Appointment> appointmentJob:

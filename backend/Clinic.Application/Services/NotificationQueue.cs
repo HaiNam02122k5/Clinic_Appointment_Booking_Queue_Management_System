@@ -12,14 +12,12 @@ namespace Clinic.Application.Services
             INotificationJob job,
             CancellationToken cancellationToken = default)
         {
-            Console.WriteLine("Add item");
             return _queue.Writer.WriteAsync(job, cancellationToken);
         }
 
         public IAsyncEnumerable<INotificationJob> ReadAllAsync(
             CancellationToken cancellationToken = default)
         {
-            Console.WriteLine("Reading all items");
             return _queue.Reader.ReadAllAsync(cancellationToken);
         }
     }
