@@ -1,12 +1,16 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { supportedLocales, setLocale } from '@/lib/i18n'
+import ChangePasswordModal from '@/components/ui/ChangePasswordModal.vue'
 
 const { locale } = useI18n()
 const router = useRouter()
 const auth = useAuthStore()
+
+const isChangePasswordOpen = ref(false)
 
 function onLocaleChange(event: Event) {
   const value = (event.target as HTMLSelectElement).value
@@ -17,7 +21,6 @@ function logout() {
   auth.logout()
   router.push('/login')
 }
-
 </script>
 
 <template>
@@ -428,18 +431,30 @@ function logout() {
 
           </div>
 
+        <div class="flex items-center gap-3">
+          <!-- Đổi mật khẩu -->
+          <button
+            type="button"
+            class="text-sm font-medium text-slate-500 hover:text-[#0E4D92] transition-colors cursor-pointer flex items-center gap-1.5 focus:outline-none"
+            @click="isChangePasswordOpen = true"
+            title="Đổi mật khẩu"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            <span class="hidden sm:inline">Đổi mật khẩu</span>
+          </button>
 
-        <!-- Logout -->
-        <button
-          type="button"
-          class="text-sm font-medium
-                 text-slate-500
-                 transition-colors
-                 hover:text-red-600"
-          @click="logout"
-        >
-          Đăng xuất
-        </button>
+          <!-- Logout -->
+          <button
+            type="button"
+            class="text-sm font-medium text-slate-500 hover:text-red-600 transition-colors cursor-pointer focus:outline-none"
+            @click="logout"
+          >
+            Đăng xuất
+          </button>
+        </div>
 
       </header>
 
@@ -448,6 +463,12 @@ function logout() {
       <main class="min-h-0 flex-1 overflow-y-auto p-6">
         <RouterView />
       </main>
+
+      <!-- Modal Đổi Mật Khẩu -->
+      <ChangePasswordModal
+        :open="isChangePasswordOpen"
+        @close="isChangePasswordOpen = false"
+      />
 
     </div>
 

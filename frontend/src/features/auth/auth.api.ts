@@ -1,4 +1,4 @@
-﻿import { env } from '@/config/env'
+import { env } from '@/config/env'
 import { http } from '@/lib/api/http'
 import { tokenStorage } from '@/lib/api/token-storage'
 import { mockGetMe, mockLogin, mockRegister } from '@/mock/clinic-data'
@@ -233,6 +233,33 @@ export const authApi = {
     }
   },
 
+
+  forgotPassword(phoneNumberOrEmail: string): Promise<{ message: string }> {
+    if (env.enableMock) {
+      return Promise.resolve({
+        message: 'Nếu số điện thoại hoặc email tồn tại trong hệ thống, hướng dẫn đặt lại mật khẩu đã được gửi.',
+      })
+    }
+
+    return http
+      .post<{ message: string }>('/forgot-password', {
+        phoneNumberOrEmail: phoneNumberOrEmail.trim(),
+      })
+      .then((r) => r.data)
+  },
+
+  changePassword(payload: { currentPassword: string; newPassword: string }): Promise<{ message: string }> {
+    if (env.enableMock) {
+      return Promise.resolve({ message: 'Mật khẩu đã được cập nhật thành công.' })
+    }
+
+    return http
+      .post<{ message: string }>('/change-password', {
+        currentPassword: payload.currentPassword,
+        newPassword: payload.newPassword,
+      })
+      .then((r) => r.data)
+  },
 
   mockMultiRoleLogin(user: Partial<AuthUser> = {}): LoginResponse {
     return {
