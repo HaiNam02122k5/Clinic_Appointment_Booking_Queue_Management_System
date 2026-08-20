@@ -1,5 +1,6 @@
 using Clinic.API;
 using Clinic.API.Hubs;
+using Clinic.API.Workers;
 using Clinic.Application;
 using Clinic.Infrastructure.Sqlserver;
 using Clinic.Infrastructure.Sqlserver.Notifications;
@@ -16,10 +17,20 @@ builder.Services.AddPresentation();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructureSqlServer(builder.Configuration);
 
+// Configure JSON serialization options to handle enum values as strings
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+});
+
 // Configure notification services
 builder.Services.Configure<EmailOptions>(
     builder.Configuration.GetSection("Email"));
 builder.Services.AddSignalR();
+
+// Add workers
+builder.Services.AddHostedService<NotificationWorker>();
+builder.Services.AddHostedService<ScheduledNotificationWorker>();
 
 // Add Authentication and Authorization services
 builder.Services

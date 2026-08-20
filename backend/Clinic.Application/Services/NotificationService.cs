@@ -1,4 +1,5 @@
-﻿using Clinic.Application.Interfaces;
+﻿using Clinic.Application.Common.Models;
+using Clinic.Application.Interfaces;
 using Clinic.Application.Notifications.Interfaces;
 using Clinic.Domain.Entities;
 
@@ -9,25 +10,38 @@ namespace Clinic.Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IAppointmentNotificatinHandler _appointmentHandler;
         private readonly IDueNotificationHandler _dueHandler ;
+        private readonly IAccountNotificationHandler _accountNotificationHandler;
+        private readonly ICustomNotificationHandler _customNotificationHandler;
 
         public NotificationService(
             IAppointmentNotificatinHandler appointmentHandler,
             IDueNotificationHandler dueHandler,
+            IAccountNotificationHandler accountNotificationHandler,
+            ICustomNotificationHandler customNotificationHandler,
             IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork;
             _dueHandler = dueHandler;
             _appointmentHandler = appointmentHandler;
+            _accountNotificationHandler = accountNotificationHandler;
+            _customNotificationHandler = customNotificationHandler;
         }
 
         public async Task SendAsync(
             INotificationJob job,
             CancellationToken cancellationToken = default)
         {
+            Console.WriteLine("Processing job");
             switch (job)
             {
                 case NotificationJob<Appointment> appointmentJob:
                     await _appointmentHandler.HandleAsync(appointmentJob, cancellationToken);
+                    break;
+                case NotificationJob<Account> accountJob:
+                    await _accountNotificationHandler.HandleAsync(accountJob, cancellationToken);
+                    break;
+                case NotificationJob<CustomNotificationData> customNotificationJob:
+                    await _customNotificationHandler.HandleAsync(customNotificationJob, cancellationToken);
                     break;
                 default:
                     throw new NotSupportedException($"Notification job type '{job.GetType().Name}' is not supported.");

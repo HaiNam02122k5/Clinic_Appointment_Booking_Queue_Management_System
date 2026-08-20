@@ -28,10 +28,9 @@ namespace Clinic.Domain.Entities
 
         public DateTimeOffset? ScheduledAt { get; protected set; }
 
-        public Notification(Person person, NotificationType type, string title, string message, NotificationChannel channel, DateTimeOffset? scheduledTime = null)
+        public Notification(Guid personId, NotificationType type, string title, string message, NotificationChannel channel, DateTimeOffset? scheduledTime = null)
         {
-            Person = person;
-            PersonId = person.Id;
+            PersonId = personId;
             Type = type;
             Title = title;
             Message = message;

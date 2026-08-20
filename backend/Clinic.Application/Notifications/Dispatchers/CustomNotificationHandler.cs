@@ -3,17 +3,20 @@ using Clinic.Application.Notifications.Interfaces;
 using Clinic.Application.Notifications.Templates;
 using Clinic.Domain.Entities;
 using Clinic.Domain.Enums;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace Clinic.Application.Notifications.Dispatchers
 {
-    public class AppointmentNotificationHandler : IAppointmentNotificatinHandler
+    public class CustomNotificationHandler : ICustomNotificationHandler
     {
         private readonly INotificationRepository _notificationRepository;
         private readonly IEmailSender _emailSender;
         private readonly ISmsSender _smsSender;
         private readonly IInAppSender _inAppSender;
 
-        public AppointmentNotificationHandler(
+        public CustomNotificationHandler(
             INotificationRepository notificationRepository,
             IEmailSender emailSender,
             ISmsSender smsSender,
@@ -24,26 +27,20 @@ namespace Clinic.Application.Notifications.Dispatchers
             _smsSender = smsSender;
             _inAppSender = inAppSender;
         }
-
-        public async Task HandleAsync(NotificationJob<Appointment> appointmentJob, CancellationToken cancellationToken = default, DateTimeOffset? scheduledTime = null)
+        public async Task HandleAsync(NotificationJob<CustomNotificationData> notificationJob, CancellationToken cancellationToken = default, DateTimeOffset? scheduledTime = null)
         {
-            if (appointmentJob.SendInApp && appointmentJob.Person.User != null)
+            if (notificationJob.SendInApp && notificationJob.Person.User != null)
             {
-                InAppContent content = appointmentJob.NotificationType switch
-                {
-                    NotificationType.AppointmentConfirmation => new AppointmentConfirmationTemplate().RenderInApp(appointmentJob.Data),
-                    NotificationType.AppointmentReminder => new AppointmentReminderTemplate().RenderInApp(appointmentJob.Data),
-                    NotificationType.AppointmentCancellation => new AppointmentCancelledTemplate().RenderInApp(appointmentJob.Data),
-                    _ => throw new ArgumentOutOfRangeException()
-                };
+                InAppContent content = new CustomNotificationTemplate().RenderInApp(notificationJob.Data);
                 var notification = new Notification(
-                        appointmentJob.Person.Id,
-                        appointmentJob.NotificationType,
+                        notificationJob.Person.Id,
+                        notificationJob.NotificationType,
                         content.Title,
                         content.Message,
                         NotificationChannel.InApp,
                         scheduledTime
                     );
+
                 await _notificationRepository.AddAsync(notification, cancellationToken);
 
                 // For scheduling notifications, don't send the notification immediately if the scheduled time is in the future
@@ -51,21 +48,16 @@ namespace Clinic.Application.Notifications.Dispatchers
                 {
                     return;
                 }
-                await _inAppSender.SendAsync(appointmentJob.Person.User.Id, content.Title, content.Message, cancellationToken);
+
+                await _inAppSender.SendAsync(notificationJob.Person.User.Id, content.Title, content.Message, cancellationToken);
                 notification.MarkAsSent();
             }
-            if (appointmentJob.SendEmail && appointmentJob.Person.Email != null)
+            if (notificationJob.SendEmail && notificationJob.Person.Email != null)
             {
-                EmailContent content = appointmentJob.NotificationType switch
-                {
-                    NotificationType.AppointmentConfirmation => new AppointmentConfirmationTemplate().RenderEmail(appointmentJob.Data),
-                    NotificationType.AppointmentReminder => new AppointmentReminderTemplate().RenderEmail(appointmentJob.Data),
-                    NotificationType.AppointmentCancellation => new AppointmentCancelledTemplate().RenderEmail(appointmentJob.Data),
-                    _ => throw new ArgumentOutOfRangeException()
-                };
+                EmailContent content = new CustomNotificationTemplate().RenderEmail(notificationJob.Data);
                 var notification = new Notification(
-                        appointmentJob.Person.Id,
-                        appointmentJob.NotificationType,
+                        notificationJob.Person.Id,
+                        notificationJob.NotificationType,
                         content.Subject,
                         content.Body,
                         NotificationChannel.Email,
@@ -79,7 +71,7 @@ namespace Clinic.Application.Notifications.Dispatchers
                     {
                         return;
                     }
-                    await _emailSender.SendAsync(appointmentJob.Person.Email, content.Subject, content.Body, cancellationToken);
+                    await _emailSender.SendAsync(notificationJob.Person.Email, content.Subject, content.Body, cancellationToken);
                     notification.MarkAsSent();
                 }
                 catch
@@ -87,18 +79,12 @@ namespace Clinic.Application.Notifications.Dispatchers
                     notification.MarkAsFailed();
                 }
             }
-            if (appointmentJob.SendSms && appointmentJob.Person.PhoneNumber != null)
+            if (notificationJob.SendSms && notificationJob.Person.PhoneNumber != null)
             {
-                SmsContent content = appointmentJob.NotificationType switch
-                {
-                    NotificationType.AppointmentConfirmation => new AppointmentConfirmationTemplate().RenderSms(appointmentJob.Data),
-                    NotificationType.AppointmentReminder => new AppointmentReminderTemplate().RenderSms(appointmentJob.Data),
-                    NotificationType.AppointmentCancellation => new AppointmentCancelledTemplate().RenderSms(appointmentJob.Data),
-                    _ => throw new ArgumentOutOfRangeException()
-                };
+                SmsContent content = new CustomNotificationTemplate().RenderSms(notificationJob.Data);
                 var notification = new Notification(
-                        appointmentJob.Person.Id,
-                        appointmentJob.NotificationType,
+                        notificationJob.Person.Id,
+                        notificationJob.NotificationType,
                         null,
                         content.Message,
                         NotificationChannel.Sms,
@@ -112,7 +98,7 @@ namespace Clinic.Application.Notifications.Dispatchers
                     {
                         return;
                     }
-                    await _smsSender.SendAsync(appointmentJob.Person.PhoneNumber, content.Message, cancellationToken);
+                    await _smsSender.SendAsync(notificationJob.Person.PhoneNumber, content.Message, cancellationToken);
                     notification.MarkAsSent();
                 }
                 catch

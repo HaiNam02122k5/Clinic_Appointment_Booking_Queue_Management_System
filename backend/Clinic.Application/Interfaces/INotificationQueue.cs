@@ -20,10 +20,29 @@ namespace Clinic.Application.Interfaces
         bool SendSms
     ) : INotificationJob;
 
+    public record CustomNotificationData(
+        string FullName,
+        string Title,
+        string Message
+    );
+
     public interface INotificationQueue
     {
+        /// <summary>
+        /// Enqueues a notification job to the queue asynchronously.
+        /// </summary>
+        /// <param name="job"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         ValueTask EnqueueAsync(
             INotificationJob job,
             CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Reads all notification jobs from the queue asynchronously.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        IAsyncEnumerable<INotificationJob> ReadAllAsync(CancellationToken cancellationToken = default);
     }
 }

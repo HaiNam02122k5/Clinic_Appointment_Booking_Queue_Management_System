@@ -29,8 +29,10 @@ namespace Clinic.Application
             services.AddScoped<IPersonService, PersonService>();
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<INotificationService, NotificationService>();
-            services.AddScoped<INotificationQueue,  NotificationQueue>();
+            services.AddSingleton<INotificationQueue, NotificationQueue>();
             services.AddScoped<IAppointmentNotificatinHandler, AppointmentNotificationHandler>();
+            services.AddScoped<IAccountNotificationHandler, AccountNotificationHandler>();
+            services.AddScoped<ICustomNotificationHandler, CustomNotificationHandler>();
             services.AddScoped<IDueNotificationHandler, DueNotificationHandler>();
             // Application services are registered via the infrastructure layer.
             // TODO: nếu dùng Mapster theo pattern IRegister, quét cấu hình mapping tại đây:
