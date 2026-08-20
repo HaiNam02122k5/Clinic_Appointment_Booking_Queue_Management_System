@@ -129,7 +129,7 @@ describe('PatientBookingView', () => {
     await vm.selectDoctor(1)
     vm.appointmentDate = '2026-08-20'
     await vm.changeDate()
-    vm.appointmentTime = '08:00'
+    vm.chooseSlot({ id: 1, time: '08:00' })
     await nextTick()
 
     expect(patientStore.loadSlots).toHaveBeenCalledWith(1, '2026-08-20')
@@ -212,7 +212,7 @@ describe('PatientBookingView', () => {
     await vm.selectDoctor(1)
     vm.appointmentDate = '2026-08-20'
     await vm.changeDate()
-    vm.appointmentTime = '08:00'
+    vm.chooseSlot({ id: 1, time: '08:00' })
     await nextTick()
 
     const nextButton = Array.from(wrapper.findAll('button')).find((btn) =>
@@ -236,12 +236,14 @@ describe('PatientBookingView', () => {
     await confirmButton!.trigger('click')
     await flushPromises()
 
-    expect(patientStore.createAppointment).toHaveBeenCalledWith({
-      doctorId: 1,
-      appointmentDate: '2026-08-20',
-      appointmentTime: '08:00',
-      symptoms: 'Sốt, ho nhẹ 3 ngày',
-    })
+    expect(patientStore.createAppointment).toHaveBeenCalledWith(
+      expect.objectContaining({
+        doctorId: 1,
+        appointmentDate: '2026-08-20',
+        appointmentTime: '08:00',
+        symptoms: 'Sốt, ho nhẹ 3 ngày',
+      }),
+    )
 
     expect(wrapper.text()).toContain('Đặt lịch thành công!')
     expect(wrapper.text()).toContain('A-12')
@@ -258,7 +260,7 @@ describe('PatientBookingView', () => {
     await vm.selectDoctor(1)
     vm.appointmentDate = '2026-08-20'
     await vm.changeDate()
-    vm.appointmentTime = '08:00'
+    vm.chooseSlot({ id: 1, time: '08:00' })
     vm.nextStep()
     vm.symptoms = 'Đau ngực'
     vm.nextStep()

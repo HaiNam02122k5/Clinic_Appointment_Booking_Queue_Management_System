@@ -4,6 +4,14 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { validators } from '@/utils/validators'
 import { useFormValidation } from '@/composables/useFormValidation'
+import AuthLayout from '@/components/layout/AuthLayout.vue'
+import BaseAlert from '@/components/ui/BaseAlert.vue'
+import BaseInput from '@/components/ui/BaseInput.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
+import BaseTextarea from '@/components/ui/BaseTextarea.vue'
+import BasePasswordInput from '@/components/ui/BasePasswordInput.vue'
+import BaseCheckbox from '@/components/ui/BaseCheckbox.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -16,7 +24,7 @@ const {
   touched,
   isSubmitting,
   handleBlur,
-  validateAll
+  validateAll,
 } = useFormValidation(
   {
     username: '',
@@ -33,7 +41,10 @@ const {
   {
     username: [
       (val) => validators.required(val, 'Tên đăng nhập'),
-      (val) => (val && val.trim().length < 8 ? { isValid: false, message: 'Tên đăng nhập phải có ít nhất 8 ký tự' } : { isValid: true, message: '' }),
+      (val) =>
+        val && val.trim().length < 8
+          ? { isValid: false, message: 'Tên đăng nhập phải có ít nhất 8 ký tự' }
+          : { isValid: true, message: '' },
     ],
     fullName: [(val) => validators.required(val, 'Họ và tên')],
     phoneNumber: [
@@ -45,16 +56,27 @@ const {
       (val) => validators.email(val),
     ],
     address: [(val) => validators.required(val, 'Địa chỉ')],
-    dateOfBirth: [(val) => (val ? { isValid: true, message: '' } : { isValid: false, message: 'Ngày sinh là bắt buộc' })],
+    dateOfBirth: [
+      (val) => (val ? { isValid: true, message: '' } : { isValid: false, message: 'Ngày sinh là bắt buộc' }),
+    ],
     password: [
       (val) => validators.required(val, 'Mật khẩu'),
-      (val) => (val && val.trim().length < 8 ? { isValid: false, message: 'Mật khẩu phải có ít nhất 8 ký tự' } : { isValid: true, message: '' }),
+      (val) =>
+        val && val.trim().length < 8
+          ? { isValid: false, message: 'Mật khẩu phải có ít nhất 8 ký tự' }
+          : { isValid: true, message: '' },
       (val) => validators.password(val, 8),
     ],
     confirmPassword: [(val, formData) => validators.confirmPassword(formData.password, val)],
   },
-  { externalError: backendError }
+  { externalError: backendError },
 )
+
+const genderOptions = [
+  { label: 'Nam', value: 'Male' },
+  { label: 'Nữ', value: 'Female' },
+  { label: 'Khác', value: 'Other' },
+]
 
 async function handleRegister() {
   if (!validateAll()) return
@@ -86,200 +108,157 @@ async function handleRegister() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-slate-50 flex font-sans">
-    <!-- Banner Trái -->
-    <div class="hidden lg:flex lg:w-2/5 bg-gradient-to-br from-[#0E4D92] to-[#1565c0] flex-col justify-between p-10">
-      <div class="flex items-center gap-2.5">
-        <div class="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center text-white font-bold text-lg">+</div>
-        <span class="font-bold text-white text-base">ClinicQueue</span>
+  <AuthLayout
+    title="Đăng ký tài khoản"
+    subtitle="Nhập thông tin cá nhân để tạo hồ sơ khám bệnh."
+    hero-title="Tạo tài khoản để&#10;truy cập hệ thống"
+    hero-subtitle="Đăng ký tài khoản để tiếp tục sử dụng hệ thống quản lý khám bệnh, lịch hẹn và quy trình nội bộ theo vai trò được phân quyền."
+    hero-badge="Hệ thống phòng khám"
+    :features="[
+      'Tạo hồ sơ bệnh nhân trực tuyến',
+      'Đặt lịch hẹn khám nhanh chóng',
+      'Theo dõi tiến trình và số thứ tự khám thời gian thực',
+    ]"
+  >
+    <!-- Slot Alert hiển thị lỗi -->
+    <template #alerts>
+      <div v-if="authStore.error" class="mb-4">
+        <BaseAlert type="error" :message="authStore.error" />
       </div>
-      <div>
-        <span class="inline-block bg-blue-400/20 text-blue-100 border border-blue-300/30 text-xs px-3 py-1 rounded-full font-medium mb-4">
-          Hệ thống phòng khám
-        </span>
-        <h2 class="text-3xl font-bold text-white leading-tight mb-4">Tạo tài khoản để truy cập hệ thống</h2>
-        <p class="text-white/70 text-sm leading-relaxed mb-6">
-          Đăng ký tài khoản để tiếp tục sử dụng hệ thống quản lý khám bệnh, lịch hẹn và quy trình nội bộ theo vai trò được phân quyền.
-        </p>
+    </template>
+
+    <!-- Form Đăng ký -->
+    <form @submit.prevent="handleRegister" class="space-y-4 mb-6" novalidate>
+      <!-- Tên đăng nhập -->
+      <BaseInput
+        v-model="formData.username"
+        label="Tên đăng nhập"
+        required
+        placeholder="patient01"
+        :error="touched.username && errors.username ? errors.username : ''"
+        @blur="handleBlur('username')"
+        autocomplete="username"
+      />
+
+      <!-- Họ và tên -->
+      <BaseInput
+        v-model="formData.fullName"
+        label="Họ và tên"
+        required
+        placeholder="Nguyễn Văn A"
+        :error="touched.fullName && errors.fullName ? errors.fullName : ''"
+        @blur="handleBlur('fullName')"
+        autocomplete="name"
+      />
+
+      <!-- SĐT & Giới tính -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <BaseInput
+          v-model="formData.phoneNumber"
+          label="Số điện thoại"
+          required
+          type="tel"
+          placeholder="0912345678"
+          :error="touched.phoneNumber && errors.phoneNumber ? errors.phoneNumber : ''"
+          @blur="handleBlur('phoneNumber')"
+          autocomplete="tel"
+        />
+
+        <BaseSelect
+          v-model="formData.gender"
+          label="Giới tính"
+          :options="genderOptions"
+        />
       </div>
-      <p class="text-white/40 text-xs">© 2026 ClinicQueue</p>
-    </div>
 
-    <!-- Banner Phải -->
-    <div class="flex-1 flex flex-col items-center justify-center px-6 py-10 overflow-y-auto">
-      <div class="w-full max-w-md">
-        <div class="mb-6">
-          <h1 class="text-2xl font-bold text-slate-800">Đăng ký tài khoản</h1>
-          <p class="text-sm text-slate-500 mt-1">Nhập thông tin cá nhân để tạo hồ sơ khám bệnh.</p>
-        </div>
-      
-        <div v-if="authStore.error" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600">
-          ⚠️ {{ authStore.error }}
-        </div>       
+      <!-- Ngày sinh & Email -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <BaseInput
+          v-model="formData.dateOfBirth"
+          label="Ngày sinh"
+          type="date"
+          :error="touched.dateOfBirth && errors.dateOfBirth ? errors.dateOfBirth : ''"
+          @blur="handleBlur('dateOfBirth')"
+        />
 
-        <form @submit.prevent="handleRegister" class="space-y-4" novalidate>
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1">Tên đăng nhập <span class="text-red-500">*</span></label>
-            <input
-              v-model="formData.username"
-              @blur="handleBlur('username')"
-              type="text"
-              placeholder="patient01"
-              :class="[
-                'w-full border rounded-xl px-3.5 py-2.5 text-sm focus:outline-none transition-all',
-                touched.username && errors.username ? 'border-red-500 bg-red-50/30' : 'border-slate-200 focus:ring-2 focus:ring-[#0E4D92]'
-              ]"
-            />
-            <p v-if="touched.username && errors.username" class="text-xs text-red-500 mt-1">⚠️ {{ errors.username }}</p>
-          </div>
-
-          <!-- Họ tên -->
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1">Họ và tên <span class="text-red-500">*</span></label>
-            <input
-              v-model="formData.fullName"
-              @blur="handleBlur('fullName')"
-              type="text"
-              placeholder="Nguyễn Văn A"
-              :class="[
-                'w-full border rounded-xl px-3.5 py-2.5 text-sm focus:outline-none transition-all',
-                touched.fullName && errors.fullName ? 'border-red-500 bg-red-50/30' : 'border-slate-200 focus:ring-2 focus:ring-[#0E4D92]'
-              ]"
-            />
-            <p v-if="touched.fullName && errors.fullName" class="text-xs text-red-500 mt-1">⚠️ {{ errors.fullName }}</p>
-          </div>
-
-          <!-- SĐT + Giới tính -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1">Số điện thoại <span class="text-red-500">*</span></label>
-              <input
-                v-model="formData.phoneNumber"
-                @blur="handleBlur('phoneNumber')"
-                type="tel"
-                placeholder="0912345678"
-                :class="[
-                  'w-full border rounded-xl px-3.5 py-2.5 text-sm focus:outline-none transition-all',
-                  touched.phoneNumber && errors.phoneNumber ? 'border-red-500 bg-red-50/30' : 'border-slate-200 focus:ring-2 focus:ring-[#0E4D92]'
-                ]"
-              />
-              <p v-if="touched.phoneNumber && errors.phoneNumber" class="text-xs text-red-500 mt-1">⚠️ {{ errors.phoneNumber }}</p>
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1">Giới tính</label>
-              <select
-                v-model="formData.gender"
-                class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-[#0E4D92] focus:outline-none bg-white"
-              >
-                <option value="Male">Nam</option>
-                <option value="Female">Nữ</option>
-                <option value="Other">Khác</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Ngày sinh + Email -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1">Ngày sinh</label>
-              <input
-                v-model="formData.dateOfBirth"
-                type="date"
-                class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:ring-2 focus:ring-[#0E4D92] focus:outline-none bg-white"
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1">Email <span class="text-red-500">*</span></label>
-              <input
-                v-model="formData.email"
-                @blur="handleBlur('email')"
-                type="email"
-                placeholder="email@example.com"
-                :class="[
-                  'w-full border rounded-xl px-3.5 py-2.5 text-sm focus:outline-none transition-all',
-                  touched.email && errors.email ? 'border-red-500 bg-red-50/30' : 'border-slate-200 focus:ring-2 focus:ring-[#0E4D92]'
-                ]"
-              />
-              <p v-if="touched.email && errors.email" class="text-xs text-red-500 mt-1">⚠️ {{ errors.email }}</p>
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1">Địa chỉ <span class="text-red-500">*</span></label>
-            <textarea
-              v-model="formData.address"
-              @blur="handleBlur('address')"
-              rows="2"
-              placeholder="Số nhà, đường, phường, quận..."
-              :class="[
-                'w-full border rounded-xl px-3.5 py-2.5 text-sm focus:outline-none transition-all resize-none',
-                touched.address && errors.address ? 'border-red-500 bg-red-50/30' : 'border-slate-200 focus:ring-2 focus:ring-[#0E4D92]'
-              ]"
-            />
-            <p v-if="touched.address && errors.address" class="text-xs text-red-500 mt-1">⚠️ {{ errors.address }}</p>
-          </div>
-
-          <!-- Mật khẩu & Xác nhận -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1">Mật khẩu <span class="text-red-500">*</span></label>
-              <input
-                v-model="formData.password"
-                @blur="handleBlur('password')"
-                type="password"
-                placeholder="••••••••"
-                :class="[
-                  'w-full border rounded-xl px-3.5 py-2.5 text-sm focus:outline-none transition-all',
-                  touched.password && errors.password ? 'border-red-500 bg-red-50/30' : 'border-slate-200 focus:ring-2 focus:ring-[#0E4D92]'
-                ]"
-              />
-              <p v-if="touched.password && errors.password" class="text-xs text-red-500 mt-1">⚠️ {{ errors.password }}</p>
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1">Xác nhận mật khẩu <span class="text-red-500">*</span></label>
-              <input
-                v-model="formData.confirmPassword"
-                @blur="handleBlur('confirmPassword')"
-                type="password"
-                placeholder="••••••••"
-                :class="[
-                  'w-full border rounded-xl px-3.5 py-2.5 text-sm focus:outline-none transition-all',
-                  touched.confirmPassword && errors.confirmPassword ? 'border-red-500 bg-red-50/30' : 'border-slate-200 focus:ring-2 focus:ring-[#0E4D92]'
-                ]"
-              />
-              <p v-if="touched.confirmPassword && errors.confirmPassword" class="text-xs text-red-500 mt-1">⚠️ {{ errors.confirmPassword }}</p>
-            </div>
-          </div>
-
-          <div class="flex items-center justify-between mt-2">
-            <label class="flex items-start gap-2 text-sm text-slate-600 cursor-pointer select-none">
-              <input v-model="formData.rememberMe" type="checkbox" class="mt-1 rounded text-[#0E4D92]" />
-              <span>
-                <span class="block font-medium text-slate-700">Ghi nhớ đăng nhập sau khi đăng ký</span>
-                <span class="block text-xs text-slate-500">Nếu bỏ tích, hệ thống chỉ giữ phiên đăng nhập trong trình duyệt hiện tại.</span>
-              </span>
-            </label>
-          </div>
-
-          <button
-            type="submit"
-            :disabled="isSubmitting || authStore.status === 'loading'"
-            class="w-full bg-[#0E4D92] text-white font-semibold rounded-xl py-3 text-sm hover:bg-[#0b3d75] transition-all disabled:opacity-50 mt-2"
-          >
-            <span v-if="isSubmitting || authStore.status === 'loading'">Đang tạo tài khoản...</span>
-            <span v-else>Đăng ký ngay</span>
-          </button>
-        </form>
-
-        <p class="text-center text-sm text-slate-500 mt-6">
-          Đã có tài khoản?
-          <router-link to="/login" class="text-[#0E4D92] font-semibold hover:underline">
-            Đăng nhập
-          </router-link>
-        </p>
+        <BaseInput
+          v-model="formData.email"
+          label="Email"
+          required
+          type="email"
+          placeholder="email@example.com"
+          :error="touched.email && errors.email ? errors.email : ''"
+          @blur="handleBlur('email')"
+          autocomplete="email"
+        />
       </div>
-    </div>
-  </div>
+
+      <!-- Địa chỉ -->
+      <BaseTextarea
+        v-model="formData.address"
+        label="Địa chỉ"
+        required
+        :rows="2"
+        placeholder="Số nhà, đường, phường, quận..."
+        :error="touched.address && errors.address ? errors.address : ''"
+        @blur="handleBlur('address')"
+      />
+
+      <!-- Mật khẩu & Xác nhận mật khẩu -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <BasePasswordInput
+          v-model="formData.password"
+          label="Mật khẩu"
+          required
+          placeholder="••••••••"
+          :error="touched.password && errors.password ? errors.password : ''"
+          @blur="handleBlur('password')"
+          autocomplete="new-password"
+        />
+
+        <BasePasswordInput
+          v-model="formData.confirmPassword"
+          label="Xác nhận mật khẩu"
+          required
+          placeholder="••••••••"
+          :error="touched.confirmPassword && errors.confirmPassword ? errors.confirmPassword : ''"
+          @blur="handleBlur('confirmPassword')"
+          autocomplete="new-password"
+        />
+      </div>
+
+      <!-- Ghi nhớ đăng nhập -->
+      <div class="pt-1">
+        <BaseCheckbox
+          v-model="formData.rememberMe"
+          label="Ghi nhớ đăng nhập sau khi đăng ký"
+          description="Nếu bỏ tích, hệ thống chỉ giữ phiên đăng nhập trong trình duyệt hiện tại."
+        />
+      </div>
+
+      <!-- Nút Đăng ký -->
+      <div class="pt-2">
+        <BaseButton
+          type="submit"
+          variant="primary"
+          size="lg"
+          block
+          :loading="isSubmitting || authStore.status === 'loading'"
+          loading-text="Đang tạo tài khoản..."
+        >
+          Đăng ký ngay
+        </BaseButton>
+      </div>
+    </form>
+
+    <!-- Footer chuyển sang Đăng nhập -->
+    <template #footer>
+      <p class="text-center text-sm text-slate-500">
+        Đã có tài khoản?
+        <router-link to="/login" class="text-[#0E4D92] font-semibold hover:underline">
+          Đăng nhập
+        </router-link>
+      </p>
+    </template>
+  </AuthLayout>
 </template>
