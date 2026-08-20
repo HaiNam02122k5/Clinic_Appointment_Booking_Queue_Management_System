@@ -78,7 +78,7 @@ namespace Clinic.Application.Features.MedicalReports.Commands
 
                 if (ticket.Appointment.Status == AppointmentStatus.CheckedIn)
                 {
-                    ticket.Appointment.Complete();
+                    ticket.Appointment.Complete(_currentUser.UserId ?? throw new UnauthorizedAccessException());
                 }
             }
 
@@ -92,7 +92,7 @@ namespace Clinic.Application.Features.MedicalReports.Commands
                 PatientName = ticket.Appointment.Patient?.Person?.FullName ?? string.Empty,
                 DoctorId = ticket.Appointment.WorkSchedule.DoctorId,
                 DoctorName = ticket.Appointment.WorkSchedule.Doctor?.Employee?.Person?.FullName ?? string.Empty,
-                ExamDate = ticket.Appointment.TimeSlot,
+                ExamDate = ticket.Appointment.WorkSchedule.Date,
                 Symptoms = report.Symptoms,
                 Diagnosis = report.Diagnosis,
                 Prescription = report.Prescription,

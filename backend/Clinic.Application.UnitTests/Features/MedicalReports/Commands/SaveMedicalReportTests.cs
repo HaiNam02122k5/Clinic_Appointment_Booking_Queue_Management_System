@@ -20,10 +20,11 @@ namespace Clinic.Application.UnitTests.Features.MedicalReports.Commands
             var queueTicketRepository = new FakeQueueTicketRepository();
             var unitOfWork = new FakeUnitOfWork();
 
-            var doctorId = Guid.NewGuid();
-            var currentUser = new FakeCurrentUser { DoctorId = doctorId };
+            var doctor = TestDataFactory.CreateDoctor();
+            var workSchedule = TestDataFactory.CreateWorkSchedule(doctor: doctor, date: DateOnly.FromDateTime(DateTime.Today));
+            var appointment = TestDataFactory.CreateAppointment(workSchedule: workSchedule, checkedIn: true);
+            var currentUser = new FakeCurrentUser { DoctorId = doctor.Id, UserId = Guid.NewGuid() };
 
-            var appointment = TestDataFactory.CreateAppointment(doctorId: doctorId, checkedIn: true);
             var ticket = TestDataFactory.CreateQueueTicket(appointment);
             ticket.Call();
             ticket.StartExam();
@@ -64,10 +65,11 @@ namespace Clinic.Application.UnitTests.Features.MedicalReports.Commands
             var queueTicketRepository = new FakeQueueTicketRepository();
             var unitOfWork = new FakeUnitOfWork();
 
-            var doctorId = Guid.NewGuid();
-            var currentUser = new FakeCurrentUser { DoctorId = doctorId };
+            var doctor = TestDataFactory.CreateDoctor();
+            var workSchedule = TestDataFactory.CreateWorkSchedule(doctor: doctor, date: DateOnly.FromDateTime(DateTime.Today));
+            var appointment = TestDataFactory.CreateAppointment(workSchedule: workSchedule, checkedIn: true);
+            var currentUser = new FakeCurrentUser { DoctorId = doctor.Id, UserId = Guid.NewGuid() };
 
-            var appointment = TestDataFactory.CreateAppointment(doctorId: doctorId, checkedIn: true);
             var ticket = TestDataFactory.CreateQueueTicket(appointment);
             ticket.Call();
             ticket.StartExam();
@@ -110,10 +112,11 @@ namespace Clinic.Application.UnitTests.Features.MedicalReports.Commands
             var queueTicketRepository = new FakeQueueTicketRepository();
             var unitOfWork = new FakeUnitOfWork();
 
-            var doctorId = Guid.NewGuid();
-            var currentUser = new FakeCurrentUser { DoctorId = doctorId };
+            var doctor = TestDataFactory.CreateDoctor();
+            var workSchedule = TestDataFactory.CreateWorkSchedule(doctor: doctor, date: DateOnly.FromDateTime(DateTime.Today));
+            var appointment = TestDataFactory.CreateAppointment(workSchedule: workSchedule, checkedIn: true);
+            var currentUser = new FakeCurrentUser { DoctorId = doctor.Id, UserId = Guid.NewGuid() };
 
-            var appointment = TestDataFactory.CreateAppointment(doctorId: doctorId, checkedIn: true);
             var ticket = TestDataFactory.CreateQueueTicket(appointment);
             ticket.Call();
             ticket.StartExam();
@@ -149,10 +152,11 @@ namespace Clinic.Application.UnitTests.Features.MedicalReports.Commands
             var queueTicketRepository = new FakeQueueTicketRepository();
             var unitOfWork = new FakeUnitOfWork();
 
-            var doctorId = Guid.NewGuid();
-            var currentUser = new FakeCurrentUser { DoctorId = doctorId };
+            var doctor = TestDataFactory.CreateDoctor();
+            var workSchedule = TestDataFactory.CreateWorkSchedule(doctor: doctor, date: DateOnly.FromDateTime(DateTime.Today));
+            var appointment = TestDataFactory.CreateAppointment(workSchedule: workSchedule, checkedIn: true);
+            var currentUser = new FakeCurrentUser { DoctorId = doctor.Id, UserId = Guid.NewGuid() };
 
-            var appointment = TestDataFactory.CreateAppointment(doctorId: doctorId, checkedIn: true);
             var ticket = TestDataFactory.CreateQueueTicket(appointment);
             await queueTicketRepository.AddAsync(ticket);
 
@@ -184,11 +188,12 @@ namespace Clinic.Application.UnitTests.Features.MedicalReports.Commands
             var queueTicketRepository = new FakeQueueTicketRepository();
             var unitOfWork = new FakeUnitOfWork();
 
-            var doctorId = Guid.NewGuid();
-            var otherDoctorId = Guid.NewGuid();
-            var currentUser = new FakeCurrentUser { DoctorId = otherDoctorId };
+            var doctor = TestDataFactory.CreateDoctor();
+            var otherDoctor = TestDataFactory.CreateDoctor();
+            var workSchedule = TestDataFactory.CreateWorkSchedule(doctor: doctor, date: DateOnly.FromDateTime(DateTime.Today));
+            var appointment = TestDataFactory.CreateAppointment(workSchedule: workSchedule, checkedIn: true);
+            var currentUser = new FakeCurrentUser { DoctorId = otherDoctor.Id, UserId = Guid.NewGuid() };
 
-            var appointment = TestDataFactory.CreateAppointment(doctorId: doctorId, checkedIn: true);
             var ticket = TestDataFactory.CreateQueueTicket(appointment);
             await queueTicketRepository.AddAsync(ticket);
 
@@ -208,7 +213,7 @@ namespace Clinic.Application.UnitTests.Features.MedicalReports.Commands
             var medicalReportRepository = new FakeMedicalReportRepository();
             var queueTicketRepository = new FakeQueueTicketRepository();
             var unitOfWork = new FakeUnitOfWork();
-            var currentUser = new FakeCurrentUser { DoctorId = Guid.NewGuid() };
+            var currentUser = new FakeCurrentUser { DoctorId = Guid.NewGuid(), UserId = Guid.NewGuid() };
 
             var handler = new SaveMedicalReportHandler(medicalReportRepository, queueTicketRepository, currentUser, unitOfWork);
 

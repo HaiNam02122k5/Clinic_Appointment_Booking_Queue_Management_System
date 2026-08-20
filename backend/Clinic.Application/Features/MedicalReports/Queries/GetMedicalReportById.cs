@@ -46,7 +46,7 @@ namespace Clinic.Application.Features.MedicalReports.Queries
                 PatientName = ticket.Appointment.Patient?.Person?.FullName ?? string.Empty,
                 DoctorId = ticket.Appointment.WorkSchedule.DoctorId,
                 DoctorName = ticket.Appointment.WorkSchedule.Doctor?.Employee?.Person?.FullName ?? string.Empty,
-                ExamDate = ticket.Appointment.TimeSlot,
+                ExamDate = ticket.Appointment.WorkSchedule.Date,
                 Symptoms = report.Symptoms,
                 Diagnosis = report.Diagnosis,
                 Prescription = report.Prescription,

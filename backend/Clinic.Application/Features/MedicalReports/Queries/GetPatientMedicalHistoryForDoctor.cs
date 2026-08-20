@@ -61,7 +61,7 @@ namespace Clinic.Application.Features.MedicalReports.Queries
                     PatientName = r.QueueTicket.Appointment.Patient?.Person?.FullName ?? string.Empty,
                     DoctorId = r.QueueTicket.Appointment.WorkSchedule.DoctorId,
                     DoctorName = r.QueueTicket.Appointment.WorkSchedule.Doctor?.Employee?.Person?.FullName ?? string.Empty,
-                    ExamDate = r.QueueTicket.Appointment.TimeSlot,
+                    ExamDate = r.QueueTicket.Appointment.WorkSchedule.Date,
                     Symptoms = r.Symptoms,
                     Diagnosis = r.Diagnosis,
                     Prescription = r.Prescription,

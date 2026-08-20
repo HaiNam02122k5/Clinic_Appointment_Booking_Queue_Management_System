@@ -1,4 +1,4 @@
-﻿using Clinic.Application.Interfaces;
+using Clinic.Application.Interfaces;
 using Clinic.Domain.Entities;
 using Clinic.Infrastructure.Sqlserver.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -22,7 +22,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             _roleRepository = roleRepository;
             _personService = personService;
         }
-        public async Task CreateInitialAdminAsync(string username, string password)
+        public async Task CreateInitialAdminAsync(string? username = null, string? password = null)
         {
 
             if (await _context.Users.Include(u => u.UserRoles).ThenInclude(ur => ur.Role).FirstOrDefaultAsync(u => u.UserRoles.Any(ur => ur.Role.Name == "Admin")) != null)

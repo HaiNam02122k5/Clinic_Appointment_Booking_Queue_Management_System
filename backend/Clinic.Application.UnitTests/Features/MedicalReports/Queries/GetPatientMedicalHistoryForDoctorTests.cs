@@ -19,11 +19,12 @@ namespace Clinic.Application.UnitTests.Features.MedicalReports.Queries
             var medicalReportRepository = new FakeMedicalReportRepository();
             var appointmentRepository = new FakeAppointmentRepository();
 
-            var doctorId = Guid.NewGuid();
-            var patientId = Guid.NewGuid();
-            var currentUser = new FakeCurrentUser { DoctorId = doctorId };
+            var doctor = TestDataFactory.CreateDoctor();
+            var patient = TestDataFactory.CreatePatient();
+            var workSchedule = TestDataFactory.CreateWorkSchedule(doctor: doctor, date: DateOnly.FromDateTime(DateTime.Today));
+            var currentUser = new FakeCurrentUser { DoctorId = doctor.Id, UserId = Guid.NewGuid() };
 
-            var appointment = TestDataFactory.CreateAppointment(patientId: patientId, doctorId: doctorId, checkedIn: true);
+            var appointment = TestDataFactory.CreateAppointment(patient: patient, workSchedule: workSchedule, checkedIn: true);
             await appointmentRepository.AddAsync(appointment);
 
             var ticket1 = TestDataFactory.CreateQueueTicket(appointment, queueNumber: 1);
@@ -44,7 +45,7 @@ namespace Clinic.Application.UnitTests.Features.MedicalReports.Queries
             var handler = new GetPatientMedicalHistoryForDoctorHandler(medicalReportRepository, appointmentRepository, currentUser);
 
             // Act
-            var result = await handler.Handle(new GetPatientMedicalHistoryForDoctorQuery(patientId), CancellationToken.None);
+            var result = await handler.Handle(new GetPatientMedicalHistoryForDoctorQuery(patient.Id), CancellationToken.None);
 
             // Assert
             Assert.NotNull(result);
@@ -60,9 +61,9 @@ namespace Clinic.Application.UnitTests.Features.MedicalReports.Queries
             var medicalReportRepository = new FakeMedicalReportRepository();
             var appointmentRepository = new FakeAppointmentRepository();
 
-            var doctorId = Guid.NewGuid();
-            var patientId = Guid.NewGuid();
-            var currentUser = new FakeCurrentUser { DoctorId = doctorId };
+            var doctor = TestDataFactory.CreateDoctor();
+            var patient = TestDataFactory.CreatePatient();
+            var currentUser = new FakeCurrentUser { DoctorId = doctor.Id, UserId = Guid.NewGuid() };
 
             // No appointment between this doctor and patient
 
@@ -70,7 +71,7 @@ namespace Clinic.Application.UnitTests.Features.MedicalReports.Queries
 
             // Act & Assert
             await Assert.ThrowsAsync<ForbiddenException>(() =>
-                handler.Handle(new GetPatientMedicalHistoryForDoctorQuery(patientId), CancellationToken.None));
+                handler.Handle(new GetPatientMedicalHistoryForDoctorQuery(patient.Id), CancellationToken.None));
         }
 
         [Fact]
@@ -80,12 +81,13 @@ namespace Clinic.Application.UnitTests.Features.MedicalReports.Queries
             var medicalReportRepository = new FakeMedicalReportRepository();
             var appointmentRepository = new FakeAppointmentRepository();
 
-            var patientId = Guid.NewGuid();
-            var otherDoctorId = Guid.NewGuid();
-            var currentUser = new FakeCurrentUser();
+            var doctor = TestDataFactory.CreateDoctor();
+            var patient = TestDataFactory.CreatePatient();
+            var workSchedule = TestDataFactory.CreateWorkSchedule(doctor: doctor, date: DateOnly.FromDateTime(DateTime.Today));
+            var currentUser = new FakeCurrentUser { UserId = Guid.NewGuid() };
             currentUser.GrantPermission("patient-history.view.any");
 
-            var appointment = TestDataFactory.CreateAppointment(patientId: patientId, doctorId: otherDoctorId, checkedIn: true);
+            var appointment = TestDataFactory.CreateAppointment(patient: patient, workSchedule: workSchedule, checkedIn: true);
             await appointmentRepository.AddAsync(appointment);
 
             var ticket = TestDataFactory.CreateQueueTicket(appointment);
@@ -99,7 +101,7 @@ namespace Clinic.Application.UnitTests.Features.MedicalReports.Queries
             var handler = new GetPatientMedicalHistoryForDoctorHandler(medicalReportRepository, appointmentRepository, currentUser);
 
             // Act
-            var result = await handler.Handle(new GetPatientMedicalHistoryForDoctorQuery(patientId), CancellationToken.None);
+            var result = await handler.Handle(new GetPatientMedicalHistoryForDoctorQuery(patient.Id), CancellationToken.None);
 
             // Assert
             Assert.NotNull(result);
