@@ -22,6 +22,7 @@ namespace Clinic.Application.Interfaces
         /// <param name="user"></param>
         /// <param name="newPassword"></param>
         Task UpdatePassword(User user, string newPassword);
+        Task VerifyAndUpdatePassword(Guid UserId, string currentPassword, string newPassword);
 
         /// <summary>
         /// Verifies the user's credentials and returns the user if valid, otherwise returns null.

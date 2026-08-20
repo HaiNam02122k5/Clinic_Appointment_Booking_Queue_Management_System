@@ -1,6 +1,7 @@
 ﻿using Clinic.API.Models;
 using Clinic.Application.Contracts;
 using Clinic.Application.Features.Auth.Commands;
+using Clinic.Application.Features.Users.NewFolder;
 using Clinic.Application.Features.Users.Queries;
 using Clinic.Application.Interfaces;
 using MapsterMapper;
@@ -134,5 +135,17 @@ namespace Clinic.API.Controllers
             await _sender.Send(command);
             return Ok(new { message = "If the email exists, a password reset link has been sent." });
         }
+
+        [HttpPost("/change-password")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> ChangePassword([FromBody] UpdatePasswordRequest request)
+        {
+            var command = _mapper.Map<UpdatePasswordCommand>(request);
+            await _sender.Send(command);
+            return Ok(new { message = "Password updated successfully." });
+        }
+
     }
 }

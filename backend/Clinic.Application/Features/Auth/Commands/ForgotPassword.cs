@@ -1,5 +1,7 @@
 ﻿using Clinic.Application.Common.Exceptions;
+using Clinic.Application.Common.Models;
 using Clinic.Application.Interfaces;
+using Clinic.Domain.Enums;
 using MediatR;
 using System;
 using System.Collections.Generic;
@@ -14,13 +16,13 @@ namespace Clinic.Application.Features.Auth.Commands
         private readonly IPersonRepository _personRepository;
         private readonly IUserService _userService;
         private readonly IUnitOfWork _unitOfWork;
-        //private readonly INotificationQueue _notificationQueue;
-        public ForgotPasswordCommandHandler(IPersonRepository personRepository, IUserService userService, IUnitOfWork unitOfWork)
+        private readonly INotificationQueue _notificationQueue;
+        public ForgotPasswordCommandHandler(IPersonRepository personRepository, IUserService userService, IUnitOfWork unitOfWork, INotificationQueue notificationQueue)
         {
             _personRepository = personRepository;
             _userService = userService;
             _unitOfWork = unitOfWork;
-            //_notificationQueue = notificationQueue;
+            _notificationQueue = notificationQueue;
         }
 
         public async Task<int> Handle(ForgotPasswordCommand request, CancellationToken cancellationToken)
@@ -54,7 +56,12 @@ namespace Clinic.Application.Features.Auth.Commands
             }
 
             // Send a notification to user via email below
-            // _notificationQueue.Enqueue(new NotificationJob<Person>(user, NotificationType.PasswordReset, new { NewPassword = new string(randomPassword) }, false, true, false));
+             await _notificationQueue.EnqueueAsync(new NotificationJob<Account>(
+                 user,
+                 new Account { FullName = user.FullName, Password = new string(randomPassword) },
+                 NotificationType.ResetPassword,
+                 false, true, false), cancellationToken
+             );
             Console.WriteLine($"Temporary password for {user.FullName}: {new string(randomPassword)}");
 
             await _userService.UpdatePassword(user.User, new string(randomPassword));
