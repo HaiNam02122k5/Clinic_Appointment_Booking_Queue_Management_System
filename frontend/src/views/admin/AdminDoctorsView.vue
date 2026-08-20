@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import axios from 'axios'
+
 import DoctorFormModal from '@/features/doctors/components/DoctorFormModal.vue'
+
 import { doctorsApi } from '@/features/doctors/doctors.api'
 import { specialtiesApi } from '@/features/specialties/specialties.api'
 
@@ -10,9 +11,14 @@ import type {
   Doctor,
   DoctorDetail,
   DoctorStatus,
-  Specialty,
   UpdateDoctorRequest,
 } from '@/features/doctors/doctors.types'
+
+import type { Specialty } from '@/features/specialties/specialties.types'
+
+// ==============================
+// STATE
+// ==============================
 
 const doctors = ref<Doctor[]>([])
 const specialties = ref<Specialty[]>([])
@@ -20,6 +26,8 @@ const specialties = ref<Specialty[]>([])
 const loadingDoctors = ref(false)
 const loadingSpecialties = ref(false)
 const submitting = ref(false)
+
+const errorMessage = ref('')
 
 const search = ref('')
 const selectedStatus = ref<DoctorStatus | ''>('')
@@ -31,9 +39,14 @@ const totalCount = ref(0)
 const totalPages = ref(1)
 
 const isModalOpen = ref(false)
+
 const selectedDoctor = ref<DoctorDetail | null>(null)
 
-const pageNumbers = computed(() => {
+// ==============================
+// PAGINATION
+// ==============================
+
+const pageNumbers = computed<number[]>(() => {
   const pages: number[] = []
 
   for (let i = 1; i <= totalPages.value; i += 1) {
@@ -43,33 +56,45 @@ const pageNumbers = computed(() => {
   return pages
 })
 
-const loadDoctors = async () => {
+// ==============================
+// LOAD DOCTORS
+// ==============================
+
+async function loadDoctors() {
   try {
     loadingDoctors.value = true
+    errorMessage.value = ''
 
     const response = await doctorsApi.list({
-      Search: search.value || undefined,
+      Search: search.value.trim() || undefined,
       Status: selectedStatus.value || undefined,
       PageNumber: pageNumber.value,
       PageSize: pageSize.value,
     })
 
-    doctors.value = response.items
+    console.log('DOCTORS RESPONSE:', response)
 
-    totalCount.value = response.totalCount
-    totalPages.value = response.totalPages || 1
+    doctors.value = response?.items ?? []
+    totalCount.value = response?.totalCount ?? 0
+    totalPages.value = response?.totalPages ?? 1
   } catch (error) {
-    console.error('Không thể tải danh sách bác sĩ:', error)
+    console.error('FETCH DOCTORS ERROR:', error)
 
     doctors.value = []
     totalCount.value = 0
     totalPages.value = 1
+
+    errorMessage.value = 'Không thể tải danh sách bác sĩ.'
   } finally {
     loadingDoctors.value = false
   }
 }
 
-const loadSpecialties = async () => {
+// ==============================
+// LOAD SPECIALTIES
+// ==============================
+
+async function loadSpecialties() {
   try {
     loadingSpecialties.value = true
 
@@ -78,9 +103,11 @@ const loadSpecialties = async () => {
       PageSize: 100,
     })
 
-    specialties.value = response.items
+    console.log('SPECIALTIES RESPONSE:', response)
+
+    specialties.value = response?.items ?? []
   } catch (error) {
-    console.error('Không thể tải danh sách chuyên khoa:', error)
+    console.error('FETCH SPECIALTIES ERROR:', error)
 
     specialties.value = []
   } finally {
@@ -88,19 +115,43 @@ const loadSpecialties = async () => {
   }
 }
 
-const handleSearch = async () => {
+// ==============================
+// SEARCH
+// ==============================
+
+async function handleSearch() {
   pageNumber.value = 1
 
   await loadDoctors()
 }
 
-const handleStatusChange = async () => {
+// ==============================
+// STATUS FILTER
+// ==============================
+
+async function handleStatusChange() {
   pageNumber.value = 1
 
   await loadDoctors()
 }
 
-const changePage = async (page: number) => {
+// ==============================
+// RESET FILTERS
+// ==============================
+
+async function resetFilters() {
+  search.value = ''
+  selectedStatus.value = ''
+  pageNumber.value = 1
+
+  await loadDoctors()
+}
+
+// ==============================
+// PAGINATION
+// ==============================
+
+async function changePage(page: number) {
   if (page < 1 || page > totalPages.value) {
     return
   }
@@ -110,70 +161,70 @@ const changePage = async (page: number) => {
   await loadDoctors()
 }
 
-const openCreateModal = () => {
-  selectedDoctor.value = null
+// ==============================
+// CREATE DOCTOR
+// ==============================
 
+function openCreateModal() {
+  selectedDoctor.value = null
   isModalOpen.value = true
 }
 
-const openEditModal = async (doctor: Doctor) => {
+// ==============================
+// EDIT DOCTOR
+// ==============================
+
+async function openEditModal(doctor: Doctor) {
   try {
     submitting.value = true
 
     const doctorDetail = await doctorsApi.get(doctor.id)
 
     selectedDoctor.value = doctorDetail
-
     isModalOpen.value = true
   } catch (error) {
-    console.error('Không thể lấy thông tin bác sĩ:', error)
+    console.error('GET DOCTOR ERROR:', error)
 
-    alert('Không thể tải thông tin bác sĩ')
+    alert('Không thể tải thông tin bác sĩ.')
   } finally {
     submitting.value = false
   }
 }
 
-const closeModal = () => {
-  if (submitting.value) return
+// ==============================
+// CLOSE MODAL
+// ==============================
+
+function closeModal() {
+  if (submitting.value) {
+    return
+  }
 
   isModalOpen.value = false
-
   selectedDoctor.value = null
 }
 
-const handleSubmitDoctor = async (payload: {
+// ==============================
+// SUBMIT DOCTOR
+// ==============================
+
+async function handleSubmitDoctor(payload: {
   mode: 'create' | 'edit'
   data: CreateDoctorRequest | UpdateDoctorRequest
-}) => {
+}) {
   try {
     submitting.value = true
 
     if (payload.mode === 'create') {
-      await doctorsApi.create(
-        payload.data as CreateDoctorRequest,
-      )
+      const createData = payload.data as CreateDoctorRequest
+
+      await doctorsApi.create(createData)
     } else {
       if (!selectedDoctor.value) {
-        return
+        throw new Error('Không tìm thấy bác sĩ cần cập nhật.')
       }
 
-      const data = payload.data as UpdateDoctorRequest
-
-      const updateData: UpdateDoctorRequest = {
-        fullName: data.fullName,
-        phoneNumber: data.phoneNumber,
-        email: data.email,
-        dateOfBirth: data.dateOfBirth,
-        gender: data.gender,
-        address: data.address,
-        licenseNumber: data.licenseNumber,
-        qualification: data.qualification,
-        experienceYears: Number(data.experienceYears),
-        biography: data.biography,
-      }
-
-      console.log('UPDATE DATA:', updateData)
+      const updateData = payload.data as UpdateDoctorRequest
 
       await doctorsApi.update(
         selectedDoctor.value.id,
@@ -185,48 +236,42 @@ const handleSubmitDoctor = async (payload: {
     selectedDoctor.value = null
 
     await loadDoctors()
-  } catch (error: unknown) {
-  console.error('UPDATE ERROR:', error)
+  } catch (error) {
+    console.error('SAVE DOCTOR ERROR:', error)
 
-  if (axios.isAxiosError(error)) {
-    console.error('RESPONSE:', error.response?.data)
-
-    const responseData = error.response?.data as {
-      detail?: string
-      errorMessages?: string[]
-    }
-
-    alert(
-      responseData.detail ||
-      responseData.errorMessages?.join(', ') ||
-      'Không thể cập nhật bác sĩ',
-    )
-  } else {
-    alert('Không thể cập nhật bác sĩ')
-  }
-} finally {
-  submitting.value = false
-}
-}
-
-const getGenderText = (gender: string) => {
-  switch (gender) {
-    case 'Male':
-      return 'Nam'
-
-    case 'Female':
-      return 'Nữ'
-
-    default:
-      return 'Khác'
+    alert('Không thể lưu thông tin bác sĩ.')
+  } finally {
+    submitting.value = false
   }
 }
 
-const getStatusText = (status: DoctorStatus) => {
-  return status === 'Active'
-    ? 'Đang hoạt động'
-    : 'Ngừng hoạt động'
+// ==============================
+// HELPERS
+// ==============================
+
+function getGenderText(gender?: string) {
+  if (gender === 'Male') {
+    return 'Nam'
+  }
+
+  if (gender === 'Female') {
+    return 'Nữ'
+  }
+
+  return 'Khác'
 }
+
+function getStatusText(status?: string) {
+  if (status === 'Active') {
+    return 'Đang hoạt động'
+  }
+
+  return 'Ngừng hoạt động'
+}
+
+// ==============================
+// INITIAL LOAD
+// ==============================
 
 onMounted(async () => {
   await Promise.all([
@@ -238,30 +283,29 @@ onMounted(async () => {
 
 <template>
   <div class="doctors-page">
+    <!-- HEADER -->
     <div class="page-header">
       <div>
         <h1>Quản lý bác sĩ</h1>
-
-        <p>
-          Quản lý thông tin và tài khoản của các bác sĩ
-        </p>
+        <p>Quản lý thông tin và danh sách bác sĩ trong hệ thống</p>
       </div>
 
       <button
-        class="btn-add"
         type="button"
+        class="btn-add"
         @click="openCreateModal"
       >
         + Thêm bác sĩ
       </button>
     </div>
 
+    <!-- FILTER -->
     <div class="filter-card">
       <div class="search-group">
         <input
           v-model="search"
           type="text"
-          placeholder="Tìm kiếm tên, email hoặc số điện thoại..."
+          placeholder="Tìm kiếm theo tên, email..."
           @keyup.enter="handleSearch"
         >
 
@@ -291,8 +335,25 @@ onMounted(async () => {
           Ngừng hoạt động
         </option>
       </select>
+
+      <button
+        type="button"
+        class="btn-reset"
+        @click="resetFilters"
+      >
+        Đặt lại
+      </button>
     </div>
 
+    <!-- ERROR -->
+    <div
+      v-if="errorMessage"
+      class="error-message"
+    >
+      {{ errorMessage }}
+    </div>
+
+    <!-- TABLE -->
     <div class="table-card">
       <div class="table-header">
         <div>
@@ -304,6 +365,7 @@ onMounted(async () => {
         </div>
       </div>
 
+      <!-- LOADING -->
       <div
         v-if="loadingDoctors"
         class="loading-state"
@@ -311,6 +373,7 @@ onMounted(async () => {
         Đang tải danh sách bác sĩ...
       </div>
 
+      <!-- EMPTY -->
       <div
         v-else-if="doctors.length === 0"
         class="empty-state"
@@ -318,6 +381,7 @@ onMounted(async () => {
         Chưa có bác sĩ nào.
       </div>
 
+      <!-- TABLE CONTENT -->
       <div
         v-else
         class="table-wrapper"
@@ -339,19 +403,20 @@ onMounted(async () => {
               v-for="doctor in doctors"
               :key="doctor.id"
             >
+              <!-- DOCTOR -->
               <td>
                 <div class="doctor-info">
                   <div class="avatar">
                     {{
                       doctor.fullName
-                        .charAt(0)
-                        .toUpperCase()
+                        ? doctor.fullName.charAt(0).toUpperCase()
+                        : '?'
                     }}
                   </div>
 
                   <div>
                     <strong>
-                      {{ doctor.fullName }}
+                      {{ doctor.fullName || 'Chưa cập nhật' }}
                     </strong>
 
                     <span>
@@ -361,30 +426,38 @@ onMounted(async () => {
                 </div>
               </td>
 
+              <!-- CONTACT -->
               <td>
                 <div class="contact-info">
-                  <span>{{ doctor.email }}</span>
-
-                  <span>{{ doctor.phoneNumber }}</span>
-                </div>
-              </td>
-
-              <td>
-                <div class="professional-info">
-                  <strong>
-                    {{ doctor.currentSpecialty }}
-                  </strong>
+                  <span>
+                    {{ doctor.email || 'Chưa cập nhật' }}
+                  </span>
 
                   <span>
-                    {{ doctor.qualification }}
+                    {{ doctor.phoneNumber || 'Chưa cập nhật' }}
                   </span>
                 </div>
               </td>
 
+              <!-- SPECIALTY -->
               <td>
-                {{ doctor.experienceYears }} năm
+                <div class="professional-info">
+                  <strong>
+                    {{ doctor.currentSpecialty || 'Chưa cập nhật' }}
+                  </strong>
+
+                  <span>
+                    {{ doctor.qualification || 'Chưa cập nhật' }}
+                  </span>
+                </div>
               </td>
 
+              <!-- EXPERIENCE -->
+              <td>
+                {{ doctor.experienceYears ?? 0 }} năm
+              </td>
+
+              <!-- STATUS -->
               <td>
                 <span
                   class="status-badge"
@@ -397,11 +470,11 @@ onMounted(async () => {
                 </span>
               </td>
 
+              <!-- ACTION -->
               <td>
                 <button
-                  class="btn-edit"
                   type="button"
-                  :disabled="submitting"
+                  class="btn-edit"
                   @click="openEditModal(doctor)"
                 >
                   Chỉnh sửa
@@ -412,6 +485,7 @@ onMounted(async () => {
         </table>
       </div>
 
+      <!-- PAGINATION -->
       <div
         v-if="totalPages > 1"
         class="pagination"
@@ -444,6 +518,7 @@ onMounted(async () => {
       </div>
     </div>
 
+    <!-- DOCTOR MODAL -->
     <DoctorFormModal
       :open="isModalOpen"
       :doctor="selectedDoctor"
@@ -458,7 +533,6 @@ onMounted(async () => {
 <style scoped>
 .doctors-page {
   padding: 28px;
-
   color: #1e293b;
 }
 
@@ -466,37 +540,28 @@ onMounted(async () => {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-
   margin-bottom: 24px;
 }
 
 .page-header h1 {
   margin: 0;
-
   font-size: 28px;
   font-weight: 700;
-
   color: #0f172a;
 }
 
 .page-header p {
   margin: 8px 0 0;
-
   color: #64748b;
 }
 
 .btn-add {
   padding: 11px 18px;
-
   border: none;
   border-radius: 8px;
-
   background: #2563eb;
-
-  color: white;
-
+  color: #ffffff;
   font-weight: 600;
-
   cursor: pointer;
 }
 
@@ -506,85 +571,83 @@ onMounted(async () => {
 
 .filter-card,
 .table-card {
-  background: white;
-
+  background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
-
-  box-shadow: 0 2px 8px rgb(15 23 42 / 4%);
 }
 
 .filter-card {
   display: flex;
+  align-items: center;
   gap: 16px;
-
   padding: 18px;
-
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .search-group {
   display: flex;
-
   flex: 1;
 }
 
 .search-group input {
   flex: 1;
-
   padding: 11px 14px;
-
   border: 1px solid #cbd5e1;
   border-radius: 8px 0 0 8px;
-
+  color: #1e293b;
   outline: none;
 }
 
 .btn-search {
   padding: 0 20px;
-
   border: none;
   border-radius: 0 8px 8px 0;
-
   background: #334155;
-
-  color: white;
-
+  color: #ffffff;
   cursor: pointer;
 }
 
 .status-filter {
-  min-width: 190px;
-
-  padding: 0 12px;
-
+  min-width: 180px;
+  padding: 11px 12px;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
+  background: #ffffff;
+  color: #1e293b;
+}
 
-  background: white;
+.btn-reset {
+  padding: 11px 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #475569;
+  cursor: pointer;
+}
+
+.error-message {
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #dc2626;
 }
 
 .table-header {
-  display: flex;
-  justify-content: space-between;
-
   padding: 20px 24px;
-
   border-bottom: 1px solid #e2e8f0;
 }
 
 .table-header h2 {
   margin: 0;
-
   font-size: 18px;
 }
 
 .table-header p {
   margin: 5px 0 0;
-
-  font-size: 14px;
-
   color: #64748b;
+  font-size: 14px;
 }
 
 .table-wrapper {
@@ -593,37 +656,25 @@ onMounted(async () => {
 
 table {
   width: 100%;
-
   border-collapse: collapse;
 }
 
 th {
   padding: 14px 24px;
-
   background: #f8fafc;
-
   text-align: left;
-
   font-size: 12px;
-  font-weight: 700;
-
   color: #64748b;
-
-  text-transform: uppercase;
 }
 
 td {
   padding: 18px 24px;
-
   border-top: 1px solid #f1f5f9;
-
-  font-size: 14px;
 }
 
 .doctor-info {
   display: flex;
   align-items: center;
-
   gap: 12px;
 }
 
@@ -631,23 +682,17 @@ td {
   display: flex;
   align-items: center;
   justify-content: center;
-
   width: 40px;
   height: 40px;
-
   border-radius: 50%;
-
   background: #dbeafe;
-
   color: #2563eb;
-
   font-weight: 700;
 }
 
 .doctor-info strong,
 .professional-info strong {
   display: block;
-
   margin-bottom: 4px;
 }
 
@@ -655,105 +700,77 @@ td {
 .contact-info span,
 .professional-info span {
   display: block;
-
   font-size: 13px;
-
   color: #64748b;
 }
 
 .contact-info {
   display: flex;
   flex-direction: column;
-
   gap: 4px;
 }
 
 .status-badge {
   display: inline-flex;
-
   padding: 6px 10px;
-
   border-radius: 999px;
-
   font-size: 12px;
   font-weight: 600;
 }
 
 .status-badge.active {
   background: #dcfce7;
-
   color: #15803d;
 }
 
 .status-badge.inactive {
   background: #fee2e2;
-
   color: #dc2626;
 }
 
 .btn-edit {
   padding: 8px 13px;
-
   border: 1px solid #bfdbfe;
   border-radius: 7px;
-
   background: #eff6ff;
-
   color: #2563eb;
-
   font-weight: 600;
-
   cursor: pointer;
-}
-
-.btn-edit:hover {
-  background: #dbeafe;
 }
 
 .loading-state,
 .empty-state {
   padding: 50px 20px;
-
   text-align: center;
-
   color: #64748b;
 }
 
 .pagination {
   display: flex;
   justify-content: center;
-
   gap: 6px;
-
   padding: 20px;
 }
 
 .pagination button {
   min-width: 36px;
   height: 36px;
-
   padding: 0 10px;
-
   border: 1px solid #e2e8f0;
   border-radius: 7px;
-
-  background: white;
-
+  background: #ffffff;
   cursor: pointer;
 }
 
 .pagination button.active {
   border-color: #2563eb;
-
   background: #2563eb;
-
-  color: white;
+  color: #ffffff;
 }
 
 .pagination button:disabled {
-  cursor: not-allowed;
-
   opacity: 0.4;
+  cursor: not-allowed;
 }
 
 @media (max-width: 768px) {
@@ -766,17 +783,12 @@ td {
     flex-direction: column;
   }
 
-  .page-header {
-    gap: 16px;
-  }
-
   .filter-card {
     align-items: stretch;
   }
 
   .status-filter {
-    min-width: auto;
-    min-height: 42px;
+    width: 100%;
   }
 }
 </style>

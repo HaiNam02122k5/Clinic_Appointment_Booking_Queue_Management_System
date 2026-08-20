@@ -23,9 +23,14 @@ export interface GetSpecialtiesParams {
   PageSize?: number
 }
 
-export interface ApiResponse<T> {
-  statusCode: string
-  isSuccess: boolean
-  errorMessages: string[]
-  result: T
+export interface CreateSpecialtyRequest {
+  name: string
+  description: string
+  establishedDate: string
+}
+
+export interface UpdateSpecialtyRequest {
+  name: string
+  description: string
+  establishedDate: string
 }

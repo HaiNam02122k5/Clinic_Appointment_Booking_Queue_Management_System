@@ -5,7 +5,8 @@ using System.Collections.Generic;
 namespace Clinic.Application.Interfaces
 {
     public interface IWorkScheduleRepository
-    {
+    {   
+        Task AddAsync(WorkSchedule workSchedule);
         /// <summary>
         /// Lấy 1 WorkSchedule theo Id, kèm Appointments (để tính số chỗ còn trống) và
         /// Doctor -> Employee -> Person (để hiển thị/kiểm tra khi cần).
@@ -78,5 +79,6 @@ namespace Clinic.Application.Interfaces
         Task<bool> HasDuplicateShiftRequest(Guid doctorId, DateOnly date, TimeOnly startTime, TimeOnly endTime, Guid? currentSRId = null);
 
         Task<IEnumerable<WorkSchedule>> GetDoctorSchedulesWithAppointmentByDateAsync(Guid? doctorId, DateOnly date);
+
     }
 }

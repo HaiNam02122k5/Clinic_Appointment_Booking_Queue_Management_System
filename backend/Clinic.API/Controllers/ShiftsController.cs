@@ -132,5 +132,25 @@ namespace Clinic.API.Controllers
             var schedules = await _sender.Send(command);
             return Ok(schedules);
         }
+        [HttpGet("/admin/shifts")]
+        [Authorize(Policy = "Permission:shift.manage")]
+        [ProducesResponseType(
+            typeof(IEnumerable<DoctorScheduleDto<WorkScheduleDto>>),
+            StatusCodes.Status200OK
+        )]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> GetAllDoctorShifts(
+            [FromQuery] GetShiftsQuery query
+        )
+        {
+            var command = new GetAllDoctorSchedulesQuery(
+                query.StartDate,
+                query.EndDate
+            );
+
+            var result = await _sender.Send(command);
+
+            return Ok(result);
+        }
     }
 }

@@ -39,7 +39,9 @@ namespace Clinic.Application.Features.WorkSchedules.Commands
                 shiftEnd: request.EndTime,
                 patientLimit: request.PatientLimit
             );
-            doctor.AddWorkSchedule(workSchedule);
+
+            await _workScheduleRepository.AddAsync(workSchedule);
+
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return new WorkScheduleDto
             {

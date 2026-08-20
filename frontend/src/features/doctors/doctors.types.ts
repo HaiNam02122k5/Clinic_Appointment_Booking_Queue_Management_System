@@ -1,27 +1,26 @@
-export type DoctorGender =
-  | 'Male'
-  | 'Female'
-  | 'Other'
-
 export type DoctorStatus =
   | 'Active'
   | 'Inactive'
+
+export type Gender =
+  | 'Male'
+  | 'Female'
 
 export interface Doctor {
   id: string
   fullName: string
   phoneNumber: string
   email: string
-  gender: DoctorGender
+  gender: Gender
   licenseNumber: string
   qualification: string
   currentSpecialty: string
   experienceYears: number
   status: DoctorStatus
-  biography?: string
 }
 
-export interface DoctorDetail extends Doctor {
+export interface DoctorDetail
+  extends Doctor {
   biography: string
 }
 
@@ -46,13 +45,6 @@ export interface GetDoctorsParams {
   PageSize?: number
 }
 
-export interface ApiResponse<T> {
-  statusCode: string
-  isSuccess: boolean
-  errorMessages: string[]
-  result: T
-}
-
 export interface CreateDoctorRequest {
   hireDate: string
   licenseNumber: string
@@ -60,7 +52,6 @@ export interface CreateDoctorRequest {
   experienceYears: number
   status: DoctorStatus
   specialtyId: string
-
   email: string
   address: string
   username: string
@@ -68,7 +59,7 @@ export interface CreateDoctorRequest {
   fullName: string
   phoneNumber: string
   dateOfBirth: string
-  gender: DoctorGender
+  gender: Gender
   biography: string
 }
 
@@ -77,35 +68,10 @@ export interface UpdateDoctorRequest {
   phoneNumber: string
   email: string
   dateOfBirth: string
-  gender: DoctorGender
+  gender: Gender
   address: string
   licenseNumber: string
   qualification: string
   experienceYears: number
   biography: string
-}
-
-export interface Specialty {
-  id: string
-  name: string
-  description: string
-  establishedDate: string
-}
-
-export interface PagedSpecialtiesResponse {
-  items: Specialty[]
-  pageNumber: number
-  pageSize: number
-  totalCount: number
-  totalPages: number
-  hasPrevious: boolean
-  hasNext: boolean
-}
-
-export interface GetSpecialtiesParams {
-  Search?: string
-  SortBy?: string
-  Descending?: boolean
-  Page?: number
-  PageSize?: number
 }

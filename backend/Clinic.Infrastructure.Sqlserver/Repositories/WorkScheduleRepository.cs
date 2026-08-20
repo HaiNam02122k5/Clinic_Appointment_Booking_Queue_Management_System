@@ -17,7 +17,11 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
         {
             _context = context;
         }
-
+        
+        public async Task AddAsync(WorkSchedule workSchedule)
+        {
+            await _context.WorkSchedules.AddAsync(workSchedule);
+        }
         // ===== Nhóm chức năng: đặt lịch khám (booking) =====
 
         public async Task<WorkSchedule?> GetByIdAsync(Guid id)
@@ -171,5 +175,6 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                     ws.Date == date && ws.ShiftStart < endTime && ws.ShiftEnd > startTime && (currentWSId == null || ws.Id != currentWSId));
             return hasOverlapping;
         }
+
     }
 }
