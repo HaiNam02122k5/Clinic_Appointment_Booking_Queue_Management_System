@@ -1,0 +1,31 @@
+﻿using Clinic.Application.Interfaces;
+using Clinic.Domain.Entities;
+using Clinic.Domain.Enums;
+using Clinic.Infrastructure.Sqlserver.Persistence;
+using Microsoft.EntityFrameworkCore;
+
+namespace Clinic.Infrastructure.Sqlserver.Repositories
+{
+    public class NotificationRepository : INotificationRepository
+    {
+        private readonly ApplicationDbContext _context;
+        public NotificationRepository(ApplicationDbContext context)
+        {
+            _context = context;
+        }
+        public async Task AddAsync(Notification notification, CancellationToken cancellationToken)
+        {
+            await _context.Notifications.AddAsync(notification, cancellationToken);
+        }
+
+        public async Task<IEnumerable<Notification>> GetAllScheduledAndFailedByAsync(DateTimeOffset time, CancellationToken stoppingToken)
+        {
+            return await _context.Notifications.Where(n => n.Status == NotificationStatus.Failed || (n.ScheduledAt != null && n.ScheduledAt <= time && n.Status == NotificationStatus.Pending)).ToListAsync(stoppingToken);
+        }
+
+        public async Task<Notification?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+        {
+            return await _context.Notifications.Include(n => n.Person).ThenInclude(p => p.User).FirstOrDefaultAsync(n => n.Id == id, cancellationToken);
+        }
+    }
+}

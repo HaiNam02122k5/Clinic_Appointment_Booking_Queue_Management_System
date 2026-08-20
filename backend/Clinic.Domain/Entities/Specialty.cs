@@ -22,7 +22,7 @@ namespace Clinic.Domain.Entities
         {
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentException("Specialty name cannot be null or empty.", nameof(name));
-            if (establishedDate > DateOnly.FromDateTime(DateTime.UtcNow))
+            if (establishedDate > new TimeConverter().Today)
                 throw new ArgumentException("Established date cannot be in the future.", nameof(establishedDate));
             Name = name;
             Description = description;
@@ -44,7 +44,7 @@ namespace Clinic.Domain.Entities
         {
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentException("Specialty name cannot be null or empty.", nameof(name));
-            if (establishedDate > DateOnly.FromDateTime(DateTime.UtcNow))
+            if (establishedDate > new TimeConverter().Today)
                 throw new ArgumentException("Established date cannot be in the future.", nameof(establishedDate));
             Name = name;
             Description = description;

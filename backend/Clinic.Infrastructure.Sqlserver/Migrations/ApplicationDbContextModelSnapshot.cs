@@ -41,6 +41,7 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Reason")
+                        .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
@@ -49,11 +50,14 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<DateTime>("TimeSlot")
-                        .HasColumnType("datetime2");
+                    b.Property<TimeOnly>("TimeSlot")
+                        .HasColumnType("time");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("WorkScheduleId")
                         .HasColumnType("uniqueidentifier");
@@ -62,9 +66,54 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
 
                     b.HasIndex("PatientId");
 
+                    b.HasIndex("UpdatedByUserId");
+
                     b.HasIndex("WorkScheduleId");
 
+                    b.HasIndex("TimeSlot", "WorkScheduleId")
+                        .IsUnique()
+                        .HasFilter("[IsWalkIn] = 0 AND [Status] <> 'Cancelled' AND [IsDeleted] = 0");
+
                     b.ToTable("Appointments", (string)null);
+                });
+
+            modelBuilder.Entity("Clinic.Domain.Entities.AppointmentSnapshot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AppointmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("OldWorkScheduleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<TimeOnly>("TimeSlot")
+                        .HasColumnType("time");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("UpdatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppointmentId");
+
+                    b.HasIndex("OldWorkScheduleId");
+
+                    b.HasIndex("UpdatedByUserId");
+
+                    b.ToTable("AppointmentSnapshots", (string)null);
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.Doctor", b =>
@@ -224,6 +273,9 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<bool?>("IsRead")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Message")
                         .IsRequired()
                         .HasMaxLength(1000)
@@ -232,6 +284,9 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                     b.Property<Guid>("PersonId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<DateTimeOffset?>("ScheduledAt")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<DateTime?>("SendTime")
                         .HasColumnType("datetime2");
 
@@ -239,6 +294,10 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Type")
                         .IsRequired()
@@ -351,7 +410,7 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Cancel own appointment (Patient)",
                             IsDeleted = false,
-                            Name = "appointment.cancel.own"
+                            Name = "appointment.edit.own"
                         },
                         new
                         {
@@ -359,7 +418,7 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Cancel any appointment (Admin/Receptionist)",
                             IsDeleted = false,
-                            Name = "appointment.cancel.any"
+                            Name = "appointment.edit.any"
                         },
                         new
                         {
@@ -675,11 +734,83 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         },
                         new
                         {
+                            Id = new Guid("2000000b-0000-0000-0000-000000000005"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Start exam for own queue ticket (Doctor)",
+                            IsDeleted = false,
+                            Name = "queue.start-exam.own"
+                        },
+                        new
+                        {
+                            Id = new Guid("2000000b-0000-0000-0000-000000000002"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Start exam for any doctor's queue ticket (Admin/Receptionist)",
+                            IsDeleted = false,
+                            Name = "queue.start-exam.any"
+                        },
+                        new
+                        {
+                            Id = new Guid("2000000b-0000-0000-0000-000000000003"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Complete exam for own queue ticket (Doctor)",
+                            IsDeleted = false,
+                            Name = "queue.complete-exam.own"
+                        },
+                        new
+                        {
+                            Id = new Guid("2000000b-0000-0000-0000-000000000004"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Complete exam for any doctor's queue ticket (Admin/Receptionist)",
+                            IsDeleted = false,
+                            Name = "queue.complete-exam.any"
+                        },
+                        new
+                        {
                             Id = new Guid("2000000b-0000-0000-0000-000000000001"),
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             Description = "Manage doctor own shift suggestions (Doctor)",
                             IsDeleted = false,
                             Name = "shift.suggestion.self-manage"
+                        },
+                        new
+                        {
+                            Id = new Guid("2000000a-0000-0000-0000-000000000007"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Create any patient record (Receptionist)",
+                            IsDeleted = false,
+                            Name = "patient.create.any"
+                        },
+                        new
+                        {
+                            Id = new Guid("2000000a-0000-0000-0000-000000000008"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Edit own patient record (Patient)",
+                            IsDeleted = false,
+                            Name = "patient.edit.own"
+                        },
+                        new
+                        {
+                            Id = new Guid("2000000a-0000-0000-0000-000000000009"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "Edit any patient record (Receptionist)",
+                            IsDeleted = false,
+                            Name = "patient.edit.any"
+                        },
+                        new
+                        {
+                            Id = new Guid("2000000a-0000-0000-0000-000000000010"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "View own patient record (Patient)",
+                            IsDeleted = false,
+                            Name = "patient.view.own"
+                        },
+                        new
+                        {
+                            Id = new Guid("2000000a-0000-0000-0000-000000000011"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Description = "View any patient record (Receptionist)",
+                            IsDeleted = false,
+                            Name = "patient.view.any"
                         });
                 });
 
@@ -730,6 +861,22 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                     b.ToTable("Persons", (string)null);
                 });
 
+            modelBuilder.Entity("Clinic.Domain.Entities.QueueCounter", b =>
+                {
+                    b.Property<Guid>("DoctorId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<int>("CurrentNumber")
+                        .HasColumnType("int");
+
+                    b.HasKey("DoctorId", "Date");
+
+                    b.ToTable("QueueCounters", (string)null);
+                });
+
             modelBuilder.Entity("Clinic.Domain.Entities.QueueTicket", b =>
                 {
                     b.Property<Guid>("Id")
@@ -756,6 +903,12 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
 
                     b.Property<int>("QueueNumber")
                         .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -1015,6 +1168,16 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         new
                         {
                             RoleId = new Guid("00000000-0000-0000-0000-000000000001"),
+                            PermissionId = new Guid("2000000b-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000001"),
+                            PermissionId = new Guid("2000000b-0000-0000-0000-000000000004")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000001"),
                             PermissionId = new Guid("10000000-0000-0000-0000-000000000016")
                         },
                         new
@@ -1125,12 +1288,37 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         new
                         {
                             RoleId = new Guid("00000000-0000-0000-0000-000000000003"),
+                            PermissionId = new Guid("2000000b-0000-0000-0000-000000000002")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000003"),
+                            PermissionId = new Guid("2000000b-0000-0000-0000-000000000004")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000003"),
                             PermissionId = new Guid("10000000-0000-0000-0000-000000000015")
                         },
                         new
                         {
                             RoleId = new Guid("00000000-0000-0000-0000-000000000003"),
                             PermissionId = new Guid("10000000-0000-0000-0000-000000000018")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000003"),
+                            PermissionId = new Guid("2000000a-0000-0000-0000-000000000007")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000003"),
+                            PermissionId = new Guid("2000000a-0000-0000-0000-000000000009")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000003"),
+                            PermissionId = new Guid("2000000a-0000-0000-0000-000000000011")
                         },
                         new
                         {
@@ -1190,6 +1378,16 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         new
                         {
                             RoleId = new Guid("00000000-0000-0000-0000-000000000004"),
+                            PermissionId = new Guid("2000000b-0000-0000-0000-000000000005")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000004"),
+                            PermissionId = new Guid("2000000b-0000-0000-0000-000000000003")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000004"),
                             PermissionId = new Guid("10000000-0000-0000-0000-000000000015")
                         },
                         new
@@ -1201,6 +1399,11 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         {
                             RoleId = new Guid("00000000-0000-0000-0000-000000000004"),
                             PermissionId = new Guid("2000000b-0000-0000-0000-000000000001")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000004"),
+                            PermissionId = new Guid("2000000a-0000-0000-0000-000000000011")
                         },
                         new
                         {
@@ -1241,6 +1444,16 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         {
                             RoleId = new Guid("00000000-0000-0000-0000-000000000002"),
                             PermissionId = new Guid("2000000a-0000-0000-0000-000000000004")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002"),
+                            PermissionId = new Guid("2000000a-0000-0000-0000-000000000008")
+                        },
+                        new
+                        {
+                            RoleId = new Guid("00000000-0000-0000-0000-000000000002"),
+                            PermissionId = new Guid("2000000a-0000-0000-0000-000000000010")
                         });
                 });
 
@@ -1253,24 +1466,27 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
                     b.Property<Guid>("DoctorId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<int>("PatientLimitPerSlot")
+                    b.Property<int>("PatientLimit")
                         .HasColumnType("int");
 
                     b.Property<string>("Reason")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<DateTime>("ShiftEnd")
-                        .HasColumnType("datetime2");
+                    b.Property<TimeOnly>("ShiftEnd")
+                        .HasColumnType("time");
 
-                    b.Property<DateTime>("ShiftStart")
-                        .HasColumnType("datetime2");
+                    b.Property<TimeOnly>("ShiftStart")
+                        .HasColumnType("time");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -1428,20 +1644,23 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
                     b.Property<Guid>("DoctorId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<int>("PatientLimitPerSlot")
+                    b.Property<int>("PatientLimit")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("ShiftEnd")
-                        .HasColumnType("datetime2");
+                    b.Property<TimeOnly>("ShiftEnd")
+                        .HasColumnType("time");
 
-                    b.Property<DateTime>("ShiftStart")
-                        .HasColumnType("datetime2");
+                    b.Property<TimeOnly>("ShiftStart")
+                        .HasColumnType("time");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -1466,6 +1685,12 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Clinic.Domain.Entities.User", "Updator")
+                        .WithMany()
+                        .HasForeignKey("UpdatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("Clinic.Domain.Entities.WorkSchedule", "WorkSchedule")
                         .WithMany("Appointments")
                         .HasForeignKey("WorkScheduleId")
@@ -1474,7 +1699,36 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
 
                     b.Navigation("Patient");
 
+                    b.Navigation("Updator");
+
                     b.Navigation("WorkSchedule");
+                });
+
+            modelBuilder.Entity("Clinic.Domain.Entities.AppointmentSnapshot", b =>
+                {
+                    b.HasOne("Clinic.Domain.Entities.Appointment", "Appointment")
+                        .WithMany("Snapshots")
+                        .HasForeignKey("AppointmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Clinic.Domain.Entities.WorkSchedule", "OldWorkSchedule")
+                        .WithMany()
+                        .HasForeignKey("OldWorkScheduleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Clinic.Domain.Entities.User", "Updator")
+                        .WithMany()
+                        .HasForeignKey("UpdatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Appointment");
+
+                    b.Navigation("OldWorkSchedule");
+
+                    b.Navigation("Updator");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.Doctor", b =>
@@ -1654,6 +1908,8 @@ namespace Clinic.Infrastructure.Sqlserver.Migrations
             modelBuilder.Entity("Clinic.Domain.Entities.Appointment", b =>
                 {
                     b.Navigation("QueueTicket");
+
+                    b.Navigation("Snapshots");
                 });
 
             modelBuilder.Entity("Clinic.Domain.Entities.Doctor", b =>

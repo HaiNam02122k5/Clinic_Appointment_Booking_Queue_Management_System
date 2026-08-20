@@ -24,6 +24,7 @@ namespace Clinic.Infrastructure.Sqlserver.Persistence
         public DbSet<Patient> Patients => Set<Patient>();
         public DbSet<Appointment> Appointments => Set<Appointment>();
         public DbSet<QueueTicket> QueueTickets => Set<QueueTicket>();
+        public DbSet<QueueCounter> QueueCounters => Set<QueueCounter>();
         public DbSet<MedicalReport> MedicalReports => Set<MedicalReport>();
         public DbSet<Notification> Notifications => Set<Notification>();
         public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();

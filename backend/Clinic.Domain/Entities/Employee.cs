@@ -9,6 +9,7 @@ namespace Clinic.Domain.Entities
     /// </summary>
     public class Employee : BaseEntity
     {
+        private readonly TimeSpan VietnamTimeOffset = TimeSpan.FromHours(7); // Giờ Việt Nam (UTC+7)
         /// <summary>FK, UNIQUE.</summary>
         public Guid PersonId { get; protected set; }
         public Person Person { get; protected set; } = null!;
@@ -26,8 +27,9 @@ namespace Clinic.Domain.Entities
 
         public Employee(Person person, DateOnly hireDate, Employee? manager = null, EmployeeStatus status = EmployeeStatus.Active)
         {
+            var localToday = new TimeConverter().Today;
             if (person == null) throw new ArgumentNullException(nameof(person));
-            if (hireDate > DateOnly.FromDateTime(DateTime.Now).AddDays(30)) throw new ArgumentException("Hire date cannot be more than one month later from today.", nameof(hireDate));
+            if (hireDate > localToday.AddDays(30)) throw new ArgumentException("Hire date cannot be more than one month later from today.", nameof(hireDate));
             Person = person;
             PersonId = person.Id;
             HireDate = hireDate;

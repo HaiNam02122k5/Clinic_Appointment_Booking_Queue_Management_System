@@ -45,7 +45,7 @@ namespace Clinic.Domain.Entities
         {
             if (EndDate != null) throw new InvalidOperationException("Work history has already ended.");
             if (endDate != null && endDate < StartDate) throw new ArgumentException("End date cannot be earlier than start date.", nameof(endDate));
-            EndDate = endDate ?? DateOnly.FromDateTime(DateTime.UtcNow);
+            EndDate = endDate ?? new TimeConverter().Today;
             MarkUpdated();
         }
     }

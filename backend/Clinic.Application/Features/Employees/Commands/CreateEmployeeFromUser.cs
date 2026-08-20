@@ -65,6 +65,20 @@ namespace Clinic.Application.Features.Employees.Commands
                 address: request.Address
             );
             var employee = new Employee(user.Person, request.HireDate);
+
+            // Temporarily create a patient for employee here
+            if (user.Person.Patient == null)
+            {
+                var patient = new Patient(user.Person, null, null);
+                var patientRole = await _roleRepository.GetByNameAsync("Patient");
+                if (patientRole == null)
+                {
+                    throw new ArgumentException($"Role 'Patient' does not exist.");
+                }
+                user.AssignRole(patientRole);
+                user.Person.Patient = patient;
+            }
+
             // Add new roles
             foreach (var roleName in request.Roles)
             {

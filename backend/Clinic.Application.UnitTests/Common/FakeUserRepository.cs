@@ -1,4 +1,4 @@
-﻿using Clinic.Application.Common.Models;
+using Clinic.Application.Common.Models;
 using Clinic.Application.Interfaces;
 using Clinic.Domain.Entities;
 using Clinic.Domain.Enums;
@@ -20,7 +20,7 @@ namespace Clinic.Application.UnitTests.Common
 
         public async Task<IEnumerable<User>> GetAllAsync()
         {
-            throw new NotImplementedException();
+            return _users.Where(u => !u.IsDeleted).ToList();
         }
 
         public async Task<User?> GetByIdAsync(Guid? id)

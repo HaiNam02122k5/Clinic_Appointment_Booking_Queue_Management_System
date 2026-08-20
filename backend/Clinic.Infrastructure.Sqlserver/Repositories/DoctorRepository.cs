@@ -1,4 +1,3 @@
-﻿using Azure;
 using Clinic.Application.Common.Models;
 using Clinic.Application.Interfaces;
 using Clinic.Domain.Entities;
@@ -11,13 +10,32 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
     public class DoctorRepository : IDoctorRepository
     {
         private readonly ApplicationDbContext _context;
+
         public DoctorRepository(ApplicationDbContext context)
         {
             _context = context;
         }
+
         public async Task AddAsync(Doctor doctor)
         {
             _context.Doctors.Add(doctor);
+        }
+
+        public async Task<List<Doctor>> GetActiveDoctorsBySpecialty(Guid? specialtyId)
+        {
+            var query = _context.Doctors
+                .Include(d => d.Employee)
+                    .ThenInclude(e => e.Person)
+                .Include(d => d.WorkHistories)
+                    .ThenInclude(wh => wh.Specialty)
+                .Where(d => d.IsDeleted == false && d.Status == DoctorStatus.Active);
+
+            if (specialtyId != null)
+            {
+                query = query.Where(d => d.WorkHistories.Any(wh => wh.SpecialtyId == specialtyId && wh.EndDate == null));
+            }
+
+            return await query.ToListAsync();
         }
 
         public async Task<Doctor?> GetInfoByIdAsync(Guid? doctorId)
@@ -26,6 +44,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             {
                 return null;
             }
+
             return await _context.Doctors
                 .Include(d => d.Employee)
                     .ThenInclude(e => e.Person)
@@ -79,7 +98,11 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
 
             var totalCount = await query.CountAsync();
 
-            var items = await query.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToListAsync();
+            var items = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
             return new PagedResult<Doctor>(items, totalCount);
         }
     }

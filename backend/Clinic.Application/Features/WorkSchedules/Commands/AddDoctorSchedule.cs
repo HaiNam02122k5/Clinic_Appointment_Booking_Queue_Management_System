@@ -7,7 +7,7 @@ using MediatR;
 namespace Clinic.Application.Features.WorkSchedules.Commands
 {
     // Use-case: Admin adds a new work schedule for a doctor
-    public record AddDoctorScheduleCommand(Guid DoctorId, DateTime StartTime, DateTime EndTime, int PatientLimitPerSlot) : IRequest<WorkScheduleDto>;
+    public record AddDoctorScheduleCommand(Guid DoctorId, DateOnly Date, TimeOnly StartTime, TimeOnly EndTime, int PatientLimit) : IRequest<WorkScheduleDto>;
 
     public class AddDoctorScheduleCommandHandler : IRequestHandler<AddDoctorScheduleCommand, WorkScheduleDto>
     {
@@ -27,16 +27,17 @@ namespace Clinic.Application.Features.WorkSchedules.Commands
             {
                 throw new NotFoundException("Doctor not found.");
             }
-            if (await _workScheduleRepository.HasOverlappingWorkSchedule(request.DoctorId, request.StartTime, request.EndTime))
+            if (await _workScheduleRepository.HasOverlappingWorkSchedule(request.DoctorId, request.Date, request.StartTime, request.EndTime))
             {
                 throw new InvalidOperationException("The doctor has an overlapping work schedule in the specified time range.");
             }
             var workSchedule = new WorkSchedule
             (
                 doctor: doctor,
+                date: request.Date,
                 shiftStart: request.StartTime,
                 shiftEnd: request.EndTime,
-                patientLimitPerSlot: request.PatientLimitPerSlot
+                patientLimit: request.PatientLimit
             );
             doctor.AddWorkSchedule(workSchedule);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -44,9 +45,10 @@ namespace Clinic.Application.Features.WorkSchedules.Commands
             {
                 Id = workSchedule.Id,
                 DoctorId = doctor.Id,
+                Date = request.Date,
                 StartTime = request.StartTime,
                 EndTime = request.EndTime,
-                PatientLimitPerSlot = request.PatientLimitPerSlot,
+                PatientLimit = request.PatientLimit,
                 Status = workSchedule.Status
             };
         }
