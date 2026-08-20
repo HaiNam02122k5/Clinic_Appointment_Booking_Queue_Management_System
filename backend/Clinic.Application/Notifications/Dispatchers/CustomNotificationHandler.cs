@@ -85,7 +85,7 @@ namespace Clinic.Application.Notifications.Dispatchers
                 var notification = new Notification(
                         notificationJob.Person.Id,
                         notificationJob.NotificationType,
-                        null,
+                        "<NO TITLE>",
                         content.Message,
                         NotificationChannel.Sms,
                         scheduledTime

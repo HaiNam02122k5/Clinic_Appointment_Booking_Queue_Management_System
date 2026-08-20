@@ -99,7 +99,7 @@ namespace Clinic.Application.Notifications.Dispatchers
                 var notification = new Notification(
                         appointmentJob.Person.Id,
                         appointmentJob.NotificationType,
-                        null,
+                        "<NO TITLE>",
                         content.Message,
                         NotificationChannel.Sms,
                         scheduledTime
