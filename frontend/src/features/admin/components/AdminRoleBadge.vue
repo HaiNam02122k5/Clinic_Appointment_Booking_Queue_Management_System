@@ -1,21 +1,29 @@
 <script setup lang="ts">
-import type { AccountRole } from '@/features/admin/admin.mock'
+import { computed } from 'vue'
 
-defineProps<{
-  role: AccountRole
+const props = defineProps<{
+  role: string
 }>()
 
-const roleText: Record<AccountRole, string> = {
+const normalizedRole = computed(() => {
+  const r = (props.role || '').toLowerCase()
+  if (r === 'admin') return 'admin'
+  if (r === 'doctor') return 'doctor'
+  if (r === 'receptionist') return 'receptionist'
+  return 'patient'
+})
+
+const roleText: Record<string, string> = {
   patient: 'Bệnh nhân',
   doctor: 'Bác sĩ',
   receptionist: 'Lễ tân',
   admin: 'Quản trị viên',
 }
 
-const roleClass: Record<AccountRole, string> = {
+const roleClass: Record<string, string> = {
   patient: 'bg-slate-100 text-slate-600',
   doctor: 'bg-blue-50 text-blue-700',
-  receptionist: 'bg-violet-50 text-violet-700',
+  receptionist: 'bg-indigo-50 text-indigo-700',
   admin: 'bg-amber-50 text-amber-700',
 }
 </script>
@@ -23,8 +31,8 @@ const roleClass: Record<AccountRole, string> = {
 <template>
   <span
     class="inline-flex rounded-md px-2.5 py-1 text-xs font-medium"
-    :class="roleClass[role]"
+    :class="roleClass[normalizedRole] || 'bg-slate-100 text-slate-600'"
   >
-    {{ roleText[role] }}
+    {{ roleText[normalizedRole] || role }}
   </span>
 </template>

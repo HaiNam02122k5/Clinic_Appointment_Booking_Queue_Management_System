@@ -23,7 +23,7 @@ const form = reactive<CreateUserInput>({ name: '', username: '', email: '' })
 watch(
   () => [props.open, props.initial],
   () => {
-    form.name = props.initial?.name ?? ''
+    form.name = props.initial?.fullName ?? props.initial?.name ?? ''
     form.username = props.initial?.username ?? ''
     form.email = props.initial?.email ?? ''
   },

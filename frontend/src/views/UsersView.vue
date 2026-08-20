@@ -79,7 +79,7 @@ async function handleSubmit(input: CreateUserInput) {
             :key="u.id"
             class="border-b border-gray-100 last:border-0 dark:border-gray-800"
           >
-            <td class="px-4 py-3 font-medium">{{ u.name }}</td>
+            <td class="px-4 py-3 font-medium">{{ u.fullName || u.name }}</td>
             <td class="px-4 py-3 text-gray-500">@{{ u.username }}</td>
             <td class="px-4 py-3 text-gray-500">{{ u.email }}</td>
             <td class="px-4 py-3">
