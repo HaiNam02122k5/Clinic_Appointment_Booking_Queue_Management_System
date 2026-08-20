@@ -1,9 +1,23 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import {
+  computed,
+  onMounted,
+  ref,
+  watch,
+} from 'vue'
 
 import AdminPagination from '@/features/admin/components/AdminPagination.vue'
 
-import { DOCTORS } from '@/features/admin/admin.mock'
+import { doctorsApi } from '@/features/doctors/doctors.api'
+import type { Doctor } from '@/features/doctors/doctors.types'
+
+// ================================
+// STATE
+// ================================
+
+const doctors = ref<Doctor[]>([])
+const loading = ref(false)
+const error = ref('')
 
 const search = ref('')
 const specialtyFilter = ref('all')
@@ -13,11 +27,44 @@ const currentPage = ref(1)
 const pageSize = 5
 
 // ================================
+// LOAD API
+// ================================
+
+async function loadDoctors() {
+  loading.value = true
+  error.value = ''
+
+  try {
+    const response = await doctorsApi.list()
+
+    doctors.value = response.items
+
+    console.log('Doctors from API:', doctors.value)
+  } catch (err: unknown) {
+    console.error('Failed to load doctors:', err)
+
+    error.value = 'Không thể tải danh sách bác sĩ.'
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  loadDoctors()
+})
+
+// ================================
 // SPECIALTIES
 // ================================
 
 const specialties = computed(() => {
-  return [...new Set(DOCTORS.map((doctor) => doctor.specialty))]
+  return [
+    ...new Set(
+      doctors.value
+        .map((doctor) => doctor.currentSpecialty)
+        .filter(Boolean),
+    ),
+  ]
 })
 
 // ================================
@@ -27,20 +74,25 @@ const specialties = computed(() => {
 const filteredDoctors = computed(() => {
   const keyword = search.value.trim().toLowerCase()
 
-  return DOCTORS.filter((doctor) => {
+  return doctors.value.filter((doctor) => {
     const matchesSearch =
       !keyword ||
-      doctor.name.toLowerCase().includes(keyword) ||
-      doctor.specialty.toLowerCase().includes(keyword) ||
-      doctor.room.toLowerCase().includes(keyword)
+      doctor.fullName.toLowerCase().includes(keyword) ||
+      doctor.currentSpecialty.toLowerCase().includes(keyword) ||
+      (doctor.email ?? '').toLowerCase().includes(keyword)
 
     const matchesSpecialty =
       specialtyFilter.value === 'all' ||
-      doctor.specialty === specialtyFilter.value
+      doctor.currentSpecialty === specialtyFilter.value
+
+    const doctorStatus =
+      doctor.status === 0
+        ? 'active'
+        : 'inactive'
 
     const matchesStatus =
       statusFilter.value === 'all' ||
-      doctor.status === statusFilter.value
+      doctorStatus === statusFilter.value
 
     return (
       matchesSearch &&
@@ -81,6 +133,14 @@ watch(
 // ================================
 // HELPERS
 // ================================
+
+function getDoctorStatus(
+  doctor: Doctor,
+): 'active' | 'inactive' {
+  return doctor.status === 0
+    ? 'active'
+    : 'inactive'
+}
 
 function statusText(
   status: 'active' | 'inactive',
@@ -250,17 +310,16 @@ function resetFilters() {
 
     <div
       class="rounded-xl border border-slate-200
-             bg-white p-5"
+            bg-white p-5"
     >
-
       <div
         class="mb-4 flex items-center
-               justify-between"
+              justify-between"
       >
         <div>
           <h2
             class="text-sm font-semibold
-                   text-slate-800"
+                  text-slate-800"
           >
             Danh sách bác sĩ
           </h2>
@@ -273,94 +332,72 @@ function resetFilters() {
 
       <div
         class="overflow-hidden
-               rounded-lg border
-               border-slate-200"
+              rounded-lg border
+              border-slate-200"
       >
-        <table class="w-full text-sm">
+        <!-- LOADING -->
 
-          <!-- HEADER -->
+        <div
+          v-if="loading"
+          class="py-12 text-center text-sm text-slate-400"
+        >
+          Đang tải danh sách bác sĩ...
+        </div>
 
+        <!-- ERROR -->
+
+        <div
+          v-else-if="error"
+          class="py-12 text-center text-sm text-red-500"
+        >
+          {{ error }}
+        </div>
+
+        <!-- TABLE -->
+
+        <table
+          v-else
+          class="w-full text-sm"
+        >
           <thead>
             <tr
               class="border-b
-                     border-slate-200
-                     bg-slate-50"
+                    border-slate-200
+                    bg-slate-50"
             >
-              <th
-                class="px-4 py-3 text-left
-                       text-xs font-semibold
-                       uppercase tracking-wide
-                       text-slate-500"
-              >
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 #
               </th>
 
-              <th
-                class="px-4 py-3 text-left
-                       text-xs font-semibold
-                       uppercase tracking-wide
-                       text-slate-500"
-              >
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Bác sĩ
               </th>
 
-              <th
-                class="px-4 py-3 text-left
-                       text-xs font-semibold
-                       uppercase tracking-wide
-                       text-slate-500"
-              >
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Chuyên khoa
               </th>
 
-              <th
-                class="px-4 py-3 text-left
-                       text-xs font-semibold
-                       uppercase tracking-wide
-                       text-slate-500"
-              >
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Phòng
               </th>
 
-              <th
-                class="px-4 py-3 text-left
-                       text-xs font-semibold
-                       uppercase tracking-wide
-                       text-slate-500"
-              >
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Lịch làm việc
               </th>
 
-              <th
-                class="px-4 py-3 text-left
-                       text-xs font-semibold
-                       uppercase tracking-wide
-                       text-slate-500"
-              >
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Số bệnh nhân
               </th>
 
-              <th
-                class="px-4 py-3 text-left
-                       text-xs font-semibold
-                       uppercase tracking-wide
-                       text-slate-500"
-              >
+              <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Trạng thái
               </th>
 
-              <th
-                class="px-4 py-3 text-right
-                       text-xs font-semibold
-                       uppercase tracking-wide
-                       text-slate-500"
-              >
+              <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">
                 Thao tác
               </th>
             </tr>
           </thead>
-
-          <!-- BODY -->
 
           <tbody class="divide-y divide-slate-100">
 
@@ -369,12 +406,11 @@ function resetFilters() {
               :key="doctor.id"
               class="hover:bg-slate-50"
             >
-
               <!-- NUMBER -->
 
               <td
                 class="px-4 py-3
-                       text-xs text-slate-400"
+                      text-xs text-slate-400"
               >
                 {{
                   (currentPage - 1) * pageSize +
@@ -388,9 +424,9 @@ function resetFilters() {
               <td class="px-4 py-3">
                 <div
                   class="font-medium
-                         text-slate-800"
+                        text-slate-800"
                 >
-                  {{ doctor.name }}
+                  {{ doctor.fullName }}
                 </div>
               </td>
 
@@ -398,37 +434,37 @@ function resetFilters() {
 
               <td
                 class="px-4 py-3
-                       text-slate-600"
+                      text-slate-600"
               >
-                {{ doctor.specialty }}
+                {{ doctor.currentSpecialty }}
               </td>
 
               <!-- ROOM -->
 
               <td
                 class="px-4 py-3
-                       text-slate-600"
+                      text-slate-600"
               >
-                {{ doctor.room }}
+                -
               </td>
 
               <!-- SCHEDULE -->
 
               <td
                 class="px-4 py-3
-                       text-xs text-slate-500"
+                      text-xs text-slate-500"
               >
-                {{ doctor.schedule }}
+                -
               </td>
 
               <!-- PATIENTS -->
 
               <td
                 class="px-4 py-3
-                       font-medium
-                       text-slate-700"
+                      font-medium
+                      text-slate-700"
               >
-                {{ doctor.patients }}
+                -
               </td>
 
               <!-- STATUS -->
@@ -436,12 +472,10 @@ function resetFilters() {
               <td class="px-4 py-3">
                 <span
                   class="rounded-md px-2.5 py-1
-                         text-xs font-medium"
-                  :class="
-                    statusClass(doctor.status)
-                  "
+                        text-xs font-medium"
+                  :class="statusClass(getDoctorStatus(doctor))"
                 >
-                  {{ statusText(doctor.status) }}
+                  {{ statusText(getDoctorStatus(doctor)) }}
                 </span>
               </td>
 
@@ -450,49 +484,43 @@ function resetFilters() {
               <td class="px-4 py-3">
                 <div
                   class="flex justify-end
-                         gap-2"
+                        gap-2"
                 >
                   <button
-                    class="rounded-md
-                           px-2.5 py-1.5
-                           text-xs font-medium
-                           text-slate-600
-                           hover:bg-slate-100"
+                    class="rounded-md px-2.5 py-1.5
+                          text-xs font-medium
+                          text-slate-600
+                          hover:bg-slate-100"
                   >
                     Xem
                   </button>
 
                   <button
-                    class="rounded-md
-                           px-2.5 py-1.5
-                           text-xs font-medium
-                           text-violet-600
-                           hover:bg-violet-50"
+                    class="rounded-md px-2.5 py-1.5
+                          text-xs font-medium
+                          text-violet-600
+                          hover:bg-violet-50"
                   >
                     Sửa
                   </button>
                 </div>
               </td>
-
             </tr>
 
             <!-- EMPTY -->
 
-            <tr
-              v-if="pagedDoctors.length === 0"
-            >
+            <tr v-if="pagedDoctors.length === 0">
               <td
                 colspan="8"
                 class="px-4 py-12
-                       text-center
-                       text-sm text-slate-400"
+                      text-center
+                      text-sm text-slate-400"
               >
                 Không tìm thấy bác sĩ phù hợp.
               </td>
             </tr>
 
           </tbody>
-
         </table>
       </div>
 
@@ -502,7 +530,6 @@ function resetFilters() {
         v-model:current-page="currentPage"
         :total-pages="totalPages"
       />
-
     </div>
 
   </div>
