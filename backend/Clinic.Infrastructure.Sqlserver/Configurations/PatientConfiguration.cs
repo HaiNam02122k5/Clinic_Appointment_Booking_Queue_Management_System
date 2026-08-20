@@ -23,6 +23,8 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
 
             builder.Property(p => p.InsuranceNumber).HasMaxLength(50);
             builder.Property(p => p.EmergencyContact).HasMaxLength(200);
+
+            builder.HasData(SampleData.Patients);
         }
     }
 }

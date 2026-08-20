@@ -21,6 +21,8 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
             builder.HasIndex(s => s.Name).IsUnique().HasFilter("[IsDeleted] = 0");
 
             builder.Property(s => s.Description).HasMaxLength(500);
+
+            builder.HasData(SampleData.Specialties);
         }
     }
 }
