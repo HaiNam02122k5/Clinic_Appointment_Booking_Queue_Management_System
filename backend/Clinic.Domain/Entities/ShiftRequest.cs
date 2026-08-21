@@ -71,12 +71,14 @@ namespace Clinic.Domain.Entities
             MarkUpdated();
         }
 
-        public void Approve()
+        public WorkSchedule Approve()
         {
             if (Status != ShiftRequestStatus.Pending) throw new InvalidOperationException("Only pending shift requests can be approved.");
             Status = ShiftRequestStatus.Approved;
-            Doctor.AddWorkSchedule(new WorkSchedule(Doctor, Date, ShiftStart, ShiftEnd, PatientLimit));
+            var workSchedule = new WorkSchedule(Doctor, Date, ShiftStart, ShiftEnd, PatientLimit);
+            Doctor.AddWorkSchedule(workSchedule);
             MarkUpdated();
+            return workSchedule;
         }
 
         public void Cancel()

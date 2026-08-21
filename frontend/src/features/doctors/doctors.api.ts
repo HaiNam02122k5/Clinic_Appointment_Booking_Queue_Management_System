@@ -1,12 +1,27 @@
 import { http } from '@/lib/api/http'
 import type {
+  ApiResponse,
+  AppointmentDetail,
   Doctor,
   DoctorDetail,
+  DoctorSchedule,
   GetDoctorsParams,
   PagedDoctorsResponse,
   CreateDoctorPayload,
   UpdateDoctorPayload,
+  UpdateDoctorRequest,
+  QueueTicket,
+  RequestedShift,
+  SkipQueueResult,
+  WorkSchedule,
 } from './doctors.types'
+
+const unwrap = <T>(data: ApiResponse<T> | T): T => {
+  if (data && typeof data === 'object' && 'result' in data) {
+    return (data as ApiResponse<T>).result
+  }
+  return data as T
+}
 
 export const doctorsApi = {
   // GET /doctors
@@ -86,10 +101,10 @@ export const doctorsApi = {
       gender: typeof d.gender === 'string' ? (d.gender.toLowerCase() === 'female' ? 1 : 0) : (d.gender ?? 0),
       address: d.address || d.Address || '',
       hireDate: d.hireDate || d.HireDate || '',
-    }
+    } as any
   },
 
-  // GET /doctors/me
+  // GET /doctors/me (Admin fallback)
   async getMyProfile(): Promise<DoctorDetail> {
     const res = await http.get<any>('/doctors/me').then((r) => r.data)
     const d = res?.result !== undefined ? res.result : res
@@ -112,7 +127,7 @@ export const doctorsApi = {
       gender: typeof d.gender === 'string' ? (d.gender.toLowerCase() === 'female' ? 1 : 0) : (d.gender ?? 0),
       address: d.address || d.Address || '',
       hireDate: d.hireDate || d.HireDate || '',
-    }
+    } as any
   },
 
   // POST /doctors
@@ -155,7 +170,7 @@ export const doctorsApi = {
     })
   },
 
-  // DELETE /doctors/{doctorId} -> Chuyển trạng thái sang Ngừng hoạt động (Inactive = 1) qua PATCH /doctors/{doctorId}/status
+  // DELETE /doctors/{doctorId} -> Inactive
   async delete(id: string): Promise<void> {
     await http.patch(`/doctors/${id}/status`, 1)
   },
@@ -164,4 +179,100 @@ export const doctorsApi = {
   async updateStatus(id: string, status: number): Promise<void> {
     await http.patch(`/doctors/${id}/status`, status)
   },
+
+  // ──────────────────────────────────────────────
+  // Doctor Portal APIs (from doctor-full branch)
+  // ──────────────────────────────────────────────
+
+  // GET /doctors/me (Doctor Portal – typed DoctorDetail)
+  getOwnProfile: (): Promise<DoctorDetail> =>
+    http.get<ApiResponse<DoctorDetail>>('/doctors/me').then((r) => unwrap(r.data)),
+
+  // PUT /doctors/me
+  updateOwnProfile: (data: UpdateDoctorRequest): Promise<unknown> =>
+    http.put<ApiResponse<unknown>>('/doctors/me', data).then((r) => unwrap(r.data)),
+
+  // GET /shifts?StartDate=...&EndDate=...
+  getOwnSchedule: (startDate: string, endDate: string): Promise<DoctorSchedule<WorkSchedule>> =>
+    http
+      .get<ApiResponse<DoctorSchedule<WorkSchedule>>>('/shifts', {
+        params: { StartDate: startDate, EndDate: endDate },
+      })
+      .then((r) => unwrap(r.data)),
+
+  // GET /shifts/suggestions
+  getOwnShiftRequests: (startDate: string, endDate: string): Promise<DoctorSchedule<RequestedShift>> =>
+    http
+      .get<ApiResponse<DoctorSchedule<RequestedShift>> | DoctorSchedule<RequestedShift>>('/shifts/suggestions', {
+        params: {
+          StartDate: startDate,
+          EndDate: endDate,
+        },
+      })
+      .then((r) => unwrap(r.data)),
+
+  // POST /shifts/suggestions
+  createShiftRequest: (data: {
+    date: string
+    startTime: string
+    endTime: string
+    patientLimit: number
+    reason: string
+  }): Promise<RequestedShift> =>
+    http
+      .post<ApiResponse<RequestedShift> | RequestedShift>('/shifts/suggestions', data)
+      .then((r) => unwrap(r.data)),
+
+  // PATCH /shifts/suggestions/{id}
+  updateShiftRequest: (
+    id: string,
+    data: {
+      date: string
+      startTime: string
+      endTime: string
+      patientLimitPerSlot: number
+      reason: string
+    },
+  ): Promise<unknown> =>
+    http.patch<ApiResponse<unknown>>(`/shifts/suggestions/${id}`, data).then((r) => unwrap(r.data)),
+
+  // POST /shifts/suggestions/{id}/cancel
+  cancelShiftRequest: (id: string): Promise<unknown> =>
+    http.post<ApiResponse<unknown>>(`/shifts/suggestions/${id}/cancel`).then((r) => unwrap(r.data)),
+
+  // GET /doctors/{doctorId}/queue
+  getQueue: (doctorId: string): Promise<QueueTicket[]> =>
+    http.get<ApiResponse<QueueTicket[]>>(`/doctors/${doctorId}/queue`).then((r) => unwrap(r.data)),
+
+  // POST /doctors/{doctorId}/queue/next
+  callNext: (doctorId: string): Promise<QueueTicket> =>
+    http.post<ApiResponse<QueueTicket>>(`/doctors/${doctorId}/queue/next`).then((r) => unwrap(r.data)),
+
+  // POST /queue/{queueTicketId}/start-exam
+  startExam: (queueTicketId: string): Promise<unknown> =>
+    http.post<ApiResponse<unknown>>(`/queue/${queueTicketId}/start-exam`).then((r) => unwrap(r.data)),
+
+  // POST /queue/{queueTicketId}/complete-exam
+  completeExam: (queueTicketId: string): Promise<unknown> =>
+    http.post<ApiResponse<unknown>>(`/queue/${queueTicketId}/complete-exam`).then((r) => unwrap(r.data)),
+
+  // POST /queue/{queueTicketId}/skip
+  skip: (queueTicketId: string): Promise<SkipQueueResult> =>
+    http.post<ApiResponse<SkipQueueResult>>(`/queue/${queueTicketId}/skip`).then((r) => unwrap(r.data)),
+
+  // PATCH /queue/{queueTicketId}/priority
+  setPriority: (queueTicketId: string, priority: boolean): Promise<unknown> =>
+    http
+      .patch<ApiResponse<unknown>>(`/queue/${queueTicketId}/priority`, { priority })
+      .then((r) => unwrap(r.data)),
+
+  // GET /appointments/{appointmentId}
+  getAppointment: (appointmentId: string): Promise<AppointmentDetail> =>
+    http
+      .get<ApiResponse<AppointmentDetail>>(`/appointments/${appointmentId}`)
+      .then((r) => unwrap(r.data)),
+
+  // Alias for compatibility
+  get: (id: string) =>
+    http.get<ApiResponse<Doctor>>(`/doctors/${id}`).then((r) => unwrap(r.data)),
 }

@@ -42,6 +42,18 @@ export interface DoctorScheduleRow {
   doctorId: string
   doctorName: string
   specialty: string
-  // Array of 7 days (Monday to Sunday) containing array of shifts for that day
   dayShifts: WorkSchedule[][]
+}
+
+export interface ShiftSuggestion {
+  id: string
+  doctorId: string
+  doctorName?: string
+  specialty?: string
+  date: string
+  startTime: string
+  endTime: string
+  patientLimit: number
+  reason?: string | null
+  status: 'Pending' | 'Approved' | 'Rejected' | 'Cancelled' | string
 }

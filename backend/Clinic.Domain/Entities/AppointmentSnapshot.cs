@@ -1,4 +1,4 @@
-﻿using Clinic.Domain.Common;
+using Clinic.Domain.Common;
 using Clinic.Domain.Enums;
 using System;
 using System.Collections.Generic;
@@ -26,7 +26,6 @@ namespace Clinic.Domain.Entities
 
         public AppointmentSnapshot(Appointment appointment)
         {
-            Id = Guid.NewGuid();
             Appointment = appointment;
             AppointmentId = appointment.Id;
             OldWorkScheduleId = appointment.WorkScheduleId;
