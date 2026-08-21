@@ -2,6 +2,7 @@ import { http } from '@/lib/api/http'
 import type {
   CreateShiftPayload,
   DoctorScheduleResponse,
+  ShiftSuggestion,
   UpdateShiftPayload,
   WorkSchedule,
 } from './shifts.types'
@@ -123,5 +124,47 @@ export const shiftsApi = {
       remainingCapacity: item.remainingCapacity ?? item.RemainingCapacity ?? 0,
       status: 'Active',
     }))
+  },
+
+  // ──────────────────────────────────────────────
+  // Shift Suggestions Approval (Admin)
+  // ──────────────────────────────────────────────
+
+  // GET /doctors/{doctorId}/suggestions?StartDate=...&EndDate=...
+  async getDoctorSuggestions(doctorId: string, startDate: string, endDate: string): Promise<ShiftSuggestion[]> {
+    const res = await http
+      .get<any>(`/doctors/${doctorId}/suggestions`, {
+        params: {
+          StartDate: startDate,
+          EndDate: endDate,
+        },
+      })
+      .then((r) => r.data)
+
+    const data = res?.result !== undefined ? res.result : res
+    const rawSchedules = data?.schedules || data?.Schedules || []
+    const doctorName = data?.doctorName || data?.DoctorName || ''
+
+    return rawSchedules.map((s: any) => ({
+      id: String(s.id || s.Id || ''),
+      doctorId: String(s.doctorId || s.DoctorId || doctorId),
+      doctorName: doctorName || s.doctorName || s.DoctorName || '',
+      date: s.date || s.Date || '',
+      startTime: formatTime(s.startTime || s.StartTime || s.shiftStart),
+      endTime: formatTime(s.endTime || s.EndTime || s.shiftEnd),
+      patientLimit: s.patientLimit ?? s.PatientLimit ?? 20,
+      reason: s.reason || s.Reason || '',
+      status: s.status || s.Status || 'Pending',
+    }))
+  },
+
+  // POST /shifts/suggestions/{suggestionId}/approve
+  async approveShiftSuggestion(suggestionId: string): Promise<void> {
+    await http.post(`/shifts/suggestions/${suggestionId}/approve`)
+  },
+
+  // POST /shifts/suggestions/{suggestionId}/reject
+  async rejectShiftSuggestion(suggestionId: string): Promise<void> {
+    await http.post(`/shifts/suggestions/${suggestionId}/reject`)
   },
 }

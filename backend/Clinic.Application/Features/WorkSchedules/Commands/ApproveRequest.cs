@@ -1,4 +1,4 @@
-﻿using Clinic.Application.Common.Exceptions;
+using Clinic.Application.Common.Exceptions;
 using Clinic.Application.Interfaces;
 using Clinic.Domain.Common.Exceptions;
 using MediatR;
@@ -30,7 +30,8 @@ namespace Clinic.Application.Features.WorkSchedules.Commands
             {
                 throw new ConflictException("The shift request overlaps with an existing work schedule.");
             }
-            shiftRequest.Approve();
+            var workSchedule = shiftRequest.Approve();
+            await _workScheduleRepository.AddWorkScheduleAsync(workSchedule);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return shiftRequest.Id;
         }

@@ -73,7 +73,9 @@ watch(
         form.email = props.doctor.email || ''
         form.phoneNumber = props.doctor.phoneNumber || ''
         form.dateOfBirth = props.doctor.dateOfBirth || '1985-01-01'
-        form.gender = props.doctor.gender ?? 0
+        form.gender = typeof props.doctor.gender === 'string'
+          ? (props.doctor.gender.toLowerCase() === 'female' ? 1 : 0)
+          : (props.doctor.gender ?? 0)
         form.address = props.doctor.address || 'Hà Nội'
         form.specialtyId = props.doctor.specialtyId || specialties.value[0]?.id || ''
         form.licenseNumber = props.doctor.licenseNumber || ''

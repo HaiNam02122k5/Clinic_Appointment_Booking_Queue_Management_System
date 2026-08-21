@@ -1,4 +1,4 @@
-﻿using Clinic.Domain.Entities;
+using Clinic.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System;
@@ -14,6 +14,7 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
             builder.ToTable("AppointmentSnapshots");
 
             builder.HasKey(a => a.Id);
+            builder.Property(a => a.Id).ValueGeneratedOnAdd();
 
             builder.HasOne(a => a.Appointment)
                 .WithMany(a => a.Snapshots)

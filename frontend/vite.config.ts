@@ -70,6 +70,21 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      '/shifts': {
+        target: 'https://localhost:61658',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/specialties': {
+        target: 'https://localhost:61658',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/employees': {
+        target: 'https://localhost:61658',
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
 })

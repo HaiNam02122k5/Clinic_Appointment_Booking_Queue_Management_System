@@ -2,6 +2,7 @@
 import { onMounted, ref, watch } from 'vue'
 import { doctorsApi } from '@/features/doctors/doctors.api'
 import { specialtiesApi } from '@/features/specialties/specialties.api'
+import { formatSpecialtyName } from '@/features/specialties/specialties.utils'
 import type { CreateDoctorPayload, Doctor, UpdateDoctorPayload } from '@/features/doctors/doctors.types'
 import type { Specialty } from '@/features/specialties/specialties.types'
 import AdminFilterToolbar from '@/features/admin/components/AdminFilterToolbar.vue'
@@ -217,7 +218,7 @@ async function handleDelete() {
             :key="s.id"
             :value="s.id"
           >
-            {{ s.name }}
+            {{ formatSpecialtyName(s.name) }}
           </option>
         </select>
 
@@ -288,7 +289,7 @@ async function handleDelete() {
               <!-- Chuyên khoa -->
               <td class="px-4 py-3.5">
                 <span class="inline-flex items-center rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-semibold text-[#0E4D92]">
-                  {{ doctor.currentSpecialty || doctor.specialty || 'Đa khoa' }}
+                  {{ formatSpecialtyName(doctor.currentSpecialty || doctor.specialty) }}
                 </span>
               </td>
 
