@@ -41,7 +41,7 @@ namespace Clinic.API.Controllers
         }
 
         [HttpGet("appointments/pending")]
-        [Authorize(Policy = "Permission:appointment.read")]
+        [Authorize(Roles = "Receptionist")]
         [ProducesResponseType(typeof(List<AppointmentDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> GetPendingAppointments([FromQuery] PendingAppointmentRequest request)
