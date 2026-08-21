@@ -19,7 +19,7 @@ export const doctorsApi = {
           SortBy: params?.sortBy || 'fullName',
           OrderBy: params?.orderBy || 'asc',
           Gender: params?.gender,
-          Status: params?.status,
+          Status: params?.status !== undefined && params?.status !== '' && params?.status !== 'all' ? params.status : undefined,
           PageNumber: params?.pageNumber ?? 1,
           PageSize: params?.pageSize ?? 10,
         },

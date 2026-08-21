@@ -1,4 +1,4 @@
-﻿using Clinic.Application.Common.Models;
+using Clinic.Application.Common.Models;
 using Clinic.Domain.Entities;
 using Clinic.Domain.Enums;
 
@@ -44,6 +44,6 @@ namespace Clinic.Application.Interfaces
         /// <summary>
         /// Gets a paginated list of users based on search criteria, sorting, and filtering options.
         /// </summary>
-        Task<PagedResult<User>> GetPagedAsync(string? search, string sortBy, Gender? gender, bool descending, int pageNumber, int pageSize);
+        Task<PagedResult<User>> GetPagedAsync(string? search, string sortBy, string? role, Gender? gender, bool descending, int pageNumber, int pageSize);
     }
 }

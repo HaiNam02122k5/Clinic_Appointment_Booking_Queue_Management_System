@@ -25,7 +25,7 @@ async function reloadHistory() {
           Lịch sử khám bệnh
         </h1>
         <p class="mt-1 text-sm text-slate-500">
-          {{ patient.history?.length || 0 }} lần khám đã ghi nhận
+          {{ (patient.sortedHistory ?? patient.history)?.length || 0 }} lần khám đã ghi nhận
         </p>
       </div>
 
@@ -72,18 +72,18 @@ async function reloadHistory() {
 
     <!-- Trạng thái 3: Trống dữ liệu -->
     <div
-      v-else-if="!patient.history || patient.history.length === 0"
+      v-else-if="!(patient.sortedHistory?.length || patient.history?.length)"
       class="rounded-2xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500 shadow-xs"
     >
       <div class="text-4xl mb-2">📋</div>
-      <p class="font-bold text-slate-700">Chưa có lịch sử khám bệnh</p>
+      <p class="font-bold text-slate-700">Chưa có lịch sử khám.</p>
       <p class="text-xs text-slate-400 mt-1">Các kết quả khám và đơn thuốc từ bác sĩ sẽ được hiển thị tại đây sau khi hoàn tất buổi khám.</p>
     </div>
 
     <!-- Trạng thái 4: Hiển thị danh sách -->
     <div v-else class="space-y-4">
       <PatientHistoryCard
-        v-for="record in patient.history"
+        v-for="record in (patient.sortedHistory ?? patient.history)"
         :key="record.id"
         :record="record"
       />

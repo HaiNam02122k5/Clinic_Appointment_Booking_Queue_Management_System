@@ -1,4 +1,4 @@
-﻿using Clinic.Domain.Entities;
+using Clinic.Domain.Entities;
 using Clinic.Infrastructure.Sqlserver.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Clinic.Application.Interfaces;
@@ -88,7 +88,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                 .FirstOrDefaultAsync(u => u.PersonId == id);
         }
 
-        public async Task<PagedResult<User>> GetPagedAsync(string? search, string sortBy, Gender? gender, bool descending, int pageNumber, int pageSize)
+        public async Task<PagedResult<User>> GetPagedAsync(string? search, string sortBy, string? role, Gender? gender, bool descending, int pageNumber, int pageSize)
         {
             var query = _context.Users
                 .Include(u => u.Person)
@@ -99,6 +99,11 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             if (!string.IsNullOrEmpty(search))
             {
                 query = query.Where(u => u.Username.Contains(search) || u.Person.FullName.Contains(search));
+            }
+
+            if (!string.IsNullOrEmpty(role))
+            {
+                query = query.Where(u => u.UserRoles.Any(ur => ur.Role.Name.ToLower() == role.ToLower()));
             }
 
             if (gender.HasValue)

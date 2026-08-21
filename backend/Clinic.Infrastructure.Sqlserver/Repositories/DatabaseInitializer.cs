@@ -24,13 +24,23 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
         }
         public async Task CreateInitialAdminAsync(string? username = null, string? password = null)
         {
+            var adminUsername = username ?? _configuration["InitialAdmin:Username"] ?? "admin";
+            var adminPassword = password ?? _configuration["InitialAdmin:Password"] ?? "AdminPassowrd123!";
 
-            if (await _context.Users.Include(u => u.UserRoles).ThenInclude(ur => ur.Role).FirstOrDefaultAsync(u => u.UserRoles.Any(ur => ur.Role.Name == "Admin")) != null)
+            if (await _context.Users.AnyAsync(u => u.Username == adminUsername))
             {
                 return;
             }
-            var person = await _personService.CreateOrGetPersonAsync("Admin Name", _configuration["InitialAdmin:PhoneNumber"] ?? "0111111111", _configuration["InitialAdmin:Email"] ?? "admin@example.com", new DateOnly(1990, 1, 1), Domain.Enums.Gender.Male, "");
-            var user = await _userService.CreateUserAsync(_configuration["InitialAdmin:Username"] ?? "admin", _configuration["InitialAdmin:Password"] ?? "AdminPassowrd123!", person);
+
+            var person = await _personService.CreateOrGetPersonAsync(
+                "System Administrator",
+                _configuration["InitialAdmin:PhoneNumber"] ?? "0111111111",
+                _configuration["InitialAdmin:Email"] ?? "admin@clinic.local",
+                new DateOnly(1990, 1, 1),
+                Domain.Enums.Gender.Male,
+                "Ho Chi Minh City");
+
+            var user = await _userService.CreateUserAsync(adminUsername, adminPassword, person);
             var employee = new Employee(person, new DateOnly(2025, 1, 1));
 
             var adminRole = await _roleRepository.GetByNameAsync("Admin");

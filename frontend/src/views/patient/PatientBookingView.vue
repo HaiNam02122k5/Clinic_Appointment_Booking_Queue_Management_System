@@ -8,6 +8,8 @@ import BaseAlert from '@/components/ui/BaseAlert.vue'
 import PatientBackendNotice from '@/features/patients/components/PatientBackendNotice.vue'
 import PatientDoctorCard from '@/features/patients/components/PatientDoctorCard.vue'
 import PatientSlotPicker from '@/features/patients/components/PatientSlotPicker.vue'
+import { specialtiesApi } from '@/features/specialties/specialties.api'
+import { formatSpecialtyName, getSpecialtyDisplay, matchesSpecialty } from '@/features/specialties/specialties.utils'
 import type { Appointment, AvailableSlot } from '@/features/patients/patient.types'
 
 const router = useRouter()
@@ -66,19 +68,68 @@ watch(
   { deep: true },
 )
 
-const specialties = [
-  'Nội tổng quát',
-  'Tim mạch',
-  'Nhi khoa',
-  'Da liễu',
-  'Xương khớp',
-  'Tai mũi họng',
+interface SpecialtyOption {
+  key: string
+  label: string
+}
+
+const defaultSpecialties: SpecialtyOption[] = [
+  { key: 'Cardiology', label: 'Tim mạch' },
+  { key: 'Dermatology', label: 'Da liễu' },
+  { key: 'Pediatrics', label: 'Nhi khoa' },
+  { key: 'Orthopedics', label: 'Xương khớp' },
+  { key: 'General Practice', label: 'Nội tổng quát' },
+  { key: 'Tai mũi họng', label: 'Tai mũi họng' },
 ]
+
+const apiSpecialties = ref<SpecialtyOption[]>([])
+
+async function loadSpecialties() {
+  try {
+    const res = await specialtiesApi.list({ pageSize: 100 })
+    const items = res?.items || []
+    if (items.length > 0) {
+      apiSpecialties.value = items.map((s) => ({
+        key: s.name,
+        label: getSpecialtyDisplay(s.name) || s.name,
+      }))
+    }
+  } catch {
+    // ignore
+  }
+}
+
+const displayedSpecialties = computed<SpecialtyOption[]>(() => {
+  if (apiSpecialties.value.length > 0) {
+    return apiSpecialties.value
+  }
+
+  // Extract from loaded doctors if available
+  const docSpecs = new Set<string>()
+  patient.doctors.forEach((d) => {
+    if (d.specialty) {
+      docSpecs.add(d.specialty)
+    }
+  })
+
+  if (docSpecs.size > 0) {
+    const list: SpecialtyOption[] = []
+    docSpecs.forEach((spec) => {
+      list.push({
+        key: spec,
+        label: getSpecialtyDisplay(spec) || spec,
+      })
+    })
+    return list
+  }
+
+  return defaultSpecialties
+})
 
 // Tính toán danh sách bác sĩ dựa trên chuyên khoa đã chọn
 const filteredDoctors = computed(() => {
   if (!specialty.value) return patient.doctors
-  return patient.doctors.filter((doctor) => doctor.specialty === specialty.value)
+  return patient.doctors.filter((doctor) => matchesSpecialty(doctor.specialty, specialty.value))
 })
 
 // Lấy thông tin bác sĩ đã chọn dựa trên doctorId
@@ -89,6 +140,7 @@ const selectedDoctor = computed(() =>
 // Hàm tải danh sách bác sĩ khi component được mounted
 onMounted(async () => {
   await reloadBookingData()
+  loadSpecialties()
 })
 
 async function reloadBookingData() {
@@ -122,10 +174,12 @@ async function changeDate() {
 }
 
 // Hàm xử lý sự kiện khi người dùng chọn khung giờ
-function handleSelectSlot(slot: AvailableSlot) {
-  selectedSlotId.value = slot.workScheduleId ?? slot.id
+function handleSelectSlot(slot: AvailableSlot | { id?: number | string; time: string; workScheduleId?: number | string }) {
+  selectedSlotId.value = slot.workScheduleId ?? slot.id ?? null
   appointmentTime.value = slot.time
 }
+
+const chooseSlot = handleSelectSlot
 
 // Chuyển sang bước tiếp theo
 function nextStep() {
@@ -148,22 +202,25 @@ function previousStep() {
 async function confirmBooking() {
   const resolvedSlotId = selectedSlotId.value ??
     patient.slots.find((slot) => slot.time === appointmentTime.value)?.workScheduleId ??
-    patient.slots.find((slot) => slot.time === appointmentTime.value)?.id ??
-    null
+    patient.slots.find((slot) => slot.time === appointmentTime.value)?.id
 
-  if (!doctorId.value || !resolvedSlotId) return
+  if (!doctorId.value || !resolvedSlotId || !appointmentDate.value || !appointmentTime.value) {
+    return
+  }
 
   try {
-    createdAppointment.value = await patient.createAppointment({
+    const result = await patient.createAppointment({
       doctorId: doctorId.value,
       workScheduleId: resolvedSlotId,
       appointmentDate: appointmentDate.value,
       appointmentTime: appointmentTime.value,
-      symptoms: symptoms.value,
+      symptoms: symptoms.value.trim() || undefined,
     })
+
+    createdAppointment.value = result
     success.value = true
   } catch {
-    // Store xử lý lỗi
+    // lỗi đã được lưu trong store
   }
 }
 
@@ -180,6 +237,26 @@ function newBooking() {
   createdAppointment.value = null
   patient.clearSlots()
 }
+
+defineExpose({
+  step,
+  specialty,
+  doctorId,
+  selectedSlotId,
+  appointmentDate,
+  appointmentTime,
+  symptoms,
+  success,
+  createdAppointment,
+  selectDoctor,
+  changeDate,
+  chooseSlot,
+  handleSelectSlot,
+  nextStep,
+  previousStep,
+  confirmBooking,
+  newBooking,
+})
 </script>
 
 <template>
@@ -312,18 +389,18 @@ function newBooking() {
             </button>
 
             <button
-              v-for="sp in specialties"
-              :key="sp"
+              v-for="sp in displayedSpecialties"
+              :key="sp.key"
               type="button"
-              class="rounded-xl border px-3.5 py-1.5 text-xs font-semibold transition-all select-none"
+              class="rounded-xl border px-3.5 py-1.5 text-xs font-semibold transition-all select-none cursor-pointer"
               :class="
-                specialty === sp
+                specialty === sp.key || specialty === sp.label
                   ? 'border-[#0E4D92] bg-[#0E4D92] text-white shadow-2xs'
                   : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
               "
-              @click="specialty = sp"
+              @click="specialty = sp.key"
             >
-              {{ sp }}
+              {{ sp.label }}
             </button>
           </div>
         </div>
@@ -384,7 +461,7 @@ function newBooking() {
       <section v-if="step === 2" class="space-y-4">
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
           <h2 class="mb-4 font-bold text-slate-800 text-base">
-            Thông tin người khám & Lý do
+            Thông tin bệnh nhân
           </h2>
 
           <div class="space-y-4">
@@ -450,7 +527,7 @@ function newBooking() {
             <div class="rounded-xl bg-blue-50/70 border border-blue-100 p-3.5">
               <p class="text-xs font-semibold text-blue-700">Chuyên khoa</p>
               <p class="text-sm font-bold text-slate-800 mt-0.5">
-                {{ selectedDoctor?.specialty }}
+                {{ formatSpecialtyName(selectedDoctor?.specialty) }}
               </p>
             </div>
 
@@ -495,7 +572,7 @@ function newBooking() {
             loading-text="Đang đặt lịch..."
             @click="confirmBooking"
           >
-            ✓ Xác nhận đặt khám
+            ✓ Xác nhận đặt lịch
           </BaseButton>
         </div>
 

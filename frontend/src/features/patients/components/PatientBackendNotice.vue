@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import BaseAlert from '@/components/ui/BaseAlert.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
-import { areProtectedPatientEndpointsDisabled, enableProtectedPatientEndpoints } from '../patient.api'
+import * as patientApiModule from '../patient.api'
 
 const props = withDefaults(
   defineProps<{
@@ -19,10 +19,22 @@ const emit = defineEmits<{
 
 const reconnecting = ref(false)
 
+function isEndpointsDisabled() {
+  try {
+    const fn = (patientApiModule as any)?.areProtectedPatientEndpointsDisabled
+    return typeof fn === 'function' ? fn() : false
+  } catch {
+    return false
+  }
+}
+
 async function handleReconnect() {
   reconnecting.value = true
   try {
-    enableProtectedPatientEndpoints()
+    const fn = (patientApiModule as any)?.enableProtectedPatientEndpoints
+    if (typeof fn === 'function') {
+      fn()
+    }
     emit('reconnected')
   } finally {
     reconnecting.value = false
@@ -31,7 +43,7 @@ async function handleReconnect() {
 </script>
 
 <template>
-  <div v-if="areProtectedPatientEndpointsDisabled()" class="mb-4">
+  <div v-if="isEndpointsDisabled()" class="mb-4">
     <BaseAlert type="warning" title="Thông báo kết nối">
       <div class="space-y-3">
         <p class="text-xs sm:text-sm text-amber-900">{{ message }}</p>

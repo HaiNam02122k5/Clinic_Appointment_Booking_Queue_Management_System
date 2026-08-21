@@ -32,10 +32,6 @@ const submitting = ref(false)
 const viewModalOpen = ref(false)
 const viewingAccount = ref<User | null>(null)
 
-const deleteConfirmOpen = ref(false)
-const deletingAccount = ref<User | null>(null)
-const deleting = ref(false)
-
 function getSortedRoles(roles?: string[]): string[] {
   if (!roles || roles.length === 0) return ['Patient']
   const priority: Record<string, number> = {
@@ -54,6 +50,7 @@ async function loadAccounts() {
   try {
     const res = await usersApi.list({
       search: search.value.trim() || undefined,
+      role: roleFilter.value !== 'all' ? roleFilter.value : undefined,
       pageNumber: currentPage.value,
       pageSize,
     })
@@ -68,7 +65,7 @@ async function loadAccounts() {
     }
 
     accounts.value = items
-    totalPages.value = res?.totalPages || 1
+    totalPages.value = res?.totalPages || Math.max(1, Math.ceil((res?.totalCount ?? items.length) / pageSize))
     totalCount.value = res?.totalCount ?? items.length
   } catch (err: any) {
     accounts.value = []
@@ -83,8 +80,11 @@ onMounted(() => {
 })
 
 watch([search, roleFilter], () => {
-  currentPage.value = 1
-  loadAccounts()
+  if (currentPage.value !== 1) {
+    currentPage.value = 1
+  } else {
+    loadAccounts()
+  }
 })
 
 watch(currentPage, () => {
@@ -94,8 +94,11 @@ watch(currentPage, () => {
 function resetFilters() {
   search.value = ''
   roleFilter.value = 'all'
-  currentPage.value = 1
-  loadAccounts()
+  if (currentPage.value !== 1) {
+    currentPage.value = 1
+  } else {
+    loadAccounts()
+  }
 }
 
 function openCreate() {
@@ -111,11 +114,6 @@ function openEdit(account: User) {
 function openView(account: User) {
   viewingAccount.value = account
   viewModalOpen.value = true
-}
-
-function confirmDelete(account: User) {
-  deletingAccount.value = account
-  deleteConfirmOpen.value = true
 }
 
 async function handleFormSubmit(payload: CreateUserInput | UpdateUserInput) {
@@ -141,26 +139,6 @@ async function handleFormSubmit(payload: CreateUserInput | UpdateUserInput) {
     error.value = err?.response?.data?.message || err?.message || 'Thao tác không thành công.'
   } finally {
     submitting.value = false
-  }
-}
-
-async function handleDelete() {
-  if (!deletingAccount.value) return
-
-  deleting.value = true
-  try {
-    await usersApi.remove(deletingAccount.value.id)
-    successMessage.value = `Đã khóa/xóa tài khoản ${deletingAccount.value.username} thành công!`
-    deleteConfirmOpen.value = false
-    await loadAccounts()
-
-    setTimeout(() => {
-      successMessage.value = ''
-    }, 4000)
-  } catch (err: any) {
-    error.value = err?.message || 'Không thể khóa tài khoản.'
-  } finally {
-    deleting.value = false
   }
 }
 </script>
@@ -315,14 +293,6 @@ async function handleDelete() {
                   >
                     Sửa
                   </button>
-
-                  <button
-                    type="button"
-                    class="rounded-lg px-2.5 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-                    @click="confirmDelete(account)"
-                  >
-                    Khóa
-                  </button>
                 </div>
               </td>
             </tr>
@@ -398,23 +368,6 @@ async function handleDelete() {
           </div>
         </div>
       </div>
-    </BaseModal>
-
-    <!-- Delete/Lock Confirmation Modal -->
-    <BaseModal
-      :open="deleteConfirmOpen"
-      title="Xác nhận khóa tài khoản"
-      size="sm"
-      icon="🔒"
-      @close="deleteConfirmOpen = false"
-    >
-      <p class="text-sm text-slate-600">
-        Bạn có chắc chắn muốn vô hiệu hóa / khóa tài khoản <strong class="text-slate-800">@{{ deletingAccount?.username }}</strong> không?
-      </p>
-      <template #footer>
-        <BaseButton variant="outline" size="sm" @click="deleteConfirmOpen = false">Hủy</BaseButton>
-        <BaseButton variant="danger" size="sm" :loading="deleting" @click="handleDelete">Khóa tài khoản</BaseButton>
-      </template>
     </BaseModal>
   </div>
 </template>

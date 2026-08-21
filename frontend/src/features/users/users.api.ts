@@ -15,6 +15,7 @@ export const usersApi = {
         .get<any>('/admin/users', {
           params: {
             Search: params?.search || undefined,
+            Role: params?.role || undefined,
             SortBy: params?.sortBy || 'fullName',
             OrderBy: params?.orderBy || 'asc',
             Gender: params?.gender,

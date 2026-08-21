@@ -1,4 +1,4 @@
-﻿using Clinic.Application.Contracts;
+using Clinic.Application.Contracts;
 using Clinic.Application.Interfaces;
 using Clinic.Domain.Enums;
 using MediatR;
@@ -7,6 +7,7 @@ namespace Clinic.Application.Features.Users.Queries
 {
     public record GetPagedUsersQuery(
         string? Search = null,
+        string? Role = null,
         string SortBy = "fullName",
         Gender? Gender = null,
         bool Descending = false,
@@ -25,6 +26,7 @@ namespace Clinic.Application.Features.Users.Queries
             var users = await _userRepository.GetPagedAsync(
                 request.Search,
                 request.SortBy,
+                request.Role,
                 request.Gender,
                 request.Descending,
                 request.PageNumber,

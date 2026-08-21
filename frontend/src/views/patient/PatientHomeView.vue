@@ -22,6 +22,117 @@ const today = new Date().toLocaleDateString('vi-VN', {
 
 const initialLoading = ref(true)
 const cancellingAppointmentId = ref<string | number | null>(null)
+const appointmentFilter = ref<'all' | 'upcoming' | 'confirmed' | 'pending' | 'cancelled'>('all')
+
+function normalizeStatus(value: unknown): string {
+  if (value == null) return ''
+  return String(value)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function isStatusConfirmed(raw: unknown): boolean {
+  const s = normalizeStatus(raw)
+  return (
+    s.includes('confirm') ||
+    s.includes('xac') ||
+    s.includes('approved') ||
+    s.includes('duyet') ||
+    s === 'confirmed'
+  )
+}
+
+function isStatusPending(raw: unknown): boolean {
+  const s = normalizeStatus(raw)
+  return (
+    s.includes('pend') ||
+    s.includes('wait') ||
+    s.includes('cho') ||
+    s.includes('dang cho') ||
+    s === 'pending'
+  )
+}
+
+function isStatusCancelled(raw: unknown): boolean {
+  const s = normalizeStatus(raw)
+  return s.includes('cancel') || s.includes('huy') || s === 'cancelled' || s === 'canceled'
+}
+
+function parseDate(value: unknown): Date | null {
+  if (!value && value !== 0) return null
+  const s = String(value).trim()
+  if (!s) return null
+
+  const dm = /^([0-3]?\d)\/(0?[1-9]|1[0-2])\/(\d{4})$/.exec(s)
+  if (dm) {
+    const local = new Date(Number(dm[3]), Number(dm[2]) - 1, Number(dm[1]))
+    return Number.isNaN(local.getTime()) ? null : local
+  }
+
+  const iso = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(s)
+  if (iso) {
+    const local = new Date(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]))
+    return Number.isNaN(local.getTime()) ? null : local
+  }
+
+  const parsed = new Date(s)
+  return Number.isNaN(parsed.getTime()) ? null : parsed
+}
+
+function inNext7Days(date: Date): boolean {
+  const start = new Date()
+  start.setHours(0, 0, 0, 0)
+  const end = new Date(start)
+  end.setDate(end.getDate() + 6)
+
+  const candidate = new Date(date)
+  candidate.setHours(0, 0, 0, 0)
+  return candidate >= start && candidate <= end
+}
+
+const displayedAppointments = computed(() => {
+  const source = Array.isArray(patient.sortedAppointments) && patient.sortedAppointments.length > 0
+    ? patient.sortedAppointments
+    : (Array.isArray(patient.appointments) ? patient.appointments : (Array.isArray((patient as any).upcomingAppointments) ? (patient as any).upcomingAppointments : []))
+
+  const list = [...source]
+
+  return list
+    .filter((appointment) => {
+      const status = appointment.status
+      const date = parseDate(appointment.appointmentDate)
+
+      switch (appointmentFilter.value) {
+        case 'upcoming':
+          return date !== null && inNext7Days(date) && (isStatusPending(status) || isStatusConfirmed(status))
+        case 'confirmed':
+          return isStatusConfirmed(status)
+        case 'pending':
+          return isStatusPending(status)
+        case 'cancelled':
+          return isStatusCancelled(status)
+        case 'all':
+        default:
+          return true
+      }
+    })
+    .sort((a, b) => {
+      const da = parseDate(a.appointmentDate)
+      const db = parseDate(b.appointmentDate)
+      if (da && db) return da.getTime() - db.getTime()
+      if (da && !db) return -1
+      if (!da && db) return 1
+      return 0
+    })
+})
+
+function setFilter(f: typeof appointmentFilter.value) {
+  appointmentFilter.value = f
+}
 
 // Kiểm tra trạng thái kết nối tới backend và các dịch vụ bệnh nhân
 const connecting = computed(() => {
@@ -80,7 +191,17 @@ async function retryHistory() {
 }
 
 async function handleCancelAppointment(id: string | number) {
-  if (!confirm('Bạn có chắc chắn muốn hủy lịch hẹn này không?')) return
+  let confirmed = true
+  if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
+    try {
+      confirmed = window.confirm('Bạn có chắc chắn muốn hủy lịch hẹn này không?')
+    } catch {
+      confirmed = true
+    }
+  }
+
+  if (confirmed === false) return
+
   cancellingAppointmentId.value = id
   try {
     await patient.cancelAppointment(id)
@@ -128,7 +249,7 @@ async function handleCancelAppointment(id: string | number) {
           </div>
           <div class="flex items-center gap-2">
             <div class="hidden sm:block text-xs text-slate-600">
-              Lịch sắp tới: <span class="font-bold text-[#0E4D92]">{{ patient.upcomingAppointments?.length || 0 }}</span>
+              Sắp tới (7 ngày): <span class="font-bold text-[#0E4D92]">{{ patient.upcomingWeekCount || 0 }}</span>
             </div>
             <div class="hidden sm:block text-xs text-slate-600">
               Trong hàng đợi: <span class="font-bold text-[#0E4D92]">{{ patient.queue?.myTicket ? 'Có' : 'Chưa' }}</span>
@@ -197,7 +318,7 @@ async function handleCancelAppointment(id: string | number) {
       <!-- Upcoming Appointment Section -->
       <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
         <div class="mb-4 flex items-center justify-between">
-          <h2 class="font-bold text-slate-800 text-base">Lịch hẹn sắp tới</h2>
+          <h2 class="font-bold text-slate-800 text-base">Danh sách lịch hẹn</h2>
           <div class="flex items-center gap-3">
             <RouterLink to="/patient/booking" class="text-xs font-semibold text-[#0E4D92] hover:underline">+ Đặt thêm</RouterLink>
             <button
@@ -210,6 +331,60 @@ async function handleCancelAppointment(id: string | number) {
           </div>
         </div>
 
+        <!-- Filter tabs -->
+        <div class="mb-4 flex flex-wrap items-center gap-1.5">
+          <button
+            type="button"
+            class="px-3 py-1 text-xs font-medium rounded-lg transition-colors"
+            :class="appointmentFilter === 'all'
+              ? 'bg-[#0E4D92] text-white font-semibold shadow-2xs'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+            @click="setFilter('all')"
+          >
+            Tất cả
+          </button>
+          <button
+            type="button"
+            class="px-3 py-1 text-xs font-medium rounded-lg transition-colors"
+            :class="appointmentFilter === 'upcoming'
+              ? 'bg-[#0E4D92] text-white font-semibold shadow-2xs'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+            @click="setFilter('upcoming')"
+          >
+            Sắp tới (7 ngày)
+          </button>
+          <button
+            type="button"
+            class="px-3 py-1 text-xs font-medium rounded-lg transition-colors"
+            :class="appointmentFilter === 'confirmed'
+              ? 'bg-[#0E4D92] text-white font-semibold shadow-2xs'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+            @click="setFilter('confirmed')"
+          >
+            Đã xác nhận
+          </button>
+          <button
+            type="button"
+            class="px-3 py-1 text-xs font-medium rounded-lg transition-colors"
+            :class="appointmentFilter === 'pending'
+              ? 'bg-[#0E4D92] text-white font-semibold shadow-2xs'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+            @click="setFilter('pending')"
+          >
+            Chờ duyệt
+          </button>
+          <button
+            type="button"
+            class="px-3 py-1 text-xs font-medium rounded-lg transition-colors"
+            :class="appointmentFilter === 'cancelled'
+              ? 'bg-[#0E4D92] text-white font-semibold shadow-2xs'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+            @click="setFilter('cancelled')"
+          >
+            Đã hủy
+          </button>
+        </div>
+
         <div v-if="patient.appointmentsLoading && initialLoading" class="rounded-xl bg-slate-50 p-4 text-sm text-slate-500 text-center">
           Đang tải lịch hẹn...
         </div>
@@ -218,15 +393,16 @@ async function handleCancelAppointment(id: string | number) {
           {{ patient.appointmentsError }}
         </div>
 
-        <div v-else-if="!patient.upcomingAppointments?.length" class="rounded-xl bg-slate-50 p-4 text-sm text-slate-500 text-center">
-          Bạn chưa có lịch hẹn sắp tới nào.
+        <div v-else-if="!displayedAppointments.length" class="rounded-xl bg-slate-50 p-6 text-sm text-slate-500 text-center">
+          Không tìm thấy lịch hẹn phù hợp.
         </div>
 
         <div v-else class="space-y-3">
           <PatientAppointmentCard
-            v-for="appointment in patient.upcomingAppointments"
+            v-for="appointment in displayedAppointments"
             :key="appointment.id"
             :appointment="appointment"
+            :highlight="Array.isArray(patient.upcomingWeekIds) && patient.upcomingWeekIds.some((id) => String(id) === String(appointment.id))"
             :cancelling="cancellingAppointmentId === appointment.id"
             @cancel="handleCancelAppointment"
           />

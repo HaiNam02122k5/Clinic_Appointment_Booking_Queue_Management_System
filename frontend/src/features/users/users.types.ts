@@ -53,6 +53,7 @@ export interface PagedUsersResponse {
 
 export interface GetUsersParams {
   search?: string
+  role?: string
   sortBy?: string
   orderBy?: string
   gender?: number

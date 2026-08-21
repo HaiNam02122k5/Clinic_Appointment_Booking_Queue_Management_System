@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Doctor } from '../patient.types'
+import { formatSpecialtyName } from '@/features/specialties/specialties.utils'
 
 const props = defineProps<{
   doctor: Doctor
@@ -35,7 +36,7 @@ const emit = defineEmits<{
         </p>
 
         <p class="text-xs text-slate-500 truncate mt-0.5">
-          {{ doctor.specialty }}
+          {{ formatSpecialtyName(doctor.specialty) }}
           <span v-if="doctor.room" class="text-slate-400"> · {{ doctor.room }}</span>
         </p>
       </div>

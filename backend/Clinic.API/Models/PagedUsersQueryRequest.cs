@@ -1,4 +1,4 @@
-﻿using Clinic.Domain.Enums;
+using Clinic.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
 
 namespace Clinic.API.Models
@@ -7,6 +7,7 @@ namespace Clinic.API.Models
     {
         [MaxLength(50, ErrorMessage = "Search term must be at most 50 characters.")]
         public string? Search { get; set; } = string.Empty;
+        public string? Role { get; set; }
         [MaxLength(50, ErrorMessage = "Sort field must be at most 50 characters.")]
         public string? SortBy { get; set; } = string.Empty;
         [MaxLength(5, ErrorMessage = "Order field must be 'asc' or 'desc'. Default is 'asc'.")]

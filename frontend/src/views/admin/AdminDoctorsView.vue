@@ -78,8 +78,11 @@ onMounted(() => {
 })
 
 watch([search, specialtyFilter, statusFilter], () => {
-  currentPage.value = 1
-  loadDoctors()
+  if (currentPage.value !== 1) {
+    currentPage.value = 1
+  } else {
+    loadDoctors()
+  }
 })
 
 watch(currentPage, () => {
@@ -90,8 +93,11 @@ function resetFilters() {
   search.value = ''
   specialtyFilter.value = 'all'
   statusFilter.value = 'all'
-  currentPage.value = 1
-  loadDoctors()
+  if (currentPage.value !== 1) {
+    currentPage.value = 1
+  } else {
+    loadDoctors()
+  }
 }
 
 function openCreate() {
@@ -222,8 +228,7 @@ async function handleDelete() {
         >
           <option value="all">Tất cả trạng thái</option>
           <option value="0">Đang hoạt động</option>
-          <option value="1">Nghỉ phép</option>
-          <option value="2">Đã thôi việc</option>
+          <option value="1">Ngừng hoạt động</option>
         </select>
       </template>
     </AdminFilterToolbar>

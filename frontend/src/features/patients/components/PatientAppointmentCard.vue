@@ -5,6 +5,7 @@ import type { Appointment } from '../patient.types'
 const props = defineProps<{
   appointment: Appointment
   cancelling?: boolean
+  highlight?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -18,7 +19,12 @@ const canCancel = (status: string) => {
 </script>
 
 <template>
-  <div class="rounded-xl border border-blue-200 bg-blue-50/70 p-4 transition-all">
+  <div
+    class="rounded-xl border p-4 transition-all"
+    :class="highlight && appointment.status !== 'Cancelled'
+      ? 'border-blue-300 bg-blue-50/90 ring-1 ring-blue-300 shadow-2xs'
+      : 'border-slate-200 bg-white hover:border-slate-300'"
+  >
     <div class="flex items-center gap-4">
       <!-- Date & Time block -->
       <div class="w-20 text-center shrink-0">
@@ -26,11 +32,19 @@ const canCancel = (status: string) => {
         <p class="text-lg font-bold text-[#0E4D92]">{{ appointment.appointmentTime }}</p>
       </div>
 
-      <div class="h-10 w-px bg-blue-200 shrink-0" />
+      <div class="h-10 w-px bg-slate-200 shrink-0" />
 
       <!-- Doctor & Specialty info -->
       <div class="min-w-0 flex-1">
-        <p class="font-bold text-slate-800 truncate">{{ appointment.doctorName }}</p>
+        <div class="flex items-center gap-2">
+          <p class="font-bold text-slate-800 truncate">{{ appointment.doctorName }}</p>
+          <span
+            v-if="highlight && appointment.status !== 'Cancelled'"
+            class="rounded-md bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold text-[#0E4D92]"
+          >
+            Trong 7 ngày
+          </span>
+        </div>
         <p class="text-xs font-medium text-slate-500 truncate">{{ appointment.specialty }}</p>
       </div>
 
@@ -44,7 +58,7 @@ const canCancel = (status: string) => {
     </div>
 
     <!-- Cancel button -->
-    <div v-if="canCancel(appointment.status)" class="mt-3 flex justify-end border-t border-blue-100 pt-2.5">
+    <div v-if="canCancel(appointment.status)" class="mt-3 flex justify-end border-t border-slate-100 pt-2.5">
       <button
         type="button"
         :disabled="cancelling"
@@ -56,7 +70,7 @@ const canCancel = (status: string) => {
           <line x1="15" y1="9" x2="9" y2="15"/>
           <line x1="9" y1="9" x2="15" y2="15"/>
         </svg>
-        <span>Hủy lịch</span>
+        <span>{{ cancelling ? 'Đang hủy...' : 'Hủy lịch' }}</span>
       </button>
     </div>
   </div>

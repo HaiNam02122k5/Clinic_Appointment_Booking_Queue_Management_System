@@ -56,8 +56,11 @@ onMounted(() => {
 })
 
 watch(search, () => {
-  currentPage.value = 1
-  loadSpecialties()
+  if (currentPage.value !== 1) {
+    currentPage.value = 1
+  } else {
+    loadSpecialties()
+  }
 })
 
 watch(currentPage, () => {
@@ -66,8 +69,11 @@ watch(currentPage, () => {
 
 function resetFilters() {
   search.value = ''
-  currentPage.value = 1
-  loadSpecialties()
+  if (currentPage.value !== 1) {
+    currentPage.value = 1
+  } else {
+    loadSpecialties()
+  }
 }
 
 function openCreate() {
