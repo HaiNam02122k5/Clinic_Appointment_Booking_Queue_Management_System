@@ -51,20 +51,19 @@ export const receptionistApi = {
 
   async getUpcomingAppointments(patientId: string): Promise<AppointmentItem[]> {
     try {
-      const res = await http.get(`/patients/${patientId}/appointments/upcoming`)
+      const res = await http.get(`/patients/${patientId}/appointments`)
       const unwrapped = unwrap<any>(res.data)
       if (Array.isArray(unwrapped)) return unwrapped
       if (Array.isArray(unwrapped?.items)) return unwrapped.items
+      if (Array.isArray(unwrapped?.result)) return unwrapped.result
       return []
     } catch {
-      // Fallback: query appointments by patientId
       try {
-        const res = await http.get('/appointments', {
-          params: { patientId, pageSize: 20 },
-        })
+        const res = await http.get(`/patients/${patientId}/appointments/upcoming`)
         const unwrapped = unwrap<any>(res.data)
         if (Array.isArray(unwrapped)) return unwrapped
         if (Array.isArray(unwrapped?.items)) return unwrapped.items
+        if (Array.isArray(unwrapped?.result)) return unwrapped.result
         return []
       } catch {
         return []

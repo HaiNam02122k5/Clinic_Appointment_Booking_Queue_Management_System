@@ -1,4 +1,4 @@
-﻿using Clinic.API.Models;
+using Clinic.API.Models;
 using Clinic.Application.Common.Models;
 using Clinic.Application.Contracts;
 using Clinic.Application.Features.Appointments.Queries;
@@ -53,6 +53,7 @@ namespace Clinic.API.Controllers
         }
 
         [HttpGet("{patientId}/appointments")]
+        [HttpGet("{patientId}/appointments/upcoming")]
         [Authorize(Policy = "Permission:patient.view.any")]
         [ProducesResponseType(typeof(List<AppointmentDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
