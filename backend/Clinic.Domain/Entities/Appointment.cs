@@ -34,6 +34,29 @@ namespace Clinic.Domain.Entities
 
         private Appointment() { } // For EF Core
 
+        public Appointment( // For seeding sample data
+            Guid id,
+            Guid patientId,
+            Guid workScheduleId,
+            TimeOnly timeSlot,
+            string reason,
+            AppointmentStatus status,
+            bool isWalkIn,
+            Guid updatedByUserId,
+            DateTime createdAt,
+            DateTime? updatedAt,
+            bool isDeleted)
+            : base(id, createdAt, updatedAt, isDeleted)
+        {
+            PatientId = patientId;
+            WorkScheduleId = workScheduleId;
+            TimeSlot = timeSlot;
+            Reason = reason;
+            Status = status;
+            IsWalkIn = isWalkIn;
+            UpdatedByUserId = updatedByUserId;
+        }
+
         public Appointment(Patient patient, WorkSchedule workSchedule, TimeOnly timeSlot, string reason, Guid createdByUserId, bool isWalkIn = false)
         {
             WorkSchedule = workSchedule ?? throw new ArgumentNullException(nameof(workSchedule));
@@ -56,6 +79,7 @@ namespace Clinic.Domain.Entities
             WorkScheduleId = workSchedule.Id;
             TimeSlot = timeSlot;
             IsWalkIn = isWalkIn;
+            Status = AppointmentStatus.Confirmed;
             UpdatedByUserId = createdByUserId;
         }
 
@@ -64,6 +88,10 @@ namespace Clinic.Domain.Entities
             if (Status is AppointmentStatus.Completed or AppointmentStatus.Cancelled)
             {
                 return; // No throw, if it passed, let it pass.
+            }
+            if (WorkSchedule is null)
+            {
+                throw new InvalidOperationException("Appointment schedule is missing.");
             }
             // Force cancellation by admin, no time limit check.
             if (QueueTicket != null && QueueTicket.Status is QueueStatus.Waiting or QueueStatus.Called)
@@ -150,6 +178,14 @@ namespace Clinic.Domain.Entities
             if (Status is AppointmentStatus.Completed or AppointmentStatus.Cancelled)
             {
                 throw new InvalidOperationException($"{Enum.GetName(Status)} appointments can't be cancelled.");
+            }
+            if (WorkSchedule is null)
+            {
+                throw new InvalidOperationException("Appointment schedule is missing.");
+            }
+            if (cancelledByUserId == Guid.Empty)
+            {
+                throw new InvalidOperationException("A valid user is required to cancel this appointment.");
             }
             var utcSlot = new TimeConverter().ConvertToUtc(new DateTime(WorkSchedule.Date, TimeSlot));
             if (DateTime.UtcNow.AddHours(CancelLimitHours) > utcSlot)

@@ -2,11 +2,13 @@
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
+import { usePatientStore } from '@/stores/patient'
 import { supportedLocales, setLocale } from '@/lib/i18n'
 
 const { locale } = useI18n()
 const router = useRouter()
 const auth = useAuthStore()
+const patient = usePatientStore()
 
 function onLocaleChange(event: Event) {
   const value = (event.target as HTMLSelectElement).value
@@ -21,13 +23,13 @@ function logout() {
 </script>
 
 <template>
-  <div class="flex min-h-screen bg-slate-50">
+  <div class="flex h-screen overflow-hidden bg-slate-50">
 
     <!-- ================================================= -->
     <!-- SIDEBAR -->
     <!-- ================================================= -->
     <aside
-      class="flex h-screen w-64 shrink-0 flex-col
+      class="sticky top-0 flex h-screen w-64 shrink-0 flex-col
              border-r border-slate-200 bg-white"
     >
 
@@ -77,7 +79,7 @@ function logout() {
       <!-- ================================================= -->
       <!-- MENU -->
       <!-- ================================================= -->
-      <nav class="flex-1 overflow-y-auto p-4">
+      <nav class="flex-1 overflow-y-auto bg-white p-4">
 
         <!-- ================= RECEPTIONIST ================= -->
         <template v-if="auth.hasRole(['Receptionist'])">
@@ -332,7 +334,69 @@ function logout() {
           </div>
 
           <div class="space-y-1">
-            <!-- Menu bệnh nhân thêm sau -->
+            <RouterLink
+              to="/patient/home"
+              class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+              exact-active-class="bg-violet-50 text-violet-700"
+            >
+              <!-- Home icon -->
+              <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 11.5L12 4l9 7.5" />
+                <path d="M5 21V12h14v9" />
+              </svg>
+              <span>Tổng quan</span>
+            </RouterLink>
+
+            <RouterLink
+              to="/patient/booking"
+              class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+              active-class="bg-violet-50 text-violet-700"
+            >
+              <!-- Calendar icon -->
+              <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <path d="M16 2v4M8 2v4M3 10h18" />
+              </svg>
+              <span>Đặt khám</span>
+            </RouterLink>
+
+            <RouterLink
+              to="/patient/queue"
+              class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+              active-class="bg-violet-50 text-violet-700"
+            >
+              <!-- Queue icon -->
+              <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
+              </svg>
+              <span>Hàng đợi</span>
+            </RouterLink>
+
+            <RouterLink
+              to="/patient/history"
+              class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+              active-class="bg-violet-50 text-violet-700"
+            >
+              <!-- History icon -->
+              <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 12a9 9 0 1 1-3-6.7" />
+                <path d="M12 7v5l4 2" />
+              </svg>
+              <span>Lịch sử khám</span>
+            </RouterLink>
+
+            <RouterLink
+              to="/profile"
+              class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+              active-class="bg-violet-50 text-violet-700"
+            >
+              <!-- Profile icon -->
+              <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="8" r="4" />
+                <path d="M6 20a6 6 0 0 1 12 0" />
+              </svg>
+              <span>Hồ sơ</span>
+            </RouterLink>
           </div>
 
         </template>
@@ -345,7 +409,7 @@ function logout() {
     <!-- ================================================= -->
     <!-- MAIN CONTENT -->
     <!-- ================================================= -->
-    <div class="flex min-w-0 flex-1 flex-col">
+    <div class="flex min-w-0 flex-1 flex-col overflow-hidden">
 
       <!-- ================= HEADER ================= -->
       <header
@@ -392,7 +456,7 @@ function logout() {
                     text-sm font-semibold
                     text-violet-700"
             >
-              {{ auth.user.name?.charAt(0)?.toUpperCase() || 'U' }}
+              {{ (patient.profile?.fullName ?? auth.user.name)?.charAt(0)?.toUpperCase() || 'U' }}
             </div>
 
             <!-- Name + role -->
@@ -403,7 +467,7 @@ function logout() {
                       text-sm font-medium
                       text-slate-800"
               >
-                {{ auth.user.name || 'Demo User' }}
+                {{ patient.profile?.fullName ?? auth.user.name ?? 'Demo User' }}
               </div>
 
               <div class="text-xs text-slate-400">
@@ -445,7 +509,7 @@ function logout() {
 
 
       <!-- ================= PAGE CONTENT ================= -->
-      <main class="min-h-0 flex-1 overflow-y-auto p-6">
+      <main class="min-h-0 flex-1 overflow-y-auto bg-slate-50 p-6">
         <RouterView />
       </main>
 

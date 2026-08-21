@@ -25,6 +25,8 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
             builder.Property(w => w.Status)
                 .HasConversion<string>()
                 .HasMaxLength(20);
+
+            builder.HasData(SampleData.WorkSchedules);
         }
     }
 }

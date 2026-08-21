@@ -38,5 +38,7 @@ namespace Clinic.Application.Interfaces
         Task<Dictionary<string, IValueWithChange>> GetDashboardData();
         Task<StatisticsDataDto> GetStatistics(bool isWeekPeriod);
         Task<PagedResult<Appointment>> GetAppointmentsByDateAsync(DateOnly date, int pageNumber, int pageSize);
+        Task AddAsync(Appointment appointment);
+        Task<PagedResult<Appointment>> GetPendingAppointmentsAsync(string search, string sortBy, bool descending, int pageNumber, int pageSize);
     }
 }

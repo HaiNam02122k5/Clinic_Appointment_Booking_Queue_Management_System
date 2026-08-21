@@ -1,7 +1,8 @@
 export const env = {
   appName: import.meta.env.VITE_APP_NAME ?? 'Clinic',
-  // địa chỉ API của backend chạy riêng. Mặc định khớp với launchSettings của ASP.NET API.
-  apiBaseUrl: import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:61659',
+  // Trong dev, dùng cùng origin với Vite để tránh CORS.
+  // Vite proxy sẽ forward /auth/* tới backend https://localhost:61658.
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL ?? '',
   defaultLocale: import.meta.env.VITE_DEFAULT_LOCALE ?? 'vi',
   // Bật mock mode khi chưa có backend thực: VITE_ENABLE_MOCK=true
   enableMock: import.meta.env.VITE_ENABLE_MOCK === 'true',

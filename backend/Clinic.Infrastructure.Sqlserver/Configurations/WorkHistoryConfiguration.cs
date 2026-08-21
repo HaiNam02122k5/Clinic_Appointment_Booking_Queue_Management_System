@@ -21,6 +21,8 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
                 .WithMany(s => s.WorkHistories)
                 .HasForeignKey(w => w.SpecialtyId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasData(SampleData.WorkHistories);
         }
     }
 }

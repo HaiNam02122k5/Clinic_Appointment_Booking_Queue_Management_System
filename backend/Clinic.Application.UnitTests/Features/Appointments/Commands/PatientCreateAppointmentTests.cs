@@ -13,7 +13,9 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Commands
             var workScheduleRepository = new FakeWorkScheduleRepository();
             var patientRepository = new FakePatientRepository();
             var unitOfWork = new FakeUnitOfWork();
-            var handler = new CreateAppointmentCommandHandler(workScheduleRepository, patientRepository, unitOfWork);
+            var notiQueue = new FakeNotificationQueue();
+            var appointmentRepository = new FakeAppointmentRepository();
+            var handler = new CreateAppointmentCommandHandler(workScheduleRepository, patientRepository, unitOfWork, notiQueue, appointmentRepository);
             var person = TestDataFactory.CreatePerson();
             var user = TestDataFactory.CreateUser(person: person);
             var patient = TestDataFactory.CreatePatient(person: person);
@@ -39,7 +41,9 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Commands
             var workScheduleRepository = new FakeWorkScheduleRepository();
             var patientRepository = new FakePatientRepository();
             var unitOfWork = new FakeUnitOfWork();
-            var handler = new CreateAppointmentCommandHandler(workScheduleRepository, patientRepository, unitOfWork);
+            var notiQueue = new FakeNotificationQueue();
+            var appointmentRepository = new FakeAppointmentRepository();
+            var handler = new CreateAppointmentCommandHandler(workScheduleRepository, patientRepository, unitOfWork, notiQueue, appointmentRepository);
             var person = TestDataFactory.CreatePerson();
             var user = TestDataFactory.CreateUser(person: person);
             var patient = TestDataFactory.CreatePatient(person: person);
@@ -57,7 +61,9 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Commands
             var workScheduleRepository = new FakeWorkScheduleRepository();
             var patientRepository = new FakePatientRepository();
             var unitOfWork = new FakeUnitOfWork();
-            var handler = new CreateAppointmentCommandHandler(workScheduleRepository, patientRepository, unitOfWork);
+            var notiQueue = new FakeNotificationQueue();
+            var appointmentRepository = new FakeAppointmentRepository();
+            var handler = new CreateAppointmentCommandHandler(workScheduleRepository, patientRepository, unitOfWork, notiQueue, appointmentRepository);
             var person = TestDataFactory.CreatePerson();
             var user = TestDataFactory.CreateUser(person: person);
             var patient = TestDataFactory.CreatePatient(person: person);

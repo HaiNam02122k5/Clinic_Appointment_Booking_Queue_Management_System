@@ -43,6 +43,34 @@ describe('patient domain flow', () => {
     expect(patient.historyError).toBeNull()
   })
 
+  it('sorts medical history by most recent examination first', async () => {
+    vi.mocked(patientApi.getMedicalHistory).mockResolvedValue([
+      {
+        id: 1,
+        examinationDate: '2026-08-11',
+        doctorName: 'BS. A',
+        specialty: 'Nội tổng quát',
+        diagnosis: 'Viêm họng',
+        prescription: 'Paracetamol 500mg',
+      },
+      {
+        id: 2,
+        examinationDate: '2026-08-20',
+        doctorName: 'BS. B',
+        specialty: 'Nội khoa',
+        diagnosis: 'Sốt',
+        prescription: 'Vitamin C',
+      },
+    ])
+
+    const patient = usePatientStore()
+    await patient.loadHistory()
+
+    expect(patient.sortedHistory[0]?.id).toBe(2)
+    expect(patient.sortedHistory[1]?.id).toBe(1)
+    expect(patient.history[0]?.id).toBe(2)
+  })
+
   it('surfaces a history error when the medical history API fails', async () => {
     vi.mocked(patientApi.getMedicalHistory).mockRejectedValue({
       response: { data: { message: 'Không thể tải lịch sử khám' } },
@@ -114,6 +142,7 @@ describe('patient domain flow', () => {
     expect(patient.appointments?.[0]?.status).toBe('Confirmed')
     expect(patient.appointmentsError).toBe('Không thể hủy lịch')
   })
+
 
   it('does not expose a queue-cancel action on the current queue screen because the feature is not implemented', async () => {
     const patient = usePatientStore()

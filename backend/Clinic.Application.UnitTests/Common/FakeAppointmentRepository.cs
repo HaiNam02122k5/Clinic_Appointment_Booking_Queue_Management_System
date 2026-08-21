@@ -13,7 +13,8 @@ namespace Clinic.Application.UnitTests.Common
 
         public Task<bool> ExistsForDoctorAndPatientAsync(Guid doctorId, Guid patientId)
         {
-            throw new NotImplementedException();
+            var exists = _appointments.Any(a => !a.IsDeleted && a.PatientId == patientId && a.WorkSchedule.DoctorId == doctorId);
+            return Task.FromResult(exists);
         }
 
         public async Task<PagedResult<Appointment>> GetAppointmentsByPatientIdAsync(Guid patientId, string category)
@@ -22,13 +23,16 @@ namespace Clinic.Application.UnitTests.Common
                 .Where(a => a.IsDeleted == false && a.PatientId == patientId);
 
             // Apply category filter if provided
-            query = category.ToLower() switch
+            if (!string.IsNullOrEmpty(category))
             {
-                "upcoming" => query.Where(a => new[] { AppointmentStatus.Pending, AppointmentStatus.Confirmed, AppointmentStatus.CheckedIn }.Contains(a.Status)),
-                "completed" => query.Where(a => a.Status == AppointmentStatus.Completed),
-                "cancelled" => query.Where(a => a.Status == AppointmentStatus.Cancelled),
-                _ => query
-            };
+                query = category.ToLower() switch
+                {
+                    "upcoming" => query.Where(a => new[] { AppointmentStatus.Pending, AppointmentStatus.Confirmed, AppointmentStatus.CheckedIn }.Contains(a.Status)),
+                    "completed" => query.Where(a => a.Status == AppointmentStatus.Completed),
+                    "cancelled" => query.Where(a => a.Status == AppointmentStatus.Cancelled),
+                    _ => query
+                };
+            }
 
             var items = query.OrderByDescending(a => a.WorkSchedule.Date).ThenByDescending(a => a.TimeSlot).ToList();
 
@@ -98,6 +102,11 @@ namespace Clinic.Application.UnitTests.Common
         }
 
         public Task<PagedResult<Appointment>> GetAppointmentsByDateAsync(DateOnly date, int pageNumber, int pageSize)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<PagedResult<Appointment>> GetPendingAppointmentsAsync(string search, string sortBy, bool descending, int pageNumber, int pageSize)
         {
             throw new NotImplementedException();
         }

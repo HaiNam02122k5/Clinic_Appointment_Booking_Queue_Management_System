@@ -1,19 +1,20 @@
 export interface Doctor {
-  id: number
+  id: number | string
   name: string
   specialty: string
   room?: string
 }
 
 export interface AvailableSlot {
-  id: number
+  id: number | string
+  workScheduleId?: number | string
   time: string
   available: boolean
 }
 
 export interface Appointment {
-  id: number
-  doctorId: number
+  id: number | string
+  doctorId: number | string
   doctorName: string
   specialty: string
   appointmentDate: string
@@ -23,9 +24,12 @@ export interface Appointment {
 }
 
 export interface CreateAppointmentRequest {
-  doctorId: number
-  appointmentDate: string
-  appointmentTime: string
+  doctorId?: number | string
+  workScheduleId?: number | string
+  appointmentDate?: string
+  appointmentTime?: string
+  timeSlot?: string
+  reason?: string
   symptoms?: string
 }
 
@@ -59,4 +63,18 @@ export interface MedicalRecord {
   diagnosis: string
   prescription: string
   note?: string
+}
+
+export interface PatientProfile {
+  id?: number | string
+  fullName?: string
+  email?: string
+  phoneNumber?: string
+  address?: string
+  dateOfBirth?: string
+  // Human-friendly display (dd/mm/yyyy). If provided prefer this for rendering in UI.
+  dateOfBirthDisplay?: string
+  gender?: number | string
+  insuranceNumber?: string
+  emergencyContact?: string
 }

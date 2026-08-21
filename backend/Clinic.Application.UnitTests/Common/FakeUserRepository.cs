@@ -53,12 +53,18 @@ namespace Clinic.Application.UnitTests.Common
                 query = query.Where(u => u.Person.Gender == gender.Value);
             }
 
-            query = sortBy.ToLower() switch
+            if (!string.IsNullOrEmpty(sortBy))
             {
-                "username" => descending ? query.OrderByDescending(u => u.Username) : query.OrderBy(u => u.Username),
-                "fullName" => descending ? query.OrderByDescending(u => u.Person.FullName) : query.OrderBy(u => u.Person.FullName),
-                _ => descending ? query.OrderByDescending(u => u.Person.FullName) : query.OrderBy(u => u.Person.FullName),
-            };
+                query = sortBy.ToLower() switch
+                {
+                    "username" => descending ? query.OrderByDescending(u => u.Username) : query.OrderBy(u => u.Username),
+                    "fullName" => descending ? query.OrderByDescending(u => u.Person.FullName) : query.OrderBy(u => u.Person.FullName),
+                    _ => descending ? query.OrderByDescending(u => u.Person.FullName) : query.OrderBy(u => u.Person.FullName),
+                };
+            } else
+            {
+                query = descending ? query.OrderByDescending(u => u.Person.FullName) : query.OrderBy(u => u.Person.FullName); // Default sorting by FullName
+            }
 
 
             var totalItems = query.Count();

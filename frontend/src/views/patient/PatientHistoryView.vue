@@ -1,17 +1,45 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { usePatientStore } from '@/stores/patient'
+import { areProtectedPatientEndpointsDisabled, enableProtectedPatientEndpoints } from '@/features/patients/patient.api'
 
 const patient = usePatientStore()
+const tryingToConnect = ref(false)
 
+// Tải lịch sử khám bệnh khi component được mount
 onMounted(() => {
   patient.loadHistory()
 })
 
+// Hàm xử lý khi người dùng nhấn nút "Kết nối lại với backend"
+async function connectToBackend() {
+  tryingToConnect.value = true
+  try {
+    enableProtectedPatientEndpoints()
+    await patient.loadHistory()
+  } finally {
+    tryingToConnect.value = false
+  }
+}
+
 // Hàm bổ trợ định dạng ngày tháng
 const formatDate = (dateString?: string) => {
   if (!dateString) return ''
-  return new Date(dateString).toLocaleDateString('vi-VN')
+
+  const normalized = String(dateString).trim()
+  if (!normalized) return ''
+
+  // If already in dd/mm/yyyy, return as-is
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(normalized)) return normalized
+
+  // Handle ISO or other parseable formats
+  const safeDate = normalized.includes('T')
+    ? new Date(normalized)
+    : new Date(`${normalized}T00:00:00`)
+
+  if (Number.isNaN(safeDate.getTime())) return normalized.slice(0, 10)
+
+  return safeDate.toLocaleDateString('vi-VN')
 }
 </script>
 
@@ -25,7 +53,7 @@ const formatDate = (dateString?: string) => {
       </h1>
 
       <p class="mt-1 text-sm text-slate-400">
-        {{ patient.history?.length || 0 }} lần khám đã lưu
+        {{ patient.sortedHistory?.length || 0 }} lần khám đã lưu
       </p>
     </div>
 
@@ -35,6 +63,14 @@ const formatDate = (dateString?: string) => {
       class="py-10 text-center text-sm text-slate-400"
     >
       Đang tải lịch sử khám...
+    </div>
+
+    <!-- Nếu protected endpoints đã bị disable, cho phép người dùng bật lại -->
+    <div v-else-if="areProtectedPatientEndpointsDisabled()" class="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center text-sm text-amber-800">
+      Hệ thống hiện không kết nối tới API hồ sơ bệnh nhân (được tắt để tránh lỗi). Bạn có muốn thử kết nối lại tới backend?
+      <div class="mt-3">
+        <button @click="connectToBackend" :disabled="tryingToConnect" class="px-4 py-2 rounded bg-[#0E4D92] text-white">{{ tryingToConnect ? 'Đang kết nối...' : 'Kết nối lại với backend' }}</button>
+      </div>
     </div>
 
     <!-- Trạng thái 2: Lỗi -->
@@ -47,7 +83,7 @@ const formatDate = (dateString?: string) => {
 
     <!-- Trạng thái 3: Trống dữ liệu -->
     <div
-      v-else-if="!patient.history || patient.history.length === 0"
+      v-else-if="!patient.sortedHistory || patient.sortedHistory.length === 0"
       class="rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-400"
     >
       Chưa có lịch sử khám.
@@ -57,7 +93,7 @@ const formatDate = (dateString?: string) => {
     <!-- Trạng thái 4: Hiển thị danh sách -->
     <template v-else>
       <article
-        v-for="record in patient.history"
+        v-for="record in patient.sortedHistory"
         :key="record.id"
         class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
       >

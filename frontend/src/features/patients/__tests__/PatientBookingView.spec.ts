@@ -238,14 +238,31 @@ describe('PatientBookingView', () => {
 
     expect(patientStore.createAppointment).toHaveBeenCalledWith({
       doctorId: 1,
+      workScheduleId: 1,
       appointmentDate: '2026-08-20',
       appointmentTime: '08:00',
+      timeSlot: '08:00',
+      reason: 'Sốt, ho nhẹ 3 ngày',
       symptoms: 'Sốt, ho nhẹ 3 ngày',
     })
 
     expect(wrapper.text()).toContain('Đặt lịch thành công!')
     expect(wrapper.text()).toContain('A-12')
     expect(wrapper.text()).toContain('BS. Trần Minh Hùng')
+  })
+
+  it('hiển thị thông báo khi không có bác sĩ nào có lịch trống trong ngày đã chọn', async () => {
+    patientStore.doctors = []
+
+    const wrapper = mount(PatientBookingView)
+    await flushPromises()
+
+    const vm = wrapper.vm as any
+    vm.appointmentDate = '2026-08-20'
+    await nextTick()
+
+    expect(wrapper.text()).toContain('Không có bác sĩ nào có lịch trống cho ngày đã chọn')
+    expect(vm.filteredDoctors).toHaveLength(0)
   })
 
   it('giữ trạng thái không thành công khi API đặt lịch lỗi', async () => {

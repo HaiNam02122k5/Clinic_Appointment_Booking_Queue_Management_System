@@ -22,6 +22,8 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
                 .WithMany(r => r.UserRoles)
                 .HasForeignKey(ur => ur.RoleId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasData(SampleData.UserRoles);
         }
     }
 }

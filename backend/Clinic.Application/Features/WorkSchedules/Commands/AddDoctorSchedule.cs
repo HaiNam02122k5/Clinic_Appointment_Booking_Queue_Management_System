@@ -40,8 +40,8 @@ namespace Clinic.Application.Features.WorkSchedules.Commands
                 patientLimit: request.PatientLimit
             );
 
-            await _workScheduleRepository.AddAsync(workSchedule);
-
+            doctor.AddWorkSchedule(workSchedule);
+            await _workScheduleRepository.AddWorkScheduleAsync(workSchedule);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return new WorkScheduleDto
             {

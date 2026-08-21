@@ -1,6 +1,8 @@
 export type QueueStatus = 'waiting' | 'examining' | 'completed'
 
 export interface QueuePatient {
+  id?: string
+  appointmentId?: string
   no: string
   name: string
   doctor: string
