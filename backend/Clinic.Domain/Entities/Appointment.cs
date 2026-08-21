@@ -79,7 +79,6 @@ namespace Clinic.Domain.Entities
             WorkScheduleId = workSchedule.Id;
             TimeSlot = timeSlot;
             IsWalkIn = isWalkIn;
-            Status = AppointmentStatus.Confirmed;
             UpdatedByUserId = createdByUserId;
         }
 

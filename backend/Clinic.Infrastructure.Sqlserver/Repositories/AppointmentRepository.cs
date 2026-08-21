@@ -261,7 +261,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             var query = _context.Appointments
                 .Include(a => a.Patient).ThenInclude(p => p.Person)
                 .Include(a => a.WorkSchedule).ThenInclude(ws => ws.Doctor).ThenInclude(d => d.Employee).ThenInclude(e => e.Person)
-                .Where(a => !a.IsDeleted && a.Status == AppointmentStatus.Pending && a.WorkSchedule.Date >= DateOnly.FromDateTime(DateTime.Now));
+                .Where(a => !a.IsDeleted && a.Status == AppointmentStatus.Pending && a.WorkSchedule.Date >= DateOnly.FromDateTime(DateTime.UtcNow));
 
             // Apply search filter if provided
             if (!string.IsNullOrEmpty(search))
