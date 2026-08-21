@@ -51,6 +51,28 @@ function unwrapApiResult<T>(payload: unknown): T | null {
   return payload as T
 }
 
+/**
+ * Extract a friendly error message from axios-style error responses or fallback message.
+ */
+function extractErrorMessage(error: unknown): string {
+  try {
+    const resp = (error as any)?.response
+    if (resp && resp.data) {
+      const data = resp.data
+      if (Array.isArray(data.errorMessages) && data.errorMessages.length) return String(data.errorMessages.join(', '))
+      if (Array.isArray(data.errors) && data.errors.length) return String(data.errors.join(', '))
+      if (typeof data.message === 'string' && data.message) return data.message
+      if (data.result && Array.isArray((data.result as any).errorMessages) && (data.result as any).errorMessages.length) return String((data.result as any).errorMessages.join(', '))
+      if (typeof data === 'string' && data) return data
+    }
+    // Some servers return plain text in response.data or response.statusText
+    if ((error as any)?.message) return (error as any).message
+  } catch (e) {
+    // ignore
+  }
+  return 'Đã xảy ra lỗi. Vui lòng thử lại.'
+}
+
 const searchValue = ref('')
 const searchResults = ref<PatientSearchItem[]>([])
 const selectedPatient = ref<PatientSearchItem | null>(null)
@@ -266,14 +288,18 @@ async function confirmAppointmentPerRow(id: string) {
       ? Number((error as { response?: { status?: number } }).response?.status)
       : undefined
 
+    const msg = extractErrorMessage(error)
+
     if (status === 400) {
-      errorMessage.value = 'Cuộc hẹn không hợp lệ để xác nhận.'
+      errorMessage.value = msg || 'Cuộc hẹn không hợp lệ để xác nhận.'
     } else if (status === 404) {
-      errorMessage.value = 'Không tìm thấy cuộc hẹn.'
+      errorMessage.value = msg || 'Không tìm thấy cuộc hẹn.'
     } else if (status === 401 || status === 403) {
-      errorMessage.value = 'Bạn không có quyền xác nhận cuộc hẹn.'
+      errorMessage.value = msg || 'Bạn không có quyền xác nhận cuộc hẹn.'
+    } else if (status === 409) {
+      errorMessage.value = msg || 'Xung đột: cuộc hẹn không thể được xác nhận.'
     } else {
-      errorMessage.value = 'Xác nhận thất bại. Vui lòng thử lại.'
+      errorMessage.value = msg || 'Xác nhận thất bại. Vui lòng thử lại.'
     }
   } finally {
     isLoading.value = false
@@ -320,14 +346,18 @@ async function checkInPerRow(id: string) {
       ? Number((error as { response?: { status?: number } }).response?.status)
       : undefined
 
+    const msg = extractErrorMessage(error)
+
     if (status === 400) {
-      errorMessage.value = 'Lịch hẹn này không thể check-in ở thời điểm hiện tại.'
+      errorMessage.value = msg || 'Lịch hẹn này không thể check-in ở thời điểm hiện tại.'
     } else if (status === 404) {
-      errorMessage.value = 'Không tìm thấy lịch hẹn để check-in.'
+      errorMessage.value = msg || 'Không tìm thấy lịch hẹn để check-in.'
     } else if (status === 401 || status === 403) {
-      errorMessage.value = 'Bạn không có quyền check-in bệnh nhân.'
+      errorMessage.value = msg || 'Bạn không có quyền check-in bệnh nhân.'
+    } else if (status === 409) {
+      errorMessage.value = msg || 'Xung đột: hành động check-in không thể thực hiện.'
     } else {
-      errorMessage.value = 'Không thể check-in bệnh nhân này.'
+      errorMessage.value = msg || 'Không thể check-in bệnh nhân này.'
     }
   } finally {
     isLoading.value = false
@@ -407,22 +437,29 @@ async function performAppointmentAction(appointmentId?: string | null) {
       ? Number((error as { response?: { status?: number } }).response?.status)
       : undefined
 
+    const msg = extractErrorMessage(error)
+
     if (status === 400) {
-      errorMessage.value = 'Hành động không hợp lệ cho cuộc hẹn này.'
+      errorMessage.value = msg || 'Hành động không hợp lệ cho cuộc hẹn này.'
       return
     }
 
     if (status === 404) {
-      errorMessage.value = 'Không tìm thấy cuộc hẹn.'
+      errorMessage.value = msg || 'Không tìm thấy cuộc hẹn.'
       return
     }
 
     if (status === 401 || status === 403) {
-      errorMessage.value = 'Bạn không có quyền thực hiện hành động này.'
+      errorMessage.value = msg || 'Bạn không có quyền thực hiện hành động này.'
       return
     }
 
-    errorMessage.value = 'Đã xảy ra lỗi khi thực hiện hành động. Vui lòng thử lại.'
+    if (status === 409) {
+      errorMessage.value = msg || 'Xung đột khi thực hiện hành động.'
+      return
+    }
+
+    errorMessage.value = msg || 'Đã xảy ra lỗi khi thực hiện hành động. Vui lòng thử lại.'
   } finally {
     isLoading.value = false
   }
