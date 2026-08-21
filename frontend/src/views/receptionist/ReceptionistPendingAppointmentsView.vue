@@ -49,6 +49,8 @@ const total = ref(0)
 const isLoading = ref(false)
 const errorMessage = ref('')
 const successMessage = ref('')
+// per-row loading for confirm buttons
+const rowLoading = ref<Record<string, boolean>>({})
 
 function formatDate(value?: string | null): string {
   if (!value) return '—'
@@ -107,6 +109,27 @@ async function loadPending() {
 async function confirmAppointment(id: string) {
   errorMessage.value = ''
   successMessage.value = ''
+
+  const appt = appointments.value.find((a) => a.id === id)
+  if (!appt) {
+    errorMessage.value = 'Không tìm thấy cuộc hẹn.'
+    return
+  }
+
+  if (!appt.patientName || !appt.doctorId || !appt.date) {
+    errorMessage.value = 'Cuộc hẹn thiếu dữ liệu (tên bệnh nhân/bác sĩ/ngày). Không thể xác nhận.'
+    return
+  }
+
+  const statusText = String(appt.status ?? '').trim().toLowerCase()
+  const isPending = ['pending', '0'].some((s) => statusText.includes(s))
+  if (!isPending) {
+    errorMessage.value = 'Chỉ có cuộc hẹn ở trạng thái Chờ xác nhận mới có thể xác nhận.'
+    return
+  }
+
+  // mark row loading
+  rowLoading.value[id] = true
   isLoading.value = true
   try {
     await http.post(`/appointments/${id}/confirm`)
@@ -118,16 +141,21 @@ async function confirmAppointment(id: string) {
       ? Number((err as any).response?.status)
       : undefined
 
-    if (status === 400) {
-      errorMessage.value = 'Cuộc hẹn không hợp lệ để xác nhận.'
+    if (status === 409) {
+      // conflict: reload to reflect server state
+      await loadPending()
+      errorMessage.value = (err as any)?.response?.data?.message || 'Xung đột: cuộc hẹn không thể được xác nhận.'
+    } else if (status === 400) {
+      errorMessage.value = (err as any)?.response?.data?.message || 'Cuộc hẹn không hợp lệ để xác nhận.'
     } else if (status === 404) {
-      errorMessage.value = 'Không tìm thấy cuộc hẹn.'
+      errorMessage.value = (err as any)?.response?.data?.message || 'Không tìm thấy cuộc hẹn.'
     } else if (status === 401 || status === 403) {
-      errorMessage.value = 'Bạn không có quyền xác nhận cuộc hẹn.'
+      errorMessage.value = (err as any)?.response?.data?.message || 'Bạn không có quyền xác nhận cuộc hẹn.'
     } else {
-      errorMessage.value = 'Xác nhận thất bại. Vui lòng thử lại.'
+      errorMessage.value = (err as any)?.response?.data?.message || 'Xác nhận thất bại. Vui lòng thử lại.'
     }
   } finally {
+    rowLoading.value[id] = false
     isLoading.value = false
   }
 }
@@ -184,10 +212,10 @@ onMounted(() => {
             <td class="py-2">
               <button
                 class="rounded bg-violet-600 px-3 py-1 text-xs font-medium text-white hover:bg-violet-700"
-                :disabled="isLoading"
+                              :disabled="isLoading || !!rowLoading[a.id]"
                 @click="confirmAppointment(a.id)"
               >
-                Xác nhận
+                              {{ !!rowLoading[a.id] ? 'Đang...' : 'Xác nhận' }}
               </button>
             </td>
           </tr>

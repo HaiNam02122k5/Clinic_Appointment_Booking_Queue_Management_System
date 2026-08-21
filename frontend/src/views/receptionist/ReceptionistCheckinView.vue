@@ -82,6 +82,8 @@ const errorMessage = ref('')
 const successMessage = ref('')
 const queueNumber = ref<string | null>(null)
 const isLoading = ref(false)
+// track per-row loading to disable only the button being processed
+const rowLoading = ref<Record<string, boolean>>({})
 
 function formatDate(value?: string | null): string {
   if (!value) return '—'
@@ -284,8 +286,8 @@ async function confirmAppointmentPerRow(id: string) {
   }
 
   // require basic relations present
-  if (!appointment.doctorId || !appointment.date || !appointment.patientId) {
-    errorMessage.value = 'Cuộc hẹn thiếu dữ liệu cần thiết (bác sĩ/ngày/ bệnh nhân). Vui lòng chỉnh sửa cuộc hẹn trước khi xác nhận.'
+  if (!appointment.doctorId || !appointment.date || !appointment.patientId || !appointment.patientName || !appointment.doctorName) {
+    errorMessage.value = 'Cuộc hẹn thiếu dữ liệu cần thiết (bác sĩ/ngày/bệnh nhân tên). Vui lòng chỉnh sửa cuộc hẹn trước khi xác nhận.'
     return
   }
 
@@ -297,6 +299,8 @@ async function confirmAppointmentPerRow(id: string) {
     return
   }
 
+  // mark row loading
+  rowLoading.value[id] = true
   isLoading.value = true
   try {
     await http.post(`/appointments/${id}/confirm`)
@@ -326,6 +330,7 @@ async function confirmAppointmentPerRow(id: string) {
       errorMessage.value = msg || 'Xác nhận thất bại. Vui lòng thử lại.'
     }
   } finally {
+    rowLoading.value[id] = false
     isLoading.value = false
   }
 }
@@ -369,6 +374,7 @@ async function checkInPerRow(id: string) {
     return
   }
 
+  rowLoading.value[id] = true
   isLoading.value = true
   try {
     await http.post(`/appointments/${id}/check-in`)
@@ -421,6 +427,7 @@ async function checkInPerRow(id: string) {
       errorMessage.value = msg || 'Không thể check-in bệnh nhân này.'
     }
   } finally {
+    rowLoading.value[id] = false
     isLoading.value = false
   }
 }
@@ -730,6 +737,7 @@ async function checkIn() {
               class="rounded bg-amber-500 px-3 py-1 text-xs font-medium text-white hover:bg-amber-600"
               :disabled="isLoading"
               @click.stop="confirmAppointmentPerRow(appointment.id)"
+              :disabled="isLoading || !!rowLoading[appointment.id]"
             >
               Xác nhận
             </button>
@@ -739,6 +747,7 @@ async function checkIn() {
               class="rounded bg-violet-600 px-3 py-1 text-xs font-medium text-white hover:bg-violet-700"
               :disabled="isLoading"
               @click.stop="checkInPerRow(appointment.id)"
+              :disabled="isLoading || !!rowLoading[appointment.id]"
             >
               Check-in
             </button>
