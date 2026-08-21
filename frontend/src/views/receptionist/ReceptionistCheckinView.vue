@@ -25,6 +25,23 @@ type PatientDetailResponse = {
   PhoneNumber?: string
 }
 
+function unwrapApiResult<T>(payload: unknown): T | null {
+  if (!payload || typeof payload !== 'object') {
+    return payload as T | null
+  }
+
+  const maybeEnvelope = payload as { result?: T; data?: T }
+  if (maybeEnvelope.result !== undefined) {
+    return maybeEnvelope.result
+  }
+
+  if (maybeEnvelope.data !== undefined) {
+    return maybeEnvelope.data
+  }
+
+  return payload as T
+}
+
 const searchValue = ref('')
 const patient = ref<AppointmentPatient | null>(null)
 const errorMessage = ref('')
@@ -77,9 +94,10 @@ async function resolvePhoneNumber(patientId?: string): Promise<string> {
   }
 
   try {
-    const { data } = await http.get<PatientDetailResponse>(`/patients/${patientId}`)
+    const { data } = await http.get<PatientDetailResponse | { result?: PatientDetailResponse }>(`/patients/${patientId}`)
+    const patient = unwrapApiResult<PatientDetailResponse | null>(data)
 
-    return data.phoneNumber ?? data.PhoneNumber ?? ''
+    return patient?.phoneNumber ?? patient?.PhoneNumber ?? ''
   } catch {
     return ''
   }
@@ -102,29 +120,35 @@ async function searchPatient() {
 
   try {
     const appointmentId = keyword
-    const { data } = await http.get<AppointmentDetailResponse>(`/appointments/${appointmentId}`)
+    const { data } = await http.get<AppointmentDetailResponse | { result?: AppointmentDetailResponse }>(`/appointments/${appointmentId}`)
+    const appointment = unwrapApiResult<AppointmentDetailResponse | null>(data)
 
-    const status = data.status?.toLowerCase()
+    if (!appointment) {
+      errorMessage.value = 'Không tìm thấy lịch hẹn phù hợp.'
+      return
+    }
 
-    if (status === 'checkedin' || status === 'completed' || status === 'cancelled' || status === 'noshow') {
+    const status = String(appointment.status ?? '').trim().toLowerCase().replace(/[_\s-]+/g, '')
+
+    if (['checkedin', 'completed', 'cancelled', 'canceled', 'noshow', 'finished'].includes(status)) {
       errorMessage.value = 'Bệnh nhân này đã check-in.'
       return
     }
 
-    const phone = await resolvePhoneNumber(data.patientId)
+    const phone = await resolvePhoneNumber(appointment.patientId)
 
     patient.value = {
-      appointmentId: data.id,
+      appointmentId: appointment.id,
       phone,
-      name: data.patientName,
-      doctor: data.doctorName,
-      appointmentTime: formatTime(data.timeSlot),
-      specialty: data.reason || 'Khám',
+      name: appointment.patientName,
+      doctor: appointment.doctorName,
+      appointmentTime: formatTime(appointment.timeSlot),
+      specialty: appointment.reason || 'Khám',
       checkedIn: status === 'checkedin',
-      doctorId: data.doctorId,
+      doctorId: appointment.doctorId,
     } as AppointmentPatient & { doctorId?: string }
 
-    selectedDoctorId.value = data.doctorId
+    selectedDoctorId.value = appointment.doctorId
   } catch (error: unknown) {
     const status = typeof error === 'object' && error !== null && 'response' in error
       ? Number((error as { response?: { status?: number } }).response?.status)
@@ -157,11 +181,12 @@ async function checkIn() {
   try {
     await http.post(`/appointments/${patient.value.appointmentId}/check-in`)
 
-    const { data } = await http.get<Array<{ appointmentId: string; queueNumber: number }>>(
+    const { data } = await http.get<Array<{ appointmentId: string; queueNumber: number }> | { result?: Array<{ appointmentId: string; queueNumber: number }> }>(
       `/doctors/${selectedDoctorId.value}/queue`,
     )
 
-    const matchedTicket = data.find((item) => item.appointmentId === patient.value!.appointmentId)
+    const queueList = unwrapApiResult<Array<{ appointmentId: string; queueNumber: number }> | null>(data) ?? []
+    const matchedTicket = queueList.find((item) => item.appointmentId === patient.value!.appointmentId)
 
     queueNumber.value = matchedTicket
       ? formatQueueNumber(matchedTicket.queueNumber)

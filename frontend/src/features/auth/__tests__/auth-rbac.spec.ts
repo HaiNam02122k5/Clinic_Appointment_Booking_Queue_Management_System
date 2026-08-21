@@ -7,6 +7,19 @@ const { routerPush } = vi.hoisted(() => ({
   routerPush: vi.fn(),
 }))
 
+function makeJwt(payload: Record<string, unknown>) {
+  const encode = (value: unknown) => {
+    const json = JSON.stringify(value)
+    const base64 = typeof Buffer !== 'undefined'
+      ? Buffer.from(json, 'utf8').toString('base64')
+      : btoa(json)
+
+    return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
+  }
+
+  return `${encode({ alg: 'HS256', typ: 'JWT' })}.${encode(payload)}.signature`
+}
+
 vi.mock('vue-router', async () => {
   const actual = await vi.importActual<typeof import('vue-router')>('vue-router')
   return {
@@ -215,6 +228,84 @@ describe('auth complete flow', () => {
     expect(localStorage.getItem('auth.user')).toBeNull()
     expect(sessionStorage.getItem('auth.user')).toContain('Admin session')
     expect(tokenStorage.getAccess()).toBe('session-switch-token')
+  })
+
+  it('reads JWT role claims and refresh token from a real JWT-shaped login response', async () => {
+    const accessToken = makeJwt({
+      sub: '42',
+      name: 'Nguyễn Văn A',
+      email: 'a@example.com',
+      role: 'Admin',
+      roles: ['Admin'],
+      'http://schemas.microsoft.com/ws/2008/06/identity/claims/role': 'Admin',
+    })
+
+    vi.spyOn(authApi, 'login').mockResolvedValue({
+      accessToken,
+      refreshToken: 'jwt-refresh-token-01',
+      user: {
+        id: 42,
+        name: 'Nguyễn Văn A',
+        email: 'a@example.com',
+        role: 'Admin',
+        roles: ['Admin'],
+        activeRole: 'Admin',
+      },
+    })
+
+    const auth = useAuthStore()
+    const user = await auth.login({
+      email: 'a@example.com',
+      password: 'Password123!',
+    })
+
+    expect(tokenStorage.getAccess()).toBe(accessToken)
+    expect(tokenStorage.getRefresh()).toBe('jwt-refresh-token-01')
+    expect(user.role).toBe('Admin')
+    expect(user.roles).toEqual(['Admin'])
+    expect(user.activeRole).toBe('Admin')
+    expect(auth.hasRole(['Admin'])).toBe(true)
+    expect(auth.currentUserRole).toBe('Admin')
+  })
+
+  it('register flow accepts JWT claims and persists the active patient role on success', async () => {
+    const accessToken = makeJwt({
+      sub: '77',
+      name: 'Ms. Lan',
+      email: 'lan@example.com',
+      role: 'Patient',
+      roles: ['Patient'],
+    })
+
+    vi.spyOn(authApi, 'register').mockResolvedValue({
+      accessToken,
+      refreshToken: 'jwt-register-refresh-02',
+      user: {
+        id: 77,
+        name: 'Ms. Lan',
+        email: 'lan@example.com',
+        role: 'Patient',
+        roles: ['Patient'],
+        activeRole: 'Patient',
+      },
+    })
+
+    const auth = useAuthStore()
+    const result = await auth.register({
+      fullName: 'Ms. Lan',
+      phoneNumber: '0912345678',
+      email: 'lan@example.com',
+      password: 'Password123!',
+      gender: 'Female',
+      dateOfBirth: '1998-05-10',
+    })
+
+    expect(result.accessToken).toBe(accessToken)
+    expect(tokenStorage.getAccess()).toBe(accessToken)
+    expect(tokenStorage.getRefresh()).toBe('jwt-register-refresh-02')
+    expect(auth.user?.role).toBe('Patient')
+    expect(auth.user?.activeRole).toBe('Patient')
+    expect(auth.hasRole(['Patient'])).toBe(true)
   })
 
   it('supports login with multiple roles and prompts the user to choose an active role', async () => {

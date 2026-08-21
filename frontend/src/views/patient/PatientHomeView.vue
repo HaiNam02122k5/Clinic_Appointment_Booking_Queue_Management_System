@@ -104,8 +104,16 @@ function inNext7Days(date: Date): boolean {
   return candidate >= start && candidate <= end
 }
 
+const fallbackAppointments = computed(() => {
+  if (Array.isArray(patient.appointments)) return [...patient.appointments]
+  if (Array.isArray((patient as any).upcomingAppointments)) return [...(patient as any).upcomingAppointments]
+  return []
+})
+
 const displayedAppointments = computed(() => {
-  const list = Array.isArray(patient.sortedAppointments) ? [...patient.sortedAppointments] : []
+  const list = Array.isArray(patient.sortedAppointments)
+    ? [...patient.sortedAppointments]
+    : fallbackAppointments.value
 
   return list
     .filter((appointment: any) => {
@@ -213,8 +221,16 @@ async function retryQueue() { await patient.loadQueue() }
 async function retryHistory() { await patient.loadHistory() }
 
 async function handleCancelAppointment(id: string | number) {
-  const confirmed = window.confirm('Bạn có chắc chắn muốn hủy lịch khám này?')
-  if (!confirmed) return
+  let confirmed = true
+  if (typeof window !== 'undefined' && typeof window.confirm === 'function') {
+    try {
+      confirmed = window.confirm('Bạn có chắc chắn muốn hủy lịch khám này?')
+    } catch {
+      confirmed = true
+    }
+  }
+
+  if (confirmed === false) return
 
   cancelingAppointmentId.value = id
   try {
@@ -224,11 +240,14 @@ async function handleCancelAppointment(id: string | number) {
   }
 }
 
-watch(() => patient.appointments.length, () => {
-  if (appointmentFilter.value === 'upcoming' && (patient.upcomingWeekCount ?? 0) === 0) {
-    appointmentFilter.value = 'all'
-  }
-})
+watch(
+  () => fallbackAppointments.value.length,
+  () => {
+    if (appointmentFilter.value === 'upcoming' && (patient.upcomingWeekCount ?? 0) === 0) {
+      appointmentFilter.value = 'all'
+    }
+  },
+)
 </script>
 
 <template>
