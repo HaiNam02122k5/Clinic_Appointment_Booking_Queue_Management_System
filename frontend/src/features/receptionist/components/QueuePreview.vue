@@ -23,6 +23,10 @@ function statusText(status: QueuePatient['status']) {
 
     <div class="space-y-2">
 
+      <div v-if="!queue || queue.length === 0" class="py-6 text-center text-sm text-slate-500">
+        Không có bệnh nhân trong hàng chờ.
+      </div>
+
       <div
         v-for="patient in queue.slice(0, 4)"
         :key="patient.no"

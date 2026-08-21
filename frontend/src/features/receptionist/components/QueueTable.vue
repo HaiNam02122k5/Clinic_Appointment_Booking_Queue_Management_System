@@ -83,6 +83,10 @@ function handleAction(patient: QueuePatient) {
       <!-- BODY -->
       <tbody class="divide-y divide-slate-100">
 
+        <tr v-if="!queue || queue.length === 0">
+          <td colspan="6" class="py-4 text-center text-sm text-slate-500">Không có bệnh nhân trong hàng đợi.</td>
+        </tr>
+
         <tr
           v-for="patient in queue"
           :key="patient.no"
