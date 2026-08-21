@@ -73,8 +73,8 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                 .GroupBy(p => 1)
                 .Select(g => new
                 {
-                    CurrentTotal = g.Count(p => p.CreatedAt >= currentPeriodStart && p.CreatedAt < now),
-                    PreviousTotal = g.Count(p => p.CreatedAt >= previousPeriodStart && p.CreatedAt < currentPeriodStart),
+                    CurrentTotal = g.Count(p => p.CreatedAt < now),
+                    PreviousTotal = g.Count(p => p.CreatedAt < currentPeriodStart),
                 })
                 .FirstOrDefaultAsync();
 

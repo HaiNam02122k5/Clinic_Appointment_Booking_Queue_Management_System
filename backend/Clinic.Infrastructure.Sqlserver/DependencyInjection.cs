@@ -17,7 +17,7 @@ namespace Clinic.Infrastructure.Sqlserver
             IConfiguration configuration)
         {
             var connectionString = configuration.GetConnectionString("DefaultConnection");
-
+            Console.WriteLine($"Connection String: {connectionString}");
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(connectionString));
 

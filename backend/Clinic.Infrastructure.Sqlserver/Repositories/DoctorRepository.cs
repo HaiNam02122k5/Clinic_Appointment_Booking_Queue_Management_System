@@ -50,10 +50,10 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                 .GroupBy(d => 1)
                 .Select(g => new
                 {
-                    CurrentTotal = g.Count(d => d.CreatedAt >= currentPeriodStart && d.CreatedAt < now),
-                    PreviousTotal = g.Count(d => d.CreatedAt >= previousPeriodStart && d.CreatedAt < currentPeriodStart),
-                    CurrentActive = g.Count(d => d.Status == DoctorStatus.Active && d.CreatedAt >= currentPeriodStart && d.CreatedAt < now),
-                    PreviousActive = g.Count(d => d.Status == DoctorStatus.Active && d.CreatedAt >= previousPeriodStart && d.CreatedAt < currentPeriodStart)
+                    CurrentTotal = g.Count(d => d.CreatedAt < now),
+                    PreviousTotal = g.Count(d => d.CreatedAt < currentPeriodStart),
+                    CurrentActive = g.Count(d => d.Status == DoctorStatus.Active && d.CreatedAt < now),
+                    PreviousActive = g.Count(d => d.Status == DoctorStatus.Active && d.CreatedAt < currentPeriodStart)
                 })
                 .FirstOrDefaultAsync();
 
