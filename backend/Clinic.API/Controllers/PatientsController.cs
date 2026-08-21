@@ -54,13 +54,13 @@ namespace Clinic.API.Controllers
 
         [HttpGet("{patientId}/appointments")]
         [Authorize(Policy = "Permission:patient.view.any")]
-        [ProducesResponseType(typeof(List<AppointmentExtended>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<AppointmentDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<IActionResult> GetPatientAppointments([FromRoute] Guid patientId)
         {
             var userId = _currentUser.UserId ?? throw new UnauthorizedAccessException();
-            var command = new GetPatientAppointmentsQuery(userId, "all", patientId);
+            var command = new GetPatientAppointmentsQuery(userId, "upcoming", patientId);
             var result = await _sender.Send(command);
             return Ok(result);
         }
