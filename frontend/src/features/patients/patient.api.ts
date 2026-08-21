@@ -81,12 +81,17 @@ function normalizeDoctorList(data: any): Doctor[] {
 
 function normalizeSlotList(data: any): AvailableSlot[] {
   const items = Array.isArray(data) ? data : data?.items ?? data?.result ?? data?.data ?? []
-  return (Array.isArray(items) ? items : []).map((item: any) => ({
-    id: item?.workScheduleId ?? item?.id ?? item?.workScheduleID ?? '',
-    workScheduleId: item?.workScheduleId ?? item?.id ?? item?.workScheduleID ?? '',
-    time: toTimeString(item?.shiftStart ?? item?.time ?? item?.startTime ?? item?.slotTime),
-    available: Number(item?.remainingCapacity ?? item?.available ?? 1) > 0,
-  }))
+  return (Array.isArray(items) ? items : []).map((item: any) => {
+    const wsId = item?.workScheduleId ?? item?.WorkScheduleId ?? item?.id ?? item?.Id ?? ''
+    const rawTime = item?.shiftStart ?? item?.ShiftStart ?? item?.time ?? item?.startTime ?? item?.slotTime
+    const capacity = item?.remainingCapacity ?? item?.RemainingCapacity ?? item?.available ?? 1
+    return {
+      id: wsId,
+      workScheduleId: wsId,
+      time: toTimeString(rawTime),
+      available: Number(capacity) > 0,
+    }
+  })
 }
 
 async function callWithFallback<T>(

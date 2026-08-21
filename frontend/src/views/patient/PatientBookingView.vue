@@ -156,6 +156,7 @@ async function confirmBooking() {
   try {
     createdAppointment.value = await patient.createAppointment({
       doctorId: doctorId.value,
+      workScheduleId: resolvedSlotId,
       appointmentDate: appointmentDate.value,
       appointmentTime: appointmentTime.value,
       symptoms: symptoms.value,
