@@ -1,5 +1,6 @@
 using Clinic.API.Models;
 using Clinic.Application.Contracts;
+using Clinic.Application.Features.Appointments.Queries;
 using Clinic.Application.Features.Doctors.Queries;
 using Clinic.Application.Features.Employees.Queries;
 using Mapster;
@@ -25,6 +26,7 @@ namespace Clinic.API.Mappings
             //config.NewConfig<CropDto, CropResponse>();
             config.NewConfig<DoctorsQueryRequest, GetDoctorsQuery>().Map(dest => dest.Descending, src => src.OrderBy == "desc");
             config.NewConfig<EmployeesQueryRequest, GetEmployeesQuery>().Map(dest => dest.Descending, src => src.OrderBy == "desc");
+            config.NewConfig<PendingAppointmentRequest, GetPendingAppointmentsQuery>().Map(dest => dest.Descending, src => src.OrderBy == "desc");
         }
     }
 }
