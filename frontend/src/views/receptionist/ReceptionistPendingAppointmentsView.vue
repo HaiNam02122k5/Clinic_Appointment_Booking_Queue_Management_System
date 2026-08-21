@@ -14,6 +14,34 @@ type AppointmentItem = {
   status?: string | number | null
 }
 
+type PaginationEnvelope<T> = {
+  items?: T[]
+  totalCount?: number
+  pageNumber?: number
+  pageSize?: number
+}
+
+function unwrapApiResult<T>(payload: unknown): T | null {
+  if (!payload || typeof payload !== 'object') {
+    return payload as T | null
+  }
+
+  const maybeEnvelope = payload as { result?: T; data?: T; items?: T }
+  if (maybeEnvelope.result !== undefined) {
+    return maybeEnvelope.result
+  }
+
+  if (maybeEnvelope.data !== undefined) {
+    return maybeEnvelope.data
+  }
+
+  if (maybeEnvelope.items !== undefined) {
+    return maybeEnvelope.items
+  }
+
+  return payload as T
+}
+
 const appointments = ref<AppointmentItem[]>([])
 const pageNumber = ref(1)
 const pageSize = ref(10)
@@ -52,16 +80,27 @@ async function loadPending() {
       },
     })
 
-    // API can return an envelope or list
-    const payload = (data && typeof data === 'object') ? (data as any).items ?? (data as any).result ?? data : data
-    const items = Array.isArray(payload) ? payload : []
-    appointments.value = items
-    // try to read total count if present
-    total.value = (data && typeof data === 'object' && (data as any).totalCount) ? Number((data as any).totalCount) : items.length
+    const payload = unwrapApiResult<PaginationEnvelope<AppointmentItem> | AppointmentItem[] | null>(data)
+    const nextItems = Array.isArray(payload)
+      ? payload
+      : Array.isArray(payload?.items)
+        ? payload.items
+        : []
+
+    appointments.value = nextItems
+    total.value = Array.isArray(payload)
+      ? payload.length
+      : Number(payload?.totalCount ?? nextItems.length)
   } catch (err: unknown) {
+  // surface server message when possible
+  try {
+    const msg = (err as any)?.response?.data?.message || (err as any)?.response?.data?.errorMessages?.join(', ')
+    errorMessage.value = msg || 'Không thể tải danh sách chờ xác nhận.'
+  } catch {
     errorMessage.value = 'Không thể tải danh sách chờ xác nhận.'
+  }
   } finally {
-    isLoading.value = false
+  isLoading.value = false
   }
 }
 
@@ -101,7 +140,7 @@ function prevPage() {
 }
 
 function nextPage() {
-  if (appointments.value.length === pageSize.value) {
+  if (pageNumber.value * pageSize.value < total.value) {
     pageNumber.value++
     void loadPending()
   }
@@ -162,7 +201,7 @@ onMounted(() => {
         <div class="text-sm text-slate-600">Tổng: {{ total }}</div>
         <div class="space-x-2">
           <button class="rounded border px-3 py-1 text-sm" @click="prevPage" :disabled="pageNumber === 1">Trước</button>
-          <button class="rounded border px-3 py-1 text-sm" @click="nextPage" :disabled="appointments.length < pageSize">Sau</button>
+          <button class="rounded border px-3 py-1 text-sm" @click="nextPage" :disabled="pageNumber * pageSize >= total">Sau</button>
         </div>
       </div>
     </div>

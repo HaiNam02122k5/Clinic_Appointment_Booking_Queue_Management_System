@@ -275,6 +275,28 @@ function selectAppointment(appointmentId: string) {
 async function confirmAppointmentPerRow(id: string) {
   errorMessage.value = ''
   successMessage.value = ''
+
+  // client-side validation to avoid triggering backend null-state errors
+  const appointment = upcomingAppointments.value.find((a) => a.id === id)
+  if (!appointment) {
+    errorMessage.value = 'Không tìm thấy cuộc hẹn để xác nhận.'
+    return
+  }
+
+  // require basic relations present
+  if (!appointment.doctorId || !appointment.date || !appointment.patientId) {
+    errorMessage.value = 'Cuộc hẹn thiếu dữ liệu cần thiết (bác sĩ/ngày/ bệnh nhân). Vui lòng chỉnh sửa cuộc hẹn trước khi xác nhận.'
+    return
+  }
+
+  // Only allow if status is pending
+  const statusText = String(appointment.status ?? '').trim().toLowerCase()
+  const isPending = ['pending', '0'].some((s) => statusText.includes(s))
+  if (!isPending) {
+    errorMessage.value = 'Chỉ có cuộc hẹn ở trạng thái Chờ xác nhận mới có thể xác nhận.'
+    return
+  }
+
   isLoading.value = true
   try {
     await http.post(`/appointments/${id}/confirm`)
@@ -297,6 +319,8 @@ async function confirmAppointmentPerRow(id: string) {
     } else if (status === 401 || status === 403) {
       errorMessage.value = msg || 'Bạn không có quyền xác nhận cuộc hẹn.'
     } else if (status === 409) {
+      // If conflict, refresh list to show current server state (another user changed it)
+      if (selectedPatient.value) await loadPatientAppointments(selectedPatient.value.id)
       errorMessage.value = msg || 'Xung đột: cuộc hẹn không thể được xác nhận.'
     } else {
       errorMessage.value = msg || 'Xác nhận thất bại. Vui lòng thử lại.'
@@ -309,12 +333,47 @@ async function confirmAppointmentPerRow(id: string) {
 async function checkInPerRow(id: string) {
   errorMessage.value = ''
   successMessage.value = ''
+
+  const appointment = upcomingAppointments.value.find((a) => a.id === id)
+  if (!appointment) {
+    errorMessage.value = 'Không tìm thấy cuộc hẹn để check-in.'
+    return
+  }
+
+  // Only allow check-in for confirmed appointments
+  const statusText = String(appointment.status ?? '').trim().toLowerCase()
+  const isConfirmed = ['confirmed', '1'].some((s) => statusText.includes(s))
+  const isCheckedIn = ['checkedin', '2'].some((s) => statusText.includes(s))
+
+  if (!isConfirmed) {
+    errorMessage.value = 'Chỉ có cuộc hẹn đã được xác nhận mới có thể check-in.'
+    return
+  }
+  if (isCheckedIn) {
+    errorMessage.value = 'Cuộc hẹn đã được check-in.'
+    return
+  }
+
+  // Optional: prevent check-in for wrong date (most clinics allow check-in same day)
+  if (appointment.date) {
+    const apptDate = new Date(appointment.date)
+    const today = new Date()
+    if (apptDate.getFullYear() !== today.getFullYear() || apptDate.getMonth() !== today.getMonth() || apptDate.getDate() !== today.getDate()) {
+      errorMessage.value = 'Không thể check-in vì ngày cuộc hẹn không phải hôm nay.'
+      return
+    }
+  }
+
+  if (!appointment.doctorId) {
+    errorMessage.value = 'Cuộc hẹn chưa gán bác sĩ, không thể check-in.'
+    return
+  }
+
   isLoading.value = true
   try {
     await http.post(`/appointments/${id}/check-in`)
 
     // Attempt to fetch queue number from doctor queue if possible
-    const appointment = upcomingAppointments.value.find((a) => a.id === id)
     if (appointment?.doctorId) {
       try {
         const { data } = await http.get(`/doctors/${appointment.doctorId}/queue`)
@@ -355,6 +414,8 @@ async function checkInPerRow(id: string) {
     } else if (status === 401 || status === 403) {
       errorMessage.value = msg || 'Bạn không có quyền check-in bệnh nhân.'
     } else if (status === 409) {
+      // If conflict (someone else already checked-in), reload list to reflect server state
+      if (selectedPatient.value) await loadPatientAppointments(selectedPatient.value.id)
       errorMessage.value = msg || 'Xung đột: hành động check-in không thể thực hiện.'
     } else {
       errorMessage.value = msg || 'Không thể check-in bệnh nhân này.'
