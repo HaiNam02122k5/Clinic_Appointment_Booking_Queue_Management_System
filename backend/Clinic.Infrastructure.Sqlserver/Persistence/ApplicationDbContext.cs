@@ -30,6 +30,7 @@ namespace Clinic.Infrastructure.Sqlserver.Persistence
         public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
         public DbSet<WorkHistory> WorkHistories => Set<WorkHistory>();
         public DbSet<ShiftRequest> ShiftRequests => Set<ShiftRequest>();
+        public DbSet<AppointmentSnapshot> AppointmentSnapshots => Set<AppointmentSnapshot>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

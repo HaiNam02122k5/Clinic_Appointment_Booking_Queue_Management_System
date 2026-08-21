@@ -29,15 +29,15 @@ namespace Clinic.API.Controllers
         // For receptionist only
         [HttpPost("appointments")]
         [Authorize(Policy = "Permission:appointment.create")]
-        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(AppointmentDto), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> CreateAppointmentForPatient([FromBody] ReceptionistCreateAppointmentRequest request)
         {
             var userId = _currentUser.UserId;
             var command = new CreateAppointmentCommand(userId, request.WorkScheduleId, request.TimeSlot, request.Reason, request.IsWalkIn, request.PatientId);
-            await _sender.Send(command);
-            return StatusCode(StatusCodes.Status201Created);
+            var result = await _sender.Send(command);
+            return CreatedAtAction(nameof(AppointmentsController.GetAppointment), new { id = result.Id }, result);
         }
 
         [HttpGet("appointments/pending")]
