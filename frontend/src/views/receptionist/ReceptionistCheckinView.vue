@@ -250,6 +250,90 @@ function selectAppointment(appointmentId: string) {
   queueNumber.value = null
 }
 
+async function confirmAppointmentPerRow(id: string) {
+  errorMessage.value = ''
+  successMessage.value = ''
+  isLoading.value = true
+  try {
+    await http.post(`/appointments/${id}/confirm`)
+    successMessage.value = 'Đã xác nhận cuộc hẹn.'
+    // refresh appointments for the selected patient so status reflects backend
+    if (selectedPatient.value) {
+      await loadPatientAppointments(selectedPatient.value.id)
+    }
+  } catch (error: unknown) {
+    const status = typeof error === 'object' && error !== null && 'response' in error
+      ? Number((error as { response?: { status?: number } }).response?.status)
+      : undefined
+
+    if (status === 400) {
+      errorMessage.value = 'Cuộc hẹn không hợp lệ để xác nhận.'
+    } else if (status === 404) {
+      errorMessage.value = 'Không tìm thấy cuộc hẹn.'
+    } else if (status === 401 || status === 403) {
+      errorMessage.value = 'Bạn không có quyền xác nhận cuộc hẹn.'
+    } else {
+      errorMessage.value = 'Xác nhận thất bại. Vui lòng thử lại.'
+    }
+  } finally {
+    isLoading.value = false
+  }
+}
+
+async function checkInPerRow(id: string) {
+  errorMessage.value = ''
+  successMessage.value = ''
+  isLoading.value = true
+  try {
+    await http.post(`/appointments/${id}/check-in`)
+
+    // Attempt to fetch queue number from doctor queue if possible
+    const appointment = upcomingAppointments.value.find((a) => a.id === id)
+    if (appointment?.doctorId) {
+      try {
+        const { data } = await http.get(`/doctors/${appointment.doctorId}/queue`)
+        const payload = unwrapApiResult<QueueItem[] | { items?: QueueItem[]; data?: QueueItem[]; result?: QueueItem[] } | null>(data)
+        const queueList = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.items)
+            ? payload.items
+            : Array.isArray(payload?.data)
+              ? payload.data
+              : Array.isArray(payload?.result)
+                ? payload.result
+                : []
+
+        const matchedQueue = queueList.find((item) => String(item.appointmentId ?? item.id) === String(id))
+        queueNumber.value = formatQueueNumber(matchedQueue?.queueNumber ?? null)
+      } catch {
+        queueNumber.value = 'A-001'
+      }
+    }
+
+    successMessage.value = 'Check-in bệnh nhân thành công.'
+    // refresh list
+    if (selectedPatient.value) {
+      await loadPatientAppointments(selectedPatient.value.id)
+    }
+  } catch (error: unknown) {
+    const status = typeof error === 'object' && error !== null && 'response' in error
+      ? Number((error as { response?: { status?: number } }).response?.status)
+      : undefined
+
+    if (status === 400) {
+      errorMessage.value = 'Lịch hẹn này không thể check-in ở thời điểm hiện tại.'
+    } else if (status === 404) {
+      errorMessage.value = 'Không tìm thấy lịch hẹn để check-in.'
+    } else if (status === 401 || status === 403) {
+      errorMessage.value = 'Bạn không có quyền check-in bệnh nhân.'
+    } else {
+      errorMessage.value = 'Không thể check-in bệnh nhân này.'
+    }
+  } finally {
+    isLoading.value = false
+  }
+}
+
 /**
  * Perform the appropriate action for the selected appointment:
  * - If status is pending => call /appointments/{id}/confirm and update local status to confirmed
@@ -515,31 +599,55 @@ async function checkIn() {
       </div>
 
       <div class="space-y-3">
-        <button
+        <div
           v-for="appointment in upcomingAppointments"
           :key="appointment.id"
-          type="button"
-          class="w-full rounded-lg border px-4 py-3 text-left transition-colors"
+          role="button"
+          class="w-full rounded-lg border px-4 py-3 text-left transition-colors flex items-start justify-between"
           :class="selectedAppointmentId === appointment.id
             ? 'border-violet-500 bg-violet-50'
             : 'border-slate-200 bg-white hover:border-violet-200 hover:bg-violet-50/50'"
           @click="selectAppointment(appointment.id)"
         >
-          <div class="flex items-center justify-between gap-3">
-            <span class="text-sm font-semibold text-slate-800">
-             {{ formatDate(appointment.date) }}
-            </span>
-            <span class="rounded-full bg-violet-100 px-2 py-1 text-[10px] font-medium text-violet-700">
-             {{ appointmentStatusLabel(appointment.status) }}
-            </span>
+          <div class="min-w-0">
+            <div class="flex items-center justify-between gap-3">
+              <span class="text-sm font-semibold text-slate-800">
+               {{ formatDate(appointment.date) }}
+              </span>
+              <span class="rounded-full bg-violet-100 px-2 py-1 text-[10px] font-medium text-violet-700">
+               {{ appointmentStatusLabel(appointment.status) }}
+              </span>
+            </div>
+
+            <div class="mt-2 space-y-1 text-xs text-slate-600">
+              <div>Giờ: {{ formatTime(appointment.timeSlot) }}</div>
+              <div>Bác sĩ: {{ appointment.doctorName || 'Chưa xác định' }}</div>
+              <div v-if="appointment.reason">Lý do: {{ appointment.reason }}</div>
+            </div>
           </div>
 
-          <div class="mt-2 space-y-1 text-xs text-slate-600">
-            <div>Giờ: {{ formatTime(appointment.timeSlot) }}</div>
-            <div>Bác sĩ: {{ appointment.doctorName || 'Chưa xác định' }}</div>
-            <div v-if="appointment.reason">Lý do: {{ appointment.reason }}</div>
+          <div class="ml-4 flex-shrink-0">
+            <button
+              v-if="(String(appointment.status ?? '').toLowerCase().includes('pending') || String(appointment.status ?? '') === '0')"
+              class="rounded bg-amber-500 px-3 py-1 text-xs font-medium text-white hover:bg-amber-600"
+              :disabled="isLoading"
+              @click.stop="confirmAppointmentPerRow(appointment.id)"
+            >
+              Xác nhận
+            </button>
+
+            <button
+              v-else-if="(String(appointment.status ?? '').toLowerCase().includes('confirmed') || String(appointment.status ?? '') === '1')"
+              class="rounded bg-violet-600 px-3 py-1 text-xs font-medium text-white hover:bg-violet-700"
+              :disabled="isLoading"
+              @click.stop="checkInPerRow(appointment.id)"
+            >
+              Check-in
+            </button>
+
+            <span v-else class="text-xs text-slate-400">—</span>
           </div>
-        </button>
+        </div>
       </div>
 
       <button
