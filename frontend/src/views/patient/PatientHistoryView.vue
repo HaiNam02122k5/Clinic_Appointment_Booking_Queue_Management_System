@@ -1,12 +1,26 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { usePatientStore } from '@/stores/patient'
+import { areProtectedPatientEndpointsDisabled, enableProtectedPatientEndpoints } from '@/features/patients/patient.api'
 
 const patient = usePatientStore()
+const tryingToConnect = ref(false)
 
+// Tải lịch sử khám bệnh khi component được mount
 onMounted(() => {
   patient.loadHistory()
 })
+
+// Hàm xử lý khi người dùng nhấn nút "Kết nối lại với backend"
+async function connectToBackend() {
+  tryingToConnect.value = true
+  try {
+    enableProtectedPatientEndpoints()
+    await patient.loadHistory()
+  } finally {
+    tryingToConnect.value = false
+  }
+}
 
 // Hàm bổ trợ định dạng ngày tháng
 const formatDate = (dateString?: string) => {
@@ -35,6 +49,14 @@ const formatDate = (dateString?: string) => {
       class="py-10 text-center text-sm text-slate-400"
     >
       Đang tải lịch sử khám...
+    </div>
+
+    <!-- Nếu protected endpoints đã bị disable, cho phép người dùng bật lại -->
+    <div v-else-if="areProtectedPatientEndpointsDisabled()" class="rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center text-sm text-amber-800">
+      Hệ thống hiện không kết nối tới API hồ sơ bệnh nhân (được tắt để tránh lỗi). Bạn có muốn thử kết nối lại tới backend?
+      <div class="mt-3">
+        <button @click="connectToBackend" :disabled="tryingToConnect" class="px-4 py-2 rounded bg-[#0E4D92] text-white">{{ tryingToConnect ? 'Đang kết nối...' : 'Kết nối lại với backend' }}</button>
+      </div>
     </div>
 
     <!-- Trạng thái 2: Lỗi -->

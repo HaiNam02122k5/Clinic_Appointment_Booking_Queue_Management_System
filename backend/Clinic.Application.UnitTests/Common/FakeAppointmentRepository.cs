@@ -23,13 +23,16 @@ namespace Clinic.Application.UnitTests.Common
                 .Where(a => a.IsDeleted == false && a.PatientId == patientId);
 
             // Apply category filter if provided
-            query = category.ToLower() switch
+            if (!string.IsNullOrEmpty(category))
             {
-                "upcoming" => query.Where(a => new[] { AppointmentStatus.Pending, AppointmentStatus.Confirmed, AppointmentStatus.CheckedIn }.Contains(a.Status)),
-                "completed" => query.Where(a => a.Status == AppointmentStatus.Completed),
-                "cancelled" => query.Where(a => a.Status == AppointmentStatus.Cancelled),
-                _ => query
-            };
+                query = category.ToLower() switch
+                {
+                    "upcoming" => query.Where(a => new[] { AppointmentStatus.Pending, AppointmentStatus.Confirmed, AppointmentStatus.CheckedIn }.Contains(a.Status)),
+                    "completed" => query.Where(a => a.Status == AppointmentStatus.Completed),
+                    "cancelled" => query.Where(a => a.Status == AppointmentStatus.Cancelled),
+                    _ => query
+                };
+            }
 
             var items = query.OrderByDescending(a => a.WorkSchedule.Date).ThenByDescending(a => a.TimeSlot).ToList();
 

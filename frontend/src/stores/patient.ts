@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
+import { useAuthStore } from '@/stores/auth'
 import { patientApi } from '@/features/patients/patient.api'
 
 import type {
@@ -18,6 +19,7 @@ export const usePatientStore = defineStore('patient', () => {
   const appointments = ref<Appointment[]>([])
   const queue = ref<QueueStatus | null>(null)
   const history = ref<MedicalRecord[]>([])
+  const profile = ref<import('@/features/patients/patient.types').PatientProfile | null>(null)
 
   // Loading riêng
   const doctorsLoading = ref(false)
@@ -25,13 +27,15 @@ export const usePatientStore = defineStore('patient', () => {
   const appointmentsLoading = ref(false)
   const queueLoading = ref(false)
   const historyLoading = ref(false)
-
+  
   // Error riêng
   const doctorsError = ref<string | null>(null)
   const slotsError = ref<string | null>(null)
   const appointmentsError = ref<string | null>(null)
   const queueError = ref<string | null>(null)
   const historyError = ref<string | null>(null)
+  const profileLoading = ref(false)
+  const profileError = ref<string | null>(null)
 
   const upcomingAppointments = computed(() =>
     appointments.value.filter(
@@ -178,6 +182,30 @@ export const usePatientStore = defineStore('patient', () => {
     }
   }
 
+  async function loadProfile() {
+    profileLoading.value = true
+    profileError.value = null
+
+    try {
+      const result = await patientApi.getMyProfile()
+      profile.value = result
+
+      const authStore = useAuthStore()
+      if (result?.fullName && authStore.user) {
+        authStore.setUser({
+          ...authStore.user,
+          name: result.fullName,
+          email: result.email ?? authStore.user.email,
+        })
+      }
+    } catch (e: any) {
+      profile.value = null
+      profileError.value = e.response?.data?.message || 'Không thể tải hồ sơ bệnh nhân'
+    } finally {
+      profileLoading.value = false
+    }
+  }
+
   return {
     // Data
     doctors,
@@ -210,5 +238,11 @@ export const usePatientStore = defineStore('patient', () => {
     cancelAppointment,
     loadQueue,
     loadHistory,
+    loadProfile,
+
+    // Profile
+    profile,
+    profileLoading,
+    profileError,
   }
 })

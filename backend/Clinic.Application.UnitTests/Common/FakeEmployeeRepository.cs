@@ -40,12 +40,18 @@ namespace Clinic.Application.UnitTests.Common
                 query = query.Where(e => e.Person.User.UserRoles.Any(ur => roles.Contains(ur.Role.Name)));
             }
 
-            query = sortBy.ToLower() switch
+            if (!string.IsNullOrEmpty(sortBy))
             {
-                "fullname" => descending ? query.OrderByDescending(s => s.Person.FullName) : query.OrderBy(s => s.Person.FullName),
-                "dateofbirth" => descending ? query.OrderByDescending(s => s.Person.DateOfBirth) : query.OrderBy(s => s.Person.DateOfBirth),
-                _ => query.OrderBy(s => s.Person.FullName), // Default sorting by FullName
-            };
+                query = sortBy.ToLower() switch
+                {
+                    "fullname" => descending ? query.OrderByDescending(s => s.Person.FullName) : query.OrderBy(s => s.Person.FullName),
+                    "dateofbirth" => descending ? query.OrderByDescending(s => s.Person.DateOfBirth) : query.OrderBy(s => s.Person.DateOfBirth),
+                    _ => query.OrderBy(s => s.Person.FullName), // Default sorting by FullName
+                };
+            } else
+            {
+                query = query.OrderBy(s => s.Person.FullName); // Default sorting by FullName
+            }
 
             var totalCount = query.Count();
 

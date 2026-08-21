@@ -1,12 +1,5 @@
 import { env } from '@/config/env'
 import { http } from '@/lib/api/http'
-import {
-  mockAppointments,
-  mockAvailableSlots,
-  mockDoctors,
-  mockMedicalHistory,
-  mockQueue,
-} from '@/mock/clinic-data'
 import type {
   Doctor,
   AvailableSlot,
@@ -26,6 +19,41 @@ function toTimeString(value: unknown): string {
     return `${hh}:${mm}`
   }
   return String(value)
+}
+
+const PATIENT_PROTECTED_ENDPOINTS_DISABLED_KEY = 'clinic.patient.protected-disabled'
+
+function isProtectedPatientEndpointsDisabled(): boolean {
+  try {
+    return localStorage.getItem(PATIENT_PROTECTED_ENDPOINTS_DISABLED_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+function disableProtectedPatientEndpoints(): void {
+  try {
+    localStorage.setItem(PATIENT_PROTECTED_ENDPOINTS_DISABLED_KEY, '1')
+  } catch {
+    // ignore storage issues in private browsing or restricted environments
+  }
+}
+
+// Allow re-enabling protected endpoints (for users/devs who want to retry backend connections)
+export function enableProtectedPatientEndpoints(): void {
+  try {
+    localStorage.removeItem(PATIENT_PROTECTED_ENDPOINTS_DISABLED_KEY)
+  } catch {
+    // ignore
+  }
+}
+
+export function areProtectedPatientEndpointsDisabled(): boolean {
+  return isProtectedPatientEndpointsDisabled()
+}
+
+function shouldSkipProtectedPatientRequest(): boolean {
+  return isProtectedPatientEndpointsDisabled()
 }
 
 function mapDoctor(raw: any): Doctor {
@@ -97,35 +125,19 @@ async function callWithFallback<T>(
 
 export const patientApi = {
   getDoctors(specialty?: string): Promise<Doctor[]> {
-    if (env.enableMock) {
-      const doctors = specialty
-        ? mockDoctors.filter((doctor) => doctor.specialty.toLowerCase().includes(specialty.toLowerCase()))
-        : mockDoctors
-      return Promise.resolve(doctors)
-    }
-
-    const fallbackDoctors = specialty
-      ? mockDoctors.filter((doctor) => doctor.specialty.toLowerCase().includes(specialty.toLowerCase()))
-      : mockDoctors
-
     return callWithFallback<Doctor[]>(
       async () => {
         const res = await http.get<any>('/doctors', {
           params: { pageNumber: 1, pageSize: 20 },
         })
         const list = normalizeDoctorList(res.data)
-        return list.length > 0 ? list : fallbackDoctors
+        return list
       },
-      fallbackDoctors,
+      [],
     )
   },
 
   getAvailableSlots(doctorId: number, date: string): Promise<AvailableSlot[]> {
-    if (env.enableMock) {
-      return Promise.resolve(mockAvailableSlots[doctorId] ?? [])
-    }
-
-    const fallbackSlots = mockAvailableSlots[doctorId] ?? []
     return callWithFallback<AvailableSlot[]>(
       async () => {
         const fromDate = new Date(`${date}T00:00:00`).toISOString()
@@ -138,34 +150,13 @@ export const patientApi = {
           },
         })
         const list = normalizeSlotList(res.data)
-        return list.length > 0 ? list : fallbackSlots
+        return list
       },
-      fallbackSlots,
+      [],
     )
   },
 
   createAppointment(payload: CreateAppointmentRequest): Promise<Appointment> {
-    if (env.enableMock) {
-      const doctor = mockDoctors.find((item) => item.id === (payload.doctorId ?? 0)) ?? mockDoctors[0]
-      const fallbackDoctor: Doctor = doctor ?? {
-        id: payload.doctorId ?? 0,
-        name: 'BS. Chưa xác định',
-        specialty: 'Khác',
-      }
-      const nextAppointment: Appointment = {
-        id: Date.now(),
-        doctorId: payload.doctorId ?? 0,
-        doctorName: fallbackDoctor.name,
-        specialty: fallbackDoctor.specialty,
-        appointmentDate: payload.appointmentDate ?? '',
-        appointmentTime: payload.appointmentTime ?? payload.timeSlot ?? '',
-        status: 'Pending',
-        queueNumber: `A-${Math.floor(10 + Math.random() * 90)}`,
-      }
-      mockAppointments.unshift(nextAppointment)
-      return Promise.resolve(nextAppointment)
-    }
-
     const workScheduleId = payload.workScheduleId ?? payload.doctorId
     const reason = payload.reason ?? payload.symptoms ?? 'Đặt lịch khám'
     const timeSlot = payload.timeSlot ?? payload.appointmentTime ?? '08:00:00'
@@ -208,37 +199,61 @@ export const patientApi = {
   },
 
   getMyAppointments(): Promise<Appointment[]> {
-    if (env.enableMock) {
-      return Promise.resolve(mockAppointments)
+    if (shouldSkipProtectedPatientRequest()) {
+      return Promise.resolve([])
     }
 
     return callWithFallback<Appointment[]>(
       async () => {
-        const res = await http.get<any>('/me/appointments')
-        const list = Array.isArray(res.data) ? res.data : res.data?.items ?? res.data?.result ?? []
-        const items = Array.isArray(list) ? list : []
-        return items.map((item: any) => ({
-          id: Number(item.id ?? 0),
-          doctorId: Number(item.doctorId ?? 0),
-          doctorName: item.doctorName ?? item.DoctorName ?? 'BS. Chưa xác định',
-          specialty: item.specialty ?? item.Specialty ?? 'Khác',
-          appointmentDate: item.date ?? item.appointmentDate ?? item.Date ?? '',
-          appointmentTime: toTimeString(item.timeSlot ?? item.TimeSlot ?? item.appointmentTime ?? '08:00'),
-          status: (item.status ?? item.Status ?? 'Pending') as Appointment['status'],
-          queueNumber: item.queueNumber ?? item.QueueNumber,
-        }))
+        try {
+          const res = await http.get<any>('/me/appointments')
+          const list = Array.isArray(res.data) ? res.data : res.data?.items ?? res.data?.result ?? []
+          const items = Array.isArray(list) ? list : []
+          return items.map((item: any) => {
+            // Handle various field name formats from backend
+            const id = Number(item.id ?? item.Id ?? 0)
+            const doctorId = Number(item.doctorId ?? item.DoctorId ?? 0)
+            const doctorName = item.doctorName ?? item.DoctorName ?? 'BS. Chưa xác định'
+
+            // Backend doesn't return specialty, so use fallback
+            const specialty = item.specialty ?? item.Specialty ?? 'Khác'
+
+            // Handle date field - backend returns 'Date' as DateOnly string (YYYY-MM-DD)
+            const appointmentDate = item.appointmentDate ?? item.date ?? item.Date ?? ''
+
+            // Handle timeSlot - backend returns 'TimeSlot' as TimeOnly or time string
+            const appointmentTime = toTimeString(item.appointmentTime ?? item.timeSlot ?? item.TimeSlot ?? '08:00')
+
+            // Handle status - can be string or enum
+            const status = ((item.status ?? item.Status ?? 'Pending') as string).trim() as Appointment['status']
+
+            // Backend doesn't include queueNumber, but it can be added if needed
+            const queueNumber = item.queueNumber ?? item.QueueNumber ?? ''
+
+            return {
+              id,
+              doctorId,
+              doctorName,
+              specialty,
+              appointmentDate,
+              appointmentTime,
+              status,
+              queueNumber,
+            }
+          })
+        } catch (error: any) {
+          const status = Number(error?.response?.status ?? error?.status ?? 0)
+          if (status === 403 || status === 404) {
+            disableProtectedPatientEndpoints()
+          }
+          throw error
+        }
       },
-      mockAppointments,
+      [],
     )
   },
 
   cancelAppointment(id: number): Promise<void> {
-    if (env.enableMock) {
-      const target = mockAppointments.find((appointment) => appointment.id === id)
-      if (target) target.status = 'Cancelled'
-      return Promise.resolve(undefined)
-    }
-
     return callWithFallback(
       async () => {
         await http.post(`/appointments/${id}/cancel`)
@@ -249,65 +264,172 @@ export const patientApi = {
   },
 
   getMyQueue(): Promise<QueueStatus> {
-    if (env.enableMock) {
-      return Promise.resolve(mockQueue)
+    if (shouldSkipProtectedPatientRequest()) {
+      return Promise.resolve({
+        myTicket: '',
+        position: 0,
+        estimatedWaitMinutes: 0,
+        doctorName: 'BS. Chưa xác định',
+        appointmentTime: '',
+        currentTicket: '',
+        entries: [],
+      })
     }
 
     return callWithFallback<QueueStatus>(
       async () => {
-        const res = await http.get<any>('/me/queue-status')
-        const list = Array.isArray(res.data) ? res.data : res.data?.items ?? res.data?.result ?? []
-        const first = Array.isArray(list) && list.length > 0 ? list[0] : null
+        try {
+          const res = await http.get<any>('/me/queue-status')
+          const list = Array.isArray(res.data) ? res.data : res.data?.items ?? res.data?.result ?? []
+          const first = Array.isArray(list) && list.length > 0 ? list[0] : null
 
-        if (!first) {
-          return mockQueue
-        }
+          if (!first) {
+            return {
+              myTicket: '',
+              position: 0,
+              estimatedWaitMinutes: 0,
+              doctorName: 'BS. Chưa xác định',
+              appointmentTime: '',
+              currentTicket: '',
+              entries: [],
+            }
+          }
 
-        return {
-          myTicket: String(first.queueNumber ?? first.queueTicketId ?? ''),
-          position: Number(first.positionInQueue ?? 0),
-          estimatedWaitMinutes: Number(first.estimatedWaitMinutes ?? 0),
-          doctorName: first.doctorName ?? 'BS. Chưa xác định',
-          appointmentTime: '',
-          currentTicket: String(first.queueNumber ?? first.queueTicketId ?? ''),
-          entries: list.map((item: any) => ({
-            ticket: String(item.queueNumber ?? item.queueTicketId ?? ''),
-            patientName: 'Bệnh nhân',
-            doctorId: 0,
-            doctorName: item.doctorName ?? 'BS. Chưa xác định',
-            appointmentTime: '',
-            status: item.status === 'Waiting' ? 'Waiting' : 'InProgress',
-            estimatedWaitMinutes: Number(item.estimatedWaitMinutes ?? 0),
-            position: Number(item.positionInQueue ?? 0),
-            urgent: false,
-          })),
+          // Handle various field name formats from backend
+          // Backend returns: QueueTicketId, QueueNumber, Status, DoctorName, PositionInQueue, EstimatedWaitMinutes
+          const myTicket = String(first.queueNumber ?? first.QueueNumber ?? first.queueTicketId ?? first.QueueTicketId ?? '')
+          const position = Number(first.positionInQueue ?? first.PositionInQueue ?? 0)
+          const estimatedWaitMinutes = Number(first.estimatedWaitMinutes ?? first.EstimatedWaitMinutes ?? 0)
+          const doctorName = first.doctorName ?? first.DoctorName ?? 'BS. Chưa xác định'
+
+          // currentTicket can be same as myTicket or the first ticket in queue
+          const currentTicket = myTicket
+
+          return {
+            myTicket,
+            position,
+            estimatedWaitMinutes,
+            doctorName,
+            appointmentTime: '',  // Backend doesn't provide this, frontend can leave empty
+            currentTicket,
+            entries: list.map((item: any) => ({
+              ticket: String(item.queueNumber ?? item.QueueNumber ?? ''),
+              patientName: 'Bệnh nhân',
+              doctorId: 0,
+              doctorName: item.doctorName ?? item.DoctorName ?? 'BS. Chưa xác định',
+              appointmentTime: '',
+              status: (item.status ?? item.Status ?? 'Waiting') === 'Waiting' ? 'Waiting' : 'InProgress',
+              estimatedWaitMinutes: Number(item.estimatedWaitMinutes ?? item.EstimatedWaitMinutes ?? 0),
+              position: Number(item.positionInQueue ?? item.PositionInQueue ?? 0),
+              urgent: false,
+            })),
+          }
+        } catch (error: any) {
+          const status = Number(error?.response?.status ?? error?.status ?? 0)
+          if (status === 403 || status === 404) {
+            disableProtectedPatientEndpoints()
+          }
+          throw error
         }
       },
-      mockQueue,
+      {
+        myTicket: '',
+        position: 0,
+        estimatedWaitMinutes: 0,
+        doctorName: 'BS. Chưa xác định',
+        appointmentTime: '',
+        currentTicket: '',
+        entries: [],
+      },
     )
   },
 
   getMedicalHistory(): Promise<MedicalRecord[]> {
-    if (env.enableMock) {
-      return Promise.resolve(mockMedicalHistory)
+    if (shouldSkipProtectedPatientRequest()) {
+      return Promise.resolve([])
     }
 
     return callWithFallback<MedicalRecord[]>(
       async () => {
-        const res = await http.get<any>('/me/medical-history')
-        const list = Array.isArray(res.data) ? res.data : res.data?.items ?? res.data?.result ?? []
+        try {
+          const res = await http.get<any>('/me/medical-history')
+          const list = Array.isArray(res.data) ? res.data : res.data?.items ?? res.data?.result ?? []
 
-        return (Array.isArray(list) ? list : []).map((item: any) => ({
-          id: Number(item.id ?? 0),
-          examinationDate: item.examDate ?? item.examinationDate ?? item.date ?? '',
-          doctorName: item.doctorName ?? 'BS. Chưa xác định',
-          specialty: item.specialty ?? 'Khác',
-          diagnosis: item.diagnosis ?? '',
-          prescription: item.prescription ?? '',
-          note: item.notes ?? item.note,
-        }))
+          return (Array.isArray(list) ? list : []).map((item: any) => {
+            // Handle various field name formats from backend
+            // Backend returns: Id, DoctorName, ExamDate, Symptoms, Diagnosis, Prescription, Notes
+            const id = Number(item.id ?? item.Id ?? 0)
+            const examDate = item.examDate ?? item.ExamDate ?? item.examinationDate ?? item.date ?? ''
+            const doctorName = item.doctorName ?? item.DoctorName ?? 'BS. Chưa xác định'
+
+            // Backend doesn't return specialty, so use fallback
+            const specialty = item.specialty ?? item.Specialty ?? 'Khác'
+
+            const diagnosis = item.diagnosis ?? item.Diagnosis ?? ''
+            const prescription = item.prescription ?? item.Prescription ?? ''
+
+            // Handle notes field - backend returns 'Notes' (plural), frontend expects 'note' (singular)
+            const note = item.note ?? item.notes ?? item.Notes ?? ''
+
+            return {
+              id,
+              examinationDate: examDate,
+              doctorName,
+              specialty,
+              diagnosis,
+              prescription,
+              note,
+            }
+          })
+        } catch (error: any) {
+          const status = Number(error?.response?.status ?? error?.status ?? 0)
+          if (status === 403 || status === 404) {
+            disableProtectedPatientEndpoints()
+          }
+          throw error
+        }
       },
-      mockMedicalHistory,
+      [],
+    )
+  },
+
+  // Try to load the patient profile. Support several endpoint shapes and fallbacks.
+  getMyProfile(): Promise<import('./patient.types').PatientProfile> {
+    const fallback = { fullName: '', email: '', phoneNumber: '' }
+    if (shouldSkipProtectedPatientRequest()) {
+      return Promise.resolve(fallback)
+    }
+
+    return callWithFallback<import('./patient.types').PatientProfile>(
+      async () => {
+        // Try several common endpoints - /patients/me is the primary one
+        const tries = ['/patients/me']
+        for (const p of tries) {
+          try {
+            const res = await http.get<any>(p)
+            const data = res.data?.result ?? res.data ?? res.data?.data ?? res.data?.profile ?? {}
+            return {
+              id: data.id ?? data.Id ?? data.patientId ?? data.PatientId ?? data.userId ?? data.UserId,
+              fullName: data.fullName ?? data.FullName ?? data.name ?? data.Name ?? data.full_name ?? data.username,
+              email: data.email ?? data.Email ?? data.emailAddress ?? data.EmailAddress ?? data.email_address,
+              phoneNumber: data.phoneNumber ?? data.PhoneNumber ?? data.phone ?? data.Phone ?? data.phone_number,
+              address: data.address ?? data.Address ?? data.location ?? data.Location,
+              dateOfBirth: data.dateOfBirth ?? data.DateOfBirth ?? data.dob ?? data.Dob ?? data.birthDate ?? data.BirthDate,
+              gender: data.gender ?? data.Gender ?? data.sex ?? data.Sex,
+            }
+          } catch (e: any) {
+            const status = e?.response?.status
+            if (status === 403 || status === 404) {
+              disableProtectedPatientEndpoints()
+              return fallback
+            }
+            continue
+          }
+        }
+
+        return fallback
+      },
+      fallback,
     )
   },
 }
