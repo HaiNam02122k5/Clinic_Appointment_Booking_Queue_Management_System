@@ -1,4 +1,4 @@
-﻿using Clinic.Application.Interfaces;
+using Clinic.Application.Interfaces;
 using Clinic.Domain.Entities;
 using Clinic.Domain.Enums;
 using Clinic.Infrastructure.Sqlserver.Persistence;
@@ -45,12 +45,17 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
 
         public async Task<List<WorkSchedule>> GetAvailableSlotsAsync(Guid? doctorId, Guid? specialtyId, DateTime? fromDate, DateTime? toDate)
         {
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var nowTime = TimeOnly.FromDateTime(DateTime.UtcNow);
+
             var query = _context.WorkSchedules
                 .Include(w => w.Appointments)
                 .Include(w => w.Doctor)
                     .ThenInclude(d => d.Employee)
                         .ThenInclude(e => e.Person)
-                .Where(w => w.IsDeleted == false && w.Status == WorkScheduleStatus.Active && new DateTime(w.Date, w.ShiftEnd) > DateTime.UtcNow);
+                .Where(w => w.IsDeleted == false &&
+                            w.Status == WorkScheduleStatus.Active &&
+                            (w.Date > today || (w.Date == today && w.ShiftEnd > nowTime)));
 
             if (doctorId.HasValue)
             {
@@ -65,12 +70,16 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
 
             if (fromDate.HasValue)
             {
-                query = query.Where(w => new DateTime(w.Date, w.ShiftStart) >= fromDate.Value);
+                var fromDateOnly = DateOnly.FromDateTime(fromDate.Value);
+                var fromTimeOnly = TimeOnly.FromDateTime(fromDate.Value);
+                query = query.Where(w => w.Date > fromDateOnly || (w.Date == fromDateOnly && w.ShiftStart >= fromTimeOnly));
             }
 
             if (toDate.HasValue)
             {
-                query = query.Where(w => new DateTime(w.Date, w.ShiftStart) <= toDate.Value);
+                var toDateOnly = DateOnly.FromDateTime(toDate.Value);
+                var toTimeOnly = TimeOnly.FromDateTime(toDate.Value);
+                query = query.Where(w => w.Date < toDateOnly || (w.Date == toDateOnly && w.ShiftStart <= toTimeOnly));
             }
 
             // Chỉ lấy khung giờ còn chỗ trống (số lịch hẹn chưa hủy < giới hạn/khung giờ).
