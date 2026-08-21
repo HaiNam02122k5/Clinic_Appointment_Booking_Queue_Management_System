@@ -26,7 +26,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
 
             if (!string.IsNullOrEmpty(search))
             {
-                query = query.Where(p => p.Person.FullName.Contains(search) || p.Person.Email.Contains(search));
+                query = query.Where(p => p.Person.FullName.Contains(search) || (p.Person.Email != null && p.Person.Email.Contains(search)) || (p.Person.PhoneNumber != null && p.Person.PhoneNumber.Contains(search)) || (p.InsuranceNumber != null && p.InsuranceNumber.Contains(search)));
             }
 
             if (string.IsNullOrEmpty(sortBy))

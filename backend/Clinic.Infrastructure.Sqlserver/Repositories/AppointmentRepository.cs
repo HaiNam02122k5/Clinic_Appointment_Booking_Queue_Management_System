@@ -250,5 +250,10 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
 
             return new PagedResult<Appointment>(items, count);
         }
+
+        public async Task AddAsync(Appointment appointment)
+        {
+            await _context.Appointments.AddAsync(appointment);
+        }
     }
 }

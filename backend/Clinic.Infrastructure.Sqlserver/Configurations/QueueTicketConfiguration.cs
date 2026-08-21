@@ -32,6 +32,8 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
 
             builder.Property(q => q.RowVersion)
                 .IsRowVersion();
+
+            builder.HasData(SampleData.QueueTickets);
         }
     }
 }

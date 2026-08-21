@@ -27,6 +27,8 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.HasIndex(u => u.PersonId).IsUnique();
+
+            builder.HasData(SampleData.Users);
         }
     }
 }
