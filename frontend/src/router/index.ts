@@ -121,6 +121,12 @@ const routes: RouteRecordRaw[] = [
             component: () =>
               import('@/views/receptionist/ReceptionistCheckinView.vue'),
           },
+          {
+            path: 'appointments/pending',
+            name: 'reception-pending-appointments',
+            component: () =>
+              import('@/views/receptionist/ReceptionistPendingAppointmentsView.vue'),
+          },
         ],
       },
 

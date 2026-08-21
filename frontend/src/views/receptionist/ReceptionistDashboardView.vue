@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 
 import StatCard from '@/features/receptionist/components/StatCard.vue'
@@ -12,26 +12,31 @@ const receptionistStore = useReceptionistStore()
 const {
   queue,
   waitingCount,
+  examiningCount,
   completedCount,
+  queueError,
+  queueLoading,
 } = storeToRefs(receptionistStore)
+
+onMounted(() => {
+  receptionistStore.fetchQueue()
+})
 
 const stats = computed(() => [
   {
-    label: 'Tổng lịch hẹn',
-    value: receptionistStore.appointments.length,
+    label: 'Trong hàng chờ',
+    value: queue.value.length,
     color: '#7C3AED',
-  },
-  {
-    label: 'Đã check-in',
-    value: receptionistStore.appointments.filter(
-      appointment => appointment.checkedIn
-    ).length,
-    color: '#0E4D92',
   },
   {
     label: 'Đang chờ',
     value: waitingCount.value,
     color: '#D97706',
+  },
+  {
+    label: 'Đang khám',
+    value: examiningCount.value,
+    color: '#0E4D92',
   },
   {
     label: 'Đã khám xong',
@@ -56,6 +61,14 @@ const stats = computed(() => [
     </div>
 
     <!-- ================= STATISTICS ================= -->
+    <div v-if="queueLoading" class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700">
+      Đang tải dữ liệu hàng chờ...
+    </div>
+
+    <div v-else-if="queueError" class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+      {{ queueError }}
+    </div>
+
     <div class="grid grid-cols-4 gap-4">
 
       <StatCard

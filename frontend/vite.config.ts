@@ -85,6 +85,11 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      '/receptionist': {
+        target: 'https://localhost:61658',
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
 })
