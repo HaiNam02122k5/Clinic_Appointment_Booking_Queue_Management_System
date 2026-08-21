@@ -1,8 +1,10 @@
-﻿using Clinic.Application.Interfaces;
+using System.Data;
+using Clinic.Application.Interfaces;
 using Clinic.Domain.Entities;
 using Clinic.Domain.Enums;
 using Clinic.Infrastructure.Sqlserver.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Clinic.Infrastructure.Sqlserver.Repositories
 {
@@ -19,26 +21,38 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
         {
             var day = DateOnly.FromDateTime(date.Date);
 
-            // MERGE atomic: nếu đã có dòng counter cho (doctorId, day) thì +1,
-            // nếu chưa có thì tạo mới CurrentNumber = 1.
-            // WITH (HOLDLOCK) kết hợp khóa chính (DoctorId, Date) là combo chuẩn
-            // của SQL Server để chống race condition khi upsert đồng thời -
-            // request thứ 2 phải đợi request thứ 1 commit xong mới được chạy MERGE.
-            // Cột output phải đặt tên "Value" vì SqlQuery<int> map theo quy ước này.
-            var nextNumber = await _context.Database
-                .SqlQuery<int>($@"
-            MERGE INTO QueueCounters WITH (HOLDLOCK) AS target
-            USING (SELECT {doctorId} AS DoctorId, {day} AS [Date]) AS source
-                ON target.DoctorId = source.DoctorId AND target.[Date] = source.[Date]
-            WHEN MATCHED THEN
-                UPDATE SET CurrentNumber = target.CurrentNumber + 1
-            WHEN NOT MATCHED THEN
-                INSERT (DoctorId, [Date], CurrentNumber)
-                VALUES (source.DoctorId, source.[Date], 1)
-            OUTPUT INSERTED.CurrentNumber AS Value;")
-                .SingleAsync(cancellationToken);
+            var connection = _context.Database.GetDbConnection();
+            if (connection.State != ConnectionState.Open)
+            {
+                await connection.OpenAsync(cancellationToken);
+            }
 
-            return nextNumber;
+            await using var command = connection.CreateCommand();
+            command.Transaction = _context.Database.CurrentTransaction?.GetDbTransaction();
+            command.CommandText = @"
+                MERGE INTO QueueCounters WITH (HOLDLOCK) AS target
+                USING (SELECT @DoctorId AS DoctorId, @Date AS [Date]) AS source
+                    ON target.DoctorId = source.DoctorId AND target.[Date] = source.[Date]
+                WHEN MATCHED THEN
+                    UPDATE SET CurrentNumber = target.CurrentNumber + 1
+                WHEN NOT MATCHED THEN
+                    INSERT (DoctorId, [Date], CurrentNumber)
+                    VALUES (source.DoctorId, source.[Date], 1)
+                OUTPUT INSERTED.CurrentNumber;";
+
+            var pDoctorId = command.CreateParameter();
+            pDoctorId.ParameterName = "@DoctorId";
+            pDoctorId.Value = doctorId;
+            command.Parameters.Add(pDoctorId);
+
+            var pDate = command.CreateParameter();
+            pDate.ParameterName = "@Date";
+            pDate.Value = day.ToDateTime(TimeOnly.MinValue);
+            pDate.DbType = DbType.Date;
+            command.Parameters.Add(pDate);
+
+            var result = await command.ExecuteScalarAsync(cancellationToken);
+            return Convert.ToInt32(result);
         }
 
         public async Task AddAsync(QueueTicket queueTicket)
