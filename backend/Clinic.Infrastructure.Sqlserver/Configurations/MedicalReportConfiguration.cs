@@ -29,6 +29,8 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
             builder.Property(m => m.Status)
                 .HasConversion<string>()
                 .HasMaxLength(20);
+
+            builder.HasData(SampleData.MedicalReports);
         }
     }
 }

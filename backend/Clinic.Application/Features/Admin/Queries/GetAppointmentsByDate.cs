@@ -32,7 +32,7 @@ namespace Clinic.Application.Features.Admin.Queries
                     DoctorId = a.WorkSchedule.DoctorId,
                     DoctorName = a.WorkSchedule.Doctor.Employee.Person.FullName,
                     SpecialtyId = a.WorkSchedule.Doctor.WorkHistories.FirstOrDefault()?.SpecialtyId ?? Guid.Empty,
-                    SpecialtyName = a.WorkSchedule.Doctor.WorkHistories.FirstOrDefault()?.Specialty.Name ?? "Unknown",
+                    SpecialtyName = a.WorkSchedule.Doctor.WorkHistories.FirstOrDefault()?.Specialty?.Name ?? "Unknown",
                     Date = a.WorkSchedule.Date,
                     TimeSlot = a.TimeSlot,
                     Status = a.Status,

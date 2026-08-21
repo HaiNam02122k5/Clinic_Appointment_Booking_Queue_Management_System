@@ -34,6 +34,29 @@ namespace Clinic.Domain.Entities
 
         private Appointment() { } // For EF Core
 
+        public Appointment( // For seeding sample data
+            Guid id,
+            Guid patientId,
+            Guid workScheduleId,
+            TimeOnly timeSlot,
+            string reason,
+            AppointmentStatus status,
+            bool isWalkIn,
+            Guid updatedByUserId,
+            DateTime createdAt,
+            DateTime? updatedAt,
+            bool isDeleted)
+            : base(id, createdAt, updatedAt, isDeleted)
+        {
+            PatientId = patientId;
+            WorkScheduleId = workScheduleId;
+            TimeSlot = timeSlot;
+            Reason = reason;
+            Status = status;
+            IsWalkIn = isWalkIn;
+            UpdatedByUserId = updatedByUserId;
+        }
+
         public Appointment(Patient patient, WorkSchedule workSchedule, TimeOnly timeSlot, string reason, Guid createdByUserId, bool isWalkIn = false)
         {
             WorkSchedule = workSchedule ?? throw new ArgumentNullException(nameof(workSchedule));

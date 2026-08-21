@@ -1,6 +1,7 @@
 ﻿using Clinic.API.Models;
 using Clinic.Application.Common.Models;
 using Clinic.Application.Contracts;
+using Clinic.Application.Features.Appointments.Queries;
 using Clinic.Application.Features.Patients.Commands;
 using Clinic.Application.Features.Patients.Queries;
 using Clinic.Application.Interfaces;
@@ -47,6 +48,19 @@ namespace Clinic.API.Controllers
         public async Task<IActionResult> GetPatient([FromRoute] Guid patientId)
         {
             var command = new GetPatientByIdQuery(patientId);
+            var result = await _sender.Send(command);
+            return Ok(result);
+        }
+
+        [HttpGet("{patientId}/appointments")]
+        [Authorize(Policy = "Permission:patient.view.any")]
+        [ProducesResponseType(typeof(List<AppointmentDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        public async Task<IActionResult> GetPatientAppointments([FromRoute] Guid patientId)
+        {
+            var userId = _currentUser.UserId ?? throw new UnauthorizedAccessException();
+            var command = new GetPatientAppointmentsQuery(userId, "upcoming", patientId);
             var result = await _sender.Send(command);
             return Ok(result);
         }

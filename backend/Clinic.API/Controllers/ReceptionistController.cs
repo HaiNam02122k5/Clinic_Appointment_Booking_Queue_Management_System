@@ -40,6 +40,20 @@ namespace Clinic.API.Controllers
             return StatusCode(StatusCodes.Status201Created);
         }
 
+        [HttpGet("appointments/pending")]
+        [Authorize(Roles = "Receptionist")]
+        [ProducesResponseType(typeof(List<AppointmentDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        public async Task<IActionResult> GetPendingAppointments([FromQuery] PendingAppointmentRequest request)
+        {
+            var userId = _currentUser.UserId;
+            if (userId == null)
+                return Unauthorized();
+            var command = _mapper.Map<GetPendingAppointmentsQuery>(request);
+            var appointments = await _sender.Send(command);
+            return Ok(appointments);
+        }
+
         // For receptionist only
         [HttpPatch("appointments/{appointmentId}")]
         [Authorize(Policy = "Permission:appointment.update")]

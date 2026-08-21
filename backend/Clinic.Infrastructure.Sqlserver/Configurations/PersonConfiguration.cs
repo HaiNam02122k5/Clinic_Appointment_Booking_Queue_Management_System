@@ -32,6 +32,8 @@ namespace Clinic.Infrastructure.Sqlserver.Configurations
                 .WithOne(n => n.Person)
                 .HasForeignKey(n => n.PersonId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasData(SampleData.Persons);
         }
     }
 }
