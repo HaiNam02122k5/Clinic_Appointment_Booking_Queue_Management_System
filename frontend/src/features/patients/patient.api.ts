@@ -1,5 +1,6 @@
 import { env } from '@/config/env'
 import { http } from '@/lib/api/http'
+import { logger } from '@/lib/logger'
 import type {
   Doctor,
   AvailableSlot,
@@ -7,6 +8,7 @@ import type {
   CreateAppointmentRequest,
   QueueStatus,
   MedicalRecord,
+  PatientProfile,
 } from './patient.types'
 
 function toTimeString(value: unknown): string {
@@ -35,11 +37,10 @@ function disableProtectedPatientEndpoints(): void {
   try {
     localStorage.setItem(PATIENT_PROTECTED_ENDPOINTS_DISABLED_KEY, '1')
   } catch {
-    // ignore storage issues in private browsing or restricted environments
+    // ignore
   }
 }
 
-// Allow re-enabling protected endpoints (for users/devs who want to retry backend connections)
 export function enableProtectedPatientEndpoints(): void {
   try {
     localStorage.removeItem(PATIENT_PROTECTED_ENDPOINTS_DISABLED_KEY)
@@ -57,12 +58,12 @@ function shouldSkipProtectedPatientRequest(): boolean {
 }
 
 function mapDoctor(raw: any): Doctor {
-  const id = Number(raw?.id ?? raw?.doctorId ?? raw?.DoctorId ?? 0)
+  const id = raw?.id ?? raw?.doctorId ?? raw?.DoctorId ?? ''
   const name = raw?.fullName ?? raw?.name ?? raw?.doctorName ?? raw?.FullName ?? 'BS. Chưa xác định'
   const specialty = raw?.currentSpecialty ?? raw?.specialty ?? raw?.CurrentSpecialty ?? raw?.Specialty ?? 'Khác'
 
   return {
-    id: Number.isFinite(id) ? id : 0,
+    id: id || '0',
     name,
     specialty,
     room: raw?.room ?? raw?.roomNumber,
@@ -81,14 +82,12 @@ function normalizeDoctorList(data: any): Doctor[] {
 function normalizeSlotList(data: any): AvailableSlot[] {
   const items = Array.isArray(data) ? data : data?.items ?? data?.result ?? data?.data ?? []
   return (Array.isArray(items) ? items : []).map((item: any) => ({
-    id: item?.workScheduleId ?? item?.id ?? item?.workScheduleID ?? 0,
-    workScheduleId: item?.workScheduleId ?? item?.id ?? item?.workScheduleID ?? 0,
+    id: item?.workScheduleId ?? item?.id ?? item?.workScheduleID ?? '',
+    workScheduleId: item?.workScheduleId ?? item?.id ?? item?.workScheduleID ?? '',
     time: toTimeString(item?.shiftStart ?? item?.time ?? item?.startTime ?? item?.slotTime),
     available: Number(item?.remainingCapacity ?? item?.available ?? 1) > 0,
   }))
 }
-
-import { logger } from '@/lib/logger'
 
 async function callWithFallback<T>(
   call: () => Promise<T>,
@@ -101,7 +100,6 @@ async function callWithFallback<T>(
     const status = Number(error?.response?.status ?? error?.status ?? 0)
     const details = error?.response?.data ?? error ?? {}
 
-    // For expected client-side statuses (e.g., 403/404) treat as informational and avoid noisy warnings
     if (allowFallbackStatus.includes(status)) {
       logger.debug('[patientApi] Backend request returned allowed status, using fallback data.', {
         status,
@@ -110,7 +108,6 @@ async function callWithFallback<T>(
       return fallback
     }
 
-    // For server errors (5xx) still warn
     if (status >= 500) {
       logger.warn('[patientApi] Backend request failed (server error), using fallback data.', {
         status,
@@ -128,7 +125,7 @@ export const patientApi = {
     return callWithFallback<Doctor[]>(
       async () => {
         const res = await http.get<any>('/doctors', {
-          params: { pageNumber: 1, pageSize: 20 },
+          params: { pageNumber: 1, pageSize: 50 },
         })
         const list = normalizeDoctorList(res.data)
         return list
@@ -137,18 +134,20 @@ export const patientApi = {
     )
   },
 
-  getAvailableSlots(doctorId: number, date: string): Promise<AvailableSlot[]> {
+  getAvailableSlots(doctorId?: string | number, date?: string): Promise<AvailableSlot[]> {
     return callWithFallback<AvailableSlot[]>(
       async () => {
-        const fromDate = new Date(`${date}T00:00:00`).toISOString()
-        const toDate = new Date(`${date}T23:59:59`).toISOString()
-        const res = await http.get<any>('/slots', {
-          params: {
-            doctorId,
-            fromDate,
-            toDate,
-          },
-        })
+        const params: Record<string, any> = {}
+        // Chỉ gửi doctorId khi có giá trị Guid hợp lệ (không rỗng, không phải '0')
+        if (doctorId && doctorId !== '0' && doctorId !== 0) {
+          params.doctorId = String(doctorId)
+        }
+        if (date) {
+          params.fromDate = new Date(`${date}T00:00:00`).toISOString()
+          params.toDate = new Date(`${date}T23:59:59`).toISOString()
+        }
+
+        const res = await http.get<any>('/slots', { params })
         const list = normalizeSlotList(res.data)
         return list
       },
@@ -175,8 +174,8 @@ export const patientApi = {
         const specialty = created?.specialty ?? 'Khác'
 
         return {
-          id: Number(created?.id ?? Date.now()),
-          doctorId: Number(created?.doctorId ?? payload.doctorId ?? 0),
+          id: created?.id ?? String(Date.now()),
+          doctorId: created?.doctorId ?? payload.doctorId ?? '',
           doctorName,
           specialty,
           appointmentDate: created?.date ?? payload.appointmentDate ?? '',
@@ -186,8 +185,8 @@ export const patientApi = {
         }
       },
       {
-        id: Date.now(),
-        doctorId: payload.doctorId ?? 0,
+        id: String(Date.now()),
+        doctorId: payload.doctorId ?? '',
         doctorName: 'BS. Chưa xác định',
         specialty: 'Khác',
         appointmentDate: payload.appointmentDate ?? '',
@@ -210,24 +209,13 @@ export const patientApi = {
           const list = Array.isArray(res.data) ? res.data : res.data?.items ?? res.data?.result ?? []
           const items = Array.isArray(list) ? list : []
           return items.map((item: any) => {
-            // Handle various field name formats from backend
-            const id = Number(item.id ?? item.Id ?? 0)
-            const doctorId = Number(item.doctorId ?? item.DoctorId ?? 0)
+            const id = item.id ?? item.Id ?? ''
+            const doctorId = item.doctorId ?? item.DoctorId ?? ''
             const doctorName = item.doctorName ?? item.DoctorName ?? 'BS. Chưa xác định'
-
-            // Backend doesn't return specialty, so use fallback
             const specialty = item.specialty ?? item.Specialty ?? 'Khác'
-
-            // Handle date field - backend returns 'Date' as DateOnly string (YYYY-MM-DD)
             const appointmentDate = item.appointmentDate ?? item.date ?? item.Date ?? ''
-
-            // Handle timeSlot - backend returns 'TimeSlot' as TimeOnly or time string
             const appointmentTime = toTimeString(item.appointmentTime ?? item.timeSlot ?? item.TimeSlot ?? '08:00')
-
-            // Handle status - can be string or enum
             const status = ((item.status ?? item.Status ?? 'Pending') as string).trim() as Appointment['status']
-
-            // Backend doesn't include queueNumber, but it can be added if needed
             const queueNumber = item.queueNumber ?? item.QueueNumber ?? ''
 
             return {
@@ -253,7 +241,7 @@ export const patientApi = {
     )
   },
 
-  cancelAppointment(id: number): Promise<void> {
+  cancelAppointment(id: string | number): Promise<void> {
     return callWithFallback(
       async () => {
         await http.post(`/appointments/${id}/cancel`)
@@ -295,14 +283,10 @@ export const patientApi = {
             }
           }
 
-          // Handle various field name formats from backend
-          // Backend returns: QueueTicketId, QueueNumber, Status, DoctorName, PositionInQueue, EstimatedWaitMinutes
           const myTicket = String(first.queueNumber ?? first.QueueNumber ?? first.queueTicketId ?? first.QueueTicketId ?? '')
           const position = Number(first.positionInQueue ?? first.PositionInQueue ?? 0)
           const estimatedWaitMinutes = Number(first.estimatedWaitMinutes ?? first.EstimatedWaitMinutes ?? 0)
           const doctorName = first.doctorName ?? first.DoctorName ?? 'BS. Chưa xác định'
-
-          // currentTicket can be same as myTicket or the first ticket in queue
           const currentTicket = myTicket
 
           return {
@@ -310,12 +294,12 @@ export const patientApi = {
             position,
             estimatedWaitMinutes,
             doctorName,
-            appointmentTime: '',  // Backend doesn't provide this, frontend can leave empty
+            appointmentTime: '',
             currentTicket,
             entries: list.map((item: any) => ({
               ticket: String(item.queueNumber ?? item.QueueNumber ?? ''),
               patientName: 'Bệnh nhân',
-              doctorId: 0,
+              doctorId: item.doctorId ?? item.DoctorId ?? '',
               doctorName: item.doctorName ?? item.DoctorName ?? 'BS. Chưa xác định',
               appointmentTime: '',
               status: (item.status ?? item.Status ?? 'Waiting') === 'Waiting' ? 'Waiting' : 'InProgress',
@@ -356,19 +340,12 @@ export const patientApi = {
           const list = Array.isArray(res.data) ? res.data : res.data?.items ?? res.data?.result ?? []
 
           return (Array.isArray(list) ? list : []).map((item: any) => {
-            // Handle various field name formats from backend
-            // Backend returns: Id, DoctorName, ExamDate, Symptoms, Diagnosis, Prescription, Notes
-            const id = Number(item.id ?? item.Id ?? 0)
+            const id = item.id ?? item.Id ?? ''
             const examDate = item.examDate ?? item.ExamDate ?? item.examinationDate ?? item.date ?? ''
             const doctorName = item.doctorName ?? item.DoctorName ?? 'BS. Chưa xác định'
-
-            // Backend doesn't return specialty, so use fallback
             const specialty = item.specialty ?? item.Specialty ?? 'Khác'
-
             const diagnosis = item.diagnosis ?? item.Diagnosis ?? ''
             const prescription = item.prescription ?? item.Prescription ?? ''
-
-            // Handle notes field - backend returns 'Notes' (plural), frontend expects 'note' (singular)
             const note = item.note ?? item.notes ?? item.Notes ?? ''
 
             return {
@@ -393,16 +370,14 @@ export const patientApi = {
     )
   },
 
-  // Try to load the patient profile. Support several endpoint shapes and fallbacks.
-  getMyProfile(): Promise<import('./patient.types').PatientProfile> {
-    const fallback = { fullName: '', email: '', phoneNumber: '' }
+  getMyProfile(): Promise<PatientProfile> {
+    const fallback: PatientProfile = { fullName: '', email: '', phoneNumber: '' }
     if (shouldSkipProtectedPatientRequest()) {
       return Promise.resolve(fallback)
     }
 
-    return callWithFallback<import('./patient.types').PatientProfile>(
+    return callWithFallback<PatientProfile>(
       async () => {
-        // Try several common endpoints - /patients/me is the primary one
         const tries = ['/patients/me']
         for (const p of tries) {
           try {

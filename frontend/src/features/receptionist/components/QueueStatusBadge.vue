@@ -2,7 +2,7 @@
 import type { QueueStatus } from '../receptionist.mock'
 
 defineProps<{
-  status: QueueStatus
+  status: QueueStatus | string
 }>()
 </script>
 

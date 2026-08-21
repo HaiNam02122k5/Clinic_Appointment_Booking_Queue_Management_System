@@ -1,31 +1,31 @@
 export interface Doctor {
-  id: number
+  id: string | number
   name: string
   specialty: string
   room?: string
 }
 
 export interface AvailableSlot {
-  id: number | string
-  workScheduleId?: number | string
+  id: string | number
+  workScheduleId?: string | number
   time: string
   available: boolean
 }
 
 export interface Appointment {
-  id: number
-  doctorId: number
+  id: string | number
+  doctorId: string | number
   doctorName: string
   specialty: string
   appointmentDate: string
   appointmentTime: string
-  status: 'Pending' | 'Confirmed' | 'CheckedIn' | 'Completed' | 'Cancelled'
+  status: 'Pending' | 'Confirmed' | 'CheckedIn' | 'Completed' | 'Cancelled' | string
   queueNumber?: string
 }
 
 export interface CreateAppointmentRequest {
-  doctorId?: number
-  workScheduleId?: number | string
+  doctorId?: string | number
+  workScheduleId?: string | number
   appointmentDate?: string
   appointmentTime?: string
   timeSlot?: string
@@ -36,10 +36,10 @@ export interface CreateAppointmentRequest {
 export interface QueueEntry {
   ticket: string
   patientName: string
-  doctorId: number
+  doctorId: string | number
   doctorName: string
   appointmentTime: string
-  status: 'Waiting' | 'InProgress' | 'Completed' | 'Skipped'
+  status: 'Waiting' | 'InProgress' | 'Completed' | 'Skipped' | string
   estimatedWaitMinutes: number
   position: number
   urgent: boolean
@@ -56,7 +56,7 @@ export interface QueueStatus {
 }
 
 export interface MedicalRecord {
-  id: number
+  id: string | number
   examinationDate: string
   doctorName: string
   specialty: string
@@ -66,7 +66,7 @@ export interface MedicalRecord {
 }
 
 export interface PatientProfile {
-  id?: number | string
+  id?: string | number
   fullName?: string
   email?: string
   phoneNumber?: string

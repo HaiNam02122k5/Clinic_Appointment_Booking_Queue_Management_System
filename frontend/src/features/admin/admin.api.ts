@@ -3,7 +3,6 @@ import { env } from '@/config/env'
 import { doctorsApi } from '@/features/doctors/doctors.api'
 import { specialtiesApi } from '@/features/specialties/specialties.api'
 import { usersApi } from '@/features/users/users.api'
-import { shiftsApi } from '@/features/shifts/shifts.api'
 import type {
   AppointmentExtended,
   DashboardData,
@@ -35,16 +34,15 @@ export const adminApi = {
     } catch {
       // Fallback tổng hợp số liệu thực từ các API thực tế
       try {
-        const [docsRes, usersRes, shiftsRes] = await Promise.all([
+        const [docsRes, usersRes] = await Promise.all([
           doctorsApi.list({ pageSize: 100 }),
           usersApi.list({ pageSize: 100 }),
-          shiftsApi.list(),
         ])
 
         const totalDoctors = docsRes?.totalCount ?? docsRes?.items?.length ?? 0
         const activeDoctor = (docsRes?.items || []).filter((d) => d.status === 0 || d.status === 'Active' || d.status === 'active').length
         const totalPatients = (usersRes?.items || []).filter((u) => u.roles?.some((r) => r.toLowerCase() === 'patient')).length || usersRes?.totalCount || 0
-        const totalAppointments = shiftsRes?.length || 0
+        const totalAppointments = 0
 
         return {
           totalAppointments: { value: totalAppointments, change: 0 },
@@ -181,33 +179,10 @@ export const adminApi = {
         totalCount: data?.totalCount ?? data?.TotalCount ?? items.length,
       }
     } catch {
-      // Fallback từ danh sách ca trực thực tế hôm nay
-      try {
-        const shifts = await shiftsApi.list()
-        const items: AppointmentExtended[] = (shifts || []).slice(0, pageSize).map((s) => ({
-          id: `CA-${s.id}`,
-          patientId: '',
-          patientName: 'Ca khám trực tiếp',
-          doctorId: s.doctorId || '',
-          doctorName: s.doctorName || 'Bác sĩ',
-          specialtyId: '',
-          specialtyName: s.specialty || 'Đa khoa',
-          date: String(s.date || new Date().toISOString().split('T')[0]),
-          timeSlot: `${s.startTime} - ${s.endTime}`,
-          status: String(s.status || 'Confirmed'),
-        }))
-
-        return {
-          items,
-          totalPages: 1,
-          totalCount: items.length,
-        }
-      } catch {
-        return {
-          items: [],
-          totalPages: 1,
-          totalCount: 0,
-        }
+      return {
+        items: [],
+        totalPages: 1,
+        totalCount: 0,
       }
     }
   },

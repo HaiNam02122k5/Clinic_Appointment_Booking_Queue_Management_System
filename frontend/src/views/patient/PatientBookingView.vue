@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import {computed, onMounted, ref, watch} from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { usePatientStore } from '@/stores/patient'
-import { areProtectedPatientEndpointsDisabled, enableProtectedPatientEndpoints } from '@/features/patients/patient.api'
-import type { Appointment } from '@/features/patients/patient.types'
+import BaseButton from '@/components/ui/BaseButton.vue'
+import BaseAlert from '@/components/ui/BaseAlert.vue'
+import PatientBackendNotice from '@/features/patients/components/PatientBackendNotice.vue'
+import PatientDoctorCard from '@/features/patients/components/PatientDoctorCard.vue'
+import PatientSlotPicker from '@/features/patients/components/PatientSlotPicker.vue'
+import type { Appointment, AvailableSlot } from '@/features/patients/patient.types'
 
 const router = useRouter()
 const patient = usePatientStore()
@@ -14,7 +18,7 @@ const auth = useAuthStore()
 const step = ref(1)
 
 const specialty = ref('')
-const doctorId = ref<number | null>(null)
+const doctorId = ref<string | number | null>(null)
 const selectedSlotId = ref<number | string | null>(null)
 const appointmentDate = ref('')
 const appointmentTime = ref('')
@@ -23,9 +27,6 @@ const symptoms = ref('')
 // Trạng thái đặt lịch thành công và thông tin cuộc hẹn đã tạo
 const success = ref(false)
 const createdAppointment = ref<Appointment | null>(null)
-
-// Trạng thái chờ kết nối tới backend để tải dữ liệu bác sĩ và khung giờ
-const tryingToConnect = ref(false)
 
 // Lấy ngày hiện tại theo định dạng yyyy-mm-dd để giới hạn ngày đặt lịch
 const todayDate = new Date().toLocaleDateString('sv-SE')
@@ -65,7 +66,6 @@ watch(
   { deep: true },
 )
 
-
 const specialties = [
   'Nội tổng quát',
   'Tim mạch',
@@ -88,26 +88,18 @@ const selectedDoctor = computed(() =>
 
 // Hàm tải danh sách bác sĩ khi component được mounted
 onMounted(async () => {
-  await patient.loadDoctors()
+  await reloadBookingData()
 })
 
-// Hàm thử bật lại endpoint và tải dữ liệu từ backend
-async function connectToBackend() {
-  tryingToConnect.value = true
-  try {
-    enableProtectedPatientEndpoints()
-    // re-load current data: doctors, and slots if a doctor & date already selected
-    await patient.loadDoctors()
-    if (doctorId.value && appointmentDate.value) {
-      await patient.loadSlots(doctorId.value, appointmentDate.value)
-    }
-  } finally {
-    tryingToConnect.value = false
+async function reloadBookingData() {
+  await patient.loadDoctors()
+  if (doctorId.value && appointmentDate.value) {
+    await patient.loadSlots(doctorId.value, appointmentDate.value)
   }
 }
 
 // Hàm xử lý sự kiện khi người dùng chọn bác sĩ
-async function selectDoctor(id: number) {
+async function selectDoctor(id: string | number) {
   doctorId.value = id
   selectedSlotId.value = null
   appointmentTime.value = ''
@@ -130,12 +122,12 @@ async function changeDate() {
 }
 
 // Hàm xử lý sự kiện khi người dùng chọn khung giờ
-function chooseSlot(slot: { id: number | string; workScheduleId?: number | string; time: string }) {
+function handleSelectSlot(slot: AvailableSlot) {
   selectedSlotId.value = slot.workScheduleId ?? slot.id
   appointmentTime.value = slot.time
 }
 
-// Hàm chuyển sang bước tiếp theo trong quy trình đặt lịch
+// Chuyển sang bước tiếp theo
 function nextStep() {
   if (step.value === 1) {
     if (!doctorId.value || !appointmentDate.value || !appointmentTime.value || !selectedSlotId.value) {
@@ -145,37 +137,36 @@ function nextStep() {
   step.value++
 }
 
-// Hàm quay lại bước trước trong quy trình đặt lịch
+// Quay lại bước trước
 function previousStep() {
   if (step.value > 1) {
     step.value--
   }
 }
 
-// Hàm xác nhận đặt lịch, tạo cuộc hẹn mới dựa trên thông tin đã nhập
+// Hàm xác nhận đặt lịch
 async function confirmBooking() {
-const resolvedSlotId = selectedSlotId.value ??
-  patient.slots.find((slot) => slot.time === appointmentTime.value)?.workScheduleId ??
-  patient.slots.find((slot) => slot.time === appointmentTime.value)?.id ??
-  null
+  const resolvedSlotId = selectedSlotId.value ??
+    patient.slots.find((slot) => slot.time === appointmentTime.value)?.workScheduleId ??
+    patient.slots.find((slot) => slot.time === appointmentTime.value)?.id ??
+    null
 
-if (!doctorId.value || !resolvedSlotId) return
+  if (!doctorId.value || !resolvedSlotId) return
 
-// Gọi API để tạo cuộc hẹn mới
-try {
-  createdAppointment.value = await patient.createAppointment({
-    doctorId: doctorId.value,
-    appointmentDate: appointmentDate.value,
-    appointmentTime: appointmentTime.value,
-    symptoms: symptoms.value,
-  })
-  success.value = true
-} catch {
-  // Store xử lý lỗi
+  try {
+    createdAppointment.value = await patient.createAppointment({
+      doctorId: doctorId.value,
+      appointmentDate: appointmentDate.value,
+      appointmentTime: appointmentTime.value,
+      symptoms: symptoms.value,
+    })
+    success.value = true
+  } catch {
+    // Store xử lý lỗi
+  }
 }
-}
 
-//Hàm reset lại trạng thái đặt lịch để người dùng có thể đặt lịch mới
+// Hàm reset lại trạng thái đặt lịch
 function newBooking() {
   step.value = 1
   specialty.value = ''
@@ -192,35 +183,25 @@ function newBooking() {
 
 <template>
   <div class="mx-auto max-w-2xl space-y-5">
-
     <div>
       <h1 class="text-2xl font-bold text-slate-800">
-        Đặt lịch khám
+        Đặt lịch khám bệnh
       </h1>
-
-      <p class="mt-1 text-sm text-slate-400">
-        Đặt lịch nhanh, nhận xác nhận ngay
+      <p class="mt-1 text-xs text-slate-500">
+        Đặt hẹn trực tuyến nhanh chóng, nhận số thứ tự khám ngay lập tức
       </p>
     </div>
 
-    <!-- Nếu protected endpoints bị tắt, hiển thị banner cho phép bật lại -->
-    <div v-if="areProtectedPatientEndpointsDisabled()" class="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-      Kết nối tới API đặt lịch hiện đang bị tắt để tránh lỗi. Nếu backend đã sẵn sàng, bạn có thể thử bật lại.
-      <div class="mt-3">
-        <button @click="connectToBackend" :disabled="tryingToConnect" class="px-4 py-2 rounded bg-[#0E4D92] text-white">{{ tryingToConnect ? 'Đang kết nối...' : 'Kết nối lại với backend' }}</button>
-      </div>
-    </div>
+    <!-- Thông báo kết nối máy chủ nếu có sự cố -->
+    <PatientBackendNotice @reconnected="reloadBookingData" />
 
-    <!-- SUCCESS -->
+    <!-- SUCCESS STATE -->
     <section
       v-if="success"
-      class="rounded-2xl border border-slate-200
-             bg-white p-8 text-center shadow-sm"
+      class="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 text-center shadow-xs"
     >
       <div
-        class="mx-auto mb-4 flex h-16 w-16 items-center
-               justify-center rounded-full bg-emerald-100
-               text-2xl text-emerald-600"
+        class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-3xl text-emerald-600 font-bold"
       >
         ✓
       </div>
@@ -229,137 +210,100 @@ function newBooking() {
         Đặt lịch thành công!
       </h2>
 
-      <p class="mt-2 text-sm text-slate-500">
-        Vui lòng đến trước giờ khám để làm thủ tục
-        check-in tại quầy lễ tân.
+      <p class="mt-2 text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
+        Lịch hẹn của bạn đã được ghi nhận vào hệ thống. Vui lòng đến trước giờ khám để hoàn tất thủ tục check-in.
       </p>
 
-      <div
-        class="mt-6 rounded-2xl bg-gradient-to-br
-               from-[#0E4D92] to-[#1a6bbf]
-               p-5 text-left text-white"
-      >
-        <div class="flex justify-between">
-          <span class="text-sm text-blue-200">
-            Số thứ tự
+      <div class="mt-6 rounded-2xl bg-gradient-to-br from-[#0E4D92] to-[#1a6bbf] p-5 text-left text-white shadow-xs">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold uppercase tracking-wider text-blue-100">
+            Số thứ tự hàng đợi
           </span>
-
-          <span class="text-2xl font-bold">
+          <span class="text-2xl font-extrabold tracking-tight">
             {{ createdAppointment?.queueNumber || '---' }}
           </span>
         </div>
 
-        <div class="my-3 h-px bg-white/20" />
+        <div class="my-3.5 h-px bg-white/20" />
 
-        <div class="space-y-2 text-sm">
-
+        <div class="space-y-2.5 text-sm">
           <div class="flex justify-between">
-            <span class="text-blue-200">
-              Bác sĩ
-            </span>
-
-            <span>
-              {{ selectedDoctor?.name }}
-            </span>
+            <span class="text-blue-100 font-medium">Bác sĩ khám:</span>
+            <span class="font-bold">{{ selectedDoctor?.name }}</span>
           </div>
 
           <div class="flex justify-between">
-            <span class="text-blue-200">
-              Chuyên khoa
-            </span>
-
-            <span>
-              {{ selectedDoctor?.specialty }}
-            </span>
+            <span class="text-blue-100 font-medium">Chuyên khoa:</span>
+            <span class="font-bold">{{ selectedDoctor?.specialty }}</span>
           </div>
 
           <div class="flex justify-between">
-            <span class="text-blue-200">
-              Ngày
-            </span>
-
-            <span>
-              {{ appointmentDate }}
-            </span>
+            <span class="text-blue-100 font-medium">Ngày khám:</span>
+            <span class="font-bold">{{ appointmentDate }}</span>
           </div>
 
           <div class="flex justify-between">
-            <span class="text-blue-200">
-              Giờ
-            </span>
-
-            <span>
-              {{ appointmentTime }}
-            </span>
+            <span class="text-blue-100 font-medium">Giờ hẹn:</span>
+            <span class="font-bold text-amber-300">{{ appointmentTime }}</span>
           </div>
-
         </div>
       </div>
 
-      <div class="mt-5 flex gap-3">
-
-        <button
-          class="flex-1 rounded-xl border-2
-                 border-[#0E4D92] py-3 text-sm
-                 font-semibold text-[#0E4D92]"
+      <div class="mt-6 flex flex-col sm:flex-row gap-3">
+        <BaseButton
+          variant="outline"
+          block
           @click="newBooking"
         >
-          Đặt lịch mới
-        </button>
+          + Đặt thêm lịch mới
+        </BaseButton>
 
-        <button
-          class="flex-1 rounded-xl bg-[#00A878]
-                 py-3 text-sm font-semibold text-white"
+        <BaseButton
+          variant="primary"
+          block
           @click="router.push('/patient/queue')"
         >
-          Xem hàng đợi
-        </button>
-
+          Theo dõi hàng đợi →
+        </BaseButton>
       </div>
     </section>
 
-    <!-- STEPPER -->
+    <!-- STEPPER PROCESS -->
     <template v-else>
-
-      <div class="flex items-center">
-
+      <!-- Stepper indicator -->
+      <div class="flex items-center justify-between rounded-xl bg-white p-3 border border-slate-200 shadow-2xs">
         <div
-          v-for="item in [
-            'Chọn bác sĩ',
-            'Thông tin',
-            'Xác nhận',
-          ]"
-          :key="item"
-          class="flex flex-1 items-center"
+          v-for="(sName, idx) in ['1. Chọn bác sĩ & giờ', '2. Triệu chứng', '3. Xác nhận']"
+          :key="sName"
+          class="flex items-center gap-2 text-xs font-semibold"
+          :class="step === idx + 1 ? 'text-[#0E4D92]' : step > idx + 1 ? 'text-emerald-600' : 'text-slate-400'"
         >
-          <!-- có thể bổ sung stepper UI sau -->
+          <span
+            class="h-5 w-5 rounded-full flex items-center justify-center text-[10px] font-bold"
+            :class="step === idx + 1 ? 'bg-[#0E4D92] text-white' : step > idx + 1 ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'"
+          >
+            {{ step > idx + 1 ? '✓' : idx + 1 }}
+          </span>
+          <span class="hidden sm:inline">{{ sName }}</span>
         </div>
-
       </div>
 
       <!-- STEP 1 -->
       <section v-if="step === 1" class="space-y-4">
-
-        <!-- Specialty -->
-        <div
-          class="rounded-2xl border border-slate-200
-                 bg-white p-4"
-        >
-          <label
-            class="mb-2 block text-sm font-medium"
-          >
+        <!-- Specialty filter -->
+        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs">
+          <label class="mb-2 block text-xs font-bold text-slate-700 uppercase tracking-wider">
             Lọc theo chuyên khoa
           </label>
 
           <div class="flex flex-wrap gap-2">
-
             <button
-              class="rounded-xl border px-3.5 py-1.5
-                     text-xs font-medium"
+              type="button"
+              class="rounded-xl border px-3.5 py-1.5 text-xs font-semibold transition-all select-none"
               :class="
                 specialty === ''
-                  ? 'border-[#0E4D92] bg-[#0E4D92] text-white'
-                  : 'border-slate-200 text-slate-600'
+                  ? 'border-[#0E4D92] bg-[#0E4D92] text-white shadow-2xs'
+                  : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
               "
               @click="specialty = ''"
             >
@@ -369,317 +313,197 @@ function newBooking() {
             <button
               v-for="sp in specialties"
               :key="sp"
-              class="rounded-xl border px-3.5 py-1.5
-                     text-xs font-medium"
+              type="button"
+              class="rounded-xl border px-3.5 py-1.5 text-xs font-semibold transition-all select-none"
               :class="
                 specialty === sp
-                  ? 'border-[#0E4D92] bg-[#0E4D92] text-white'
-                  : 'border-slate-200 text-slate-600'
+                  ? 'border-[#0E4D92] bg-[#0E4D92] text-white shadow-2xs'
+                  : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
               "
               @click="specialty = sp"
             >
               {{ sp }}
             </button>
-
           </div>
         </div>
 
-        <!-- Date -->
-        <div
-          class="rounded-2xl border border-slate-200
-                 bg-white p-4"
-        >
-          <label class="mb-2 block text-sm font-medium">
-            Ngày khám
+        <!-- Date Picker -->
+        <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs">
+          <label class="mb-2 block text-xs font-bold text-slate-700 uppercase tracking-wider">
+            Chọn ngày khám
           </label>
 
           <input
             v-model="appointmentDate"
             type="date"
             :min="todayDate"
-            class="w-full rounded-xl border border-slate-200
-                   px-4 py-2.5 text-sm"
+            class="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-800 focus:border-[#0E4D92] focus:outline-none focus:ring-1 focus:ring-[#0E4D92]"
             @change="changeDate"
           />
         </div>
 
-        <!-- Doctors -->
+        <!-- Doctor list -->
         <div class="space-y-3">
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider px-1">
+            Chọn bác sĩ ({{ filteredDoctors.length }})
+          </label>
 
-          <div
-            v-for="doctor in filteredDoctors"
-            :key="doctor.id"
-            class="cursor-pointer rounded-2xl border-2
-                   bg-white p-5 transition"
-            :class="
-              doctorId === doctor.id
-                ? 'border-[#0E4D92] shadow-md'
-                : 'border-slate-200'
-            "
-            @click="selectDoctor(doctor.id)"
-          >
-
-            <div class="flex items-center gap-3">
-
-              <div
-                class="flex h-12 w-12 items-center
-                       justify-center rounded-xl
-                       bg-blue-50 font-bold
-                       text-[#0E4D92]"
-              >
-                BS
-              </div>
-
-              <div class="flex-1">
-                <p class="font-bold text-slate-800">
-                  {{ doctor.name }}
-                </p>
-
-                <p class="text-xs text-slate-400">
-                  {{ doctor.specialty }}
-                  <span v-if="doctor.room">
-                    · {{ doctor.room }}
-                  </span>
-                </p>
-              </div>
-
-              <span
-                v-if="doctorId === doctor.id"
-                class="text-[#0E4D92]"
-              >
-                ✓
-              </span>
-
-            </div>
-
-            <!-- Slots -->
-            <div
-              v-if="doctorId === doctor.id"
-              class="mt-4"
-            >
-              <p
-                class="mb-2 text-xs font-semibold
-                       text-slate-500"
-              >
-                Chọn khung giờ
-              </p>
-
-              <div class="flex flex-wrap gap-2">
-
-                <button
-                  v-for="slot in patient.slots"
-                  :key="slot.id"
-                  :disabled="!slot.available"
-                  class="rounded-xl border px-3.5 py-1.5
-                         text-xs font-medium"
-                  :class="
-                    !slot.available
-                      ? 'cursor-not-allowed border-slate-100 bg-slate-50 text-slate-300'
-                      : appointmentTime === slot.time
-                        ? 'border-[#0E4D92] bg-[#0E4D92] text-white'
-                        : 'border-slate-200 text-slate-700'
-                  "
-                  @click.stop="chooseSlot(slot)"
-                >
-                  {{ slot.time }}
-                </button>
-
-              </div>
-            </div>
-
+          <div v-if="!filteredDoctors.length" class="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
+            Không tìm thấy bác sĩ phù hợp với chuyên khoa đã chọn.
           </div>
 
+          <PatientDoctorCard
+            v-for="doctor in filteredDoctors"
+            :key="doctor.id"
+            :doctor="doctor"
+            :selected="doctorId === doctor.id"
+            @select="selectDoctor"
+          >
+            <!-- Slot Picker inside selected doctor card -->
+            <PatientSlotPicker
+              v-if="doctorId === doctor.id"
+              :slots="patient.slots"
+              :selected-time="appointmentTime"
+              @select-slot="handleSelectSlot"
+            />
+          </PatientDoctorCard>
         </div>
 
-        <button
-          class="w-full rounded-xl bg-[#0E4D92]
-                 py-3 text-sm font-semibold text-white
-                 disabled:opacity-40"
-          :disabled="
-            !doctorId ||
-            !appointmentDate ||
-            !appointmentTime ||
-            !selectedSlotId
-          "
+        <BaseButton
+          block
+          variant="primary"
+          :disabled="!doctorId || !appointmentDate || !appointmentTime || !selectedSlotId"
           @click="nextStep"
         >
-          Tiếp theo →
-        </button>
-
+          Tiếp theo: Điền triệu chứng →
+        </BaseButton>
       </section>
 
       <!-- STEP 2 -->
       <section v-if="step === 2" class="space-y-4">
-
-        <div
-          class="rounded-2xl border border-slate-200
-                 bg-white p-5"
-        >
-          <h2 class="mb-4 font-semibold text-slate-700">
-            Thông tin bệnh nhân
+        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
+          <h2 class="mb-4 font-bold text-slate-800 text-base">
+            Thông tin người khám & Lý do
           </h2>
 
           <div class="space-y-4">
-
             <div>
-              <label class="mb-1 block text-sm">
-                Họ và tên
+              <label class="mb-1.5 block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Họ và tên bệnh nhân
               </label>
-
               <input
-                :value="auth.user?.name"
+                :value="patient.profile?.fullName || auth.user?.name"
                 disabled
-                class="w-full rounded-xl border
-                       border-slate-200 bg-slate-50
-                       px-4 py-2.5 text-sm"
+                class="w-full rounded-xl border border-slate-200 bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-700 cursor-not-allowed"
               />
             </div>
 
             <div>
-              <label class="mb-1 block text-sm">
-                Lý do khám / Triệu chứng
+              <label class="mb-1.5 block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Lý do khám / Triệu chứng bệnh
               </label>
-
               <textarea
                 v-model="symptoms"
                 rows="4"
-                placeholder="Mô tả ngắn gọn triệu chứng..."
-                class="w-full resize-none rounded-xl
-                       border border-slate-200 px-4 py-2.5
-                       text-sm"
+                placeholder="Mô tả ngắn gọn các biểu hiện sức khỏe hiện tại (vd: sốt, đau ngực, ho kéo dài...)"
+                class="w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:border-[#0E4D92] focus:outline-none focus:ring-1 focus:ring-[#0E4D92]"
               />
             </div>
-
           </div>
         </div>
 
         <div class="flex gap-3">
-
-          <button
-            class="rounded-xl border-2 border-[#0E4D92]
-                   px-5 py-3 text-sm font-semibold
-                   text-[#0E4D92]"
+          <BaseButton
+            variant="outline"
+            class="w-1/3"
             @click="previousStep"
           >
             ← Quay lại
-          </button>
+          </BaseButton>
 
-          <button
-            class="flex-1 rounded-xl bg-[#0E4D92]
-                   py-3 text-sm font-semibold text-white"
+          <BaseButton
+            variant="primary"
+            class="w-2/3"
             @click="nextStep"
           >
-            Tiếp theo →
-          </button>
-
+            Tiếp theo: Xem lại & Xác nhận →
+          </BaseButton>
         </div>
-
       </section>
 
       <!-- STEP 3 -->
       <section v-if="step === 3" class="space-y-4">
-
-        <div
-          class="rounded-2xl border border-slate-200
-                 bg-white p-5"
-        >
-          <h2 class="mb-4 font-semibold text-slate-700">
-            Xác nhận thông tin
+        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
+          <h2 class="mb-4 font-bold text-slate-800 text-base">
+            Kiểm tra và xác nhận thông tin lịch khám
           </h2>
 
           <div class="grid grid-cols-2 gap-3">
-
-            <div class="rounded-xl bg-blue-50 p-3">
-              <p class="text-xs text-blue-600">
-                Bác sĩ
-              </p>
-              <p class="text-sm font-bold">
+            <div class="rounded-xl bg-blue-50/70 border border-blue-100 p-3.5">
+              <p class="text-xs font-semibold text-blue-700">Bác sĩ khám</p>
+              <p class="text-sm font-bold text-slate-800 mt-0.5">
                 {{ selectedDoctor?.name }}
               </p>
             </div>
 
-            <div class="rounded-xl bg-blue-50 p-3">
-              <p class="text-xs text-blue-600">
-                Chuyên khoa
-              </p>
-              <p class="text-sm font-bold">
+            <div class="rounded-xl bg-blue-50/70 border border-blue-100 p-3.5">
+              <p class="text-xs font-semibold text-blue-700">Chuyên khoa</p>
+              <p class="text-sm font-bold text-slate-800 mt-0.5">
                 {{ selectedDoctor?.specialty }}
               </p>
             </div>
 
-            <div class="rounded-xl bg-blue-50 p-3">
-              <p class="text-xs text-blue-600">
-                Ngày
-              </p>
-              <p class="text-sm font-bold">
+            <div class="rounded-xl bg-blue-50/70 border border-blue-100 p-3.5">
+              <p class="text-xs font-semibold text-blue-700">Ngày khám</p>
+              <p class="text-sm font-bold text-slate-800 mt-0.5">
                 {{ appointmentDate }}
               </p>
             </div>
 
-            <div class="rounded-xl bg-blue-50 p-3">
-              <p class="text-xs text-blue-600">
-                Giờ
-              </p>
-              <p class="text-lg font-bold text-[#0E4D92]">
+            <div class="rounded-xl bg-blue-50/70 border border-blue-100 p-3.5">
+              <p class="text-xs font-semibold text-blue-700">Giờ hẹn khám</p>
+              <p class="text-base font-extrabold text-[#0E4D92] mt-0.5">
                 {{ appointmentTime }}
               </p>
             </div>
-
           </div>
 
-          <div
-            v-if="symptoms"
-            class="mt-4 border-t border-slate-100 pt-4"
-          >
-            <p class="text-xs text-slate-400">
-              Lý do khám
+          <div v-if="symptoms" class="mt-4 border-t border-slate-100 pt-3.5">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              Lý do khám đã ghi nhận:
             </p>
-
-            <p class="mt-1 text-sm">
-              {{ symptoms }}
+            <p class="mt-1 text-sm font-medium text-slate-800 italic bg-slate-50 p-3 rounded-xl border border-slate-100">
+              "{{ symptoms }}"
             </p>
           </div>
-
         </div>
 
         <div class="flex gap-3">
-
-          <button
-            class="rounded-xl border-2 border-[#0E4D92]
-                   px-5 py-3 text-sm font-semibold
-                   text-[#0E4D92]"
+          <BaseButton
+            variant="outline"
+            class="w-1/3"
             @click="previousStep"
           >
             ← Quay lại
-          </button>
+          </BaseButton>
 
-          <button
-            class="flex-1 rounded-xl bg-[#00A878]
-                   py-3 text-sm font-semibold text-white
-                   disabled:opacity-50"
-            :disabled="patient.appointmentsLoading"
+          <BaseButton
+            variant="primary"
+            class="w-2/3"
+            :loading="patient.appointmentsLoading"
+            loading-text="Đang đặt lịch..."
             @click="confirmBooking"
           >
-            {{
-              patient.appointmentsLoading
-                ? 'Đang xử lý...'
-                : '✓ Xác nhận đặt lịch'
-            }}
-          </button>
-
+            ✓ Xác nhận đặt khám
+          </BaseButton>
         </div>
 
-        <p
+        <BaseAlert
           v-if="patient.appointmentsError"
-          class="rounded-xl bg-red-50 p-3 text-sm
-                 text-red-600"
-        >
-          {{ patient.appointmentsError }}
-        </p>
-
+          type="error"
+          :message="patient.appointmentsError"
+        />
       </section>
-
     </template>
-
   </div>
 </template>

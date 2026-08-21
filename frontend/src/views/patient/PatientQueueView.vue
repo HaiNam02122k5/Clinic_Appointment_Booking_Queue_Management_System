@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { usePatientStore } from '@/stores/patient'
+import BaseButton from '@/components/ui/BaseButton.vue'
+import PatientQueueCard from '@/features/patients/components/PatientQueueCard.vue'
+import PatientBackendNotice from '@/features/patients/components/PatientBackendNotice.vue'
 
 const patient = usePatientStore()
 
@@ -24,15 +27,8 @@ const formatTime = (date: Date) => {
 
 // Gửi Notification bằng Web Notification API
 const sendNotification = (title: string, body: string) => {
-  // Trình duyệt không hỗ trợ Notification
-  if (!('Notification' in window)) {
-    return
-  }
-
-  // Chưa được cấp quyền
-  if (Notification.permission !== 'granted') {
-    return
-  }
+  if (!('Notification' in window)) return
+  if (Notification.permission !== 'granted') return
 
   try {
     new Notification(title, {
@@ -60,13 +56,9 @@ const checkAndSendNotification = () => {
       'Sắp đến lượt khám!',
       `Bạn đang ở vị trí thứ #${position}. Vui lòng chuẩn bị vào phòng khám!`
     )
-
-    // Đánh dấu vé này đã được thông báo
     notifiedTicket.value = ticket
   }
 
-  // Reset trạng thái thông báo
-  // khi vị trí > 2 hoặc đã kết thúc lượt khám
   if (
     (position > 2 || position <= 0) &&
     notifiedTicket.value === ticket
@@ -77,13 +69,11 @@ const checkAndSendNotification = () => {
 
 // Lên lịch gọi API tiếp theo sau 30 giây
 const scheduleNextFetch = () => {
-  // Xóa timer cũ nếu có
   if (timer) {
     clearTimeout(timer)
     timer = undefined
   }
 
-  // Component đã bị unmount thì không tạo timer mới
   if (!isMounted) return
 
   timer = setTimeout(() => {
@@ -93,8 +83,6 @@ const scheduleNextFetch = () => {
 
 // Gọi API lấy thông tin hàng đợi
 const fetchQueue = async () => {
-  // Không gọi API nếu component đã unmount
-  // hoặc đang có request khác
   if (!isMounted || isFetching.value) return
 
   isFetching.value = true
@@ -102,32 +90,22 @@ const fetchQueue = async () => {
 
   try {
     await patient.loadQueue()
-
-    // Component có thể đã bị unmount trong lúc chờ API
     if (!isMounted) return
 
-    // Store báo lỗi
     if (patient.queueError) {
       isError.value = true
       return
     }
 
-    // API thành công
     isError.value = false
     lastUpdatedTime.value = formatTime(new Date())
-
-    // Kiểm tra xem có cần gửi notification không
     checkAndSendNotification()
   } catch (error) {
     if (!isMounted) return
-
     isError.value = true
     console.error('Lỗi khi tải hàng đợi:', error)
   } finally {
-    // Luôn kết thúc trạng thái loading
     isFetching.value = false
-
-    // Chỉ tiếp tục polling khi component còn tồn tại
     if (isMounted) {
       scheduleNextFetch()
     }
@@ -136,7 +114,6 @@ const fetchQueue = async () => {
 
 // Xin quyền gửi Notification
 const requestNotificationPermission = async () => {
-  // Trình duyệt không hỗ trợ Notification
   if (!('Notification' in window)) {
     notificationPermission.value = 'denied'
     return
@@ -144,11 +121,8 @@ const requestNotificationPermission = async () => {
 
   try {
     const permission = await Notification.requestPermission()
-
     notificationPermission.value = permission
 
-    // Nếu người dùng cho phép notification
-    // thì kiểm tra ngay trạng thái hàng đợi hiện tại
     if (permission === 'granted') {
       checkAndSendNotification()
     }
@@ -166,33 +140,26 @@ const waitingCount = computed(() => {
   )
 })
 
-// Component được mount
 onMounted(async () => {
   isMounted = true
 
-  // Kiểm tra trạng thái Notification hiện tại
   if ('Notification' in window) {
     notificationPermission.value = Notification.permission
   } else {
     notificationPermission.value = 'denied'
   }
 
-  // Lấy dữ liệu hàng đợi ngay khi mở trang
   await fetchQueue()
 })
 
-// Component bị unmount
 onUnmounted(() => {
   isMounted = false
-
-  // Hủy timer để không tiếp tục gọi API
   if (timer) {
     clearTimeout(timer)
     timer = undefined
   }
 })
 
-// Expose a small API for tests and external callers
 defineExpose({
   isError,
   isFetching,
@@ -207,56 +174,100 @@ defineExpose({
   <div class="mx-auto max-w-2xl space-y-5">
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">Trạng thái hàng đợi</h1>
-        <p class="text-sm text-slate-500" v-if="lastUpdatedTime">Cập nhật: {{ lastUpdatedTime }}</p>
+        <h1 class="text-2xl font-bold text-slate-800">
+          Trạng thái hàng đợi
+        </h1>
+        <p v-if="lastUpdatedTime" class="text-xs text-slate-500 mt-0.5">
+          Cập nhật lúc: <span class="font-medium text-slate-700">{{ lastUpdatedTime }}</span>
+        </p>
       </div>
+
       <div class="text-right">
-        <p class="text-sm text-slate-500">Đang chờ: <span class="font-semibold">{{ waitingCount }}</span></p>
+        <span class="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-[#0E4D92] border border-blue-200">
+          <span class="h-2 w-2 rounded-full bg-[#0E4D92] animate-pulse" />
+          Đang chờ: {{ waitingCount }}
+        </span>
       </div>
     </div>
 
-    <div v-if="isFetching" class="py-6 text-center text-sm text-slate-400">Đang tải hàng đợi...</div>
+    <!-- Notice if backend is offline -->
+    <PatientBackendNotice @reconnected="fetchQueue" />
 
-    <div v-else-if="isError" class="rounded-xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-600">
-      Không thể tải hàng đợi. Vui lòng thử lại sau.
+    <div v-if="isFetching && !patient.queue" class="py-12 text-center text-sm text-slate-500 rounded-2xl border border-slate-200 bg-white">
+      <div class="inline-block h-6 w-6 animate-spin rounded-full border-2 border-[#0E4D92] border-t-transparent mb-2" />
+      <p>Đang tải thông tin hàng đợi...</p>
     </div>
 
-    <div v-else-if="!patient.queue">
-      <div class="rounded-xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-400">Hiện không có thông tin hàng đợi.</div>
+    <div v-else-if="isError || patient.queueError" class="rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-700">
+      <p class="font-bold mb-1">Không thể tải hàng đợi</p>
+      <p class="text-xs text-red-600 mb-3">{{ patient.queueError || 'Lỗi kết nối máy chủ' }}</p>
+      <button
+        type="button"
+        class="px-4 py-2 rounded-xl bg-red-600 text-white text-xs font-semibold hover:bg-red-700"
+        @click="fetchQueue"
+      >
+        Thử lại
+      </button>
     </div>
 
     <div v-else class="space-y-4">
-      <div class="rounded-2xl border border-blue-200 bg-blue-50 p-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm text-slate-600">Số của bạn</p>
-            <p class="text-3xl font-bold text-[#0E4D92]">{{ patient.queue.myTicket }}</p>
-          </div>
-          <div class="text-right">
-            <p class="text-sm text-slate-600">Vị trí</p>
-            <p class="text-xl font-bold">#{{ patient.queue.position }}</p>
-          </div>
+      <!-- Your Ticket Status Card -->
+      <PatientQueueCard :queue="patient.queue" />
+
+      <!-- Notification button if not yet granted -->
+      <div
+        v-if="notificationPermission !== 'granted' && patient.queue?.myTicket"
+        class="rounded-xl border border-slate-200 bg-white p-4 flex items-center justify-between gap-3 shadow-2xs"
+      >
+        <div class="text-xs text-slate-600">
+          <p class="font-semibold text-slate-800">Nhận thông báo khi sắp đến lượt?</p>
+          <p class="text-slate-400 mt-0.5">Hệ thống sẽ gửi thông báo đến thiết bị của bạn khi vị trí còn 1-2 người.</p>
         </div>
+        <BaseButton
+          size="sm"
+          variant="outline"
+          @click="requestNotificationPermission"
+        >
+          🔔 Bật thông báo
+        </BaseButton>
       </div>
 
-      <div>
-        <h2 class="font-semibold text-slate-700">Danh sách hàng đợi</h2>
-        <div v-for="entry in patient.queue.entries" :key="entry.ticket" class="mt-3 rounded-xl border p-3 bg-white">
-          <div class="flex items-center justify-between">
+      <!-- Queue list -->
+      <div v-if="patient.queue?.entries?.length" class="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
+        <h2 class="font-bold text-slate-800 text-base mb-3">Danh sách lượt khám hiện tại</h2>
+
+        <div class="space-y-2.5">
+          <div
+            v-for="entry in patient.queue.entries"
+            :key="entry.ticket"
+            class="flex items-center justify-between rounded-xl border p-3.5 transition-colors"
+            :class="
+              entry.ticket === patient.queue.myTicket
+                ? 'border-[#0E4D92] bg-blue-50/40 ring-1 ring-[#0E4D92]'
+                : 'border-slate-100 bg-slate-50/50 hover:bg-slate-50'
+            "
+          >
             <div>
-              <p class="text-sm font-semibold">{{ entry.patientName }}</p>
-              <p class="text-xs text-slate-400">{{ entry.doctorName }} — {{ entry.appointmentTime }}</p>
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-bold text-slate-800">{{ entry.patientName }}</span>
+                <span
+                  v-if="entry.ticket === patient.queue.myTicket"
+                  class="rounded-md bg-[#0E4D92] px-1.5 py-0.5 text-[10px] font-bold text-white uppercase"
+                >
+                  Bạn
+                </span>
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5">
+                {{ entry.doctorName }} <span v-if="entry.appointmentTime">· {{ entry.appointmentTime }}</span>
+              </p>
             </div>
+
             <div class="text-right">
-              <p class="text-sm">{{ entry.ticket }}</p>
-              <p class="text-xs text-slate-400">Vị trí: {{ entry.position }}</p>
+              <span class="text-sm font-extrabold text-[#0E4D92]">{{ entry.ticket }}</span>
+              <p class="text-xs font-medium text-slate-500">Vị trí: <span class="font-bold text-slate-700">#{{ entry.position }}</span></p>
             </div>
           </div>
         </div>
-      </div>
-
-      <div class="mt-4">
-        <button @click="requestNotificationPermission" class="px-4 py-2 rounded bg-[#0E4D92] text-white">Cho phép thông báo</button>
       </div>
     </div>
   </div>
