@@ -94,15 +94,15 @@ namespace Clinic.API.Controllers
 
         [HttpPost("{appointmentId}/check-in")]
         [Authorize(Policy = "Permission:queue.check-in")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(QueueTicketBriefDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> CheckIn([FromRoute] Guid appointmentId)
         {
-            await _sender.Send(new CheckInCommand(appointmentId));
-            return NoContent();
+            var result = await _sender.Send(new CheckInCommand(appointmentId));
+            return Ok(result);
         }
 
         [HttpPost("{appointmentId}/cancel")]

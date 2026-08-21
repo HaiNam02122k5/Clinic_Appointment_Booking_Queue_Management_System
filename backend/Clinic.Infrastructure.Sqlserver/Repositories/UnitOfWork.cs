@@ -23,11 +23,12 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             {
                 return await _context.SaveChangesAsync(cancellationToken);
             }
-            catch (DbUpdateConcurrencyException)
+            catch (DbUpdateConcurrencyException ex)
             {
                 // RowVersion không khớp - bản ghi đã bị request khác cập nhật trước.
                 // Dịch sang exception riêng của Application để Infrastructure (EF Core)
                 // không rò rỉ lên Handler, giữ đúng ranh giới Clean Architecture.
+                Console.WriteLine(ex.Message);
                 throw new ConcurrencyConflictException(
                     "Dữ liệu đã bị thay đổi bởi thao tác khác, vui lòng thử lại.");
             }

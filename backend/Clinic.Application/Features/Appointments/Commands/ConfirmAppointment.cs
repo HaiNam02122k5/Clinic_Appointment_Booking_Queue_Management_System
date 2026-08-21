@@ -33,6 +33,7 @@ namespace Clinic.Application.Features.Appointments.Commands
                 throw new NotFoundException("Appointment not found.");
             }
             appointment.Confirm(request.ConfirmedByUserId);
+            await _appointmentRepository.UpdateAsync(appointment);
             await _unitOfWork.SaveChangesAsync();
             await _notificationQueue.EnqueueAsync(new NotificationJob<Appointment>(
                 appointment.Patient.Person,

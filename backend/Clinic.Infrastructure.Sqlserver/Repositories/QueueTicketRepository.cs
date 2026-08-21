@@ -36,7 +36,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                 INSERT (DoctorId, [Date], CurrentNumber)
                 VALUES (source.DoctorId, source.[Date], 1)
             OUTPUT INSERTED.CurrentNumber AS Value;")
-                .SingleAsync(cancellationToken);
+                .AsAsyncEnumerable().SingleAsync(cancellationToken);
 
             return nextNumber;
         }

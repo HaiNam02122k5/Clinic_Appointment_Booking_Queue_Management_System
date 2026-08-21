@@ -88,6 +88,10 @@ namespace Clinic.Domain.Entities
             {
                 return; // No throw, if it passed, let it pass.
             }
+            if (WorkSchedule is null)
+            {
+                throw new InvalidOperationException("Appointment schedule is missing.");
+            }
             // Force cancellation by admin, no time limit check.
             if (QueueTicket != null && QueueTicket.Status is QueueStatus.Waiting or QueueStatus.Called)
             {
@@ -173,6 +177,14 @@ namespace Clinic.Domain.Entities
             if (Status is AppointmentStatus.Completed or AppointmentStatus.Cancelled)
             {
                 throw new InvalidOperationException($"{Enum.GetName(Status)} appointments can't be cancelled.");
+            }
+            if (WorkSchedule is null)
+            {
+                throw new InvalidOperationException("Appointment schedule is missing.");
+            }
+            if (cancelledByUserId == Guid.Empty)
+            {
+                throw new InvalidOperationException("A valid user is required to cancel this appointment.");
             }
             var utcSlot = new TimeConverter().ConvertToUtc(new DateTime(WorkSchedule.Date, TimeSlot));
             if (DateTime.UtcNow.AddHours(CancelLimitHours) > utcSlot)

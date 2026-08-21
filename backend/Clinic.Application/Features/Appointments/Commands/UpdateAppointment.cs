@@ -56,6 +56,8 @@ namespace Clinic.Application.Features.Appointments.Commands
                 }
                 appointment.Update(workSchedule, request.TimeSlot, request.Reason, request.UserId);
                 workSchedule.AddAppointment(appointment);
+                
+                await _appointmentRepository.UpdateAsync(appointment);
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
                 await _unitOfWork.CommitTransactionAsync(cancellationToken);
                 return new AppointmentDto
