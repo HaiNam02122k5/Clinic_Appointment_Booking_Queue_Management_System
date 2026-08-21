@@ -1,10 +1,11 @@
-export type DoctorStatus =
-  | 'Active'
-  | 'Inactive'
+export type DoctorStatus = 'Active' | 'Inactive'
+export type Gender = 'Male' | 'Female' | 'Other'
+export type DoctorGender = Gender
 
-export type Gender =
-  | 'Male'
-  | 'Female'
+export interface Specialty {
+  id: string
+  name: string
+}
 
 export interface Doctor {
   id: string
@@ -17,11 +18,13 @@ export interface Doctor {
   currentSpecialty: string
   experienceYears: number
   status: DoctorStatus
+  biography?: string
 }
 
-export interface DoctorDetail
-  extends Doctor {
+export interface DoctorDetail extends Doctor {
   biography: string
+  dateOfBirth?: string
+  address?: string
 }
 
 export interface PagedDoctorsResponse {
@@ -74,4 +77,82 @@ export interface UpdateDoctorRequest {
   qualification: string
   experienceYears: number
   biography: string
+}
+
+export interface WorkSchedule {
+  id: string
+  doctorId: string
+  date: string
+  startTime: string
+  endTime: string
+  patientLimit: number
+  status: string
+}
+
+export interface DoctorSchedule<T = WorkSchedule> {
+  doctorId: string
+  doctorName: string
+  schedules: T[]
+  startDate: string
+  endDate: string
+}
+
+export interface RequestedShift {
+  id: string
+  doctorId: string
+  date: string
+  startTime: string
+  endTime: string
+  patientLimit: number
+  reason?: string | null
+  status: string
+}
+
+export interface QueueTicket {
+  id: string
+  appointmentId: string
+  queueNumber: number
+  priority: boolean
+  status: string
+  checkInTime: string
+  calledAt?: string | null
+  patientName?: string | null
+}
+
+export interface SkipQueueResult {
+  skippedTicket: QueueTicket
+  nextCalledTicket?: QueueTicket | null
+}
+
+export interface AppointmentDetail {
+  id: string
+  patientId: string
+  doctorId: string
+  patientName: string
+  doctorName: string
+  timeSlot: string
+  date: string
+  reason: string
+  status: string
+  queueNumber?: string | null
+  queueTime?: string | null
+  medicalReport?: MedicalReport | null
+  createdAt: string
+}
+
+export interface MedicalReport {
+  id: string
+  doctorName: string
+  examDate: string
+  symptoms?: string | null
+  diagnosis?: string | null
+  prescription?: string | null
+  notes?: string | null
+}
+
+export interface ApiResponse<T> {
+  statusCode: string
+  isSuccess: boolean
+  errorMessages: string[]
+  result: T
 }

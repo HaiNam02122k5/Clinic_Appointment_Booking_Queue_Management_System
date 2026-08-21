@@ -119,10 +119,28 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'doctor/examination',
         name: 'doctor-examination',
-        component: () => import('@/views/UsersView.vue'),
+        component: () => import('@/views/doctor/DoctorExaminationView.vue'),
         meta: {
           roles: ['Doctor'],
         },
+      },
+      {
+        path: 'doctor/schedule',
+        name: 'doctor-schedule',
+        component: () => import('@/views/doctor/DoctorScheduleView.vue'),
+        meta: { roles: ['Doctor'] },
+      },
+      {
+        path: 'doctor/shift-requests',
+        name: 'doctor-shift-requests',
+        component: () => import('@/views/doctor/DoctorShiftRequestsView.vue'),
+        meta: { roles: ['Doctor'] },
+      },
+      {
+        path: 'doctor/profile',
+        name: 'doctor-profile',
+        component: () => import('@/views/doctor/DoctorProfileView.vue'),
+        meta: { roles: ['Doctor'] },
       },
 
       // Luồng Admin

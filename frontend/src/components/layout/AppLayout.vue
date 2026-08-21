@@ -315,7 +315,34 @@ function logout() {
           </div>
 
           <div class="space-y-1">
-            <!-- Menu bác sĩ thêm sau -->
+            <RouterLink
+              to="/doctor/examination"
+              class="block rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+              exact-active-class="bg-violet-50 text-violet-700"
+            >
+              Khám bệnh & hàng đợi
+            </RouterLink>
+            <RouterLink
+              to="/doctor/schedule"
+              class="block rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+              active-class="bg-violet-50 text-violet-700"
+            >
+              Lịch làm việc
+            </RouterLink>
+            <RouterLink
+              to="/doctor/shift-requests"
+              class="block rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+              active-class="bg-violet-50 text-violet-700"
+            >
+              Đề xuất ca làm việc
+            </RouterLink>
+            <RouterLink
+              to="/doctor/profile"
+              class="block rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+              active-class="bg-violet-50 text-violet-700"
+            >
+              Hồ sơ cá nhân
+            </RouterLink>
           </div>
 
         </template>
