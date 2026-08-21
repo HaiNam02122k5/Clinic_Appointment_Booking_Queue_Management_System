@@ -62,7 +62,8 @@ function selectRole(role: UserRole) {
   const redirect = route?.query?.redirect as string | undefined
   const routeMap: Record<UserRole, string> = {
     Patient: '/patient',
-    Receptionist: '/reception/queue',
+    // Default receptionist entry should be the dashboard overview
+    Receptionist: '/reception',
     Doctor: '/doctor/examination',
     Admin: '/admin/doctors',
   }

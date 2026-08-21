@@ -48,28 +48,37 @@ function normalizeStatus(value: unknown): string {
 function isStatusConfirmed(raw: unknown): boolean {
   const s = normalizeStatus(raw)
   return (
+    s === '1' ||
+    s === 'confirmed' ||
     s.includes('confirm') ||
     s.includes('xac') ||
     s.includes('approved') ||
-    s.includes('duyet') ||
-    s === 'confirmed'
+    s.includes('duyet')
   )
 }
 
 function isStatusPending(raw: unknown): boolean {
   const s = normalizeStatus(raw)
   return (
+    s === '0' ||
+    s === 'pending' ||
     s.includes('pend') ||
     s.includes('wait') ||
     s.includes('cho') ||
-    s.includes('dang cho') ||
-    s === 'pending'
+    s.includes('dang cho')
   )
 }
 
 function isStatusCancelled(raw: unknown): boolean {
   const s = normalizeStatus(raw)
-  return s.includes('cancel') || s.includes('huy') || s === 'cancelled' || s === 'canceled'
+  return (
+    s === '4' ||
+    s === '5' ||
+    s.includes('cancel') ||
+    s.includes('huy') ||
+    s === 'cancelled' ||
+    s === 'canceled'
+  )
 }
 
 function parseDate(value: unknown): Date | null {
@@ -250,7 +259,7 @@ watch(
 )
 </script>
 
-<template>
+3<template>
   <div class="mx-auto max-w-3xl space-y-5">
     <div v-if="connecting" class="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 mb-4">
       {{ initialLoading ? 'Đang kết nối tới dịch vụ bệnh nhân...' : 'Đang đồng bộ dữ liệu...' }}

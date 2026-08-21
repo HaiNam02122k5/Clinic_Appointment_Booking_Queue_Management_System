@@ -80,7 +80,8 @@ const LOGIN_THEME = {
 // Trả về đường dẫn dựa trên vai trò người dùng
 function getRoleRoute(role: UserRole) {
   if (role === 'Admin') return '/admin/doctors'
-  if (role === 'Receptionist') return '/reception/queue'
+  // Redirect receptionists to the dashboard overview by default
+  if (role === 'Receptionist') return '/reception'
   if (role === 'Doctor') return '/doctor/examination'
   return '/patient'
 }

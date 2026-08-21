@@ -138,7 +138,28 @@ function normalizeDisplayDate(value: unknown): string {
 }
 
 function normalizeAppointmentStatus(value: unknown): Appointment['status'] | string {
-  const raw = String(value ?? 'Pending').trim()
+  if (value === null || value === undefined || value === '') return 'Pending'
+
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    switch (value) {
+      case 0:
+        return 'Pending'
+      case 1:
+        return 'Confirmed'
+      case 2:
+        return 'CheckedIn'
+      case 3:
+        return 'Completed'
+      case 4:
+        return 'Cancelled'
+      case 5:
+        return 'Cancelled'
+      default:
+        return 'Pending'
+    }
+  }
+
+  const raw = String(value).trim()
   if (!raw) return 'Pending'
 
   const normalized = raw
@@ -148,11 +169,11 @@ function normalizeAppointmentStatus(value: unknown): Appointment['status'] | str
     .replace(/\s+/g, ' ')
     .trim()
 
-  if (normalized.includes('confirm') || normalized.includes('xac') || normalized === 'confirmed') return 'Confirmed'
-  if (normalized.includes('pend') || normalized.includes('wait') || normalized.includes('cho') || normalized === 'pending') return 'Pending'
-  if (normalized.includes('cancel') || normalized.includes('huy') || normalized === 'cancelled' || normalized === 'canceled') return 'Cancelled'
-  if (normalized.includes('check') || normalized.includes('den')) return 'CheckedIn'
-  if (normalized.includes('complete') || normalized.includes('hoan')) return 'Completed'
+  if (['0', 'pending'].includes(normalized) || normalized.includes('pend') || normalized.includes('wait') || normalized.includes('cho')) return 'Pending'
+  if (['1', 'confirmed'].includes(normalized) || normalized.includes('confirm') || normalized.includes('xac')) return 'Confirmed'
+  if (['2', 'checkedin'].includes(normalized) || normalized.includes('check') || normalized.includes('den')) return 'CheckedIn'
+  if (['3', 'completed'].includes(normalized) || normalized.includes('complete') || normalized.includes('hoan')) return 'Completed'
+  if (['4', '5', 'cancelled', 'canceled'].includes(normalized) || normalized.includes('cancel') || normalized.includes('huy')) return 'Cancelled'
   return raw as Appointment['status']
 }
 
