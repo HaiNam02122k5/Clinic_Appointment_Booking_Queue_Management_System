@@ -34,7 +34,7 @@ namespace Clinic.Domain.Entities
 
         private Appointment() { } // For EF Core
 
-        public Appointment(
+        public Appointment( // For seeding sample data
             Guid id,
             Guid patientId,
             Guid workScheduleId,

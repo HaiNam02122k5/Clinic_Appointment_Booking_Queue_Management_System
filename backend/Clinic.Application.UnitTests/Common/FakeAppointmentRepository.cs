@@ -105,5 +105,10 @@ namespace Clinic.Application.UnitTests.Common
         {
             throw new NotImplementedException();
         }
+
+        public Task<PagedResult<Appointment>> GetPendingAppointmentsAsync(string search, string sortBy, bool descending, int pageNumber, int pageSize)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
