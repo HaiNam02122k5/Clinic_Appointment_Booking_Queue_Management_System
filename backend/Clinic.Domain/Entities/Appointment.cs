@@ -34,7 +34,7 @@ namespace Clinic.Domain.Entities
 
         private Appointment() { } // For EF Core
 
-        public Appointment(
+        public Appointment( // For seeding sample data
             Guid id,
             Guid patientId,
             Guid workScheduleId,
@@ -79,6 +79,7 @@ namespace Clinic.Domain.Entities
             WorkScheduleId = workSchedule.Id;
             TimeSlot = timeSlot;
             IsWalkIn = isWalkIn;
+            Status = AppointmentStatus.Confirmed;
             UpdatedByUserId = createdByUserId;
         }
 

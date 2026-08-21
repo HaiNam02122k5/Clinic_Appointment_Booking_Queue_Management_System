@@ -255,5 +255,39 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
         {
             await _context.Appointments.AddAsync(appointment);
         }
+
+        public async Task<PagedResult<Appointment>> GetPendingAppointmentsAsync(string search, string sortBy, bool descending, int pageNumber, int pageSize)
+        {
+            var query = _context.Appointments
+                .Include(a => a.Patient).ThenInclude(p => p.Person)
+                .Include(a => a.WorkSchedule).ThenInclude(ws => ws.Doctor).ThenInclude(d => d.Employee).ThenInclude(e => e.Person)
+                .Where(a => !a.IsDeleted && a.Status == AppointmentStatus.Pending);
+
+            // Apply search filter if provided
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(a => a.Patient.Person.FullName.Contains(search) || a.WorkSchedule.Doctor.Employee.Person.FullName.Contains(search));
+            }
+
+            // Apply sorting
+            if (string.IsNullOrEmpty(sortBy))
+            {
+                sortBy = "createdAt"; // Default sorting by CreatedAt
+            }
+
+            query = sortBy.ToLower() switch
+            {
+                "patientname" => descending ? query.OrderByDescending(a => a.Patient.Person.FullName) : query.OrderBy(a => a.Patient.Person.FullName),
+                "doctorname" => descending ? query.OrderByDescending(a => a.WorkSchedule.Doctor.Employee.Person.FullName) : query.OrderBy(a => a.WorkSchedule.Doctor.Employee.Person.FullName),
+                "createdat" => descending ? query.OrderByDescending(a => a.CreatedAt) : query.OrderBy(a => a.CreatedAt),
+                "date" => descending ? query.OrderByDescending(a => a.WorkSchedule.Date).ThenByDescending(a => a.TimeSlot) : query.OrderBy(a => a.WorkSchedule.Date).ThenBy(a => a.TimeSlot),
+                _ => descending ? query.OrderByDescending(a => a.CreatedAt) : query.OrderBy(a => a.CreatedAt), // Default sorting by CreatedAt
+            };
+
+            var count = await query.CountAsync();
+            var items = await query.Skip((pageNumber - 1) * pageSize).Take(pageSize).AsNoTracking().ToListAsync();
+            // Return paged results
+            return new PagedResult<Appointment>(items, count);
+        }
     }
 }
