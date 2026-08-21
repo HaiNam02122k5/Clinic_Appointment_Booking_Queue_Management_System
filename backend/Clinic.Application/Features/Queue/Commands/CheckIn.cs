@@ -36,6 +36,7 @@ namespace Clinic.Application.Features.Queue.Commands
             var queueTicket = appointment.CheckIn(checkInTime, queueNumber);
 
             await _queueTicketRepository.AddAsync(queueTicket);
+            await _appointmentRepository.UpdateAsync(appointment);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return new QueueTicketBriefDto
             {
