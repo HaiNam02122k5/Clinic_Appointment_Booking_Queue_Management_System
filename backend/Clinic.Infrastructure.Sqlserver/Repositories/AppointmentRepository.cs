@@ -53,6 +53,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
         public async Task<Appointment?> GetByIdAsync(Guid appointmentId)
         {
             return await _context.Appointments.Include(a => a.WorkSchedule).ThenInclude(ws => ws.Doctor).ThenInclude(d => d.Employee).ThenInclude(e => e.Person)
+                .Include(a => a.WorkSchedule).ThenInclude(ws => ws.Doctor).ThenInclude(d => d.WorkHistories.Where(wh => wh.IsDeleted == false)).ThenInclude(wh => wh.Specialty)
                 .Include(a => a.Patient).ThenInclude(p => p.Person)
                 .Include(a => a.QueueTicket)
                 .FirstOrDefaultAsync(a => a.Id == appointmentId && a.IsDeleted == false);
@@ -60,6 +61,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
 
         public async Task UpdateAsync(Appointment appointment)
         {
+            await _context.AppointmentSnapshots.AddRangeAsync(appointment.Snapshots);
             _context.Appointments.Update(appointment);
         }
 
@@ -261,7 +263,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             var query = _context.Appointments
                 .Include(a => a.Patient).ThenInclude(p => p.Person)
                 .Include(a => a.WorkSchedule).ThenInclude(ws => ws.Doctor).ThenInclude(d => d.Employee).ThenInclude(e => e.Person)
-                .Where(a => !a.IsDeleted && a.Status == AppointmentStatus.Pending && a.WorkSchedule.Date >= DateOnly.FromDateTime(DateTime.Now));
+                .Where(a => !a.IsDeleted && a.Status == AppointmentStatus.Pending && a.WorkSchedule.Date >= DateOnly.FromDateTime(DateTime.UtcNow));
 
             // Apply search filter if provided
             if (!string.IsNullOrEmpty(search))

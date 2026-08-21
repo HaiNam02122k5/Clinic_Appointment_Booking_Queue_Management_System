@@ -110,5 +110,10 @@ namespace Clinic.Application.UnitTests.Common
         {
             throw new NotImplementedException();
         }
+
+        public Task UpdateAsync(Appointment appointment)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
