@@ -156,10 +156,14 @@ const queueNumber = ref<string | null>(null)
 const isLoading = ref(false)
 
 /**
- * Loading riêng cho từng dòng lịch hẹn.
- */
+* Loading riêng cho từng dòng lịch hẹn.
+*/
 const rowLoading = ref<Record<string, boolean>>({})
 
+/**
+* Thông báo cảnh báo hiển thị ngay cạnh ô check-in nếu ngày hẹn không phải hôm nay.
+*/
+const appointmentWarnings = ref<Record<string, string>>({})
 /* =========================
    FORMAT
 ========================= */
@@ -260,7 +264,7 @@ function formatQueueNumber(
   return `A-${String(number).padStart(3, '0')}`
 }
 
-function appointmentStatusLabel(
+function normalizeAppointmentStatus(
   status: unknown,
 ): string {
   if (
@@ -268,13 +272,23 @@ function appointmentStatusLabel(
     status === undefined ||
     status === ''
   ) {
-    return 'Chưa rõ'
+    return ''
   }
 
-  const normalized = String(status)
+  return String(status)
     .trim()
     .toLowerCase()
     .replace(/[_\s-]+/g, '')
+}
+
+function appointmentStatusLabel(
+  status: unknown,
+): string {
+  const normalized = normalizeAppointmentStatus(status)
+
+  if (!normalized) {
+    return 'Chưa rõ'
+  }
 
   if (['pending', '0'].includes(normalized)) {
     return 'Chờ xác nhận'
@@ -305,6 +319,41 @@ function appointmentStatusLabel(
   return String(status)
 }
 
+function updateAppointmentWarnings() {
+  const nextWarnings: Record<string, string> = {}
+
+  for (const appointment of upcomingAppointments.value) {
+    const statusText = normalizeAppointmentStatus(
+      appointment.status,
+    )
+
+    if (
+      statusText !== 'confirmed' &&
+      statusText !== '1'
+    ) {
+      continue
+    }
+
+    if (!appointment.date) {
+      continue
+    }
+
+    const apptDate = new Date(appointment.date)
+    const today = new Date()
+
+    if (
+      apptDate.getFullYear() !== today.getFullYear() ||
+      apptDate.getMonth() !== today.getMonth() ||
+      apptDate.getDate() !== today.getDate()
+    ) {
+      nextWarnings[appointment.id] =
+        'Không thể check-in vì ngày cuộc hẹn không phải hôm nay.'
+    }
+  }
+
+  appointmentWarnings.value = nextWarnings
+}
+
 /* =========================
    TÌM BỆNH NHÂN
 ========================= */
@@ -315,6 +364,7 @@ async function searchPatient() {
   errorMessage.value = ''
   successMessage.value = ''
   queueNumber.value = null
+  appointmentWarnings.value = {}
 
   searchResults.value = []
 
@@ -440,6 +490,8 @@ async function loadPatientAppointments(
         return dateA - dateB
       })
 
+    updateAppointmentWarnings()
+
     /**
      * Không set errorMessage ở đây.
      *
@@ -503,6 +555,7 @@ function selectPatient(
   selectedAppointmentId.value = null
 
   queueNumber.value = null
+  appointmentWarnings.value = {}
 
   successMessage.value = ''
 
@@ -564,11 +617,9 @@ async function confirmAppointmentPerRow(
     return
   }
 
-  const statusText = String(
-    appointment.status ?? '',
+  const statusText = normalizeAppointmentStatus(
+    appointment.status,
   )
-    .trim()
-    .toLowerCase()
 
   const isPending =
     statusText === 'pending' ||
@@ -589,7 +640,7 @@ async function confirmAppointmentPerRow(
     )
 
     successMessage.value =
-      'Đã xác nhận cuộc hẹn.'
+      'Đã xác nhận cuộc hẹn thành công.'
 
     if (selectedPatient.value) {
       await loadPatientAppointments(
@@ -670,11 +721,9 @@ async function checkInPerRow(
     return
   }
 
-  const statusText = String(
-    appointment.status ?? '',
+  const statusText = normalizeAppointmentStatus(
+    appointment.status,
   )
-    .trim()
-    .toLowerCase()
 
   const isConfirmed =
     statusText === 'confirmed' ||
@@ -711,11 +760,16 @@ async function checkInPerRow(
       apptDate.getDate() !==
         today.getDate()
     ) {
+      appointmentWarnings.value[id] =
+        'Không thể check-in vì ngày cuộc hẹn không phải hôm nay.'
       errorMessage.value =
+        appointmentWarnings.value[id] ??
         'Không thể check-in vì ngày cuộc hẹn không phải hôm nay.'
       return
     }
   }
+
+  delete appointmentWarnings.value[id]
 
   if (!appointment.doctorId) {
     errorMessage.value =
@@ -778,8 +832,11 @@ async function checkInPerRow(
       }
     }
 
-    successMessage.value =
-      'Check-in bệnh nhân thành công.'
+    delete appointmentWarnings.value[id]
+
+    successMessage.value = queueNumber.value
+      ? `Check-in bệnh nhân thành công. Bệnh nhân đang ở số thứ tự ${queueNumber.value}.`
+      : 'Check-in bệnh nhân thành công.'
 
     if (selectedPatient.value) {
       await loadPatientAppointments(
@@ -864,11 +921,9 @@ async function performAppointmentAction(
     return
   }
 
-  const statusText = String(
-    appointment.status ?? '',
+  const statusText = normalizeAppointmentStatus(
+    appointment.status,
   )
-    .trim()
-    .toLowerCase()
 
   const isPending =
     statusText === 'pending' ||
@@ -891,12 +946,38 @@ async function performAppointmentAction(
       appointment.status = 'confirmed'
 
       successMessage.value =
-        'Đã xác nhận cuộc hẹn.'
+        'Đã xác nhận cuộc hẹn thành công.'
 
       return
     }
 
     if (isConfirmed) {
+      if (appointment.date) {
+        const apptDate = new Date(
+          appointment.date,
+        )
+
+        const today = new Date()
+
+        if (
+          apptDate.getFullYear() !==
+            today.getFullYear() ||
+          apptDate.getMonth() !==
+            today.getMonth() ||
+          apptDate.getDate() !==
+            today.getDate()
+        ) {
+          appointmentWarnings.value[appointment.id] =
+            'Không thể check-in vì ngày cuộc hẹn không phải hôm nay.'
+          errorMessage.value =
+            appointmentWarnings.value[appointment.id] ??
+            'Không thể check-in vì ngày cuộc hẹn không phải hôm nay.'
+          return
+        }
+      }
+
+      delete appointmentWarnings.value[appointment.id]
+
       await http.post(
         `/appointments/${appointment.id}/check-in`,
       )
@@ -952,8 +1033,9 @@ async function performAppointmentAction(
 
       appointment.status = 'checkedin'
 
-      successMessage.value =
-        'Check-in bệnh nhân thành công.'
+      successMessage.value = queueNumber.value
+        ? `Check-in bệnh nhân thành công. Bệnh nhân đang ở số thứ tự ${queueNumber.value}.`
+        : 'Check-in bệnh nhân thành công.'
 
       return
     }
@@ -1097,8 +1179,9 @@ async function checkIn() {
       }
     }
 
-    successMessage.value =
-      'Check-in bệnh nhân thành công.'
+    successMessage.value = queueNumber.value
+      ? `Check-in bệnh nhân thành công. Bệnh nhân đang ở số thứ tự ${queueNumber.value}.`
+      : 'Check-in bệnh nhân thành công.'
 
     errorMessage.value = ''
   } catch (error: unknown) {
@@ -1343,10 +1426,8 @@ async function checkIn() {
                     <!-- NÚT XÁC NHẬN -->
                     <button
                       v-if="
-                        String(appointment.status ?? '')
-                          .toLowerCase()
-                          .includes('pending') ||
-                        String(appointment.status ?? '') === '0'
+                        normalizeAppointmentStatus(appointment.status) === 'pending' ||
+                        normalizeAppointmentStatus(appointment.status) === '0'
                       "
                       type="button"
                       class="rounded bg-amber-500 px-3 py-1 text-xs font-medium text-white hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-50"
@@ -1366,29 +1447,35 @@ async function checkIn() {
                     </button>
 
                     <!-- NÚT CHECK-IN -->
-                    <button
-                      v-else-if="
-                        String(appointment.status ?? '')
-                          .toLowerCase()
-                          .includes('confirmed') ||
-                        String(appointment.status ?? '') === '1'
-                      "
-                      type="button"
-                      class="rounded bg-violet-600 px-3 py-1 text-xs font-medium text-white hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
-                      :disabled="
-                        isLoading ||
-                        !!rowLoading[appointment.id]
-                      "
-                      @click.stop="
-                        checkInPerRow(appointment.id)
-                      "
-                    >
-                      {{
-                        rowLoading[appointment.id]
-                          ? 'Đang xử lý...'
-                          : 'Check-in'
-                      }}
-                    </button>
+                    <template v-else-if="
+                      normalizeAppointmentStatus(appointment.status) === 'confirmed' ||
+                      normalizeAppointmentStatus(appointment.status) === '1'
+                    ">
+                      <button
+                        type="button"
+                        class="rounded bg-violet-600 px-3 py-1 text-xs font-medium text-white hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        :disabled="
+                          isLoading ||
+                          !!rowLoading[appointment.id]
+                        "
+                        @click.stop="
+                          checkInPerRow(appointment.id)
+                        "
+                      >
+                        {{
+                          rowLoading[appointment.id]
+                            ? 'Đang xử lý...'
+                            : 'Check-in'
+                        }}
+                      </button>
+
+                      <div
+                        v-if="appointmentWarnings[appointment.id]"
+                        class="mt-2 max-w-[180px] text-[10px] leading-relaxed text-amber-600"
+                      >
+                        {{ appointmentWarnings[appointment.id] }}
+                      </div>
+                    </template>
 
                     <!-- TRẠNG THÁI KHÁC -->
                     <span
@@ -1422,16 +1509,16 @@ async function checkIn() {
                   isLoading
                     ? 'Đang xử lý...'
                     : (
-                        upcomingAppointments.find(
-                          a => a.id === selectedAppointmentId
-                        )?.status &&
-                        ['pending', '0'].includes(
-                          String(
-                            upcomingAppointments.find(
-                              a => a.id === selectedAppointmentId
-                            )?.status
-                          ).toLowerCase()
-                        )
+                        normalizeAppointmentStatus(
+                          upcomingAppointments.find(
+                            a => a.id === selectedAppointmentId
+                          )?.status,
+                        ) === 'pending' ||
+                        normalizeAppointmentStatus(
+                          upcomingAppointments.find(
+                            a => a.id === selectedAppointmentId
+                          )?.status,
+                        ) === '0'
                           ? 'Xác nhận'
                           : 'Check-in'
                       )
