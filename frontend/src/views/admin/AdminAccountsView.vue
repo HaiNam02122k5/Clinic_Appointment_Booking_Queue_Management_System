@@ -87,7 +87,20 @@ async function handleViewUser(
     loadingUser.value = false
   }
 }
+function getRoleParam() {
+  if (roleFilter.value === 'all') {
+    return undefined
+  }
 
+  const roleMap: Record<AccountRole, string> = {
+    admin: 'Admin',
+    doctor: 'Doctor',
+    receptionist: 'Receptionist',
+    patient: 'Patient',
+  }
+
+  return roleMap[roleFilter.value]
+}
 // =================================
 // LOAD USERS
 // =================================
@@ -104,9 +117,7 @@ async function loadUsers() {
           search.value.trim() || undefined,
 
         Role:
-          roleFilter.value === 'all'
-            ? undefined
-            : roleFilter.value,
+          getRoleParam(),
 
         IsActive:
           statusFilter.value === 'all'
@@ -130,11 +141,6 @@ async function loadUsers() {
 
     totalCount.value =
       response.totalCount ?? 0
-
-    console.log(
-      'Users from API:',
-      response,
-    )
   } catch (err: unknown) {
     console.error(
       'Failed to load users:',
@@ -518,32 +524,6 @@ onMounted(() => {
           </svg>
         </div>
 
-        <!-- ROLE FILTER -->
-
-        <select
-          v-model="roleFilter"
-          class="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-600 focus:border-violet-500 focus:outline-none"
-        >
-          <option value="all">
-            Tất cả vai trò
-          </option>
-
-          <option value="patient">
-            Bệnh nhân
-          </option>
-
-          <option value="doctor">
-            Bác sĩ
-          </option>
-
-          <option value="receptionist">
-            Lễ tân
-          </option>
-
-          <option value="admin">
-            Quản trị viên
-          </option>
-        </select>
 
         <!-- STATUS FILTER -->
 

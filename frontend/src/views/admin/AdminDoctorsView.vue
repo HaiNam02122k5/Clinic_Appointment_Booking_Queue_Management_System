@@ -224,7 +224,25 @@ async function handleSubmitDoctor(payload: {
         throw new Error('Không tìm thấy bác sĩ cần cập nhật.')
       }
 
-      const updateData = payload.data as UpdateDoctorRequest
+      const data = payload.data as UpdateDoctorRequest
+
+      const updateData: UpdateDoctorRequest = {
+        fullName: data.fullName.trim(),
+        phoneNumber: data.phoneNumber.trim(),
+        email: data.email.trim(),
+
+        // BE yêu cầu DateOnly, không được gửi ""
+        dateOfBirth: data.dateOfBirth?.trim() || '2000-01-01',
+
+        gender: data.gender,
+        address: data.address?.trim() || 'Chưa cập nhật',
+        licenseNumber: data.licenseNumber.trim(),
+        qualification: data.qualification.trim(),
+        experienceYears: Number(data.experienceYears),
+        biography: data.biography?.trim() || '',
+      }
+
+      console.log('UPDATE DOCTOR PAYLOAD:', updateData)
 
       await doctorsApi.update(
         selectedDoctor.value.id,

@@ -74,4 +74,5 @@ export interface UpdateDoctorRequest {
   qualification: string
   experienceYears: number
   biography: string
+
 }
