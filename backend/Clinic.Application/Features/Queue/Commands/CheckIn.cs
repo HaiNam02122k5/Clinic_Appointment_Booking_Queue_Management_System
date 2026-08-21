@@ -1,13 +1,14 @@
 ﻿using Clinic.Application.Common.Exceptions;
+using Clinic.Application.Contracts;
 using Clinic.Application.Interfaces;
 using Clinic.Domain.Entities;
 using MediatR;
 
 namespace Clinic.Application.Features.Queue.Commands
 {
-    public record CheckInCommand(Guid AppointmentId) : IRequest;
+    public record CheckInCommand(Guid AppointmentId) : IRequest<QueueTicketBriefDto>;
 
-    public class CheckInHandler : IRequestHandler<CheckInCommand>
+    public class CheckInHandler : IRequestHandler<CheckInCommand, QueueTicketBriefDto>
     {
         private readonly IAppointmentRepository _appointmentRepository;
         private readonly IQueueTicketRepository _queueTicketRepository;
@@ -23,7 +24,7 @@ namespace Clinic.Application.Features.Queue.Commands
             _unitOfWork = unitOfWork;
         }
 
-        public async Task Handle(CheckInCommand command, CancellationToken cancellationToken)
+        public async Task<QueueTicketBriefDto> Handle(CheckInCommand command, CancellationToken cancellationToken)
         {
             var appointment = await _appointmentRepository.GetByIdAsync(command.AppointmentId)
                 ?? throw new NotFoundException($"Appointment '{command.AppointmentId}' not found.");
@@ -36,6 +37,16 @@ namespace Clinic.Application.Features.Queue.Commands
 
             await _queueTicketRepository.AddAsync(queueTicket);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
+            return new QueueTicketBriefDto
+            {
+                Id = queueTicket.Id,
+                AppointmentId = appointment.Id,
+                DoctorName = appointment.WorkSchedule.Doctor.Employee.Person.FullName,
+                PatientName = appointment.Patient.Person.FullName,
+                SpecialtyName = appointment.WorkSchedule.Doctor.WorkHistories.FirstOrDefault(wh => wh.EndDate == null)?.Specialty?.Name ?? "Unknown", // Ticket for now, so we can assume the current specialty is the one with no end date at that time
+                QueueNumber = queueTicket.QueueNumber,
+                CheckInTime = queueTicket.CheckInTime,
+            };
         }
     }
 }
