@@ -1,4 +1,4 @@
-﻿using Clinic.Application.Common.Exceptions;
+using Clinic.Application.Common.Exceptions;
 using Clinic.Application.Contracts;
 using Clinic.Application.Interfaces;
 using Clinic.Domain.Entities;
@@ -20,12 +20,19 @@ namespace Clinic.Application.Features.Appointments.Commands
     {
         private readonly IWorkScheduleRepository _workScheduleRepository;
         private readonly IPatientRepository _patientRepository;
+        private readonly IAppointmentRepository _appointmentRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly INotificationQueue _notificationQueue;
-        public CreateAppointmentCommandHandler(IWorkScheduleRepository workScheduleRepository, IPatientRepository patientRepository, IUnitOfWork unitOfWork, INotificationQueue notificationQueue)
+        public CreateAppointmentCommandHandler(
+            IWorkScheduleRepository workScheduleRepository,
+            IPatientRepository patientRepository,
+            IAppointmentRepository appointmentRepository,
+            IUnitOfWork unitOfWork,
+            INotificationQueue notificationQueue)
         {
             _workScheduleRepository = workScheduleRepository;
             _patientRepository = patientRepository;
+            _appointmentRepository = appointmentRepository;
             _unitOfWork = unitOfWork;
             _notificationQueue = notificationQueue;
         }
@@ -43,13 +50,14 @@ namespace Clinic.Application.Features.Appointments.Commands
             await _unitOfWork.InitializeTransactionLockAsync(cancellationToken);
             try
             {
-                var workSchedule = await _workScheduleRepository.GetWorkScheduleByIdAsync(request.WorkScheduleId);
+                var workSchedule = await _workScheduleRepository.GetByIdAsync(request.WorkScheduleId);
                 if (workSchedule == null)
                 {
                     throw new NotFoundException($"Work schedule not found.");
                 }
                 var appointment = new Appointment(patient, workSchedule, request.TimeSlot, request.Reason, (Guid)request.UserId, request.IsWalkIn);
                 workSchedule.AddAppointment(appointment);
+                await _appointmentRepository.AddAsync(appointment);
                 await _unitOfWork.SaveChangesAsync(cancellationToken);
                 await _unitOfWork.CommitTransactionAsync(cancellationToken);
                 return new AppointmentDto

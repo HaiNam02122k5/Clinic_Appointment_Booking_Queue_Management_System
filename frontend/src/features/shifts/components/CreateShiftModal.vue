@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, watch } from 'vue'
+import { ref, reactive, watch, computed } from 'vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseAlert from '@/components/ui/BaseAlert.vue'
@@ -23,6 +23,8 @@ const emit = defineEmits<{
 const loading = ref(false)
 const errorMessage = ref<string | null>(null)
 
+const todayDateStr = new Date().toLocaleDateString('sv-SE')
+
 const form = reactive({
   doctorId: '',
   date: '',
@@ -38,9 +40,23 @@ watch(
       errorMessage.value = null
       const firstDocId = props.doctors.length > 0 && props.doctors[0] ? props.doctors[0].id : ''
       form.doctorId = props.defaultDoctorId || firstDocId
-      form.date = props.defaultDate || (new Date().toISOString().split('T')[0] as string)
-      form.startTime = '07:30'
-      form.endTime = '11:30'
+
+      // Nếu defaultDate nhỏ hơn ngày hôm nay thì chọn ngày hôm nay
+      const initialDate = props.defaultDate && props.defaultDate >= todayDateStr ? props.defaultDate : todayDateStr
+      form.date = initialDate
+
+      // Nếu ngày là hôm nay, tự động gợi ý ca làm việc ở tương lai
+      const now = new Date()
+      const currentHours = now.getHours()
+      if (initialDate === todayDateStr && currentHours >= 11) {
+        // Chiều
+        form.startTime = '13:30'
+        form.endTime = '17:00'
+      } else {
+        form.startTime = '07:30'
+        form.endTime = '11:30'
+      }
+
       form.patientLimit = 20
     }
   },
@@ -82,6 +98,21 @@ async function handleSubmit() {
     return
   }
 
+  // Kiểm tra ca trực ở quá khứ
+  if (form.date < todayDateStr) {
+    errorMessage.value = 'Không thể tạo ca làm việc trong quá khứ. Vui lòng chọn từ hôm nay trở đi.'
+    return
+  }
+
+  if (form.date === todayDateStr) {
+    const now = new Date()
+    const currentHhMm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+    if (form.startTime <= currentHhMm) {
+      errorMessage.value = `Giờ bắt đầu (${form.startTime}) đã qua so với giờ hiện tại (${currentHhMm}). Vui lòng chọn ca làm việc tiếp theo hoặc ngày mai.`
+      return
+    }
+  }
+
   loading.value = true
   errorMessage.value = null
 
@@ -96,11 +127,12 @@ async function handleSubmit() {
     emit('saved')
     emit('close')
   } catch (err: any) {
-    errorMessage.value =
-      err.response?.data?.message ||
+    const backendMsg =
       err.response?.data?.errorMessages?.[0] ||
+      err.response?.data?.message ||
       err.message ||
       'Không thể tạo ca làm việc. Vui lòng kiểm tra trùng lịch.'
+    errorMessage.value = backendMsg
   } finally {
     loading.value = false
   }
@@ -144,6 +176,7 @@ async function handleSubmit() {
         v-model="form.date"
         type="date"
         label="Ngày làm việc"
+        :min="todayDateStr"
         required
       />
 

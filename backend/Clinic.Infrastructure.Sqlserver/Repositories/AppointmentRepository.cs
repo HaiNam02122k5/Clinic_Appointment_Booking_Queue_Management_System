@@ -58,6 +58,11 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
                 .FirstOrDefaultAsync(a => a.Id == appointmentId && a.IsDeleted == false);
         }
 
+        public async Task AddAsync(Appointment appointment)
+        {
+            await _context.Appointments.AddAsync(appointment);
+        }
+
         public async Task UpdateAsync(Appointment appointment)
         {
             _context.Appointments.Update(appointment);

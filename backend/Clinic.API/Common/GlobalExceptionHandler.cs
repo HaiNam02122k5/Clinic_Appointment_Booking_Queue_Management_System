@@ -33,7 +33,7 @@ namespace Clinic.API.Common
                 ArgumentException => (HttpStatusCode.BadRequest, new[] { exception.Message }),
                 InvalidOperationException => (HttpStatusCode.BadRequest, new[] { exception.Message }),
                 UnauthorizedAccessException => (HttpStatusCode.Unauthorized, new[] { exception.Message }),
-                _ => (HttpStatusCode.InternalServerError, new[] { "An unexpected error occurred." })
+                _ => (HttpStatusCode.InternalServerError, new[] { exception.InnerException?.Message ?? exception.Message ?? "An unexpected error occurred." })
             };
 
             if (statusCode == HttpStatusCode.InternalServerError)

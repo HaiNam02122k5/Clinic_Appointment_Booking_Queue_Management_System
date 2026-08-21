@@ -19,7 +19,7 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Commands
             var appointmentRepository = new FakeAppointmentRepository();
             var currentUser = new FakeCurrentUser();
             var unitOfWork = new FakeUnitOfWork();
-            var handler = new CreateAppointmentCommandHandler(workScheduleRepository, patientRepository, unitOfWork, notiQueue);
+            var handler = new CreateAppointmentCommandHandler(workScheduleRepository, patientRepository, appointmentRepository, unitOfWork, notiQueue);
 
             var patient = TestDataFactory.CreatePatient();
             await patientRepository.AddAsync(patient);
@@ -53,7 +53,7 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Commands
             var currentUser = new FakeCurrentUser { PatientId = null };
             var unitOfWork = new FakeUnitOfWork();
             var notiQueue = new FakeNotificationQueue();
-            var handler = new CreateAppointmentCommandHandler(workScheduleRepository, patientRepository, unitOfWork, notiQueue);
+            var handler = new CreateAppointmentCommandHandler(workScheduleRepository, patientRepository, appointmentRepository, unitOfWork, notiQueue);
 
             var workSchedule = TestDataFactory.CreateWorkSchedule();
             workScheduleRepository.Add(workSchedule);
@@ -76,7 +76,8 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Commands
             var currentUser = new FakeCurrentUser { PatientId = Guid.NewGuid() };
             var unitOfWork = new FakeUnitOfWork();
             var notiQueue = new FakeNotificationQueue();
-            var handler = new CreateAppointmentCommandHandler(workScheduleRepository, patientRepository, unitOfWork, notiQueue);
+            var appointmentRepository = new FakeAppointmentRepository();
+            var handler = new CreateAppointmentCommandHandler(workScheduleRepository, patientRepository, appointmentRepository, unitOfWork, notiQueue);
             var patient = TestDataFactory.CreatePatient();
             await patientRepository.AddAsync(patient);
 
@@ -97,7 +98,8 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Commands
             var currentUser = new FakeCurrentUser { PatientId = Guid.NewGuid() };
             var unitOfWork = new FakeUnitOfWork();
             var notiQueue = new FakeNotificationQueue();
-            var handler = new CreateAppointmentCommandHandler(workScheduleRepository, patientRepository, unitOfWork, notiQueue);
+            var appointmentRepository = new FakeAppointmentRepository();
+            var handler = new CreateAppointmentCommandHandler(workScheduleRepository, patientRepository, appointmentRepository, unitOfWork, notiQueue);
             var patient = TestDataFactory.CreatePatient();
             await patientRepository.AddAsync(patient);
             var workSchedule = TestDataFactory.CreateWorkSchedule();
@@ -120,7 +122,8 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Commands
             var currentUser = new FakeCurrentUser { PatientId = Guid.NewGuid() };
             var unitOfWork = new FakeUnitOfWork();
             var notiQueue = new FakeNotificationQueue();
-            var handler = new CreateAppointmentCommandHandler(workScheduleRepository, patientRepository, unitOfWork, notiQueue);
+            var appointmentRepository = new FakeAppointmentRepository();
+            var handler = new CreateAppointmentCommandHandler(workScheduleRepository, patientRepository, appointmentRepository, unitOfWork, notiQueue);
             var patient = TestDataFactory.CreatePatient();
             await patientRepository.AddAsync(patient);
             var workSchedule = TestDataFactory.CreateWorkSchedule();
@@ -144,7 +147,8 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Commands
             var currentUser = new FakeCurrentUser { PatientId = Guid.NewGuid() };
             var unitOfWork = new FakeUnitOfWork();
             var notiQueue = new FakeNotificationQueue();
-            var handler = new CreateAppointmentCommandHandler(workScheduleRepository, patientRepository, unitOfWork, notiQueue);
+            var appointmentRepository = new FakeAppointmentRepository();
+            var handler = new CreateAppointmentCommandHandler(workScheduleRepository, patientRepository, appointmentRepository, unitOfWork, notiQueue);
 
             var workSchedule = TestDataFactory.CreateWorkSchedule(patientLimit: 2);
             workScheduleRepository.Add(workSchedule);
@@ -175,7 +179,8 @@ namespace Clinic.Application.UnitTests.Features.Appointments.Commands
             var currentUser = new FakeCurrentUser { PatientId = Guid.NewGuid() };
             var unitOfWork = new FakeUnitOfWork();
             var notiQueue = new FakeNotificationQueue();
-            var handler = new CreateAppointmentCommandHandler(workScheduleRepository, patientRepository, unitOfWork, notiQueue);
+            var appointmentRepository = new FakeAppointmentRepository();
+            var handler = new CreateAppointmentCommandHandler(workScheduleRepository, patientRepository, appointmentRepository, unitOfWork, notiQueue);
             var patient = TestDataFactory.CreatePatient();
             await patientRepository.AddAsync(patient);
             var workSchedule = TestDataFactory.CreateWorkSchedule(patientLimit: 1);

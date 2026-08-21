@@ -99,7 +99,7 @@ namespace Clinic.Domain.Entities
         public void AddWorkSchedule(WorkSchedule workSchedule)
         {
             if (workSchedule == null) throw new ArgumentNullException(nameof(workSchedule));
-            if (WorkSchedules.Where(ws => ws.Date == workSchedule.Date && ws.ShiftStart < workSchedule.ShiftEnd && ws.ShiftEnd > workSchedule.ShiftStart).Any())
+            if (WorkSchedules.Where(ws => !ws.IsDeleted && ws.Status != WorkScheduleStatus.Cancelled && ws.Date == workSchedule.Date && ws.ShiftStart < workSchedule.ShiftEnd && ws.ShiftEnd > workSchedule.ShiftStart).Any())
             {
                 throw new ConflictException("An existing work schedule conflicts with that schedule.");
             }

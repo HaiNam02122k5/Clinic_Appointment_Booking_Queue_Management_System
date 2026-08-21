@@ -1,4 +1,4 @@
-﻿using Clinic.Application.Common.Exceptions;
+using Clinic.Application.Common.Exceptions;
 using Clinic.Application.Contracts;
 using Clinic.Application.Interfaces;
 using Clinic.Domain.Entities;
@@ -40,6 +40,7 @@ namespace Clinic.Application.Features.WorkSchedules.Commands
                 patientLimit: request.PatientLimit
             );
             doctor.AddWorkSchedule(workSchedule);
+            await _workScheduleRepository.AddWorkScheduleAsync(workSchedule);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             return new WorkScheduleDto
             {
