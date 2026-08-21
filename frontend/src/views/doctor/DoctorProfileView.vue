@@ -13,6 +13,173 @@ onMounted(load)
 </script>
 
 <template>
-  <div class="space-y-6"><div><p class="text-sm font-medium text-violet-600">Bác sĩ</p><h1 class="text-2xl font-bold text-slate-900">Hồ sơ cá nhân</h1><p class="mt-1 text-sm text-slate-500">Thông tin được lấy trực tiếp từ API /doctors/me.</p></div><div v-if="error" class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{{ error }}</div><div v-if="notice" class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">{{ notice }}</div>
-  <form class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm" @submit.prevent="save"><div class="grid gap-5 md:grid-cols-2"><label class="text-sm font-medium">Họ tên<input v-model="form.fullName" required class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"></label><label class="text-sm font-medium">Số điện thoại<input v-model="form.phoneNumber" required class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"></label><label class="text-sm font-medium">Email<input v-model="form.email" type="email" required class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"></label><label class="text-sm font-medium">Ngày sinh<input v-model="form.dateOfBirth" type="date" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"></label><label class="text-sm font-medium">Giới tính<select v-model="form.gender" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"><option value="Male">Nam</option><option value="Female">Nữ</option><option value="Other">Khác</option></select></label><label class="text-sm font-medium">Địa chỉ<input v-model="form.address" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"></label><label class="text-sm font-medium">Số giấy phép<input v-model="form.licenseNumber" required class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"></label><label class="text-sm font-medium">Trình độ<input v-model="form.qualification" required class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"></label><label class="text-sm font-medium">Số năm kinh nghiệm<input v-model.number="form.experienceYears" type="number" min="0" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"></label><div><p class="text-sm font-medium">Chuyên khoa</p><p class="mt-1 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">{{ doctor?.currentSpecialty || '—' }}</p></div><div class="md:col-span-2"><label class="text-sm font-medium">Tiểu sử<textarea v-model="form.biography" rows="5" class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2"></textarea></label></div></div><div class="mt-6 flex justify-end"><button class="rounded-lg bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50" :disabled="saving || loading">{{ saving ? 'Đang lưu...' : 'Lưu hồ sơ' }}</button></div></form></div>
+  <div class="space-y-6">
+    <!-- Header -->
+    <div>
+      <p class="text-sm font-semibold text-violet-600">
+        Bác sĩ
+      </p>
+
+      <h1 class="text-2xl font-bold text-slate-900">
+        Hồ sơ cá nhân
+      </h1>
+
+      <p class="mt-1 text-sm text-slate-600">
+        Thông tin được lấy trực tiếp từ API /doctors/me.
+      </p>
+    </div>
+
+    <!-- Error -->
+    <div
+      v-if="error"
+      class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700"
+    >
+      {{ error }}
+    </div>
+
+    <!-- Success -->
+    <div
+      v-if="notice"
+      class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-700"
+    >
+      {{ notice }}
+    </div>
+
+    <!-- Form -->
+    <form
+      class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+      @submit.prevent="save"
+    >
+      <div class="grid gap-5 md:grid-cols-2">
+
+        <label class="text-sm font-semibold text-slate-800">
+          Họ tên
+
+          <input
+            v-model="form.fullName"
+            required
+            class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none placeholder:text-slate-400 focus:border-violet-500"
+          >
+        </label>
+
+        <label class="text-sm font-semibold text-slate-800">
+          Số điện thoại
+
+          <input
+            v-model="form.phoneNumber"
+            required
+            class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-violet-500"
+          >
+        </label>
+
+        <label class="text-sm font-semibold text-slate-800">
+          Email
+
+          <input
+            v-model="form.email"
+            type="email"
+            required
+            class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-violet-500"
+          >
+        </label>
+
+        <label class="text-sm font-semibold text-slate-800">
+          Ngày sinh
+
+          <input
+            v-model="form.dateOfBirth"
+            type="date"
+            class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-violet-500"
+          >
+        </label>
+
+        <label class="text-sm font-semibold text-slate-800">
+          Giới tính
+
+          <select
+            v-model="form.gender"
+            class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 outline-none focus:border-violet-500"
+          >
+            <option value="Male">Nam</option>
+            <option value="Female">Nữ</option>
+            <option value="Other">Khác</option>
+          </select>
+        </label>
+
+        <label class="text-sm font-semibold text-slate-800">
+          Địa chỉ
+
+          <input
+            v-model="form.address"
+            class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-violet-500"
+          >
+        </label>
+
+        <label class="text-sm font-semibold text-slate-800">
+          Số giấy phép
+
+          <input
+            v-model="form.licenseNumber"
+            required
+            class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-violet-500"
+          >
+        </label>
+
+        <label class="text-sm font-semibold text-slate-800">
+          Trình độ
+
+          <input
+            v-model="form.qualification"
+            required
+            class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-violet-500"
+          >
+        </label>
+
+        <label class="text-sm font-semibold text-slate-800">
+          Số năm kinh nghiệm
+
+          <input
+            v-model.number="form.experienceYears"
+            type="number"
+            min="0"
+            class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-violet-500"
+          >
+        </label>
+
+        <div>
+          <p class="text-sm font-semibold text-slate-800">
+            Chuyên khoa
+          </p>
+
+          <p
+            class="mt-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-700"
+          >
+            {{ doctor?.currentSpecialty || '—' }}
+          </p>
+        </div>
+
+        <div class="md:col-span-2">
+          <label class="text-sm font-semibold text-slate-800">
+            Tiểu sử
+
+            <textarea
+              v-model="form.biography"
+              rows="5"
+              class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none placeholder:text-slate-400 focus:border-violet-500"
+            />
+          </label>
+        </div>
+
+      </div>
+
+      <div class="mt-6 flex justify-end">
+        <button
+          class="rounded-lg bg-violet-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
+          :disabled="saving || loading"
+        >
+          {{ saving ? 'Đang lưu...' : 'Lưu hồ sơ' }}
+        </button>
+      </div>
+    </form>
+  </div>
 </template>

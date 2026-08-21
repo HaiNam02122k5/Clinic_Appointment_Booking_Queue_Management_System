@@ -48,21 +48,26 @@ export const doctorsApi = {
       })
       .then((r) => unwrap(r.data)),
 
-  getOwnShiftRequests: (startDate: string, endDate: string) =>
-    http
-      .get<ApiResponse<DoctorSchedule<RequestedShift>>>('/shifts/suggestions', {
-        params: { StartDate: startDate, EndDate: endDate },
-      })
-      .then((r) => unwrap(r.data)),
+getOwnShiftRequests: (startDate: string, endDate: string) =>
+  http
+    .get<DoctorSchedule<RequestedShift>>('/shifts/suggestions', {
+      params: {
+        StartDate: startDate,
+        EndDate: endDate,
+      },
+    })
+    .then((r) => r.data),
 
-  createShiftRequest: (data: {
-    date: string
-    startTime: string
-    endTime: string
-    patientLimit: number
-    reason: string
-  }) =>
-    http.post<ApiResponse<RequestedShift>>('/shifts/suggestions', data).then((r) => unwrap(r.data)),
+createShiftRequest: (data: {
+  date: string
+  startTime: string
+  endTime: string
+  patientLimit: number
+  reason: string
+}) =>
+  http
+    .post<RequestedShift>('/shifts/suggestions', data)
+    .then((r) => r.data),
 
   updateShiftRequest: (
     id: string,
