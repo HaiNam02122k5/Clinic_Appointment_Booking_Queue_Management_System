@@ -203,6 +203,25 @@ function logout() {
               <span>Check-in bệnh nhân</span>
             </RouterLink>
 
+            <!-- Pending appointments -->
+            <RouterLink
+              to="/reception/appointments/pending"
+              class="flex items-center gap-3
+                     rounded-lg px-3 py-2.5
+                     text-sm font-medium
+                     text-slate-600
+                     transition-colors
+                     hover:bg-slate-50"
+              active-class="bg-violet-50 text-violet-700"
+            >
+              <!-- Clock icon -->
+              <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 6v6l4 2" />
+              </svg>
+              <span>Chờ xác nhận</span>
+            </RouterLink>
+
           </div>
         </template>
 

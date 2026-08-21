@@ -250,9 +250,98 @@ function selectAppointment(appointmentId: string) {
   queueNumber.value = null
 }
 
-async function confirmAppointment(appointmentId: string) {
-  selectAppointment(appointmentId)
-  await checkIn()
+/**
+ * Perform the appropriate action for the selected appointment:
+ * - If status is pending => call /appointments/{id}/confirm and update local status to confirmed
+ * - If status is confirmed => call /appointments/{id}/check-in and then fetch queue number
+ */
+async function performAppointmentAction(appointmentId?: string | null) {
+  if (!appointmentId) {
+    errorMessage.value = 'Vui lòng chọn một cuộc hẹn để thực hiện hành động.'
+    return
+  }
+
+  const appointment = upcomingAppointments.value.find((item) => item.id === appointmentId)
+  if (!appointment) {
+    errorMessage.value = 'Không tìm thấy cuộc hẹn đã chọn.'
+    return
+  }
+
+  // Normalize status to determine action
+  const statusText = String(appointment.status ?? '').trim().toLowerCase()
+  const isPending = ['pending', '0'].some((s) => statusText.includes(s))
+  const isConfirmed = ['confirmed', '1'].some((s) => statusText.includes(s))
+
+  errorMessage.value = ''
+  successMessage.value = ''
+  isLoading.value = true
+
+  try {
+    if (isPending) {
+      // Call confirm endpoint
+      await http.post(`/appointments/${appointment.id}/confirm`)
+      // Update local model so UI shows Confirmed and next action becomes Check-in
+      appointment.status = 'confirmed'
+      successMessage.value = 'Đã xác nhận cuộc hẹn.'
+      return
+    }
+
+    if (isConfirmed) {
+      // Proceed to check-in
+      await http.post(`/appointments/${appointment.id}/check-in`)
+
+      if (appointment.doctorId) {
+        try {
+          const { data } = await http.get(`/doctors/${appointment.doctorId}/queue`)
+          const payload = unwrapApiResult<QueueItem[] | { items?: QueueItem[]; data?: QueueItem[]; result?: QueueItem[] } | null>(data)
+          const queueList = Array.isArray(payload)
+            ? payload
+            : Array.isArray(payload?.items)
+              ? payload.items
+              : Array.isArray(payload?.data)
+                ? payload.data
+                : Array.isArray(payload?.result)
+                  ? payload.result
+                  : []
+
+          const matchedQueue = queueList.find((item) => String(item.appointmentId ?? item.id) === String(appointment.id))
+          queueNumber.value = formatQueueNumber(matchedQueue?.queueNumber ?? null)
+        } catch {
+          queueNumber.value = 'A-001'
+        }
+      }
+
+      // Update local status to checked-in
+      appointment.status = 'checkedin'
+      successMessage.value = 'Check-in bệnh nhân thành công.'
+      return
+    }
+
+    errorMessage.value = 'Cuộc hẹn hiện không thể thực hiện hành động.'
+  } catch (error: unknown) {
+    const status = typeof error === 'object' && error !== null && 'response' in error
+      ? Number((error as { response?: { status?: number } }).response?.status)
+      : undefined
+
+    if (status === 400) {
+      errorMessage.value = 'Hành động không hợp lệ cho cuộc hẹn này.'
+      return
+    }
+
+    if (status === 404) {
+      errorMessage.value = 'Không tìm thấy cuộc hẹn.'
+      return
+    }
+
+    if (status === 401 || status === 403) {
+      errorMessage.value = 'Bạn không có quyền thực hiện hành động này.'
+      return
+    }
+
+    errorMessage.value = 'Đã xảy ra lỗi khi thực hiện hành động. Vui lòng thử lại.'
+  } finally {
+    isLoading.value = false
+  }
 }
 
 async function checkIn() {
@@ -434,7 +523,7 @@ async function checkIn() {
           :class="selectedAppointmentId === appointment.id
             ? 'border-violet-500 bg-violet-50'
             : 'border-slate-200 bg-white hover:border-violet-200 hover:bg-violet-50/50'"
-          @click="void confirmAppointment(appointment.id)"
+          @click="selectAppointment(appointment.id)"
         >
           <div class="flex items-center justify-between gap-3">
             <span class="text-sm font-semibold text-slate-800">
@@ -458,9 +547,9 @@ async function checkIn() {
         type="button"
         class="mt-5 w-full rounded-lg bg-violet-600 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-violet-700 disabled:cursor-not-allowed disabled:bg-violet-400"
         :disabled="isLoading"
-        @click="void confirmAppointment(selectedAppointmentId)"
+        @click="void performAppointmentAction(selectedAppointmentId)"
       >
-        {{ isLoading ? 'Đang xử lý...' : 'Xác nhận check-in' }}
+        {{ isLoading ? 'Đang xử lý...' : (upcomingAppointments.find(a => a.id === selectedAppointmentId)?.status && ['pending','0'].includes(String(upcomingAppointments.find(a => a.id === selectedAppointmentId)?.status).toLowerCase()) ? 'Xác nhận' : 'Check-in') }}
       </button>
     </div>
 
