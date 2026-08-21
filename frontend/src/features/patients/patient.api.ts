@@ -79,6 +79,49 @@ function normalizeDoctorList(data: any): Doctor[] {
   return []
 }
 
+function formatTimeSlotForBackend(time: string): string {
+  if (!time) return '08:00:00'
+  const parts = time.trim().split(':')
+  if (parts.length === 2) return `${parts[0]}:${parts[1]}:00`
+  return time
+}
+
+function normalizeDoctorAvailableSlots(data: any): AvailableSlot[] {
+  const items = Array.isArray(data) ? data : data?.items ?? data?.result ?? data?.data ?? []
+  const slots: AvailableSlot[] = []
+
+  for (const item of items) {
+    const wsId = item?.id ?? item?.Id ?? item?.workScheduleId ?? item?.WorkScheduleId ?? ''
+    const timeSlots = item?.timeSlot ?? item?.TimeSlot ?? item?.timeSlots ?? []
+
+    if (Array.isArray(timeSlots) && timeSlots.length > 0) {
+      for (const t of timeSlots) {
+        const timeStr = toTimeString(t)
+        if (timeStr) {
+          slots.push({
+            id: `${wsId}-${timeStr}`,
+            workScheduleId: wsId,
+            time: timeStr,
+            available: true,
+          })
+        }
+      }
+    } else {
+      const rawTime = item?.shiftStart ?? item?.ShiftStart ?? item?.time ?? item?.startTime ?? item?.slotTime
+      if (rawTime) {
+        slots.push({
+          id: wsId,
+          workScheduleId: wsId,
+          time: toTimeString(rawTime),
+          available: true,
+        })
+      }
+    }
+  }
+
+  return slots
+}
+
 function normalizeSlotList(data: any): AvailableSlot[] {
   const items = Array.isArray(data) ? data : data?.items ?? data?.result ?? data?.data ?? []
   return (Array.isArray(items) ? items : []).map((item: any) => {
@@ -142,8 +185,19 @@ export const patientApi = {
   getAvailableSlots(doctorId?: string | number, date?: string): Promise<AvailableSlot[]> {
     return callWithFallback<AvailableSlot[]>(
       async () => {
+        if (doctorId && doctorId !== '0' && doctorId !== 0) {
+          try {
+            const res = await http.get<any>(`/doctors/${doctorId}/available`, {
+              params: { date: date || undefined },
+            })
+            const list = normalizeDoctorAvailableSlots(res.data)
+            if (list.length > 0) return list
+          } catch {
+            // fallback to /slots if /doctors/{id}/available fails
+          }
+        }
+
         const params: Record<string, any> = {}
-        // Chỉ gửi doctorId khi có giá trị Guid hợp lệ (không rỗng, không phải '0')
         if (doctorId && doctorId !== '0' && doctorId !== 0) {
           params.doctorId = String(doctorId)
         }
@@ -163,7 +217,8 @@ export const patientApi = {
   createAppointment(payload: CreateAppointmentRequest): Promise<Appointment> {
     const workScheduleId = payload.workScheduleId ?? payload.doctorId
     const reason = payload.reason ?? payload.symptoms ?? 'Đặt lịch khám'
-    const timeSlot = payload.timeSlot ?? payload.appointmentTime ?? '08:00:00'
+    const rawTime = payload.timeSlot ?? payload.appointmentTime ?? '08:00:00'
+    const timeSlot = formatTimeSlotForBackend(rawTime)
 
     return callWithFallback<Appointment>(
       async () => {

@@ -210,6 +210,8 @@ export const usePatientStore = defineStore('patient', () => {
     } catch (e: any) {
       appointmentsError.value =
         e.response?.data?.message ||
+        (Array.isArray(e.response?.data?.errorMessages) && e.response.data.errorMessages.join(', ')) ||
+        e.response?.data?.title ||
         'Đặt lịch thất bại'
 
       throw e
@@ -229,6 +231,8 @@ export const usePatientStore = defineStore('patient', () => {
       appointments.value = []
       appointmentsError.value =
         e.response?.data?.message ||
+        (Array.isArray(e.response?.data?.errorMessages) && e.response.data.errorMessages.join(', ')) ||
+        e.response?.data?.title ||
         'Không thể tải lịch hẹn'
     } finally {
       appointmentsLoading.value = false
