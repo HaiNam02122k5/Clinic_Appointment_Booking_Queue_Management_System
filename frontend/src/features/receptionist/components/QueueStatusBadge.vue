@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { QueueStatus } from '../receptionist.mock'
+import type { QueueStatus } from '../receptionist.types'
 
 const props = defineProps<{
   status: QueueStatus | string

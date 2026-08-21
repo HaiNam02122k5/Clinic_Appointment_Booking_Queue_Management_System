@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { QueuePatient } from '../receptionist.mock'
+import type { QueuePatient } from '../receptionist.types'
 
 defineProps<{
   queue: QueuePatient[]

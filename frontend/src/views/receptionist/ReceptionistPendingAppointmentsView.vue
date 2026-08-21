@@ -1,62 +1,25 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { http } from '@/lib/api/http'
-
-type AppointmentItem = {
-  id: string
-  patientId: string
-  doctorId?: string | null
-  patientName?: string | null
-  doctorName?: string | null
-  date?: string | null
-  timeSlot?: string | { hours?: number; minutes?: number; seconds?: number } | null
-  reason?: string | null
-  status?: string | number | null
-}
-
-type PaginationEnvelope<T> = {
-  items?: T[]
-  totalCount?: number
-  pageNumber?: number
-  pageSize?: number
-}
-
-function unwrapApiResult<T>(payload: unknown): T | null {
-  if (!payload || typeof payload !== 'object') {
-    return payload as T | null
-  }
-
-  const maybeEnvelope = payload as { result?: T; data?: T; items?: T }
-  if (maybeEnvelope.result !== undefined) {
-    return maybeEnvelope.result
-  }
-
-  if (maybeEnvelope.data !== undefined) {
-    return maybeEnvelope.data
-  }
-
-  if (maybeEnvelope.items !== undefined) {
-    return maybeEnvelope.items
-  }
-
-  return payload as T
-}
+import { receptionistApi } from '@/features/receptionist/receptionist.api'
+import type { AppointmentItem } from '@/features/receptionist/receptionist.types'
+import BaseAlert from '@/components/ui/BaseAlert.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
+import AdminPagination from '@/features/admin/components/AdminPagination.vue'
 
 const appointments = ref<AppointmentItem[]>([])
 const pageNumber = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
 const isLoading = ref(false)
-const errorMessage = ref('')
-const successMessage = ref('')
-// per-row loading for confirm buttons
+const errorMessage = ref<string | null>(null)
+const successMessage = ref<string | null>(null)
 const rowLoading = ref<Record<string, boolean>>({})
 
 function formatDate(value?: string | null): string {
   if (!value) return '—'
   const parsed = new Date(value.includes('T') ? value : `${value}T00:00:00`)
   if (Number.isNaN(parsed.getTime())) return value
-  return parsed.toLocaleDateString('vi-VN')
+  return parsed.toLocaleDateString('vi-VN', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
 function formatTime(value: unknown): string {
@@ -71,107 +34,55 @@ function formatTime(value: unknown): string {
 
 async function loadPending() {
   isLoading.value = true
-  errorMessage.value = ''
+  errorMessage.value = null
   try {
-    const { data } = await http.get('/receptionist/appointments/pending', {
-      params: {
-        pageNumber: pageNumber.value,
-        pageSize: pageSize.value,
-        sortBy: 'date',
-        orderBy: 'asc',
-      },
+    const res = await receptionistApi.getPendingAppointments({
+      pageNumber: pageNumber.value,
+      pageSize: pageSize.value,
+      sortBy: 'date',
+      orderBy: 'asc',
     })
-
-    const payload = unwrapApiResult<PaginationEnvelope<AppointmentItem> | AppointmentItem[] | null>(data)
-    const nextItems = Array.isArray(payload)
-      ? payload
-      : Array.isArray(payload?.items)
-        ? payload.items
-        : []
-
-    appointments.value = nextItems
-    total.value = Array.isArray(payload)
-      ? payload.length
-      : Number(payload?.totalCount ?? nextItems.length)
-  } catch (err: unknown) {
-  // surface server message when possible
-  try {
-    const msg = (err as any)?.response?.data?.message || (err as any)?.response?.data?.errorMessages?.join(', ')
-    errorMessage.value = msg || 'Không thể tải danh sách chờ xác nhận.'
-  } catch {
-    errorMessage.value = 'Không thể tải danh sách chờ xác nhận.'
-  }
+    appointments.value = res.items || []
+    total.value = res.totalCount || appointments.value.length
+  } catch (err: any) {
+    errorMessage.value = err.response?.data?.message || err.message || 'Không thể tải danh sách chờ xác nhận.'
   } finally {
-  isLoading.value = false
+    isLoading.value = false
   }
 }
 
-async function confirmAppointment(id: string) {
-  errorMessage.value = ''
-  successMessage.value = ''
-
-  const appt = appointments.value.find((a) => a.id === id)
-  if (!appt) {
-    errorMessage.value = 'Không tìm thấy cuộc hẹn.'
-    return
-  }
+async function handleConfirm(appt: AppointmentItem) {
+  errorMessage.value = null
+  successMessage.value = null
 
   if (!appt.patientName || !appt.doctorId || !appt.date) {
     errorMessage.value = 'Cuộc hẹn thiếu dữ liệu (tên bệnh nhân/bác sĩ/ngày). Không thể xác nhận.'
     return
   }
 
-  const statusText = String(appt.status ?? '').trim().toLowerCase()
-  const isPending = ['pending', '0'].some((s) => statusText.includes(s))
-  if (!isPending) {
-    errorMessage.value = 'Chỉ có cuộc hẹn ở trạng thái Chờ xác nhận mới có thể xác nhận.'
-    return
-  }
-
-  // mark row loading
-  rowLoading.value[id] = true
-  isLoading.value = true
+  rowLoading.value[appt.id] = true
   try {
-    await http.post(`/appointments/${id}/confirm`)
-    successMessage.value = 'Đã xác nhận cuộc hẹn.'
-    // remove from list as it's no longer pending
-    appointments.value = appointments.value.filter((a) => a.id !== id)
-  } catch (err: unknown) {
-    const status = typeof err === 'object' && err !== null && 'response' in err
-      ? Number((err as any).response?.status)
-      : undefined
-
+    await receptionistApi.confirmAppointment(appt.id)
+    successMessage.value = `Đã xác nhận cuộc hẹn của bệnh nhân ${appt.patientName || ''} thành công.`
+    // Remove from local list
+    appointments.value = appointments.value.filter((a) => a.id !== appt.id)
+    total.value = Math.max(0, total.value - 1)
+  } catch (err: any) {
+    const status = err.response?.status
     if (status === 409) {
-      // conflict: reload to reflect server state
       await loadPending()
-      errorMessage.value = (err as any)?.response?.data?.message || 'Xung đột: cuộc hẹn không thể được xác nhận.'
-    } else if (status === 400) {
-      errorMessage.value = (err as any)?.response?.data?.message || 'Cuộc hẹn không hợp lệ để xác nhận.'
-    } else if (status === 404) {
-      errorMessage.value = (err as any)?.response?.data?.message || 'Không tìm thấy cuộc hẹn.'
-    } else if (status === 401 || status === 403) {
-      errorMessage.value = (err as any)?.response?.data?.message || 'Bạn không có quyền xác nhận cuộc hẹn.'
+      errorMessage.value = err.response?.data?.message || 'Xung đột: cuộc hẹn không thể được xác nhận hoặc đã được xử lý.'
     } else {
-      errorMessage.value = (err as any)?.response?.data?.message || 'Xác nhận thất bại. Vui lòng thử lại.'
+      errorMessage.value = err.response?.data?.message || err.message || 'Xác nhận thất bại. Vui lòng thử lại.'
     }
   } finally {
-    rowLoading.value[id] = false
-    isLoading.value = false
+    rowLoading.value[appt.id] = false
   }
 }
 
-function prevPage() {
-  if (pageNumber.value > 1) {
-    pageNumber.value--
-    void loadPending()
-  }
-}
-
-function nextPage() {
-  if (pageNumber.value * pageSize.value < total.value) {
-    pageNumber.value++
-    void loadPending()
-  }
+function onPageChange(page: number) {
+  pageNumber.value = page
+  void loadPending()
 }
 
 onMounted(() => {
@@ -180,57 +91,124 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="max-w-4xl">
-    <h1 class="text-xl font-semibold text-slate-800 mb-4">Danh sách lịch hẹn chờ xác nhận</h1>
+  <div class="space-y-5 max-w-5xl">
+    <!-- HEADER -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h1 class="text-xl font-bold text-slate-800">
+          Danh sách lịch hẹn chờ xác nhận
+        </h1>
+        <p class="mt-1 text-xs sm:text-sm text-slate-500">
+          Xác nhận các yêu cầu đặt lịch trực tuyến của bệnh nhân để chuyển sang trạng thái sẵn sàng khám
+        </p>
+      </div>
 
-    <div v-if="errorMessage" class="mb-3 rounded border border-red-200 bg-red-50 p-3 text-sm text-red-600">
-      {{ errorMessage }}
+      <div>
+        <BaseButton
+          variant="secondary"
+          :disabled="isLoading"
+          @click="loadPending"
+        >
+          <span>🔄</span>
+          <span>Làm mới</span>
+        </BaseButton>
+      </div>
     </div>
-    <div v-if="successMessage" class="mb-3 rounded border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
-      {{ successMessage }}
-    </div>
 
-    <div class="rounded-lg border bg-white p-4">
-      <table class="w-full table-auto text-sm">
-        <thead>
-          <tr class="text-left text-xs text-slate-500">
-            <th class="py-2">Ngày</th>
-            <th class="py-2">Giờ</th>
-            <th class="py-2">Bệnh nhân</th>
-            <th class="py-2">Bác sĩ</th>
-            <th class="py-2">Lý do</th>
-            <th class="py-2">Hành động</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="a in appointments" :key="a.id" class="border-t">
-            <td class="py-2">{{ formatDate(a.date) }}</td>
-            <td class="py-2">{{ formatTime(a.timeSlot) }}</td>
-            <td class="py-2">{{ a.patientName ?? '—' }}</td>
-            <td class="py-2">{{ a.doctorName ?? '—' }}</td>
-            <td class="py-2">{{ a.reason ?? '—' }}</td>
-            <td class="py-2">
-              <button
-                class="rounded bg-violet-600 px-3 py-1 text-xs font-medium text-white hover:bg-violet-700"
-                              :disabled="isLoading || !!rowLoading[a.id]"
-                @click="confirmAppointment(a.id)"
-              >
-                              {{ !!rowLoading[a.id] ? 'Đang...' : 'Xác nhận' }}
-              </button>
-            </td>
-          </tr>
-          <tr v-if="!appointments.length && !isLoading">
-            <td colspan="6" class="py-3 text-center text-sm text-slate-500">Không có lịch hẹn chờ xác nhận.</td>
-          </tr>
-        </tbody>
-      </table>
+    <!-- NOTICES -->
+    <BaseAlert
+      v-if="errorMessage"
+      type="error"
+      :message="errorMessage"
+      dismissible
+      @dismiss="errorMessage = null"
+    />
+    <BaseAlert
+      v-if="successMessage"
+      type="success"
+      :message="successMessage"
+      dismissible
+      @dismiss="successMessage = null"
+    />
 
-      <div class="mt-4 flex items-center justify-between">
-        <div class="text-sm text-slate-600">Tổng: {{ total }}</div>
-        <div class="space-x-2">
-          <button class="rounded border px-3 py-1 text-sm" @click="prevPage" :disabled="pageNumber === 1">Trước</button>
-          <button class="rounded border px-3 py-1 text-sm" @click="nextPage" :disabled="pageNumber * pageSize >= total">Sau</button>
-        </div>
+    <!-- MAIN TABLE CARD -->
+    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xs">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-slate-200 bg-slate-50 text-slate-600">
+              <th class="px-5 py-3.5 text-left text-xs font-bold uppercase tracking-wider">Ngày khám</th>
+              <th class="px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider">Khung giờ</th>
+              <th class="px-5 py-3.5 text-left text-xs font-bold uppercase tracking-wider">Bệnh nhân</th>
+              <th class="px-5 py-3.5 text-left text-xs font-bold uppercase tracking-wider">Bác sĩ khám</th>
+              <th class="px-4 py-3.5 text-left text-xs font-bold uppercase tracking-wider">Lý do khám</th>
+              <th class="px-5 py-3.5 text-right text-xs font-bold uppercase tracking-wider">Hành động</th>
+            </tr>
+          </thead>
+
+          <tbody class="divide-y divide-slate-100">
+            <tr
+              v-for="a in appointments"
+              :key="a.id"
+              class="hover:bg-slate-50/70 transition-colors"
+            >
+              <td class="px-5 py-4 font-semibold text-slate-800">
+                {{ formatDate(a.date) }}
+              </td>
+              <td class="px-4 py-4">
+                <span class="inline-flex items-center rounded-md bg-violet-50 px-2 py-1 font-mono text-xs font-bold text-violet-700">
+                  {{ formatTime(a.timeSlot) }}
+                </span>
+              </td>
+              <td class="px-5 py-4">
+                <div class="font-bold text-slate-800">{{ a.patientName ?? '—' }}</div>
+              </td>
+              <td class="px-5 py-4">
+                <div class="font-medium text-slate-700">{{ a.doctorName ?? '—' }}</div>
+              </td>
+              <td class="px-4 py-4 max-w-xs text-xs text-slate-500 truncate" :title="a.reason ?? ''">
+                {{ a.reason || '—' }}
+              </td>
+              <td class="px-5 py-4 text-right">
+                <BaseButton
+                  variant="primary"
+                  size="sm"
+                  :disabled="isLoading || !!rowLoading[a.id]"
+                  @click="handleConfirm(a)"
+                >
+                  <span>{{ rowLoading[a.id] ? 'Đang xử lý...' : '✓ Xác nhận' }}</span>
+                </BaseButton>
+              </td>
+            </tr>
+
+            <!-- EMPTY STATE -->
+            <tr v-if="appointments.length === 0 && !isLoading">
+              <td colspan="6" class="py-12 text-center text-slate-400">
+                <div class="text-3xl mb-2">📋</div>
+                <div class="font-medium text-slate-600">Không có lịch hẹn nào đang chờ xác nhận</div>
+                <div class="text-xs text-slate-400 mt-1">Các yêu cầu đặt khám mới từ bệnh nhân sẽ xuất hiện tại đây</div>
+              </td>
+            </tr>
+
+            <!-- LOADING STATE -->
+            <tr v-if="isLoading">
+              <td colspan="6" class="py-12 text-center text-slate-500">
+                <span class="animate-spin inline-block text-2xl mb-1">🌀</span>
+                <div class="text-xs font-semibold text-violet-600">Đang tải danh sách chờ xác nhận...</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- PAGINATION -->
+      <div v-if="total > 0" class="border-t border-slate-100 p-4">
+        <AdminPagination
+          :current-page="pageNumber"
+          :total-pages="Math.ceil(total / pageSize) || 1"
+          :total-count="total"
+          @update:current-page="onPageChange"
+        />
       </div>
     </div>
   </div>

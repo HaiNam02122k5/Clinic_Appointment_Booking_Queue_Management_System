@@ -1,144 +1,113 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
-
 import { useReceptionistStore } from '@/stores/receptionist'
+import { receptionistApi } from '@/features/receptionist/receptionist.api'
 
-describe('Receptionist Store - Luồng lễ tân', () => {
+vi.mock('@/features/receptionist/receptionist.api', () => ({
+  receptionistApi: {
+    getDoctorQueue: vi.fn(),
+    startExam: vi.fn(),
+    completeExam: vi.fn(),
+    skipTicket: vi.fn(),
+    searchPatients: vi.fn(),
+    getUpcomingAppointments: vi.fn(),
+    confirmAppointment: vi.fn(),
+    checkInAppointment: vi.fn(),
+  },
+}))
+
+describe('Receptionist Store & Workflow (Mock-free)', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
+    vi.clearAllMocks()
   })
 
-  // ================================
-  // 1. TRA CỨU LỊCH HẸN
-  // ================================
-
-  it('tìm được lịch hẹn bằng mã APT-001', () => {
+  it('khởi tạo store với hàng đợi rỗng và không có mock data', () => {
     const store = useReceptionistStore()
-
-    const appointment = store.findAppointment('APT-001')
-
-    expect(appointment).not.toBeNull()
-    expect(appointment?.appointmentId).toBe('APT-001')
+    expect(store.queue).toEqual([])
+    expect(store.waitingCount).toBe(0)
+    expect(store.examiningCount).toBe(0)
+    expect(store.completedCount).toBe(0)
   })
 
-  it('không tìm thấy lịch hẹn không tồn tại', () => {
+  it('fetchQueue tải danh sách hàng đợi từ receptionistApi', async () => {
+    const mockTickets = [
+      {
+        id: 't-1',
+        appointmentId: 'a-1',
+        queueNumber: 1,
+        patientName: 'Nguyễn Văn A',
+        doctorName: 'BS Nam',
+        status: 'Waiting',
+        checkInTime: '2026-08-21T08:30:00Z',
+      },
+      {
+        id: 't-2',
+        appointmentId: 'a-2',
+        queueNumber: 2,
+        patientName: 'Trần Thị B',
+        doctorName: 'BS Nam',
+        status: 'Called',
+        checkInTime: '2026-08-21T08:45:00Z',
+      },
+    ]
+
+    vi.mocked(receptionistApi.getDoctorQueue).mockResolvedValue(mockTickets)
+
     const store = useReceptionistStore()
+    await store.fetchQueue('doc-123')
 
-    const appointment = store.findAppointment('APT-999')
-
-    expect(appointment).toBeNull()
+    expect(receptionistApi.getDoctorQueue).toHaveBeenCalledWith('doc-123')
+    expect(store.queue.length).toBe(2)
+    expect(store.queue[0].no).toBe('A-001')
+    expect(store.queue[0].status).toBe('waiting')
+    expect(store.queue[1].no).toBe('A-002')
+    expect(store.queue[1].status).toBe('examining')
+    expect(store.waitingCount).toBe(1)
+    expect(store.examiningCount).toBe(1)
   })
 
-  // ================================
-  // 2. CHECK-IN
-  // ================================
+  it('callPatient gọi receptionistApi.startExam và làm mới hàng đợi', async () => {
+    const mockTickets = [
+      {
+        id: 't-1',
+        appointmentId: 'a-1',
+        queueNumber: 1,
+        patientName: 'Nguyễn Văn A',
+        status: 'Waiting',
+        checkInTime: '2026-08-21T08:30:00Z',
+      },
+    ]
 
-  it('check-in bệnh nhân thành công', () => {
+    vi.mocked(receptionistApi.getDoctorQueue).mockResolvedValue(mockTickets)
+    vi.mocked(receptionistApi.startExam).mockResolvedValue()
+
     const store = useReceptionistStore()
+    await store.fetchQueue('doc-123')
+    await store.callPatient('A-001')
 
-    const result = store.checkIn('APT-001')
-
-    expect(result).not.toBeNull()
-    expect(result?.status).toBe('waiting')
+    expect(receptionistApi.startExam).toHaveBeenCalledWith('t-1')
   })
 
-  it('check-in sinh STT tiếp theo là A-029', () => {
+  it('completePatient gọi receptionistApi.completeExam và làm mới hàng đợi', async () => {
+    const mockTickets = [
+      {
+        id: 't-1',
+        appointmentId: 'a-1',
+        queueNumber: 1,
+        patientName: 'Nguyễn Văn A',
+        status: 'InProgress',
+        checkInTime: '2026-08-21T08:30:00Z',
+      },
+    ]
+
+    vi.mocked(receptionistApi.getDoctorQueue).mockResolvedValue(mockTickets)
+    vi.mocked(receptionistApi.completeExam).mockResolvedValue()
+
     const store = useReceptionistStore()
+    await store.fetchQueue('doc-123')
+    await store.completePatient('A-001')
 
-    const result = store.checkIn('APT-001')
-
-    expect(result?.no).toBe('A-029')
-  })
-
-  it('bệnh nhân sau check-in được thêm vào queue', () => {
-    const store = useReceptionistStore()
-
-    store.checkIn('APT-001')
-
-    const patient = store.queue.find(
-      (item) => item.no === 'A-029'
-    )
-
-    expect(patient).toBeDefined()
-    expect(patient?.name).toBe('Nguyễn Văn An')
-    expect(patient?.status).toBe('waiting')
-  })
-
-  it('không cho bệnh nhân check-in lần hai', () => {
-    const store = useReceptionistStore()
-
-    const firstCheckIn = store.checkIn('APT-001')
-    const secondCheckIn = store.checkIn('APT-001')
-
-    expect(firstCheckIn).not.toBeNull()
-    expect(secondCheckIn).toBeNull()
-  })
-
-  // ================================
-  // 3. QUẢN LÝ HÀNG ĐỢI
-  // ================================
-
-  it('gọi số chuyển trạng thái waiting → examining', () => {
-    const store = useReceptionistStore()
-
-    store.checkIn('APT-001')
-    store.callPatient('A-029')
-
-    const patient = store.queue.find(
-      (item) => item.no === 'A-029'
-    )
-
-    expect(patient?.status).toBe('examining')
-  })
-
-  it('hoàn thành bệnh nhân chuyển examining → completed', () => {
-    const store = useReceptionistStore()
-
-    store.checkIn('APT-001')
-    store.callPatient('A-029')
-    store.completePatient('A-029')
-
-    const patient = store.queue.find(
-      (item) => item.no === 'A-029'
-    )
-
-    expect(patient?.status).toBe('completed')
-  })
-
-  it('không thể hoàn thành bệnh nhân đang chờ', () => {
-    const store = useReceptionistStore()
-
-    store.checkIn('APT-001')
-    store.completePatient('A-029')
-
-    const patient = store.queue.find(
-      (item) => item.no === 'A-029'
-    )
-
-    expect(patient?.status).toBe('waiting')
-  })
-
-  // ================================
-  // 4. THỐNG KÊ DASHBOARD
-  // ================================
-
-  it('waitingCount tăng sau khi check-in', () => {
-    const store = useReceptionistStore()
-
-    const before = store.waitingCount
-
-    store.checkIn('APT-001')
-
-    expect(store.waitingCount).toBe(before + 1)
-  })
-
-  it('completedCount tăng sau khi hoàn thành khám', () => {
-    const store = useReceptionistStore()
-
-    store.checkIn('APT-001')
-    store.callPatient('A-029')
-    store.completePatient('A-029')
-
-    expect(store.completedCount).toBe(1)
+    expect(receptionistApi.completeExam).toHaveBeenCalledWith('t-1')
   })
 })
