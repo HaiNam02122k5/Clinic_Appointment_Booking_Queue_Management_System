@@ -31,6 +31,14 @@ function formatTime(value: unknown): string {
   return String(value)
 }
 
+function isToday(dateStr?: string | null): boolean {
+  if (!dateStr) return false
+  const apptDate = dateStr.includes('T') ? dateStr.slice(0, 10) : dateStr
+  const now = new Date()
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  return apptDate === today
+}
+
 function normalizeStatus(s?: string | number | null): string {
   const str = String(s ?? '').trim().toLowerCase()
   if (str === '0' || str.includes('pending')) return 'Pending'
@@ -83,17 +91,37 @@ function statusLabel(status: string) {
       <div
         v-for="appt in appointments"
         :key="appt.id"
-        class="rounded-xl border border-slate-200 p-4 transition-all hover:border-[#0E4D92] hover:bg-blue-50/20"
+        class="rounded-xl border p-4 transition-all"
+        :class="
+          isToday(appt.date)
+            ? 'border-[#0E4D92] bg-blue-50/20 shadow-2xs'
+            : 'border-slate-200 hover:border-slate-300'
+        "
       >
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div class="space-y-1.5">
-            <div class="flex items-center gap-2.5">
+            <div class="flex items-center flex-wrap gap-2">
               <span class="text-sm font-bold text-slate-800">
                 📅 {{ formatDate(appt.date) }}
               </span>
+
+              <span
+                v-if="isToday(appt.date)"
+                class="rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200"
+              >
+                Hôm nay
+              </span>
+              <span
+                v-else
+                class="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-500"
+              >
+                Lịch tương lai
+              </span>
+
               <span class="font-mono text-xs font-bold text-[#0E4D92] bg-blue-50 px-2 py-0.5 rounded-md">
                 🕒 {{ formatTime(appt.timeSlot) }}
               </span>
+
               <span
                 class="rounded-full border px-2 py-0.5 text-[11px] font-semibold"
                 :class="statusBadgeClass(String(appt.status ?? ''))"
@@ -113,7 +141,7 @@ function statusLabel(status: string) {
           </div>
 
           <!-- ACTIONS -->
-          <div class="flex items-center gap-2 self-end sm:self-center">
+          <div class="flex flex-col sm:items-end gap-1.5 self-end sm:self-center">
             <!-- Nút Xác nhận nếu Pending -->
             <BaseButton
               v-if="normalizeStatus(appt.status) === 'Pending'"
@@ -126,15 +154,20 @@ function statusLabel(status: string) {
             </BaseButton>
 
             <!-- Nút Check-in nếu Confirmed -->
-            <BaseButton
-              v-else-if="normalizeStatus(appt.status) === 'Confirmed'"
-              variant="primary"
-              size="sm"
-              :disabled="actionLoadingId === appt.id"
-              @click="emit('check-in', appt)"
-            >
-              <span>{{ actionLoadingId === appt.id ? 'Đang cấp số...' : '🎫 Check-in' }}</span>
-            </BaseButton>
+            <template v-else-if="normalizeStatus(appt.status) === 'Confirmed'">
+              <BaseButton
+                variant="primary"
+                size="sm"
+                :disabled="actionLoadingId === appt.id || !isToday(appt.date)"
+                :title="!isToday(appt.date) ? 'Chỉ được check-in vào đúng ngày hẹn khám' : ''"
+                @click="emit('check-in', appt)"
+              >
+                <span>{{ actionLoadingId === appt.id ? 'Đang cấp số...' : '🎫 Check-in' }}</span>
+              </BaseButton>
+              <span v-if="!isToday(appt.date)" class="text-[10px] text-amber-600 font-medium">
+                ⚠️ Chỉ check-in vào ngày khám
+              </span>
+            </template>
 
             <!-- Đã Check-in -->
             <span

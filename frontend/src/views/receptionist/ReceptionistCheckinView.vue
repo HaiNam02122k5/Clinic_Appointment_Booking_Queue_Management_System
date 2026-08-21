@@ -83,7 +83,13 @@ async function handleCheckInAppointment(appt: AppointmentItem) {
       appointments.value = await receptionistApi.getUpcomingAppointments(selectedPatient.value.id)
     }
   } catch (err: any) {
-    errorMessage.value = err.response?.data?.message || err.message || 'Check-in thất bại. Vui lòng kiểm tra lại.'
+    const errorMsg =
+      err.response?.data?.message ||
+      (Array.isArray(err.response?.data?.errorMessages) && err.response.data.errorMessages.join(', ')) ||
+      err.response?.data?.title ||
+      err.message ||
+      'Check-in thất bại. Vui lòng kiểm tra lại.'
+    errorMessage.value = errorMsg
   } finally {
     actionLoadingId.value = null
   }
