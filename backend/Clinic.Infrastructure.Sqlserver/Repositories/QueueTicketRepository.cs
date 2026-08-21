@@ -25,7 +25,7 @@ namespace Clinic.Infrastructure.Sqlserver.Repositories
             // của SQL Server để chống race condition khi upsert đồng thời -
             // request thứ 2 phải đợi request thứ 1 commit xong mới được chạy MERGE.
             // Cột output phải đặt tên "Value" vì SqlQuery<int> map theo quy ước này.
-            var nextNumber = _context.Database
+            var nextNumber = await _context.Database
                 .SqlQuery<int>($@"
             MERGE INTO QueueCounters WITH (HOLDLOCK) AS target
             USING (SELECT {doctorId} AS DoctorId, {day} AS [Date]) AS source
