@@ -396,6 +396,8 @@ export const patientApi = {
               address: data.address ?? data.Address ?? data.location ?? data.Location,
               dateOfBirth: data.dateOfBirth ?? data.DateOfBirth ?? data.dob ?? data.Dob ?? data.birthDate ?? data.BirthDate,
               gender: data.gender ?? data.Gender ?? data.sex ?? data.Sex,
+              insuranceNumber: data.insuranceNumber ?? data.InsuranceNumber ?? data.insurance_number,
+              emergencyContact: data.emergencyContact ?? data.EmergencyContact ?? data.emergency_contact,
             }
           } catch (e: any) {
             const status = e?.response?.status
@@ -411,5 +413,22 @@ export const patientApi = {
       },
       fallback,
     )
+  },
+
+  async updateMyProfile(payload: {
+    email?: string
+    gender?: number | string
+    address?: string
+    insuranceNumber?: string | null
+    emergencyContact?: string | null
+    dateOfBirth?: string | null
+    phoneNumber?: string | null
+    fullName?: string | null
+  }): Promise<void> {
+    try {
+      await http.put('/patients/me', payload)
+    } catch {
+      await http.post('/patients', payload)
+    }
   },
 }

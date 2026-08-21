@@ -73,4 +73,6 @@ export interface PatientProfile {
   address?: string
   dateOfBirth?: string
   gender?: number | string
+  insuranceNumber?: string | null
+  emergencyContact?: string | null
 }
